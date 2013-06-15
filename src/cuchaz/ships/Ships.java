@@ -1,5 +1,6 @@
 package cuchaz.ships;
 
+import net.minecraft.client.renderer.entity.RenderManager;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.Instance;
@@ -17,6 +18,10 @@ public class Ships
 	@Instance( "cuchaz.ships" )
 	public static Ships m_instance;
 	
+	// (apparently the most robust id picking strategy is almost complete randomness)
+	// item registration: use ids [7308,7319]
+	// block registration: use ids [3170-3190]
+	
 	@PreInit
 	public void preInit( FMLPreInitializationEvent event )
 	{
@@ -26,7 +31,8 @@ public class Ships
 	@Init
 	public void load( FMLInitializationEvent event )
 	{
-		// nothing to do
+		// set the ship renderer
+		RenderManager.instance.entityRenderMap.put( EntityShip.class, new RenderShip() );
 	}
 	
 	@PostInit
