@@ -8,6 +8,8 @@ public class ContainerShip extends Container
 	public ContainerShip( )
 	{
 		// add slots here if we need
+		
+		// NOTE: this class isn't really used, but it's needed by Forge's GUI API
 	}
 	
 	@Override

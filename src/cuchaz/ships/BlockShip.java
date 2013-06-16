@@ -3,9 +3,7 @@ package cuchaz.ships;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
@@ -56,7 +54,7 @@ public class BlockShip extends Block
 	public boolean onBlockActivated( World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9 )
 	{
 		// show the ship UI
-		Ships.Gui.Ship.open( player, x, y, z );
+		Gui.Ship.open( player, x, y, z );
 		return true;
 	}
 	

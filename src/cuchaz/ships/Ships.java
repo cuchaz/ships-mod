@@ -1,9 +1,7 @@
 package cuchaz.ships;
 
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -30,32 +28,6 @@ public class Ships
 	
 	public static final String TexturesPath = "/mods/ships/textures/";
 	
-	public static enum Gui
-	{
-		Ship
-		{
-			@Override
-			public Container getContainer( EntityPlayer player, int x, int y, int z )
-			{
-				return new ContainerShip();
-			}
-			
-			@Override
-			public GuiContainer getGui( EntityPlayer player, int x, int y, int z )
-			{
-				return new GuiShip( new ContainerShip() );
-			}
-		};
-		
-		public void open( EntityPlayer player, int x, int y, int z )
-		{
-			player.openGui( instance, ordinal(), player.worldObj, x, y, z );
-		}
-		
-		public abstract Container getContainer( EntityPlayer player, int x, int y, int z );
-		public abstract GuiContainer getGui( EntityPlayer player, int x, int y, int z );
-	}
-	
 	// (apparently the most robust id picking strategy is almost complete randomness)
 	// item registration:
 	
@@ -71,9 +43,9 @@ public class Ships
 	@Init
 	public void load( FMLInitializationEvent event )
 	{
-		GameRegistry.registerBlock( BlockShip, "blockShip" );
-		
-		LanguageRegistry.addName( BlockShip, "Ship" );
+		loadThings();
+		loadLanguage();
+		loadRecipes();
 		
 		// set the ship renderer
 		RenderManager.instance.entityRenderMap.put( EntityShip.class, new RenderShip() );
@@ -93,11 +65,29 @@ public class Ships
 				return Gui.values()[id].getGui( player, x, y, z );
 			}
 		} );
+	}
+	
+	private void loadThings( )
+	{
+		GameRegistry.registerBlock( BlockShip, "blockShip" );
+	}
+
+	private void loadLanguage( )
+	{
+		// block names
+		LanguageRegistry.addName( BlockShip, "Ship" );
 		
+		// gui strings
+		for( GuiString string : GuiString.values() )
+		{
+			LanguageRegistry.instance().addStringLocalization( string.getKey(), string.getUnlocalizedText() );
+		}
+	}
+
+	private void loadRecipes( )
+	{
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		ItemStack redstoneStack = new ItemStack( Item.redstone );
-		
-		// crafting recipes
 		
 		// ship
 		GameRegistry.addRecipe(
@@ -107,7 +97,7 @@ public class Ships
 			'y', redstoneStack
 		);
 	}
-	
+
 	@PostInit
 	public void postInit( FMLPostInitializationEvent event )
 	{
