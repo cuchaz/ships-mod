@@ -10,9 +10,13 @@ import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.BlockSide;
 
 public class BlockShip extends Block
 {
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconSide;
+	
 	protected BlockShip( int blockId )
 	{
 		super( blockId, Material.iron );
@@ -27,7 +31,17 @@ public class BlockShip extends Block
 	@SideOnly( Side.CLIENT )
 	public Icon getIcon( int side, int meta )
 	{
-		return null;
+		switch( BlockSide.getById( side ) )
+		{
+			case North:
+			case South:
+			case East:
+			case West:
+				return m_iconSide;
+			
+			default:
+				return blockIcon;
+		}
 	}
 	
 	@Override
@@ -35,19 +49,15 @@ public class BlockShip extends Block
 	public void registerIcons( IconRegister iconRegister )
 	{
 		blockIcon = iconRegister.registerIcon( "ships:shipTop" );
+		m_iconSide = iconRegister.registerIcon( "ships:shipSide" );
 	}
-	
-	@Override
-	public void onBlockPlacedBy( World world, int x, int y, int z, EntityLiving entityUser, ItemStack itemStack )
-    {
-		// UNDONE: construct the ship
-    }
 	
 	@Override
 	public boolean onBlockActivated( World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9 )
 	{
-		// TEMP
-		return false;
+		// show the ship UI
+		Ships.Gui.Ship.open( player, x, y, z );
+		return true;
 	}
 	
 	@Override
