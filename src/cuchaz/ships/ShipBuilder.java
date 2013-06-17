@@ -56,4 +56,26 @@ public class ShipBuilder
 		// TEMP: just use 16 for now
 		return 16;
 	}
+	
+	public void makeShip( )
+	{
+		// UNDONE: change all the ship blocks to air
+		// UNDONE: replace blocks with a ship entity
+		
+		// TEMP: for now, just spawn a ship entity
+		EntityShip ship = new EntityShip( world, new ShipBlocks( world, m_blocks ) );
+		ship.setPositionAndRotation( x, y, z, 0, 0 );
+		//if( !world.isRemote )
+        {
+			if( !world.spawnEntityInWorld( ship ) )
+			{
+				// TEMP
+				System.out.println( "Ship spawn failed!" );
+				return;
+			}
+			
+			// TEMP
+			System.out.println( "Made ship!" );
+        }
+	}
 }

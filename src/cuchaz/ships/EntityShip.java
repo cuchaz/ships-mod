@@ -6,9 +6,27 @@ import net.minecraft.world.World;
 
 public class EntityShip extends Entity
 {
-	public EntityShip( World world )
+	private ShipBlocks m_blocks;
+	
+	public EntityShip( World world, ShipBlocks blocks )
 	{
 		super( world );
+		
+		m_blocks = blocks;
+		
+		// init defaults
+		motionX = 0.0;
+        motionY = 0.0;
+        motionZ = 0.0;
+        prevPosX = posX;
+        prevPosY = posY;
+        prevPosZ = posZ;
+        setSize( 1.0f, 1.0f );
+	}
+	
+	public ShipBlocks getBlocks( )
+	{
+		return m_blocks;
 	}
 	
 	@Override
@@ -16,7 +34,7 @@ public class EntityShip extends Entity
 	{
 		// TODO Auto-generated method stub
 	}
-
+	
 	@Override
 	protected void readEntityFromNBT( NBTTagCompound nbttagcompound )
 	{
@@ -27,5 +45,11 @@ public class EntityShip extends Entity
 	protected void writeEntityToNBT( NBTTagCompound nbttagcompound )
 	{
 		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public void onEntityUpdate( )
+	{
+		// UNDONE: implement me!
 	}
 }

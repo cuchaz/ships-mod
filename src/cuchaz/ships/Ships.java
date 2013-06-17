@@ -48,7 +48,9 @@ public class Ships
 		loadRecipes();
 		
 		// set the ship renderer
-		RenderManager.instance.entityRenderMap.put( EntityShip.class, new RenderShip() );
+		RenderShip renderShip = new RenderShip();
+		RenderManager.instance.entityRenderMap.put( EntityShip.class, renderShip );
+		renderShip.setRenderManager( RenderManager.instance );
 		
 		// GUI hooks
 		NetworkRegistry.instance().registerGuiHandler( this, new IGuiHandler( )

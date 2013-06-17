@@ -1,5 +1,6 @@
 package cuchaz.ships;
 
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Container;
 
@@ -10,10 +11,19 @@ import cuchaz.modsShared.ColorUtils;
 public class GuiShip extends GuiContainer
 {
 	private ShipBuilder m_shipBuilder;
+	private GuiButton m_buttonMakeShip;
 	
 	private static final int LeftMargin = 8;
 	private static final int TopMargin = 6;
 	private static final int LineSpacing = 2;
+	
+	/* A Note about GUIs:
+	 *    Different rendering functions appear to work in different coordinate spaces
+	 *    Full screen coords:
+	 *       buttons, textures
+	 *    Window coords:
+	 *       text
+	 */
 	
 	public GuiShip( Container container, ShipBuilder shipBuilder )
 	{
@@ -24,6 +34,28 @@ public class GuiShip extends GuiContainer
 		
 		xSize = 166;
 		ySize = 153;
+		
+		m_buttonMakeShip = null;
+	}
+	
+	@Override
+	public void initGui( )
+	{
+		super.initGui();
+		
+		// add the buttons
+		m_buttonMakeShip = new GuiButton( 0, guiLeft + LeftMargin, guiTop + ySize - TopMargin - 20, 80, 20, "Make Ship" );
+		m_buttonMakeShip.enabled = m_shipBuilder.isValidShip();
+		buttonList.add( m_buttonMakeShip );
+	}
+	
+	@Override
+	protected void actionPerformed( GuiButton button )
+	{
+		if( button.id == m_buttonMakeShip.id )
+		{
+			m_shipBuilder.makeShip();
+		}
 	}
 	
 	@Override
@@ -31,8 +63,8 @@ public class GuiShip extends GuiContainer
 	{
 		final int LineHeight = fontRenderer.FONT_HEIGHT + LineSpacing;
 		
-		int color = ColorUtils.getGrey( 64 );
-		fontRenderer.drawString( GuiString.ShipTitle.getLocalizedText(), LeftMargin, TopMargin, color );
+		int textColor = ColorUtils.getGrey( 64 );
+		fontRenderer.drawString( GuiString.ShipTitle.getLocalizedText(), LeftMargin, TopMargin, textColor );
 		
 		if( m_shipBuilder.isValidShip() )
 		{
@@ -41,7 +73,7 @@ public class GuiShip extends GuiContainer
 				GuiString.ShipNumBlocks.getLocalizedText(),
 				m_shipBuilder.getNumBlocks(),
 				m_shipBuilder.getMaxNumBlocks()
-			), LeftMargin, TopMargin + LineHeight*1, color );
+			), LeftMargin, TopMargin + LineHeight*1, textColor );
 			
 			// NEXTTIME: show the make ship button!
 		}
@@ -51,7 +83,7 @@ public class GuiShip extends GuiContainer
 			fontRenderer.drawString( String.format( "%s: %s",
 				GuiString.ShipNumBlocks.getLocalizedText(),
 				GuiString.ShipTooLarge.getLocalizedText()
-			), LeftMargin, TopMargin + LineHeight*1, color );
+			), LeftMargin, TopMargin + LineHeight*1, textColor );
 		}
 	}
 	
@@ -61,8 +93,6 @@ public class GuiShip extends GuiContainer
 		// render the GUI background
         GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
         mc.renderEngine.bindTexture( Ships.TexturesPath + "/gui/ship.png" );
-        int x = ( width - xSize )/2;
-        int y = ( height - ySize )/2;
-        drawTexturedModalRect( x, y, 0, 0, xSize, ySize );
+        drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
 	}
 }
