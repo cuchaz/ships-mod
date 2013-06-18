@@ -21,6 +21,7 @@ public class EntityShip extends Entity
         prevPosX = posX;
         prevPosY = posY;
         prevPosZ = posZ;
+        yOffset = 0.0f;
         setSize( 1.0f, 1.0f );
 	}
 	

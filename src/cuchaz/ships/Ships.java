@@ -1,10 +1,10 @@
 package cuchaz.ships;
 
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.Instance;
@@ -20,7 +20,8 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
 @Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
-@NetworkMod( clientSideRequired=true, serverSideRequired=true )
+@NetworkMod( clientSideRequired=true, serverSideRequired=true, channels={ "makeShip" }, packetHandler=PacketHandler.class )
+// NOTE: 20-character limit for channel names
 public class Ships
 {
 	@Instance( "cuchaz.ships" )
@@ -47,10 +48,8 @@ public class Ships
 		loadLanguage();
 		loadRecipes();
 		
-		// set the ship renderer
-		RenderShip renderShip = new RenderShip();
-		RenderManager.instance.entityRenderMap.put( EntityShip.class, renderShip );
-		renderShip.setRenderManager( RenderManager.instance );
+		// set renderers
+		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
 		
 		// GUI hooks
 		NetworkRegistry.instance().registerGuiHandler( this, new IGuiHandler( )

@@ -63,19 +63,11 @@ public class ShipBuilder
 		// UNDONE: replace blocks with a ship entity
 		
 		// TEMP: for now, just spawn a ship entity
-		EntityShip ship = new EntityShip( world, new ShipBlocks( world, m_blocks ) );
-		ship.setPositionAndRotation( x, y, z, 0, 0 );
-		//if( !world.isRemote )
-        {
-			if( !world.spawnEntityInWorld( ship ) )
-			{
-				// TEMP
-				System.out.println( "Ship spawn failed!" );
-				return;
-			}
-			
-			// TEMP
-			System.out.println( "Made ship!" );
-        }
+		EntityShip ship = new EntityShip( world, new ShipBlocks( world, new ChunkCoordinates( x, y, z ), m_blocks ) );
+		ship.setPositionAndRotation( x, y + 2 /* TEMP */, z, 0, 0 );
+		boolean spawnSuccess = world.spawnEntityInWorld( ship );
+		
+		// TEMP
+		System.out.println( ( world.isRemote ? "CLIENT" : "SERVER" ) + " " + ( spawnSuccess ? "Made ship!" : "Ship spawn failed!" ) );
 	}
 }

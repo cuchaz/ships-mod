@@ -1,10 +1,17 @@
 package cuchaz.ships;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Container;
+import net.minecraft.network.packet.Packet250CustomPayload;
 
 import org.lwjgl.opengl.GL11;
+
+import cpw.mods.fml.common.network.PacketDispatcher;
 
 import cuchaz.modsShared.ColorUtils;
 
@@ -54,6 +61,27 @@ public class GuiShip extends GuiContainer
 	{
 		if( button.id == m_buttonMakeShip.id )
 		{
+			// tell the server to spawn a ship
+			ByteArrayOutputStream data = new ByteArrayOutputStream( 8 );
+			DataOutputStream out = new DataOutputStream( data );
+			try
+			{
+				out.writeInt( m_shipBuilder.x );
+				out.writeInt( m_shipBuilder.y );
+				out.writeInt( m_shipBuilder.z );
+			}
+			catch( IOException ex )
+			{
+				throw new Error( ex );
+			}
+			
+			Packet250CustomPayload packet = new Packet250CustomPayload();
+			packet.channel = "makeShip";
+			packet.data = data.toByteArray();
+			packet.length = data.size();
+			PacketDispatcher.sendPacketToServer( packet );
+			
+			// spawn a ship here on the client too
 			m_shipBuilder.makeShip();
 		}
 	}

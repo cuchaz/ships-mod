@@ -6,9 +6,6 @@ import static net.minecraftforge.common.ForgeDirection.UP;
 import java.util.List;
 import java.util.TreeMap;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFarmland;
 import net.minecraft.block.BlockHalfSlab;
@@ -23,6 +20,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.ForgeDirection;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class ShipBlocks implements IBlockAccess
 {
@@ -43,13 +42,15 @@ public class ShipBlocks implements IBlockAccess
 	// NOTE: this static var is ok since the logic loop is single-threaded
 	private static ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
 	
+	private ChunkCoordinates m_shipBlock;
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private BlockStorage m_airBlockStorage;
 	private final Vec3Pool m_vecPool;
-	private float[] m_lightBrightnessTable;
 	
-	public ShipBlocks( World world, List<ChunkCoordinates> blocks )
+	public ShipBlocks( World world, ChunkCoordinates shipBlock, List<ChunkCoordinates> blocks )
 	{
+		m_shipBlock = shipBlock;
+		
 		// save the block ids and metadata
 		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
 		for( ChunkCoordinates block : blocks )
@@ -57,20 +58,18 @@ public class ShipBlocks implements IBlockAccess
 			BlockStorage storage = new BlockStorage();
 			storage.blockId = world.getBlockId( block.posX, block.posY, block.posZ );
 			storage.blockMeta = world.getBlockMetadata( block.posX, block.posY, block.posZ );
+			
+			// make all the blocks relative to the ship block
+			block.posX -= m_shipBlock.posX;
+			block.posY -= m_shipBlock.posY;
+			block.posZ -= m_shipBlock.posZ;
+			
 			m_blocks.put( block, storage );
 		}
 		
 		// init defaults
 		m_airBlockStorage = new BlockStorage();
 		m_vecPool = new Vec3Pool( 10, 100 );
-		
-		// build the light brightness table (copied from WorldProvider)
-		m_lightBrightnessTable = new float[16];
-        for( int i=0; i<=15; i++ )
-        {
-            float something = 1.0f - (float)i/15.0f;
-            m_lightBrightnessTable[i] = ( 1.0f - something )/( something*3.0f + 1.0f );
-        }
 	}
 	
 	public Iterable<ChunkCoordinates> blocks( )
@@ -109,10 +108,17 @@ public class ShipBlocks implements IBlockAccess
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public int getLightBrightnessForSkyBlocks( int i, int j, int k, int l )
+	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int minBlockBrightness )
 	{
-		// TEMP: always return 0
-		return 0;
+		int skyBrightness = 15;
+        int blockBrightness = 15;
+        
+        if( blockBrightness < minBlockBrightness )
+        {
+        	blockBrightness = minBlockBrightness;
+        }
+        
+        return skyBrightness << 20 | blockBrightness << 4;
 	}
 	
 	@Override
@@ -131,16 +137,19 @@ public class ShipBlocks implements IBlockAccess
 	@SideOnly( Side.CLIENT )
 	public float getBrightness( int x, int y, int z, int minLight )
 	{
-		// TEMP: always return light 15
-		return m_lightBrightnessTable[15];
+		// apparently only used for tripwires and piston extensions. ie, we don't care
+		return 0;
 	}
 	
 	@Override
 	@SideOnly( Side.CLIENT )
 	public float getLightBrightness( int x, int y, int z )
 	{
-		// TEMP: always return light 15
-		return m_lightBrightnessTable[15];
+		// how bright is this block intrinsically? (eg fluids)
+		// returns [0-1] where 1 is the most bright
+		
+		// fluids aren't part of the boat. ie, we don't care
+		return 0;
 	}
 	
 	@Override
