@@ -51,20 +51,21 @@ public class ShipBlocks implements IBlockAccess
 	{
 		m_shipBlock = shipBlock;
 		
-		// save the block ids and metadata
 		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
+		
+		// save the ship block
+		m_blocks.put( new ChunkCoordinates( 0, 0, 0 ), copyWorldStorage( world, m_shipBlock ) );
+		
+		// save the rest of the blocks
 		for( ChunkCoordinates block : blocks )
 		{
-			BlockStorage storage = new BlockStorage();
-			storage.blockId = world.getBlockId( block.posX, block.posY, block.posZ );
-			storage.blockMeta = world.getBlockMetadata( block.posX, block.posY, block.posZ );
-			
 			// make all the blocks relative to the ship block
-			block.posX -= m_shipBlock.posX;
-			block.posY -= m_shipBlock.posY;
-			block.posZ -= m_shipBlock.posZ;
-			
-			m_blocks.put( block, storage );
+			ChunkCoordinates relativeCoords = new ChunkCoordinates(
+				block.posX - m_shipBlock.posX,
+				block.posY - m_shipBlock.posY,
+				block.posZ - m_shipBlock.posZ
+			);
+			m_blocks.put( relativeCoords, copyWorldStorage( world, block ) );
 		}
 		
 		// init defaults
@@ -260,5 +261,37 @@ public class ShipBlocks implements IBlockAccess
         }
         
         return isBlockNormalCube( x, y, z );
+	}
+	
+	public ChunkCoordinates getMin( )
+	{
+		ChunkCoordinates min = new ChunkCoordinates( 0, 0, 0 );
+		for( ChunkCoordinates coords : m_blocks.keySet() )
+		{
+			min.posX = Math.min( min.posX, coords.posX );
+			min.posY = Math.min( min.posY, coords.posY );
+			min.posZ = Math.min( min.posZ, coords.posZ );
+		}
+		return min;
+	}
+	
+	public ChunkCoordinates getMax( )
+	{
+		ChunkCoordinates max = new ChunkCoordinates( 0, 0, 0 );
+		for( ChunkCoordinates coords : m_blocks.keySet() )
+		{
+			max.posX = Math.max( max.posX, coords.posX );
+			max.posY = Math.max( max.posY, coords.posY );
+			max.posZ = Math.max( max.posZ, coords.posZ );
+		}
+		return max;
+	}
+	
+	private BlockStorage copyWorldStorage( World world, ChunkCoordinates coords )
+	{
+		BlockStorage storage = new BlockStorage();
+		storage.blockId = world.getBlockId( coords.posX, coords.posY, coords.posZ );
+		storage.blockMeta = world.getBlockMetadata( coords.posX, coords.posY, coords.posZ );
+		return storage;
 	}
 }
