@@ -16,6 +16,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
@@ -70,9 +71,15 @@ public class Ships
 	
 	private void loadThings( )
 	{
+		// blocks
 		GameRegistry.registerBlock( BlockShip, "blockShip" );
+		
+		// entities
+		int shipId = EntityRegistry.findGlobalUniqueEntityId();
+		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", shipId );
+		EntityRegistry.registerModEntity( EntityShip.class, "Ship", shipId, instance, 80, 3, true );
 	}
-
+	
 	private void loadLanguage( )
 	{
 		// block names

@@ -80,9 +80,6 @@ public class GuiShip extends GuiContainer
 			packet.data = data.toByteArray();
 			packet.length = data.size();
 			PacketDispatcher.sendPacketToServer( packet );
-			
-			// spawn a ship here on the client too
-			m_shipBuilder.makeShip();
 		}
 	}
 	

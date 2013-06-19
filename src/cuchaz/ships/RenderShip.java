@@ -5,7 +5,6 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Icon;
 
@@ -46,8 +45,8 @@ public class RenderShip extends Render
 			renderUnlitBlock( block, coords.posX, coords.posY, coords.posZ );
 			
 			// TEMP
-			renderPosition( ship, ship.getBlockEntity( coords ) );
-			renderHitbox( ship, ship.getBlockEntity( coords ) );
+			//renderPosition( ship, ship.getBlockEntity( coords ) );
+			//renderHitbox( ship, ship.getBlockEntity( coords ) );
 		}
 		
 		GL11.glPopMatrix();

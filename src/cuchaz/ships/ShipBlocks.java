@@ -3,7 +3,13 @@ package cuchaz.ships;
 import static net.minecraftforge.common.ForgeDirection.DOWN;
 import static net.minecraftforge.common.ForgeDirection.UP;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
@@ -20,6 +26,9 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.ForgeDirection;
+
+import org.apache.commons.codec.binary.Base64;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -37,6 +46,20 @@ public class ShipBlocks implements IBlockAccess
 			blockId = 0;
 			blockMeta = 0;
 		}
+
+		public void writeData( DataOutputStream out )
+		throws IOException
+		{
+			out.writeInt( blockId );
+			out.writeInt( blockMeta );
+		}
+
+		public void readData( DataInputStream in )
+		throws IOException
+		{
+			blockId = in.readInt();
+			blockMeta = in.readInt();
+		}
 	}
 	
 	// NOTE: this static var is ok since the logic loop is single-threaded
@@ -44,11 +67,20 @@ public class ShipBlocks implements IBlockAccess
 	
 	private ChunkCoordinates m_shipBlock;
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
-	private BlockStorage m_airBlockStorage;
+	private final BlockStorage m_airBlockStorage;
 	private final Vec3Pool m_vecPool;
+	
+	public ShipBlocks( )
+	{
+		// init defaults
+		m_airBlockStorage = new BlockStorage();
+		m_vecPool = new Vec3Pool( 10, 100 );
+	}
 	
 	public ShipBlocks( World world, ChunkCoordinates shipBlock, List<ChunkCoordinates> blocks )
 	{
+		this();
+		
 		m_shipBlock = shipBlock;
 		
 		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
@@ -67,10 +99,61 @@ public class ShipBlocks implements IBlockAccess
 			);
 			m_blocks.put( relativeCoords, copyWorldStorage( world, block ) );
 		}
+	}
+	
+	public ShipBlocks( byte[] data )
+	{
+		this();
 		
-		// init defaults
-		m_airBlockStorage = new BlockStorage();
-		m_vecPool = new Vec3Pool( 10, 100 );
+		DataInputStream in = new DataInputStream( new ByteArrayInputStream( data ) );
+		try
+		{
+			// read the version number
+			int version = in.readInt();
+			if( version != 0 )
+			{
+				System.err.println( "ShipBlocks persistence version " + version + " not supported! Blocks loading skipped!" );
+			}
+			else
+			{
+				// read the ship block coords
+				m_shipBlock = new ChunkCoordinates();
+				m_shipBlock.posX = in.readInt();
+				m_shipBlock.posY = in.readInt();
+				m_shipBlock.posZ = in.readInt();
+				
+				// read the blocks
+				m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
+				int numBlocks = in.readInt();
+				for( int i=0; i<numBlocks; i++ )
+				{
+					ChunkCoordinates coords = new ChunkCoordinates(
+						in.readInt(),
+						in.readInt(),
+						in.readInt()
+					);
+					
+					BlockStorage storage = new BlockStorage();
+					storage.readData( in );
+					
+					m_blocks.put( coords, storage );
+				}
+			}
+		}
+		catch( IOException ex )
+		{
+			throw new Error( "Unable to deserialize blocks!", ex );
+		}
+	}
+	
+	public ShipBlocks( String data )
+	{
+		this( Base64.decodeBase64( data ) );
+	}
+	
+	public int getNumBlocks( )
+	{
+		return m_blocks.size();
 	}
 	
 	public Iterable<ChunkCoordinates> blocks( )
@@ -285,6 +368,49 @@ public class ShipBlocks implements IBlockAccess
 			max.posZ = Math.max( max.posZ, coords.posZ );
 		}
 		return max;
+	}
+	
+	public byte[] getData( )
+	{
+		ByteArrayOutputStream data = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream( data );
+		
+		// UNDONE: we could use compression here if we need it
+		
+		try
+		{
+			// write out persistence version number
+			out.writeInt( 0 );
+			
+			// write the ship block coords
+			out.writeInt( m_shipBlock.posX );
+			out.writeInt( m_shipBlock.posY );
+			out.writeInt( m_shipBlock.posZ );
+			
+			// write out the blocks
+			out.writeInt( m_blocks.size() );
+			for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+			{
+				ChunkCoordinates coords = entry.getKey();
+				BlockStorage storage = entry.getValue();
+				
+				out.writeInt( coords.posX );
+				out.writeInt( coords.posY );
+				out.writeInt( coords.posZ );
+				storage.writeData( out );
+			}
+		}
+		catch( IOException ex )
+		{
+			throw new Error( "Unable to serialize blocks!", ex );
+		}
+		
+		return data.toByteArray();
+	}
+	
+	public String getDataString( )
+	{
+		return Base64.encodeBase64String( getData() );
 	}
 	
 	private BlockStorage copyWorldStorage( World world, ChunkCoordinates coords )

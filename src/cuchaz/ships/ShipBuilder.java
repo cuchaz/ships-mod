@@ -63,7 +63,8 @@ public class ShipBuilder
 		// UNDONE: replace blocks with a ship entity
 		
 		// TEMP: for now, just spawn a ship entity
-		EntityShip ship = new EntityShip( world, new ShipBlocks( world, new ChunkCoordinates( x, y, z ), m_blocks ) );
+		EntityShip ship = new EntityShip( world );
+		ship.setBlocks( new ShipBlocks( world, new ChunkCoordinates( x, y, z ), m_blocks ) );
 		ship.setPositionAndRotation( x, y + 2 /* TEMP */, z, 0, 0 );
 		boolean spawnSuccess = world.spawnEntityInWorld( ship );
 		

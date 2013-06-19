@@ -9,21 +9,41 @@ import net.minecraft.world.World;
 
 public class EntityShip extends Entity
 {
+	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
+	private static final int WatcherIdBlocks = 2;
+	
 	private ShipBlocks m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
 	private EntityShipBlock[] m_blockEntitiesArray;
 	
-	public EntityShip( World world, ShipBlocks blocks )
+	public EntityShip( World world )
 	{
 		super( world );
+		yOffset = 0.0f;
+		
+		m_blocks = null;
+		m_blockEntities = null;
+		m_blockEntitiesArray = null;
+		
+		// TEMP
+		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip created!" );
+	}
+	
+	public void setBlocks( ShipBlocks blocks )
+	{
+		// TEMP
+		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip got blocks!" );
 		
 		m_blocks = blocks;
+		
+		// save the block data into the data watcher so it gets sync'd to the client
+		dataWatcher.updateObject( WatcherIdBlocks, m_blocks.getDataString() );
 		
 		// build the sub entities
 		m_blockEntities = new TreeMap<ChunkCoordinates, EntityShipBlock>();
 		for( ChunkCoordinates block : m_blocks.blocks() )
 		{
-			EntityShipBlock entityBlock = new EntityShipBlock( world, this, block );
+			EntityShipBlock entityBlock = new EntityShipBlock( worldObj, this, block );
 			m_blockEntities.put( block, entityBlock );
 		}
 		
@@ -31,15 +51,33 @@ public class EntityShip extends Entity
 		m_blockEntitiesArray = new EntityShipBlock[m_blockEntities.size()];
 		m_blockEntities.values().toArray( m_blockEntitiesArray );
 		
-		// init defaults
-		motionX = 0.0;
-		motionY = 0.0;
-		motionZ = 0.0;
-		prevPosX = posX;
-		prevPosY = posY;
-		prevPosZ = posZ;
-		yOffset = 0.0f;
 		computeBoundingBox();
+		
+		// TEMP
+		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip initialized!" );
+		System.out.println( "\tShip spawned at (" + posX + "," + posY + "," + posZ + ") " + ( isDead ? "Dead" : "Alive" ) + " " + ( addedToChunk ? "Added" : "Detatched" ) );
+		System.out.println( String.format(
+			"\tbounding box [%.2f,%.2f] [%.2f,%.2f] [%.2f,%.2f]",
+			boundingBox.minX, boundingBox.maxX,
+			boundingBox.minY, boundingBox.maxY,
+			boundingBox.minZ, boundingBox.maxZ
+		) );
+	}
+	
+	@Override
+	protected void readEntityFromNBT( NBTTagCompound nbt )
+	{
+		setBlocks( new ShipBlocks( nbt.getByteArray( "blocks" ) ) );
+	}
+	
+	@Override
+	protected void writeEntityToNBT( NBTTagCompound nbt )
+	{
+		// only need to save ship blocks
+		nbt.setByteArray( "blocks", m_blocks.getData() );
+		
+		// TEMP
+		System.out.println( "Wrote NBT!" );
 	}
 	
 	public ShipBlocks getBlocks( )
@@ -61,7 +99,11 @@ public class EntityShip extends Entity
 	@Override
 	protected void entityInit( )
 	{
-		// TODO Auto-generated method stub
+		// this gets called inside super.Entity( World )
+		// it seems to be used to init the data watcher
+		
+		// allocate a slot for the block data
+		dataWatcher.addObject( WatcherIdBlocks, "" );
 	}
 	
 	@Override
@@ -93,21 +135,25 @@ public class EntityShip extends Entity
 	}
 	
 	@Override
-	protected void readEntityFromNBT( NBTTagCompound nbttagcompound )
-	{
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	protected void writeEntityToNBT( NBTTagCompound nbttagcompound )
-	{
-		// TODO Auto-generated method stub
-	}
-	
-	@Override
 	public void onUpdate( )
 	{
 		super.onUpdate();
+		
+		// TEMP
+		if( worldObj.isRemote )
+		{
+			if( m_blocks == null )
+			{
+				// do we have blocks from the data watcher?
+				String blockData = dataWatcher.getWatchableObjectString( WatcherIdBlocks );
+				if( blockData != null && blockData.length() > 0 )
+				{
+					setBlocks( new ShipBlocks( blockData ) );
+				}
+			}
+			
+			// UNDONE: find a way to tell if blocks were changed
+		}
 		
 		/* make the ship fall down
 		this.prevPosX = this.posX;
@@ -118,9 +164,6 @@ public class EntityShip extends Entity
         this.moveEntity(this.motionX, this.motionY, this.motionZ);
         boolean flag = (int)this.prevPosX != (int)this.posX || (int)this.prevPosY != (int)this.posY || (int)this.prevPosZ != (int)this.posZ;
 		*/
-		
-		// here's how to despawn
-		//setDead();
 	}
 	
 	private void computeBoundingBox( )

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.Packet250CustomPayload;
@@ -19,6 +20,9 @@ public class PacketHandler implements IPacketHandler
 		
 		try
 		{
+			// UNDONE: refactor the packet system
+			// use a lookup table for this
+			// use custom packet classes?
 			if( packet.channel.equals( "makeShip" ) )
 			{
 				onBuildShip( player, packet );
