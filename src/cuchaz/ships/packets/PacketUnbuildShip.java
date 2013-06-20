@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipBuilder;
 
 public class PacketUnbuildShip extends Packet
 {
@@ -42,13 +44,19 @@ public class PacketUnbuildShip extends Packet
 	@Override
 	public void onPacketReceived( EntityPlayer player )
 	{
-		// unspawn the entity
+		// get the ship
 		Entity entity = player.worldObj.getEntityByID( m_entityId );
-		if( entity == null )
+		if( entity == null || !( entity instanceof EntityShip ) )
 		{
 			return;
 		}
+		EntityShip ship = (EntityShip)entity;
 		
-		entity.setDead();
+		// unbuild the ship
+		ShipBuilder builder = ShipBuilder.newFromShip( ship );
+		if( builder.isShipInValidUnbuildPosition() )
+		{
+			builder.unbuild();
+		}
 	}
 }

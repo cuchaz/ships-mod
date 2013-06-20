@@ -6,7 +6,6 @@ import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
 import cuchaz.ships.ContainerShip;
 import cuchaz.ships.ShipBuilder;
-import cuchaz.ships.ShipUnbuilder;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
 
@@ -23,7 +22,7 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipBuild( new ContainerShip(), new ShipBuilder( world, x, y, z ) );
+			return new GuiShipBuild( new ContainerShip(), ShipBuilder.newFromWorld( world, x, y, z ) );
 		}
 	},
 	UnbuildShip
@@ -37,7 +36,7 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipUnbuild( new ContainerShip(), new ShipUnbuilder( ((ShipWorld)world).getShip() ) );
+			return new GuiShipUnbuild( new ContainerShip(), ShipBuilder.newFromShip( ((ShipWorld)world).getShip() ) );
 		}
 	};
 	

@@ -37,7 +37,7 @@ public class RenderShip extends Render
 		loadTexture( "/terrain.png" );
 		
 		// draw all the blocks!
-		for( ChunkCoordinates coords : ship.getBlocks().blocks() )
+		for( ChunkCoordinates coords : ship.getBlocks().coords() )
 		{
 			Block block = Block.blocksList[ship.getBlocks().getBlockId( coords )];
 			block.setBlockBoundsBasedOnState( m_renderBlocks.blockAccess, coords.posX, coords.posY, coords.posZ );
@@ -45,8 +45,8 @@ public class RenderShip extends Render
 			renderUnlitBlock( block, coords.posX, coords.posY, coords.posZ );
 			
 			// TEMP
-			//renderPosition( ship, ship.getBlockEntity( coords ) );
-			//renderHitbox( ship, ship.getBlockEntity( coords ) );
+			renderPosition( ship, ship.getBlockEntity( coords ) );
+			renderHitbox( ship, ship.getBlockEntity( coords ) );
 		}
 		
 		GL11.glPopMatrix();

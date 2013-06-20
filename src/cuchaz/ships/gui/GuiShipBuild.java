@@ -37,7 +37,7 @@ public class GuiShipBuild extends GuiShip
 			20,
 			GuiString.ShipBuild.getLocalizedText()
 		);
-		m_buttonBuild.enabled = m_shipBuilder.isValidShip();
+		m_buttonBuild.enabled = m_shipBuilder.isValidToBuild();
 		buttonList.add( m_buttonBuild );
 	}
 	
@@ -47,7 +47,7 @@ public class GuiShipBuild extends GuiShip
 		if( button.id == m_buttonBuild.id )
 		{
 			// tell the server to spawn a ship
-			PacketBuildShip packet = new PacketBuildShip( m_shipBuilder.x, m_shipBuilder.y, m_shipBuilder.z );
+			PacketBuildShip packet = new PacketBuildShip( m_shipBuilder.getX(), m_shipBuilder.getY(), m_shipBuilder.getZ() );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}
@@ -61,13 +61,13 @@ public class GuiShipBuild extends GuiShip
 		int textColor = ColorUtils.getGrey( 64 );
 		fontRenderer.drawString( GuiString.ShipConstruction.getLocalizedText(), LeftMargin, TopMargin, textColor );
 		
-		if( m_shipBuilder.isValidShip() )
+		if( m_shipBuilder.isValidToBuild() )
 		{
 			// show the number of blocks
 			fontRenderer.drawString( String.format( "%s: %d / %d",
 				GuiString.ShipNumBlocks.getLocalizedText(),
-				m_shipBuilder.getNumBlocks(),
-				m_shipBuilder.getMaxNumBlocks()
+				m_shipBuilder.getNumBlocksToBuild(),
+				m_shipBuilder.getMaxNumBlocksToBuild()
 			), LeftMargin, TopMargin + LineHeight*1, textColor );
 		}
 		else

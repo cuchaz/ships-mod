@@ -24,16 +24,10 @@ public class EntityShip extends Entity
 		m_blocks = null;
 		m_blockEntities = null;
 		m_blockEntitiesArray = null;
-		
-		// TEMP
-		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip created!" );
 	}
 	
 	public void setBlocks( ShipWorld blocks )
 	{
-		// TEMP
-		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip got blocks!" );
-		
 		m_blocks = blocks;
 		blocks.setShip( this );
 		
@@ -42,7 +36,7 @@ public class EntityShip extends Entity
 		
 		// build the sub entities
 		m_blockEntities = new TreeMap<ChunkCoordinates, EntityShipBlock>();
-		for( ChunkCoordinates block : m_blocks.blocks() )
+		for( ChunkCoordinates block : m_blocks.coords() )
 		{
 			EntityShipBlock entityBlock = new EntityShipBlock( worldObj, this, block );
 			m_blockEntities.put( block, entityBlock );
@@ -58,11 +52,20 @@ public class EntityShip extends Entity
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip initialized!" );
 		System.out.println( "\tShip spawned at (" + posX + "," + posY + "," + posZ + ") " + ( isDead ? "Dead" : "Alive" ) + " " + ( addedToChunk ? "Added" : "Detatched" ) );
 		System.out.println( String.format(
-			"\tbounding box [%.2f,%.2f] [%.2f,%.2f] [%.2f,%.2f]",
-			boundingBox.minX, boundingBox.maxX,
-			boundingBox.minY, boundingBox.maxY,
-			boundingBox.minZ, boundingBox.maxZ
+			"\tblock bounding box [%.2f,%.2f] [%.2f,%.2f] [%.2f,%.2f]",
+			m_blockEntitiesArray[0].boundingBox.minX, m_blockEntitiesArray[0].boundingBox.maxX,
+			m_blockEntitiesArray[0].boundingBox.minY, m_blockEntitiesArray[0].boundingBox.maxY,
+			m_blockEntitiesArray[0].boundingBox.minZ, m_blockEntitiesArray[0].boundingBox.maxZ
 		) );
+	}
+	
+	@Override
+	public void setDead( )
+	{
+		super.setDead();
+		
+		// TEMP
+		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip died!" );
 	}
 	
 	@Override

@@ -43,23 +43,33 @@ public class ShipWorld extends DetatchedWorld
 			blockId = in.readInt();
 			blockMeta = in.readInt();
 		}
+		
+		public void copyFromWorld( World world, ChunkCoordinates coords )
+		{
+			blockId = world.getBlockId( coords.posX, coords.posY, coords.posZ );
+			blockMeta = world.getBlockMetadata( coords.posX, coords.posY, coords.posZ );
+		}
+		
+		public void copyToWorld( World world, ChunkCoordinates coords )
+		{
+			world.setBlock( coords.posX, coords.posY, coords.posZ, blockId );
+			world.setBlockMetadataWithNotify( coords.posX, coords.posY, coords.posZ, blockMeta, 3 );
+		}
 	}
 	
 	// NOTE: this static var is ok since the logic loop is single-threaded
 	private static ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
 	
 	private EntityShip m_ship;
-	private ChunkCoordinates m_shipBlock;
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
 	
-	public ShipWorld( World world )
+	private ShipWorld( World world )
 	{
 		super( world, "Ship" );
 	    
 		// init defaults
 		m_ship = null;
-		m_shipBlock = null;
 		m_blocks = null;
 		m_airBlockStorage = new BlockStorage();
 	}
@@ -68,22 +78,26 @@ public class ShipWorld extends DetatchedWorld
 	{
 		this( world );
 		
-		m_shipBlock = shipBlock;
 		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
 		
 		// save the ship block
-		m_blocks.put( new ChunkCoordinates( 0, 0, 0 ), copyWorldStorage( world, m_shipBlock ) );
+		BlockStorage storage = new BlockStorage();
+		storage.copyFromWorld( world, shipBlock );
+		m_blocks.put( new ChunkCoordinates( 0, 0, 0 ), storage );
 		
 		// save the rest of the blocks
-		for( ChunkCoordinates block : blocks )
+		for( ChunkCoordinates worldCoords : blocks )
 		{
+			storage = new BlockStorage();
+			storage.copyFromWorld( world, worldCoords );
+			
 			// make all the blocks relative to the ship block
 			ChunkCoordinates relativeCoords = new ChunkCoordinates(
-				block.posX - m_shipBlock.posX,
-				block.posY - m_shipBlock.posY,
-				block.posZ - m_shipBlock.posZ
+				worldCoords.posX - shipBlock.posX,
+				worldCoords.posY - shipBlock.posY,
+				worldCoords.posZ - shipBlock.posZ
 			);
-			m_blocks.put( relativeCoords, copyWorldStorage( world, block ) );
+			m_blocks.put( relativeCoords, storage );
 		}
 	}
 	
@@ -102,12 +116,6 @@ public class ShipWorld extends DetatchedWorld
 			}
 			else
 			{
-				// read the ship block coords
-				m_shipBlock = new ChunkCoordinates();
-				m_shipBlock.posX = in.readInt();
-				m_shipBlock.posY = in.readInt();
-				m_shipBlock.posZ = in.readInt();
-				
 				// read the blocks
 				m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
 				int numBlocks = in.readInt();
@@ -137,6 +145,16 @@ public class ShipWorld extends DetatchedWorld
 		this( world, Base64.decodeBase64( data ) );
 	}
 	
+	public void restoreToWorld( World world, int x, int y, int z )
+	{
+		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+		{
+			ChunkCoordinates coords = entry.getKey();
+			BlockStorage storage = entry.getValue();
+			storage.copyToWorld( world, new ChunkCoordinates( coords.posX + x, coords.posY + y, coords.posZ + z ) );
+		}
+	}
+	
 	public EntityShip getShip( )
 	{
 		return m_ship;
@@ -151,7 +169,7 @@ public class ShipWorld extends DetatchedWorld
 		return m_blocks.size();
 	}
 	
-	public Iterable<ChunkCoordinates> blocks( )
+	public Iterable<ChunkCoordinates> coords( )
 	{
 		return m_blocks.keySet();
 	}
@@ -240,11 +258,6 @@ public class ShipWorld extends DetatchedWorld
 			// write out persistence version number
 			out.writeInt( 0 );
 			
-			// write the ship block coords
-			out.writeInt( m_shipBlock.posX );
-			out.writeInt( m_shipBlock.posY );
-			out.writeInt( m_shipBlock.posZ );
-			
 			// write out the blocks
 			out.writeInt( m_blocks.size() );
 			for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
@@ -269,13 +282,5 @@ public class ShipWorld extends DetatchedWorld
 	public String getDataString( )
 	{
 		return Base64.encodeBase64String( getData() );
-	}
-	
-	private BlockStorage copyWorldStorage( World world, ChunkCoordinates coords )
-	{
-		BlockStorage storage = new BlockStorage();
-		storage.blockId = world.getBlockId( coords.posX, coords.posY, coords.posZ );
-		storage.blockMeta = world.getBlockMetadata( coords.posX, coords.posY, coords.posZ );
-		return storage;
 	}
 }

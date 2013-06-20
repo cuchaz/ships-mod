@@ -52,8 +52,8 @@ public class PacketBuildShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// spawn the ship
-		ShipBuilder builder = new ShipBuilder( player.worldObj, m_x, m_y, m_z );
-		if( builder.isValidShip() )
+		ShipBuilder builder = ShipBuilder.newFromWorld( player.worldObj, m_x, m_y, m_z );
+		if( builder.isValidToBuild() )
 		{
 			builder.build();
 		}

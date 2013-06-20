@@ -24,17 +24,13 @@ public class EntityShipBlock extends Entity
 		this.coords = coords;
 		
 		// init defaults
-		motionX = 0.0;
-		motionY = 0.0;
-		motionZ = 0.0;
-		posX = coords.posX + m_ship.posX;
-		posY = coords.posY + m_ship.posY;
-		posZ = coords.posZ + m_ship.posZ;
-		prevPosX = posX;
-		prevPosY = posY;
-		prevPosZ = posZ;
-		yOffset = 0.0f;
 		setSize( 1.0f, 1.0f );
+		setPosition(
+			coords.posX + m_ship.posX,
+			coords.posY + m_ship.posY,
+			coords.posZ + m_ship.posZ
+		);
+		yOffset = 0.0f;
 	}
 	
 	@Override
