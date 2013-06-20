@@ -1,12 +1,15 @@
-package cuchaz.ships;
+package cuchaz.ships.gui;
 
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
 public enum GuiString
 {
-	ShipTitle( "Ship Dashboard" ),
+	ShipConstruction( "Ship Construction" ),
+	ShipDashboard( "Ship Dashboard" ),
 	ShipNumBlocks( "Blocks" ),
-	ShipTooLarge( "Ship is too large!" );
+	ShipTooLarge( "Ship is too large!" ),
+	ShipBuild( "Build Ship" ),
+	ShipUnbuild( "Unbuild Ship" );
 	
 	private String m_unlocalizedText;
 	

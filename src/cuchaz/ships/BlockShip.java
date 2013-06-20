@@ -9,6 +9,7 @@ import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.ships.gui.Gui;
 
 public class BlockShip extends Block
 {
@@ -51,16 +52,17 @@ public class BlockShip extends Block
 	}
 	
 	@Override
-	public boolean onBlockActivated( World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9 )
+	public boolean onBlockActivated( World world, int x, int y, int z, EntityPlayer player, int side, float xOffset, float yOffset, float zOffset )
 	{
-		// show the ship UI
-		Gui.Ship.open( player, x, y, z );
+		// are we in the world, or on the ship?
+		if( world instanceof ShipWorld )
+		{
+			Gui.UnbuildShip.open( player, world, x, y, z );
+		}
+		else
+		{
+			Gui.BuildShip.open( player, world, x, y, z );
+		}
 		return true;
-	}
-	
-	@Override
-	public void breakBlock( World world, int x, int y, int z, int side, int meta )
-	{
-		// UNDONE: destruct the ship
 	}
 }

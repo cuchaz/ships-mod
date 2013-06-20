@@ -1,8 +1,5 @@
 package cuchaz.ships;
 
-import static net.minecraftforge.common.ForgeDirection.DOWN;
-import static net.minecraftforge.common.ForgeDirection.UP;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -12,27 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockFarmland;
-import net.minecraft.block.BlockHalfSlab;
-import net.minecraft.block.BlockHopper;
-import net.minecraft.block.BlockPoweredOre;
-import net.minecraft.block.BlockStairs;
-import net.minecraft.block.material.Material;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.Vec3Pool;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraftforge.common.ForgeDirection;
 
 import org.apache.commons.codec.binary.Base64;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-public class ShipBlocks implements IBlockAccess
+public class ShipWorld extends DetatchedWorld
 {
 	private static class BlockStorage
 	{
@@ -65,24 +48,27 @@ public class ShipBlocks implements IBlockAccess
 	// NOTE: this static var is ok since the logic loop is single-threaded
 	private static ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
 	
+	private EntityShip m_ship;
 	private ChunkCoordinates m_shipBlock;
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
-	private final Vec3Pool m_vecPool;
 	
-	public ShipBlocks( )
+	public ShipWorld( World world )
 	{
+		super( world, "Ship" );
+	    
 		// init defaults
+		m_ship = null;
+		m_shipBlock = null;
+		m_blocks = null;
 		m_airBlockStorage = new BlockStorage();
-		m_vecPool = new Vec3Pool( 10, 100 );
 	}
 	
-	public ShipBlocks( World world, ChunkCoordinates shipBlock, List<ChunkCoordinates> blocks )
+	public ShipWorld( World world, ChunkCoordinates shipBlock, List<ChunkCoordinates> blocks )
 	{
-		this();
+		this( world );
 		
 		m_shipBlock = shipBlock;
-		
 		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
 		
 		// save the ship block
@@ -101,9 +87,9 @@ public class ShipBlocks implements IBlockAccess
 		}
 	}
 	
-	public ShipBlocks( byte[] data )
+	public ShipWorld( World world, byte[] data )
 	{
-		this();
+		this( world );
 		
 		DataInputStream in = new DataInputStream( new ByteArrayInputStream( data ) );
 		try
@@ -146,9 +132,18 @@ public class ShipBlocks implements IBlockAccess
 		}
 	}
 	
-	public ShipBlocks( String data )
+	public ShipWorld( World world, String data )
 	{
-		this( Base64.decodeBase64( data ) );
+		this( world, Base64.decodeBase64( data ) );
+	}
+	
+	public EntityShip getShip( )
+	{
+		return m_ship;
+	}
+	public void setShip( EntityShip val )
+	{
+		m_ship = val;
 	}
 	
 	public int getNumBlocks( )
@@ -191,21 +186,6 @@ public class ShipBlocks implements IBlockAccess
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int minBlockBrightness )
-	{
-		int skyBrightness = 15;
-        int blockBrightness = 15;
-        
-        if( blockBrightness < minBlockBrightness )
-        {
-        	blockBrightness = minBlockBrightness;
-        }
-        
-        return skyBrightness << 20 | blockBrightness << 4;
-	}
-	
-	@Override
 	public int getBlockMetadata( int x, int y, int z )
 	{
 		m_lookupCoords.set( x, y, z );
@@ -218,132 +198,10 @@ public class ShipBlocks implements IBlockAccess
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public float getBrightness( int x, int y, int z, int minLight )
+	public boolean setBlock( int par1, int par2, int par3, int par4, int par5, int par6 )
 	{
-		// apparently only used for tripwires and piston extensions. ie, we don't care
-		return 0;
-	}
-	
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getLightBrightness( int x, int y, int z )
-	{
-		// how bright is this block intrinsically? (eg fluids)
-		// returns [0-1] where 1 is the most bright
-		
-		// fluids aren't part of the boat. ie, we don't care
-		return 0;
-	}
-	
-	@Override
-	public Material getBlockMaterial( int x, int y, int z )
-	{
-		int blockId = getBlockId( x, y, z );
-        return blockId == 0 ? Material.air : Block.blocksList[blockId].blockMaterial;
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public boolean isBlockOpaqueCube( int x, int y, int z )
-	{
-		Block block = Block.blocksList[getBlockId( x, y, z )];
-		return block == null ? false : block.isOpaqueCube();
-	}
-
-	@Override
-	public boolean isBlockNormalCube( int x, int y, int z )
-	{
-		Block block = Block.blocksList[getBlockId( x, y, z )];
-		
-		// copied from Block.isBlockNormalCube() since I can't change the World argument to IBlockAccess
-		return block == null ? false : block.blockMaterial.isOpaque() && block.renderAsNormalBlock() && !block.canProvidePower();
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public boolean isAirBlock( int x, int y, int z )
-	{
-		return getBlockId( x, y, z ) == 0;
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public BiomeGenBase getBiomeGenForCoords( int x, int z )
-	{
-		// the biome doesn't matter for our ship
-		return BiomeGenBase.plains;
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public int getHeight( )
-	{
-		// copied from World
-		return 256;
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public boolean extendedLevelsInChunkCache( )
-	{
+		// do nothing. Blocks are immutable
 		return false;
-	}
-	
-	@Override
-	@SideOnly( Side.CLIENT )
-	public boolean doesBlockHaveSolidTopSurface( int x, int y, int z )
-	{
-		return isBlockSolidOnSide( x, y, z, ForgeDirection.UP, false );
-	}
-	
-	@Override
-	public Vec3Pool getWorldVec3Pool( )
-	{
-		return m_vecPool;
-	}
-	
-	@Override
-	public int isBlockProvidingPowerTo( int x, int y, int z, int direction )
-	{
-		Block block = Block.blocksList[getBlockId( x, y, z )];
-		return block == null ? 0 : block.isProvidingStrongPower( this, x, y, z, direction );
-	}
-
-	@Override
-	public boolean isBlockSolidOnSide( int x, int y, int z, ForgeDirection side, boolean _default )
-	{
-		Block block = Block.blocksList[getBlockId( x, y, z )];
-		if( block == null )
-		{
-			return false;
-		}
-		
-		// copied from Block.isBlockSolidOnSide() since I can't change the World argument to IBlockAccess
-		int meta = getBlockMetadata( x, y, z );
-        if( block instanceof BlockHalfSlab )
-        {
-            return ( (meta & 8) == 8 && (side == UP) ) || block.isOpaqueCube();
-        }
-        else if( block instanceof BlockFarmland )
-        {
-            return side != DOWN && side != UP;
-        }
-        else if( block instanceof BlockStairs )
-        {
-            boolean flipped = (meta & 4) != 0;
-            return ( (meta & 3) + side.ordinal() == 5 ) || ( side == UP && flipped );
-        }
-        else if( block instanceof BlockHopper && side == UP )
-        {
-            return true;
-        }
-        else if( block instanceof BlockPoweredOre )
-        {
-            return true;
-        }
-        
-        return isBlockNormalCube( x, y, z );
 	}
 	
 	public ChunkCoordinates getMin( )

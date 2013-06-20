@@ -19,9 +19,19 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
+import cuchaz.ships.gui.Gui;
+import cuchaz.ships.gui.GuiString;
+import cuchaz.ships.packets.PacketBuildShip;
+import cuchaz.ships.packets.PacketHandler;
+import cuchaz.ships.packets.PacketUnbuildShip;
 
 @Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
-@NetworkMod( clientSideRequired=true, serverSideRequired=true, channels={ "makeShip" }, packetHandler=PacketHandler.class )
+@NetworkMod(
+	clientSideRequired = true,
+	serverSideRequired = true,
+	channels = { PacketBuildShip.Channel, PacketUnbuildShip.Channel },
+	packetHandler = PacketHandler.class
+)
 // NOTE: 20-character limit for channel names
 public class Ships
 {
@@ -58,13 +68,13 @@ public class Ships
 			@Override
 			public Object getServerGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
 			{
-				return Gui.values()[id].getContainer( player, x, y, z );
+				return Gui.values()[id].getContainer( player, world, x, y, z );
 			}
 			
 			@Override
 			public Object getClientGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
 			{
-				return Gui.values()[id].getGui( player, x, y, z );
+				return Gui.values()[id].getGui( player, world, x, y, z );
 			}
 		} );
 	}

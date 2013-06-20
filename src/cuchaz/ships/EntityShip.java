@@ -12,7 +12,7 @@ public class EntityShip extends Entity
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
 	
-	private ShipBlocks m_blocks;
+	private ShipWorld m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
 	private EntityShipBlock[] m_blockEntitiesArray;
 	
@@ -29,12 +29,13 @@ public class EntityShip extends Entity
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip created!" );
 	}
 	
-	public void setBlocks( ShipBlocks blocks )
+	public void setBlocks( ShipWorld blocks )
 	{
 		// TEMP
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip got blocks!" );
 		
 		m_blocks = blocks;
+		blocks.setShip( this );
 		
 		// save the block data into the data watcher so it gets sync'd to the client
 		dataWatcher.updateObject( WatcherIdBlocks, m_blocks.getDataString() );
@@ -67,7 +68,7 @@ public class EntityShip extends Entity
 	@Override
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
-		setBlocks( new ShipBlocks( nbt.getByteArray( "blocks" ) ) );
+		setBlocks( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
 	}
 	
 	@Override
@@ -80,7 +81,7 @@ public class EntityShip extends Entity
 		System.out.println( "Wrote NBT!" );
 	}
 	
-	public ShipBlocks getBlocks( )
+	public ShipWorld getBlocks( )
 	{
 		return m_blocks;
 	}
@@ -148,7 +149,7 @@ public class EntityShip extends Entity
 				String blockData = dataWatcher.getWatchableObjectString( WatcherIdBlocks );
 				if( blockData != null && blockData.length() > 0 )
 				{
-					setBlocks( new ShipBlocks( blockData ) );
+					setBlocks( new ShipWorld( worldObj, blockData ) );
 				}
 			}
 			

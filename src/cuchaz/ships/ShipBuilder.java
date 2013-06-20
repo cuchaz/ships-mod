@@ -4,6 +4,7 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockUtils;
 
@@ -21,15 +22,12 @@ public class ShipBuilder
 		this.x = x;
 		this.y = y;
 		this.z = z;
-	}
-
-	public void build( )
-	{
+		
 		// find all the blocks connected to the ship block
 		m_blocks = BlockUtils.graphSearch( world, x, y, z, getMaxNumBlocks(), new BlockUtils.BlockValidator( )
 		{
 			@Override
-			public boolean isValid( World world, int x, int y, int z )
+			public boolean isValid( IBlockAccess world, int x, int y, int z )
 			{
 				int blockId = world.getBlockId( x, y, z );
 				return blockId != 0 && blockId != Block.waterStill.blockID && blockId != Block.waterMoving.blockID;
@@ -57,18 +55,15 @@ public class ShipBuilder
 		return 16;
 	}
 	
-	public void makeShip( )
+	public boolean build( )
 	{
 		// UNDONE: change all the ship blocks to air
 		// UNDONE: replace blocks with a ship entity
 		
 		// TEMP: for now, just spawn a ship entity
 		EntityShip ship = new EntityShip( world );
-		ship.setBlocks( new ShipBlocks( world, new ChunkCoordinates( x, y, z ), m_blocks ) );
+		ship.setBlocks( new ShipWorld( world, new ChunkCoordinates( x, y, z ), m_blocks ) );
 		ship.setPositionAndRotation( x, y + 2 /* TEMP */, z, 0, 0 );
-		boolean spawnSuccess = world.spawnEntityInWorld( ship );
-		
-		// TEMP
-		System.out.println( ( world.isRemote ? "CLIENT" : "SERVER" ) + " " + ( spawnSuccess ? "Made ship!" : "Ship spawn failed!" ) );
+		return world.spawnEntityInWorld( ship );
 	}
 }
