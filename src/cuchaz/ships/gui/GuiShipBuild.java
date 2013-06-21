@@ -80,5 +80,6 @@ public class GuiShipBuild extends GuiShip
 		}
 		
 		// UNDONE: choose a ship name
+		// UNDONE: show reasons for invalid build
 	}
 }

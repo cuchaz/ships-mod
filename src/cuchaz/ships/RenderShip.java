@@ -45,8 +45,8 @@ public class RenderShip extends Render
 			renderUnlitBlock( block, coords.posX, coords.posY, coords.posZ );
 			
 			// TEMP
-			renderPosition( ship, ship.getBlockEntity( coords ) );
-			renderHitbox( ship, ship.getBlockEntity( coords ) );
+			//renderPosition( ship, ship.getBlockEntity( coords ) );
+			//renderHitbox( ship, ship.getBlockEntity( coords ) );
 		}
 		
 		GL11.glPopMatrix();

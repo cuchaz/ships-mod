@@ -2,19 +2,24 @@ package cuchaz.ships;
 
 import java.util.TreeMap;
 
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public class EntityShip extends Entity
 {
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
+	private static final int WatcherIdShipType = 3;
+	private static final int WatcherIdSurfaceHeight = 4;
 	
 	private ShipWorld m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
 	private EntityShipBlock[] m_blockEntitiesArray;
+	private ShipPhysics m_physics;
 	
 	public EntityShip( World world )
 	{
@@ -24,14 +29,28 @@ public class EntityShip extends Entity
 		m_blocks = null;
 		m_blockEntities = null;
 		m_blockEntitiesArray = null;
+		m_physics = null;
+	}
+	
+	@Override
+	protected void entityInit( )
+	{
+		// this gets called inside super.Entity( World )
+		// it seems to be used to init the data watcher
+		
+		// allocate a slot for the block data
+		dataWatcher.addObject( WatcherIdBlocks, "" );
+		dataWatcher.addObject( WatcherIdShipType, 0 );
+		dataWatcher.addObject( WatcherIdSurfaceHeight, -1 );
 	}
 	
 	public void setBlocks( ShipWorld blocks )
 	{
 		m_blocks = blocks;
 		blocks.setShip( this );
+		m_physics = new ShipPhysics( m_blocks );
 		
-		// save the block data into the data watcher so it gets sync'd to the client
+		// save the data into the data watcher so it gets sync'd to the client
 		dataWatcher.updateObject( WatcherIdBlocks, m_blocks.getDataString() );
 		
 		// build the sub entities
@@ -48,15 +67,40 @@ public class EntityShip extends Entity
 		
 		computeBoundingBox();
 		
+		// do we not know where the water surface is yet?
+		if( getSurfaceHeight() == -1 )
+		{
+			// find the water surface, it's guaranteed to be below the ship origin
+			int x = MathHelper.floor_double( posX );
+			int z = MathHelper.floor_double( posZ );
+			for( int y=MathHelper.floor_double( posY ); y>=0; y-- )
+			{
+				Material material = worldObj.getBlockMaterial( x, y, z );
+				
+				if( material == Material.air )
+				{
+					continue;
+				}
+				
+				// if it's water, we win!! =D
+				if( material.isLiquid() )
+				{
+					setSurfaceHeight( y + 1 );
+					break;
+				}
+			}
+		}
+		
 		// TEMP
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip initialized!" );
-		System.out.println( "\tShip spawned at (" + posX + "," + posY + "," + posZ + ") " + ( isDead ? "Dead" : "Alive" ) + " " + ( addedToChunk ? "Added" : "Detatched" ) );
+		System.out.println( "\tShip spawned at (" + posX + "," + posY + "," + posZ + ") " + ( isDead ? "Dead" : "Alive" ) + " " + ( addedToChunk ? "Attached" : "Detatched" ) );
 		System.out.println( String.format(
 			"\tblock bounding box [%.2f,%.2f] [%.2f,%.2f] [%.2f,%.2f]",
 			m_blockEntitiesArray[0].boundingBox.minX, m_blockEntitiesArray[0].boundingBox.maxX,
 			m_blockEntitiesArray[0].boundingBox.minY, m_blockEntitiesArray[0].boundingBox.maxY,
 			m_blockEntitiesArray[0].boundingBox.minZ, m_blockEntitiesArray[0].boundingBox.maxZ
 		) );
+		System.out.println( String.format( "\tWater surface at %d", getSurfaceHeight() ) );
 	}
 	
 	@Override
@@ -71,22 +115,40 @@ public class EntityShip extends Entity
 	@Override
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
+		setShipType( ShipType.values()[nbt.getInteger( "shipType" )] );
+		setSurfaceHeight( nbt.getInteger( "lastSurfaceHeight" ) );
 		setBlocks( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
 	}
 	
 	@Override
 	protected void writeEntityToNBT( NBTTagCompound nbt )
 	{
-		// only need to save ship blocks
+		nbt.setInteger( "shipType", getShipType().ordinal() );
+		nbt.setInteger( "lastSurfaceHeight", getSurfaceHeight() );
 		nbt.setByteArray( "blocks", m_blocks.getData() );
-		
-		// TEMP
-		System.out.println( "Wrote NBT!" );
 	}
 	
 	public ShipWorld getBlocks( )
 	{
 		return m_blocks;
+	}
+	
+	public ShipType getShipType( )
+	{
+		return ShipType.values()[dataWatcher.getWatchableObjectInt( WatcherIdShipType )];
+	}
+	public void setShipType( ShipType val )
+	{
+		dataWatcher.updateObject( WatcherIdShipType, val.ordinal() );
+	}
+	
+	public int getSurfaceHeight( )
+	{
+		return dataWatcher.getWatchableObjectInt( WatcherIdSurfaceHeight );
+	}
+	public void setSurfaceHeight( int val )
+	{
+		dataWatcher.updateObject( WatcherIdSurfaceHeight, val );
 	}
 	
 	@Override
@@ -98,16 +160,6 @@ public class EntityShip extends Entity
 	public EntityShipBlock getBlockEntity( ChunkCoordinates coords )
 	{
 		return m_blockEntities.get( coords );
-	}
-	
-	@Override
-	protected void entityInit( )
-	{
-		// this gets called inside super.Entity( World )
-		// it seems to be used to init the data watcher
-		
-		// allocate a slot for the block data
-		dataWatcher.addObject( WatcherIdBlocks, "" );
 	}
 	
 	@Override
@@ -143,7 +195,7 @@ public class EntityShip extends Entity
 	{
 		super.onUpdate();
 		
-		// TEMP
+		// on the client, see if the blocks loaded yet
 		if( worldObj.isRemote )
 		{
 			if( m_blocks == null )
@@ -152,6 +204,7 @@ public class EntityShip extends Entity
 				String blockData = dataWatcher.getWatchableObjectString( WatcherIdBlocks );
 				if( blockData != null && blockData.length() > 0 )
 				{
+					// then load the blocks
 					setBlocks( new ShipWorld( worldObj, blockData ) );
 				}
 			}
@@ -159,15 +212,31 @@ public class EntityShip extends Entity
 			// UNDONE: find a way to tell if blocks were changed
 		}
 		
-		/* make the ship fall down
-		this.prevPosX = this.posX;
-        this.prevPosY = this.posY;
-        this.prevPosZ = this.posZ;
-        this.motionY -= 0.01;
-        //this.noClip = this.pushOutOfBlocks(this.posX, (this.boundingBox.minY + this.boundingBox.maxY) / 2.0D, this.posZ);
-        this.moveEntity(this.motionX, this.motionY, this.motionZ);
-        boolean flag = (int)this.prevPosX != (int)this.posX || (int)this.prevPosY != (int)this.posY || (int)this.prevPosZ != (int)this.posZ;
-		*/
+		// don't do any updating until we get blocks
+		if( m_blocks == null )
+		{
+			return;
+		}
+		
+		// simulate the vertical forces
+		double upForce = m_physics.getNetUpForce( getSurfaceHeight() - posY );
+		motionY += upForce;
+		
+		// dampen the velocity
+		final double DampeningFactor = 0.9;
+		motionX *= DampeningFactor;
+		motionY *= DampeningFactor;
+		motionZ *= DampeningFactor;
+		
+		// apply motion
+		setPosition(
+			posX + motionX,
+			posY + motionY,
+			posZ + motionZ
+		);
+		
+		// UNDONE: check for collisions
+		// UNDONE: can't walk on the floating ship... something is weird with player collision
 	}
 	
 	private void computeBoundingBox( )
