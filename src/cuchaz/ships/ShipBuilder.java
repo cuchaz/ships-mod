@@ -1,87 +1,66 @@
 package cuchaz.ships;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.Envelopes;
 
 public class ShipBuilder
 {
+	public static enum BuildFlag
+	{
+		RightNumberOfBlocks,
+		HasWaterBelow,
+		HasAirAbove,
+		FoundWaterHeight;
+	}
+	
 	private World m_world;
 	private int m_x;
 	private int m_y;
 	private int m_z;
-	private List<ChunkCoordinates> m_blocksToBuild;
 	private ShipType m_shipType;
-	private EntityShip m_ship;
-	private boolean m_isValidToBuildRightNumberOfBlocks;
-	private boolean m_isValidToBuildNotSubmerged;
-	private boolean m_isValidToBuildHasWaterBelow;
+	private List<ChunkCoordinates> m_blocks; // NOTE: blocks are in world coordinates
+	private List<Boolean> m_buildFlags;
+	private Envelopes m_envelopes;
 	
-	private ShipBuilder( World world, int x, int y, int z, List<ChunkCoordinates> blocksToBuild, ShipType shipType, EntityShip ship )
+	public ShipBuilder( World world, int x, int y, int z )
 	{
 		m_world = world;
 		m_x = x;
 		m_y = y;
 		m_z = z;
-		m_blocksToBuild = blocksToBuild;
-		m_shipType = shipType;
-		m_ship = ship;
 		
-		// init defaults
-		m_isValidToBuildRightNumberOfBlocks = false;
-		m_isValidToBuildNotSubmerged = false;
-		m_isValidToBuildHasWaterBelow = false;
-	}
-	
-	public static ShipBuilder newFromWorld( World world, int x, int y, int z )
-	{
-		// UNDONE: get the ship type from the block metadata
-		ShipType shipType = ShipType.Small;
+		// get the ship type from the block
+		m_shipType = Ships.instance.BlockShip.getShipType( world, x, y, z );
 		
 		// find all the blocks connected to the ship block
-		List<ChunkCoordinates> blocks = BlockUtils.graphSearch(
+		m_blocks = BlockUtils.graphSearch(
 			world, x, y, z,
-			shipType.getMaxNumBlocks(),
+			m_shipType.getMaxNumBlocks(),
 			new BlockUtils.BlockValidator( )
 			{
 				@Override
 				public boolean isValid( IBlockAccess world, int x, int y, int z )
 				{
-					Material material = world.getBlockMaterial( x, y, z );
-					return material != Material.air && !material.isLiquid() && material != Material.fire;
+					return !isShipSeparatorBlock( world, x, y, z );
 				}
 			}
 		);
 		
-		ShipBuilder builder = new ShipBuilder(
-			world, x, y, z,
-			blocks,
-			shipType,
-			null
-		);
+		// also add the ship block
+		m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
 		
-		builder.computeValidChecks();
+		m_envelopes = new Envelopes( m_blocks );
 		
-		return builder;
-	}
-	
-	public static ShipBuilder newFromShip( EntityShip ship )
-	{
-		return new ShipBuilder(
-			ship.worldObj,
-			MathHelper.floor_double( ship.posX ),
-			MathHelper.floor_double( ship.posY ),
-			MathHelper.floor_double( ship.posZ ),
-			null,
-			ship.getShipType(),
-			ship
-		);
+		computeBuildFlags();
 	}
 	
 	public int getX( )
@@ -99,123 +78,174 @@ public class ShipBuilder
 		return m_z;
 	}
 	
-	public EntityShip getShip( )
+	public ShipType getShipType( )
 	{
-		return m_ship;
+		return m_shipType;
 	}
 	
-	public int getNumBlocksToBuild( )
+	public int getNumBlocks( )
 	{
-		return m_blocksToBuild.size();
+		// don't count the ship block towards the size quota
+		return m_blocks.size() - 1;
 	}
 	
-	public int getMaxNumBlocksToBuild( )
+	public boolean getBuildFlag( BuildFlag flag )
 	{
-		// UNDONE: let the meta encode the quality of the block
-		// and hence, the allowed size of the ship
-		//int meta = world.getBlockMetadata( x, y, z );
-		
-		// TEMP: just use 16 for now
-		return 16;
+		return m_buildFlags.get( flag.ordinal() );
+	}
+	private void setBuildFlag( BuildFlag flag, boolean val )
+	{
+		m_buildFlags.set( flag.ordinal(), val );
 	}
 	
 	public boolean isValidToBuild( )
 	{
-		return m_isValidToBuildRightNumberOfBlocks
-			&& m_isValidToBuildNotSubmerged
-			&& m_isValidToBuildHasWaterBelow;
-		// UNDONE: remove not submerged requirement
+		boolean isValid = true;
+		for( BuildFlag flag : BuildFlag.values() )
+		{
+			isValid = isValid && getBuildFlag( flag );
+		}
+		return isValid;
 	}
 	
-	public boolean build( )
+	public EntityShip build( )
 	{
+		int waterHeight = computeWaterHeight();
+		
 		// spawn a ship entity
-		m_ship = new EntityShip( m_world );
-		m_ship.setShipType( m_shipType );
-		m_ship.setPositionAndRotation( m_x, m_y, m_z, 0, 0 );
-		m_ship.setBlocks( new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocksToBuild ) );
-		boolean isSpawnSuccessful = m_world.spawnEntityInWorld( m_ship );
+		EntityShip ship = new EntityShip( m_world );
+		ship.setPositionAndRotation( m_x, m_y, m_z, 0, 0 );
+		ship.setShipType( m_shipType );
+		ship.setWaterHeight( waterHeight );
+		ship.setBlocks( new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks ) );
 		
-		if( isSpawnSuccessful )
+		if( !m_world.spawnEntityInWorld( ship ) )
 		{
-			// remove all the blocks from the world
-			for( ChunkCoordinates block : m_blocksToBuild )
+			return null;
+		}
+		
+		// remove all the blocks from the world
+		for( ChunkCoordinates coords : m_blocks )
+		{
+			if( coords.posY >= waterHeight )
 			{
-				m_world.setBlockToAir( block.posX, block.posY, block.posZ );
+				m_world.setBlockToAir( coords.posX, coords.posY, coords.posZ );
 			}
-			m_world.setBlockToAir( m_x, m_y, m_z );
-		}
-		
-		return isSpawnSuccessful;
-	}
-	
-	public boolean isShipInValidUnbuildPosition( )
-	{
-		// UNDONE: actually implement this check
-		return true;
-	}
-	
-	public void unbuild( )
-	{
-		// unspawn the ship
-		m_ship.setDead();
-		
-		// restore all the blocks
-		m_ship.getBlocks().restoreToWorld( m_world, m_x, m_y, m_z );
-	}
-	
-	private void computeValidChecks( )
-	{
-		// right number of blocks
-		m_isValidToBuildRightNumberOfBlocks = m_blocksToBuild != null
-			&& !m_blocksToBuild.isEmpty()
-			&& m_blocksToBuild.size() <= getMaxNumBlocksToBuild();
-		
-		// not submerged
-		if( m_blocksToBuild == null )
-		{
-			m_isValidToBuildNotSubmerged = true;
-		}
-		else
-		{
-			m_isValidToBuildNotSubmerged = true;
-			for( ChunkCoordinates coords : m_blocksToBuild )
+			else
 			{
-				for( int i=0; i<4; i++ )
+				m_world.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+			}
+		}
+		m_world.setBlockToAir( m_x, m_y, m_z );
+		
+		return ship;
+	}
+	
+	private int computeWaterHeight( )
+	{
+		// for each column in the ship or outside it
+		for( int x=m_envelopes.getBoundingBox().minX-1; x<=m_envelopes.getBoundingBox().maxX+1; x++ )
+		{
+			for( int z=m_envelopes.getBoundingBox().minZ-1; z<=m_envelopes.getBoundingBox().maxZ+1; z++ )
+			{
+				int waterHeight = computeWaterHeight( x, z );
+				if( waterHeight != -1 )
 				{
-					BlockSide side = BlockSide.getByXZOffset( BlockSide.North, i );
-					Material material = m_world.getBlockMaterial(
-						coords.posX + side.getDx(),
-						coords.posY + side.getDy(),
-						coords.posZ + side.getDz()
-					);
-					if( material.isLiquid() )
-					{
-						m_isValidToBuildNotSubmerged = false;
-						break;
-					}
+					return waterHeight;
 				}
 			}
 		}
+		return -1;
+	}
+
+	private int computeWaterHeight( int x, int z )
+	{
+		// start at the top of the box
+		int y = m_envelopes.getBoundingBox().maxY+1;
+		
+		// drop until we hit air
+		boolean foundAir = false;
+		for( ; y>=0; y-- )
+		{
+			if( m_world.getBlockMaterial( x, y, z ) == Material.air )
+			{
+				foundAir = true;
+				break;
+			}
+		}
+		
+		if( !foundAir )
+		{
+			return -1;
+		}
+		
+		// keep dropping until we hit water
+		for( ; y>=0; y-- )
+		{
+			if( m_world.getBlockMaterial( x, y, z ).isLiquid() )
+			{
+				return y + 1;
+			}
+		}
+		
+		return -1;
+	}
+	
+	private void computeBuildFlags( )
+	{
+		// init the flags
+		m_buildFlags = new ArrayList<Boolean>( BuildFlag.values().length );
+		for( int i=0; i<BuildFlag.values().length; i++ )
+		{
+			m_buildFlags.add( false );
+		}
+		
+		// right number of blocks
+		setBuildFlag( BuildFlag.RightNumberOfBlocks,
+			m_blocks != null
+			&& !m_blocks.isEmpty()
+			&& m_blocks.size() <= m_shipType.getMaxNumBlocks()
+		);
 		
 		// has water below
-		// UNDONE: can optimize this by precomputing an xz projection
-		if( m_blocksToBuild == null )
+		setBuildFlag( BuildFlag.HasWaterBelow, false );
+		if( m_blocks != null )
 		{
-			m_isValidToBuildHasWaterBelow = false;
-		}
-		else
-		{
-			m_isValidToBuildHasWaterBelow = true;
-			for( ChunkCoordinates coords : m_blocksToBuild )
+			setBuildFlag( BuildFlag.HasWaterBelow, true );
+			for( ChunkCoordinates coords : m_envelopes.getEnvelope( BlockSide.Bottom ) )
 			{
 				if( !hasWaterBelow( coords ) )
 				{
-					m_isValidToBuildHasWaterBelow = false;
+					setBuildFlag( BuildFlag.HasWaterBelow, false );
 					break;
 				}
 			}
 		}
+		
+		// has air above
+		setBuildFlag( BuildFlag.HasAirAbove, false );
+		if( m_blocks != null )
+		{
+			for( ChunkCoordinates coords : m_envelopes.getEnvelope( BlockSide.Top ) )
+			{
+				if( m_world.getBlockMaterial( coords.posX, coords.posY + 1, coords.posZ ) == Material.air )
+				{
+					setBuildFlag( BuildFlag.HasAirAbove, true );
+					break;
+				}
+			}
+		}
+		
+		// found water height
+		setBuildFlag( BuildFlag.FoundWaterHeight, computeWaterHeight() != -1 );
+	}
+	
+	private boolean isShipSeparatorBlock( IBlockAccess world, int x, int y, int z )
+	{
+		Material material = world.getBlockMaterial( x, y, z );
+		return material == Material.air || material.isLiquid() || material == Material.fire;
+		
+		// UNDONE: add dock blocks
 	}
 	
 	private boolean hasWaterBelow( ChunkCoordinates coords )

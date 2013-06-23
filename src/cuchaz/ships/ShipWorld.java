@@ -74,28 +74,23 @@ public class ShipWorld extends DetatchedWorld
 		m_airBlockStorage = new BlockStorage();
 	}
 	
-	public ShipWorld( World world, ChunkCoordinates shipBlock, List<ChunkCoordinates> blocks )
+	public ShipWorld( World world, ChunkCoordinates originCoords, List<ChunkCoordinates> blocks )
 	{
 		this( world );
 		
 		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
 		
-		// save the ship block
-		BlockStorage storage = new BlockStorage();
-		storage.copyFromWorld( world, shipBlock );
-		m_blocks.put( new ChunkCoordinates( 0, 0, 0 ), storage );
-		
 		// save the rest of the blocks
 		for( ChunkCoordinates worldCoords : blocks )
 		{
-			storage = new BlockStorage();
+			BlockStorage storage = new BlockStorage();
 			storage.copyFromWorld( world, worldCoords );
 			
 			// make all the blocks relative to the ship block
 			ChunkCoordinates relativeCoords = new ChunkCoordinates(
-				worldCoords.posX - shipBlock.posX,
-				worldCoords.posY - shipBlock.posY,
-				worldCoords.posZ - shipBlock.posZ
+				worldCoords.posX - originCoords.posX,
+				worldCoords.posY - originCoords.posY,
+				worldCoords.posZ - originCoords.posZ
 			);
 			m_blocks.put( relativeCoords, storage );
 		}

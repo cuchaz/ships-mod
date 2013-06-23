@@ -4,9 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import cuchaz.ships.ShipBuilder;
-
 import net.minecraft.entity.player.EntityPlayer;
+import cuchaz.ships.ShipBuilder;
 
 public class PacketBuildShip extends Packet
 {
@@ -52,7 +51,7 @@ public class PacketBuildShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// spawn the ship
-		ShipBuilder builder = ShipBuilder.newFromWorld( player.worldObj, m_x, m_y, m_z );
+		ShipBuilder builder = new ShipBuilder( player.worldObj, m_x, m_y, m_z );
 		if( builder.isValidToBuild() )
 		{
 			builder.build();

@@ -29,10 +29,11 @@ import cuchaz.ships.packets.PacketUnbuildShip;
 @NetworkMod(
 	clientSideRequired = true,
 	serverSideRequired = true,
+	// NOTE: 20-character limit for channel names
 	channels = { PacketBuildShip.Channel, PacketUnbuildShip.Channel },
 	packetHandler = PacketHandler.class
 )
-// NOTE: 20-character limit for channel names
+
 public class Ships
 {
 	@Instance( "cuchaz.ships" )

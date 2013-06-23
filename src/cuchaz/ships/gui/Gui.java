@@ -22,7 +22,7 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipBuild( new ContainerShip(), ShipBuilder.newFromWorld( world, x, y, z ) );
+			return new GuiShipBuild( new ContainerShip(), new ShipBuilder( world, x, y, z ) );
 		}
 	},
 	UnbuildShip
@@ -36,7 +36,7 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipUnbuild( new ContainerShip(), ShipBuilder.newFromShip( ((ShipWorld)world).getShip() ) );
+			return new GuiShipUnbuild( new ContainerShip(), ((ShipWorld)world).getShip() );
 		}
 	};
 	

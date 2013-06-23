@@ -7,7 +7,7 @@ import java.io.IOException;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.ShipBuilder;
+import cuchaz.ships.ShipUnbuilder;
 
 public class PacketUnbuildShip extends Packet
 {
@@ -53,10 +53,10 @@ public class PacketUnbuildShip extends Packet
 		EntityShip ship = (EntityShip)entity;
 		
 		// unbuild the ship
-		ShipBuilder builder = ShipBuilder.newFromShip( ship );
-		if( builder.isShipInValidUnbuildPosition() )
+		ShipUnbuilder unbuilder = new ShipUnbuilder( ship );
+		if( unbuilder.isShipInValidUnbuildPosition() )
 		{
-			builder.unbuild();
+			unbuilder.unbuild();
 		}
 	}
 }

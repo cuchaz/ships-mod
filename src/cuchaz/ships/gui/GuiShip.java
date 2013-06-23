@@ -1,5 +1,8 @@
 package cuchaz.ships.gui;
 
+import static cuchaz.ships.gui.GuiSettings.LeftMargin;
+import static cuchaz.ships.gui.GuiSettings.LineSpacing;
+import static cuchaz.ships.gui.GuiSettings.TopMargin;
 import net.minecraft.inventory.Container;
 
 import org.lwjgl.opengl.GL11;
@@ -23,5 +26,12 @@ public abstract class GuiShip extends GuiCloseable
         GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
         mc.renderEngine.bindTexture( Ships.TexturesPath + "/gui/ship.png" );
         drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
+	}
+	
+	protected void drawText( String text, int lineNum, int textColor )
+	{
+		final int LineHeight = fontRenderer.FONT_HEIGHT + LineSpacing;
+		
+		fontRenderer.drawString( text, LeftMargin, TopMargin + LineHeight*lineNum, textColor );
 	}
 }

@@ -2,11 +2,9 @@ package cuchaz.ships;
 
 import java.util.TreeMap;
 
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public class EntityShip extends Entity
@@ -14,7 +12,7 @@ public class EntityShip extends Entity
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdShipType = 3;
-	private static final int WatcherIdSurfaceHeight = 4;
+	private static final int WatcherIdWaterHeight = 4;
 	
 	private ShipWorld m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
@@ -41,7 +39,7 @@ public class EntityShip extends Entity
 		// allocate a slot for the block data
 		dataWatcher.addObject( WatcherIdBlocks, "" );
 		dataWatcher.addObject( WatcherIdShipType, 0 );
-		dataWatcher.addObject( WatcherIdSurfaceHeight, -1 );
+		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
 	}
 	
 	public void setBlocks( ShipWorld blocks )
@@ -67,30 +65,6 @@ public class EntityShip extends Entity
 		
 		computeBoundingBox();
 		
-		// do we not know where the water surface is yet?
-		if( getSurfaceHeight() == -1 )
-		{
-			// find the water surface, it's guaranteed to be below the ship origin
-			int x = MathHelper.floor_double( posX );
-			int z = MathHelper.floor_double( posZ );
-			for( int y=MathHelper.floor_double( posY ); y>=0; y-- )
-			{
-				Material material = worldObj.getBlockMaterial( x, y, z );
-				
-				if( material == Material.air )
-				{
-					continue;
-				}
-				
-				// if it's water, we win!! =D
-				if( material.isLiquid() )
-				{
-					setSurfaceHeight( y + 1 );
-					break;
-				}
-			}
-		}
-		
 		// TEMP
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip initialized!" );
 		System.out.println( "\tShip spawned at (" + posX + "," + posY + "," + posZ + ") " + ( isDead ? "Dead" : "Alive" ) + " " + ( addedToChunk ? "Attached" : "Detatched" ) );
@@ -100,7 +74,7 @@ public class EntityShip extends Entity
 			m_blockEntitiesArray[0].boundingBox.minY, m_blockEntitiesArray[0].boundingBox.maxY,
 			m_blockEntitiesArray[0].boundingBox.minZ, m_blockEntitiesArray[0].boundingBox.maxZ
 		) );
-		System.out.println( String.format( "\tWater surface at %d", getSurfaceHeight() ) );
+		System.out.println( String.format( "\tWater surface at %d", getWaterHeight() ) );
 	}
 	
 	@Override
@@ -116,7 +90,7 @@ public class EntityShip extends Entity
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
 		setShipType( ShipType.values()[nbt.getInteger( "shipType" )] );
-		setSurfaceHeight( nbt.getInteger( "lastSurfaceHeight" ) );
+		setWaterHeight( nbt.getInteger( "waterHeight" ) );
 		setBlocks( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
 	}
 	
@@ -124,7 +98,7 @@ public class EntityShip extends Entity
 	protected void writeEntityToNBT( NBTTagCompound nbt )
 	{
 		nbt.setInteger( "shipType", getShipType().ordinal() );
-		nbt.setInteger( "lastSurfaceHeight", getSurfaceHeight() );
+		nbt.setInteger( "waterHeight", getWaterHeight() );
 		nbt.setByteArray( "blocks", m_blocks.getData() );
 	}
 	
@@ -142,13 +116,13 @@ public class EntityShip extends Entity
 		dataWatcher.updateObject( WatcherIdShipType, val.ordinal() );
 	}
 	
-	public int getSurfaceHeight( )
+	public int getWaterHeight( )
 	{
-		return dataWatcher.getWatchableObjectInt( WatcherIdSurfaceHeight );
+		return dataWatcher.getWatchableObjectInt( WatcherIdWaterHeight );
 	}
-	public void setSurfaceHeight( int val )
+	public void setWaterHeight( int val )
 	{
-		dataWatcher.updateObject( WatcherIdSurfaceHeight, val );
+		dataWatcher.updateObject( WatcherIdWaterHeight, val );
 	}
 	
 	@Override
@@ -219,7 +193,7 @@ public class EntityShip extends Entity
 		}
 		
 		// simulate the vertical forces
-		double upForce = m_physics.getNetUpForce( getSurfaceHeight() - posY );
+		double upForce = m_physics.getNetUpForce( getWaterHeight() - posY );
 		motionY += upForce;
 		
 		// dampen the velocity

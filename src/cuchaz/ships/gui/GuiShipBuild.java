@@ -1,13 +1,13 @@
 package cuchaz.ships.gui;
 
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
-import static cuchaz.ships.gui.GuiSettings.LineSpacing;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.ShipBuilder;
+import cuchaz.ships.ShipBuilder.BuildFlag;
 import cuchaz.ships.packets.PacketBuildShip;
 
 public class GuiShipBuild extends GuiShip
@@ -25,6 +25,7 @@ public class GuiShipBuild extends GuiShip
 	}
 	
 	@Override
+	@SuppressWarnings( "unchecked" )
 	public void initGui( )
 	{
 		super.initGui();
@@ -56,30 +57,46 @@ public class GuiShipBuild extends GuiShip
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
-		final int LineHeight = fontRenderer.FONT_HEIGHT + LineSpacing;
-		
 		int textColor = ColorUtils.getGrey( 64 );
-		fontRenderer.drawString( GuiString.ShipConstruction.getLocalizedText(), LeftMargin, TopMargin, textColor );
 		
-		if( m_shipBuilder.isValidToBuild() )
+		drawText( GuiString.ShipConstruction.getLocalizedText(), 0, textColor );
+		
+		String valueText;
+		
+		// right number of blocks
+		if( m_shipBuilder.getBuildFlag( BuildFlag.RightNumberOfBlocks ) )
 		{
-			// show the number of blocks
-			fontRenderer.drawString( String.format( "%s: %d / %d",
-				GuiString.ShipNumBlocks.getLocalizedText(),
-				m_shipBuilder.getNumBlocksToBuild(),
-				m_shipBuilder.getMaxNumBlocksToBuild()
-			), LeftMargin, TopMargin + LineHeight*1, textColor );
+			valueText = String.format( "%d / %d",
+				m_shipBuilder.getNumBlocks(),
+				m_shipBuilder.getShipType().getMaxNumBlocks()
+			);
 		}
 		else
 		{
-			// ship is too large
-			fontRenderer.drawString( String.format( "%s: %s",
-				GuiString.ShipNumBlocks.getLocalizedText(),
-				GuiString.ShipTooLarge.getLocalizedText()
-			), LeftMargin, TopMargin + LineHeight*1, textColor );
+			valueText = GuiString.ShipTooLarge.getLocalizedText();
 		}
+		drawText( String.format( "%s: %s", GuiString.ShipNumBlocks.getLocalizedText(), valueText ), 1, textColor );
+		
+		// has water below
+		valueText = getYesNoText( m_shipBuilder.getBuildFlag( BuildFlag.HasWaterBelow ) );
+		drawText( String.format( "%s: %s", GuiString.ShipInOrAboveWater.getLocalizedText(), valueText ), 2, textColor );
+		
+		// has air above
+		valueText = getYesNoText( m_shipBuilder.getBuildFlag( BuildFlag.HasAirAbove ) );
+		drawText( String.format( "%s: %s", GuiString.ShipHasAirAbove.getLocalizedText(), valueText ), 3, textColor );
+		
+		// found water height
+		valueText = getYesNoText( m_shipBuilder.getBuildFlag( BuildFlag.FoundWaterHeight ) );
+		drawText( String.format( "%s: %s", GuiString.ShipFoundWaterHeight.getLocalizedText(), valueText ), 4, textColor );
+		
+		// draw the ship and show the water height
+		//drawShip( m_shipBuilder.get );
 		
 		// UNDONE: choose a ship name
-		// UNDONE: show reasons for invalid build
+	}
+
+	protected String getYesNoText( boolean flag )
+	{
+		return flag ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText();
 	}
 }

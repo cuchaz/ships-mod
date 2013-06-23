@@ -7,24 +7,26 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.ColorUtils;
-import cuchaz.ships.ShipBuilder;
+import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipUnbuilder;
 import cuchaz.ships.packets.PacketUnbuildShip;
 
 public class GuiShipUnbuild extends GuiShip
 {
-	private ShipBuilder m_shipBuilder;
+	private EntityShip m_ship;
 	private GuiButton m_buttonUnmakeShip;
 	
-	public GuiShipUnbuild( Container container, ShipBuilder unbuilder )
+	public GuiShipUnbuild( Container container, EntityShip ship )
 	{
 		super( container );
 		
-		m_shipBuilder = unbuilder;
+		m_ship = ship;
 		
 		m_buttonUnmakeShip = null;
 	}
 	
 	@Override
+	@SuppressWarnings( "unchecked" )
 	public void initGui( )
 	{
 		super.initGui();
@@ -37,7 +39,8 @@ public class GuiShipUnbuild extends GuiShip
 			20,
 			GuiString.ShipUnbuild.getLocalizedText()
 		);
-		m_buttonUnmakeShip.enabled = m_shipBuilder.isShipInValidUnbuildPosition();
+		ShipUnbuilder unbuilder = new ShipUnbuilder( m_ship );
+		m_buttonUnmakeShip.enabled = unbuilder.isShipInValidUnbuildPosition();
 		buttonList.add( m_buttonUnmakeShip );
 	}
 	
@@ -47,7 +50,7 @@ public class GuiShipUnbuild extends GuiShip
 		if( button.id == m_buttonUnmakeShip.id )
 		{
 			// tell the server to unspwan the ship
-			PacketUnbuildShip packet = new PacketUnbuildShip( m_shipBuilder.getShip().entityId );
+			PacketUnbuildShip packet = new PacketUnbuildShip( m_ship.entityId );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}

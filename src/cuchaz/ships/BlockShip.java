@@ -65,4 +65,12 @@ public class BlockShip extends Block
 		}
 		return true;
 	}
+	
+	public ShipType getShipType( World world, int x, int y, int z )
+	{
+		// UNDONE: base this off of block metadata
+		//world.getBlockMetadata( x, y, z );
+		
+		return ShipType.Small;
+	}
 }
