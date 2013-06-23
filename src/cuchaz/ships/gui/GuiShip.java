@@ -15,8 +15,8 @@ public abstract class GuiShip extends GuiCloseable
 	{
 		super( container );
 		
-		xSize = 166;
-		ySize = 153;
+		xSize = 176;
+		ySize = 166;
 	}
 	
 	@Override
@@ -30,8 +30,16 @@ public abstract class GuiShip extends GuiCloseable
 	
 	protected void drawText( String text, int lineNum, int textColor )
 	{
-		final int LineHeight = fontRenderer.FONT_HEIGHT + LineSpacing;
-		
-		fontRenderer.drawString( text, LeftMargin, TopMargin + LineHeight*lineNum, textColor );
+		fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), textColor );
+	}
+	
+	protected String getYesNoText( boolean flag )
+	{
+		return flag ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText();
+	}
+	
+	protected int getLineY( int lineNum )
+	{
+		return TopMargin + ( fontRenderer.FONT_HEIGHT + LineSpacing )*lineNum;
 	}
 }

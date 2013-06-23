@@ -209,8 +209,8 @@ public class EntityShip extends Entity
 			posZ + motionZ
 		);
 		
+		// UNDONE: move riders
 		// UNDONE: check for collisions
-		// UNDONE: can't walk on the floating ship... something is weird with player collision
 	}
 	
 	private void computeBoundingBox( )

@@ -8,8 +8,10 @@ import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
 
 public class ShipBuilder
@@ -30,6 +32,7 @@ public class ShipBuilder
 	private List<ChunkCoordinates> m_blocks; // NOTE: blocks are in world coordinates
 	private List<Boolean> m_buildFlags;
 	private Envelopes m_envelopes;
+	private double m_equilibriumWaterHeight;
 	
 	public ShipBuilder( World world, int x, int y, int z )
 	{
@@ -55,10 +58,19 @@ public class ShipBuilder
 			}
 		);
 		
-		// also add the ship block
-		m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
-		
-		m_envelopes = new Envelopes( m_blocks );
+		if( m_blocks != null )
+		{
+			// also add the ship block
+			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
+			
+			m_envelopes = new Envelopes( m_blocks );
+			m_equilibriumWaterHeight = new ShipPhysics( new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks ) ).getEquilibriumWaterHeight();
+		}
+		else
+		{
+			m_envelopes = null;
+			m_equilibriumWaterHeight = Double.NaN;
+		}
 		
 		computeBuildFlags();
 	}
@@ -81,6 +93,11 @@ public class ShipBuilder
 	public ShipType getShipType( )
 	{
 		return m_shipType;
+	}
+	
+	public World getWorld( )
+	{
+		return m_world;
 	}
 	
 	public int getNumBlocks( )
@@ -106,6 +123,42 @@ public class ShipBuilder
 			isValid = isValid && getBuildFlag( flag );
 		}
 		return isValid;
+	}
+	
+	public BlockSide getShipSide( )
+	{
+		// return the widest side of north,west
+		if( m_envelopes.getBoundingBox().getDx() > m_envelopes.getBoundingBox().getDz() )
+		{
+			return BlockSide.West;
+		}
+		return BlockSide.North;
+	}
+	
+	public BlockSide getShipFront( )
+	{
+		// return the thinnest side of north,west
+		if( m_envelopes.getBoundingBox().getDx() > m_envelopes.getBoundingBox().getDz() )
+		{
+			return BlockSide.North;
+		}
+		return BlockSide.West;
+	}
+	
+	public BoundingBoxInt getShipBoundingBox( )
+	{
+		return m_envelopes.getBoundingBox();
+	}
+	
+	public BlockArray getShipEnvelope( BlockSide side )
+	{
+		return m_envelopes.getEnvelope( side );
+	}
+	
+	public double getEquilibriumWaterHeight( )
+	{
+		// convert to world coordinates
+		return m_equilibriumWaterHeight + m_y;
 	}
 	
 	public EntityShip build( )

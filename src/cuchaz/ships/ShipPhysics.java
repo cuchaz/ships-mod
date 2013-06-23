@@ -1,5 +1,8 @@
 package cuchaz.ships;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
 
@@ -8,47 +11,95 @@ public class ShipPhysics
 	private static final double AccelerationGravity = 0.01;
 	
 	private ShipWorld m_blocks;
+	private TreeMap<Integer,Integer> m_numDisplacementBlocks;
+	private double m_shipMass;
 	
 	public ShipPhysics( ShipWorld blocks )
 	{
 		m_blocks = blocks;
+		
+		// count the number of watertight blocks
+		m_numDisplacementBlocks = new TreeMap<Integer,Integer>();
+		for( ChunkCoordinates coords : m_blocks.coords() )
+		{
+			// UNDONE: get trapped air blocks too
+			
+			// skip non-watertight blocks
+			if( !MaterialProperties.isWatertight( getBlockMaterial( coords ) ) )
+			{
+				continue;
+			}
+			
+			if( m_numDisplacementBlocks.containsKey( coords.posY ) )
+			{
+				m_numDisplacementBlocks.put( coords.posY, m_numDisplacementBlocks.get( coords.posY ) + 1 );
+			}
+			else
+			{
+				m_numDisplacementBlocks.put( coords.posY, 1 );
+			}
+		}
+		
+		// compute the total mass
+		m_shipMass = 0.0;
+		for( ChunkCoordinates coords : m_blocks.coords() )
+		{
+			m_shipMass += MaterialProperties.getMass( getBlockMaterial( coords ) );
+		}
 	}
 	
 	public double getNetUpForce( double waterHeight )
 	{
-		double upForce = 0.0;
-		for( ChunkCoordinates coords : m_blocks.coords() )
+		double displacedWaterMass = 0.0;
+		for( Map.Entry<Integer,Integer> entry : m_numDisplacementBlocks.entrySet() )
 		{
-			// UNDONE: handle trapped air blocks!
-			upForce += -getBlockWeight( coords ) + getBlockBuoyancyForce( coords, waterHeight );
+			int y = entry.getKey();
+			int numBlocks = entry.getValue();
+			
+			displacedWaterMass += getBlockFractionSubmerged( y, waterHeight )*numBlocks*getWaterMass( y, waterHeight );
 		}
-		return upForce;
+		
+		double shipWeight = m_shipMass*AccelerationGravity;
+		double displacedWaterWeight = displacedWaterMass*AccelerationGravity;
+		return displacedWaterWeight - shipWeight;
 	}
 	
-	private double getBlockWeight( ChunkCoordinates coords )
+	public double getEquilibriumWaterHeight( )
 	{
-		// the downward force on the block is its weight
-		return MaterialProperties.getMass( getBlockMaterial( coords ) )*AccelerationGravity;
-	}
-	
-	private double getBlockBuoyancyForce( ChunkCoordinates coords, double waterHeight )
-	{
-		if( MaterialProperties.isWatertight( getBlockMaterial( coords ) ) )
+		// travel up each later until we find the one that displaces too much water
+		double displacedWaterMassSoFar = 0.0;
+		for( Map.Entry<Integer,Integer> entry : m_numDisplacementBlocks.entrySet() )
 		{
-			// the upward force is the weight of the fluid that is displaced by the block
-			double fractionSubmerged = getBlockFractionSubmerged( coords, waterHeight );
-			double bottom = getBlockBottom( coords );
-			double waterTopHeight = bottom + fractionSubmerged;
-			double waterWeight = getWaterMass( bottom, waterTopHeight )*AccelerationGravity;
-			return waterWeight;
+			int y = entry.getKey();
+			int numBlocks = entry.getValue();
+			
+			// assume the water completely submerges this layer
+			double waterHeight = y + 1;
+			double displacedWaterMassThisLevel = numBlocks*getWaterMass( y, waterHeight );
+			
+			// did we displace too much water?
+			if( displacedWaterMassSoFar + displacedWaterMassThisLevel > m_shipMass )
+			{
+				// good, the water height is in this block level
+				
+				// now solve for the water height
+				return y + ( m_shipMass - displacedWaterMassSoFar )/numBlocks/getWaterMass( y, waterHeight );
+			}
+			else
+			{
+				// try the next later on the next iteration
+				displacedWaterMassSoFar += displacedWaterMassThisLevel;
+			}
 		}
-		return 0.0;
+		
+		// there aren't enough blocks! The ship will sink!
+		return Double.NaN;
 	}
 	
-	private double getBlockFractionSubmerged( ChunkCoordinates coords, double waterHeight )
+	private double getBlockFractionSubmerged( int y, double waterHeight )
 	{
-		double bottom = getBlockBottom( coords );
-		double top = getBlockTop( coords );
+		double bottom = y;
+		double top = y + 1;
 		if( top <= waterHeight )
 		{
 			return 1.0;
@@ -63,24 +114,14 @@ public class ShipPhysics
 		}
 	}
 	
-	private double getBlockBottom( ChunkCoordinates coords )
-	{
-		return coords.posY;
-	}
-	
-	private double getBlockTop( ChunkCoordinates coords )
-	{
-		return coords.posY + 1.0;
-	}
-	
 	private Material getBlockMaterial( ChunkCoordinates coords )
 	{
 		return m_blocks.getBlockMaterial( coords.posX, coords.posY, coords.posZ );
 	}
 	
-	private double getWaterMass( double bottomHeight, double topHeight )
+	private double getWaterMass( int y, double waterHeight )
 	{
 		// UNDONE: use the surface height make the mass increase with depth
-		return MaterialProperties.getMass( Material.water )*( topHeight - bottomHeight );
+		return MaterialProperties.getMass( Material.water );
 	}
 }

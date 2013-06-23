@@ -2,9 +2,18 @@ package cuchaz.ships.gui;
 
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.inventory.Container;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.Icon;
+
+import org.lwjgl.opengl.GL11;
+
 import cpw.mods.fml.common.network.PacketDispatcher;
+import cuchaz.modsShared.BlockArray;
+import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.ShipBuilder;
 import cuchaz.ships.ShipBuilder.BuildFlag;
@@ -90,13 +99,119 @@ public class GuiShipBuild extends GuiShip
 		drawText( String.format( "%s: %s", GuiString.ShipFoundWaterHeight.getLocalizedText(), valueText ), 4, textColor );
 		
 		// draw the ship and show the water height
-		//drawShip( m_shipBuilder.get );
+		final int ShipHeight = 64;
+		drawShipSide( m_shipBuilder.getShipSide(), LeftMargin, getLineY( 5 ), xSize - LeftMargin*2, ShipHeight );
 		
 		// UNDONE: choose a ship name
 	}
-
-	protected String getYesNoText( boolean flag )
+	
+	private void drawShipSide( BlockSide side, int x, int y, int maxWidth, int maxHeight )
 	{
-		return flag ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText();
+		BlockArray envelope = m_shipBuilder.getShipEnvelope( side );
+		
+		// compute the block size
+		double blockSize = Math.min(
+			(double)maxWidth/(double)envelope.getWidth(),
+			(double)maxHeight/(double)envelope.getHeight()
+		);
+		
+		// shink the block size so we have some border
+		blockSize *= 0.8;double actualWidth = (double)envelope.getWidth()*blockSize;
+		
+		double actualHeight = (double)envelope.getHeight()*blockSize;
+		
+		// compute the water height
+		double waterHeight = m_shipBuilder.getEquilibriumWaterHeight();
+		
+		// TEMP
+		System.out.println( String.format( "Equilibrium water height: %.2f (%.2f)", waterHeight, waterHeight - envelope.getVMin() ) );
+		
+		double waterRectHeight = height;
+		if( !Double.isNaN( waterHeight ) )
+		{
+			waterRectHeight = ( waterHeight - envelope.getVMin() )*blockSize + ( maxHeight - actualHeight )/2.0;
+		}
+		
+		// draw the water rect
+		final int WaterColor = ColorUtils.getColor( 43, 99, 225 );
+		drawColoredBlock( x, y + maxHeight - waterRectHeight, maxWidth, waterRectHeight, WaterColor );
+		
+		// draw the ship blocks
+		mc.renderEngine.bindTexture( "/terrain.png" );
+		for( int u=envelope.getUMin(); u<=envelope.getUMax(); u++ )
+		{
+			for( int v=envelope.getVMin(); v<=envelope.getVMax(); v++ )
+			{
+				ChunkCoordinates coords = envelope.getBlock( u, v );
+				if( coords == null )
+				{
+					continue;
+				}
+				
+				// get the block texture
+				Block block = Block.blocksList[m_shipBuilder.getWorld().getBlockId( coords.posX, coords.posY, coords.posZ )];
+				int meta = m_shipBuilder.getWorld().getBlockMetadata( coords.posX, coords.posY, coords.posZ );
+				Icon icon = block.getBlockTexture( m_shipBuilder.getWorld(), coords.posX, coords.posY, coords.posZ, meta );
+				
+				// draw a block right on the GUI
+				drawScaledBlock(
+					( maxWidth - actualWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
+					( maxHeight - actualHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
+					blockSize,
+					blockSize,
+					icon
+				);
+			}
+		}
+	}
+	
+	private void drawColoredBlock( double x, double y, double width, double height, int color )
+	{
+		double z = (double)zLevel;
+		
+        GL11.glDisable( GL11.GL_TEXTURE_2D );
+        GL11.glColor4f(
+			ColorUtils.getRedf( color ),
+			ColorUtils.getGreenf( color ),
+			ColorUtils.getBluef( color ),
+			ColorUtils.getAlphaf( color )
+		);
+        
+		Tessellator tessellator = Tessellator.instance;
+		tessellator.startDrawingQuads();
+		
+		// upper left corner, then clockwise
+		tessellator.addVertex( x + 0, y + height, z );
+		tessellator.addVertex( x + width, y + height, z );
+		tessellator.addVertex( x + width, y + 0, z );
+		tessellator.addVertex( x + 0, y + 0, z );
+		
+		tessellator.draw();
+		
+		GL11.glEnable( GL11.GL_TEXTURE_2D );
+	}
+	
+	private void drawScaledBlock( double x, double y, double width, double height, Icon icon )
+	{
+		// get the texture u/v for this icon
+		double minU = (double)icon.getInterpolatedU( 0.0 );
+		double maxU = (double)icon.getInterpolatedU( 16.0 );
+		double minV = (double)icon.getInterpolatedV( 0.0 );
+		double maxV = (double)icon.getInterpolatedV( 16.0 );
+		
+		double z = (double)zLevel;
+		
+		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+		
+		Tessellator tessellator = Tessellator.instance;
+		tessellator.startDrawingQuads();
+		
+		// upper left corner, then clockwise
+		tessellator.addVertexWithUV( x + 0, y + height, z, minU, maxV );
+		tessellator.addVertexWithUV( x + width, y + height, z, maxU, maxV );
+		tessellator.addVertexWithUV( x + width, y + 0, z, maxU, minV );
+		tessellator.addVertexWithUV( x + 0, y + 0, z, minU, minV );
+		
+		tessellator.draw();
 	}
 }
