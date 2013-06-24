@@ -86,9 +86,9 @@ public class Ships
 		GameRegistry.registerBlock( BlockShip, "blockShip" );
 		
 		// entities
-		int shipId = EntityRegistry.findGlobalUniqueEntityId();
-		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", shipId );
-		EntityRegistry.registerModEntity( EntityShip.class, "Ship", shipId, instance, 80, 3, true );
+		final int EntityShipId = 174;
+		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
+		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, instance, 256, 10, true );
 	}
 	
 	private void loadLanguage( )

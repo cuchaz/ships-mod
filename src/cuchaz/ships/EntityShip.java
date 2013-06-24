@@ -1,10 +1,14 @@
 package cuchaz.ships;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public class EntityShip extends Entity
@@ -23,6 +27,9 @@ public class EntityShip extends Entity
 	{
 		super( world );
 		yOffset = 0.0f;
+		motionX = 0.0;
+		motionY = 0.0;
+		motionZ = 0.0;
 		
 		m_blocks = null;
 		m_blockEntities = null;
@@ -44,6 +51,14 @@ public class EntityShip extends Entity
 	
 	public void setBlocks( ShipWorld blocks )
 	{
+		// reset the motion again. For some reason, the client entity gets bogus velocities from somewhere...
+		motionX = 0.0;
+		motionY = 0.0;
+		motionZ = 0.0;
+		
+		// TEMP: set the position
+		posX = 138;
+		
 		m_blocks = blocks;
 		blocks.setShip( this );
 		m_physics = new ShipPhysics( m_blocks );
@@ -66,15 +81,12 @@ public class EntityShip extends Entity
 		computeBoundingBox();
 		
 		// TEMP
-		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip initialized!" );
-		System.out.println( "\tShip spawned at (" + posX + "," + posY + "," + posZ + ") " + ( isDead ? "Dead" : "Alive" ) + " " + ( addedToChunk ? "Attached" : "Detatched" ) );
 		System.out.println( String.format(
-			"\tblock bounding box [%.2f,%.2f] [%.2f,%.2f] [%.2f,%.2f]",
-			m_blockEntitiesArray[0].boundingBox.minX, m_blockEntitiesArray[0].boundingBox.maxX,
-			m_blockEntitiesArray[0].boundingBox.minY, m_blockEntitiesArray[0].boundingBox.maxY,
-			m_blockEntitiesArray[0].boundingBox.minZ, m_blockEntitiesArray[0].boundingBox.maxZ
+			"%s EntityShip initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			posX, posY, posZ,
+			motionX, motionY, motionZ
 		) );
-		System.out.println( String.format( "\tWater surface at %d", getWaterHeight() ) );
 	}
 	
 	@Override
@@ -192,15 +204,37 @@ public class EntityShip extends Entity
 			return;
 		}
 		
+		List<Entity> riders = getRiders();
+		
 		// simulate the vertical forces
 		double upForce = m_physics.getNetUpForce( getWaterHeight() - posY );
 		motionY += upForce;
 		
 		// dampen the velocity
 		final double DampeningFactor = 0.9;
-		motionX *= DampeningFactor;
+		//motionX *= DampeningFactor;
 		motionY *= DampeningFactor;
-		motionZ *= DampeningFactor;
+		//motionZ *= DampeningFactor;
+		
+		// TEMP: oscillate in the X direction to test riding
+		motionX += ( 140 - posX )/50.0;
+		
+		// get rid of infinitesimal motion
+		final double Threshold = 0.01;
+		if( Math.abs( motionX ) < Threshold )
+		{
+			motionX = 0;
+		}
+		if( Math.abs( motionY ) < Threshold )
+		{
+			motionY = 0;
+		}
+		if( Math.abs( motionZ ) < Threshold )
+		{
+			motionZ = 0;
+		}
+		
+		// UNDONE: when the up force is small, maybe just put the ship at the equilibrium position
 		
 		// apply motion
 		setPosition(
@@ -209,10 +243,92 @@ public class EntityShip extends Entity
 			posZ + motionZ
 		);
 		
-		// UNDONE: move riders
+		// move riders
+		for( Entity rider : riders )
+		{
+			rider.setPosition(
+				rider.posX + motionX,
+				rider.posY + motionY,
+				rider.posZ + motionZ
+			);
+			
+			// snap riders to the surface if they're really close
+			double riderY = rider.posY - rider.yOffset - posY;
+			int targetY = (int)( riderY + 0.5 );
+			if( Math.abs( riderY - targetY ) < 0.1 && rider.motionY <= 0 )
+			{
+				rider.setPosition( rider.posX, targetY + posY + rider.yOffset, rider.posZ );
+			}
+		}
+		
 		// UNDONE: check for collisions
 	}
 	
+	private List<Entity> getRiders( )
+	{
+		final double Expand = 0.1;
+		AxisAlignedBB checkBox = AxisAlignedBB.getAABBPool().getAABB(
+			boundingBox.minX - Expand,
+			boundingBox.minY - Expand,
+			boundingBox.minZ - Expand,
+			boundingBox.maxX + Expand,
+			boundingBox.maxY + Expand,
+			boundingBox.maxZ + Expand
+		);
+		@SuppressWarnings( "unchecked" )
+		List<Entity> entities = worldObj.getEntitiesWithinAABB( Entity.class, checkBox );
+		
+		// remove any entities from the list not close enough to be considered riding
+		Iterator<Entity> iter = entities.iterator();
+		while( iter.hasNext() )
+		{
+			Entity entity = iter.next();
+			if( entity == this || !isEntityCloseEnoughToRide( entity ) )
+			{
+				iter.remove();
+			}
+		}
+		
+		return entities;
+	}
+	
+	private boolean isEntityCloseEnoughToRide( Entity entity )
+	{
+		// get the closest block y the entity could be standing on
+		int y = (int)( entity.posY - entity.yOffset - posY + 0.5 ) - 1;
+		
+		// now, do a range query to get all the blocks that are at the entity's bottom bounding box face
+		AxisAlignedBB box = entity.boundingBox;
+		for( int x=MathHelper.floor_double( box.minX - posX ); x<=MathHelper.floor_double( box.maxX - posX ); x++ )
+		{
+			for( int z=MathHelper.floor_double( box.minZ - posZ ); z<=MathHelper.floor_double( box.maxZ - posZ ); z++ )
+			{
+				if( isEntityCloseEnoughToRide( entity, x, y, z ) )
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	private boolean isEntityCloseEnoughToRide( Entity entity, int x, int y, int z )
+	{
+		// is there a block here?
+		if( m_blocks.getBlockId( x, y, z ) == 0 )
+		{
+			return false;
+		}
+		
+		// is the entity close enough to the top of the block?
+		double yBlockTop = y + 1;
+		double yEntityBottom = entity.boundingBox.minY - posY;
+		
+		final double Epsilon = 0.2;
+		return Math.abs( yBlockTop - yEntityBottom ) <= Epsilon;
+	}
+
 	private void computeBoundingBox( )
 	{
 		if( m_blocks == null )

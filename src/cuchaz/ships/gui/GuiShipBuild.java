@@ -100,7 +100,11 @@ public class GuiShipBuild extends GuiShip
 		
 		// draw the ship and show the water height
 		final int ShipHeight = 64;
-		drawShipSide( m_shipBuilder.getShipSide(), LeftMargin, getLineY( 5 ), xSize - LeftMargin*2, ShipHeight );
+		BlockSide shipSide = m_shipBuilder.getShipSide();
+		if( shipSide != null )
+		{
+			drawShipSide( shipSide, LeftMargin, getLineY( 5 ), xSize - LeftMargin*2, ShipHeight );
+		}
 		
 		// UNDONE: choose a ship name
 	}
@@ -122,9 +126,6 @@ public class GuiShipBuild extends GuiShip
 		
 		// compute the water height
 		double waterHeight = m_shipBuilder.getEquilibriumWaterHeight();
-		
-		// TEMP
-		System.out.println( String.format( "Equilibrium water height: %.2f (%.2f)", waterHeight, waterHeight - envelope.getVMin() ) );
 		
 		double waterRectHeight = height;
 		if( !Double.isNaN( waterHeight ) )

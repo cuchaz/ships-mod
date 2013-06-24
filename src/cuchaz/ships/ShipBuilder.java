@@ -127,6 +127,11 @@ public class ShipBuilder
 	
 	public BlockSide getShipSide( )
 	{
+		if( m_envelopes == null )
+		{
+			return null;
+		}
+		
 		// return the widest side of north,west
 		if( m_envelopes.getBoundingBox().getDx() > m_envelopes.getBoundingBox().getDz() )
 		{
@@ -290,7 +295,11 @@ public class ShipBuilder
 		}
 		
 		// found water height
-		setBuildFlag( BuildFlag.FoundWaterHeight, computeWaterHeight() != -1 );
+		setBuildFlag( BuildFlag.FoundWaterHeight, false );
+		if( m_blocks != null )
+		{
+			setBuildFlag( BuildFlag.FoundWaterHeight, computeWaterHeight() != -1 );
+		}
 	}
 	
 	private boolean isShipSeparatorBlock( IBlockAccess world, int x, int y, int z )
