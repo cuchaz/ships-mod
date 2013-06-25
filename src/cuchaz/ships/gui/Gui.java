@@ -38,6 +38,20 @@ public enum Gui
 		{
 			return new GuiShipUnbuild( new ContainerShip(), ((ShipWorld)world).getShip() );
 		}
+	},
+	PaddleShip
+	{
+		@Override
+		public Container getContainer( EntityPlayer player, World world, int x, int y, int z )
+		{
+			return new ContainerShip();
+		}
+		
+		@Override
+		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
+		{
+			return new GuiShipPaddle( new ContainerShip(), ((ShipWorld)world).getShip(), player );
+		}
 	};
 	
 	public void open( EntityPlayer player, World world, int x, int y, int z )

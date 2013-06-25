@@ -42,7 +42,8 @@ public class Ships
 	public static final String TexturesPath = "/mods/ships/textures/";
 	
 	// (apparently the most robust id picking strategy is almost complete randomness)
-	// item registration:
+	// item registration: use ids [7321-7325]
+	public static final ItemPaddle ItemPaddle = new ItemPaddle( 7321 );
 	
 	// block registration: use ids [3170-3190]
 	public BlockShip BlockShip = new BlockShip( 3170 );
@@ -85,6 +86,9 @@ public class Ships
 		// blocks
 		GameRegistry.registerBlock( BlockShip, "blockShip" );
 		
+		// items
+		GameRegistry.registerItem( ItemPaddle, "paddle" );
+		
 		// entities
 		final int EntityShipId = 174;
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
@@ -95,6 +99,9 @@ public class Ships
 	{
 		// block names
 		LanguageRegistry.addName( BlockShip, "Ship" );
+		
+		// item names
+		LanguageRegistry.addName( ItemPaddle, "Paddle" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
@@ -107,6 +114,7 @@ public class Ships
 	{
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		ItemStack redstoneStack = new ItemStack( Item.redstone );
+		ItemStack stickStack = new ItemStack( Item.stick );
 		
 		// ship
 		GameRegistry.addRecipe(
@@ -114,6 +122,13 @@ public class Ships
 			"xxx", "xyx", "xxx",
 			'x', ironStack,
 			'y', redstoneStack
+		);
+		
+		// paddle
+		GameRegistry.addRecipe(
+			new ItemStack( ItemPaddle, 1 ),
+			" xx", " xx", "x  ",
+			'x', stickStack
 		);
 	}
 

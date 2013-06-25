@@ -57,7 +57,17 @@ public class BlockShip extends Block
 		// are we in the world, or on the ship?
 		if( world instanceof ShipWorld )
 		{
-			Gui.UnbuildShip.open( player, world, x, y, z );
+			// can the player paddle this ship?
+			boolean isPaddleEquipped = player.getCurrentEquippedItem().getItem().itemID == Ships.ItemPaddle.itemID;
+			EntityShip ship = ((ShipWorld)world).getShip();
+			if( isPaddleEquipped && ship.getShipType().isPaddleable() && ship.isEntityCloseEnoughToRide( player ) )
+			{
+				Gui.PaddleShip.open( player, world, x, y, z );
+			}
+			else
+			{
+				Gui.UnbuildShip.open( player, world, x, y, z );
+			}
 		}
 		else
 		{
@@ -71,6 +81,6 @@ public class BlockShip extends Block
 		// UNDONE: base this off of block metadata
 		//world.getBlockMetadata( x, y, z );
 		
-		return ShipType.Small;
+		return ShipType.Raft;
 	}
 }

@@ -22,10 +22,9 @@ public abstract class GuiShip extends GuiCloseable
 	@Override
 	protected void drawGuiContainerBackgroundLayer( float renderPartialTicks, int mouseX, int mouseY )
 	{
-		// render the GUI background
-        GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-        mc.renderEngine.bindTexture( Ships.TexturesPath + "/gui/ship.png" );
-        drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
+		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+		mc.renderEngine.bindTexture( Ships.TexturesPath + "/gui/ship.png" );
+		drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
 	}
 	
 	protected void drawText( String text, int lineNum, int textColor )
