@@ -15,20 +15,22 @@ import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.EntityShipBlock;
+import cuchaz.ships.PilotAction;
 import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketPilotShip;
-import cuchaz.ships.packets.PacketPilotShip.Action;
 
 public class GuiShipPaddle extends GuiCloseable
 {
 	private EntityShip m_ship;
-	private BlockSide m_sideFacingPlayer;
+	private BlockSide m_sideShipForward;
+	private PilotAction m_lastAction;
 	
 	public GuiShipPaddle( Container container, EntityShip ship, EntityPlayer player )
 	{
 		super( container );
 		
 		m_ship = ship;
+		m_lastAction = null;
 		
 		xSize = 110;
 		ySize = 25;
@@ -42,17 +44,17 @@ public class GuiShipPaddle extends GuiCloseable
 		
 		// UNDONE: rotate into ship coords
 		
-		// find the side whose normal vector best matches the vector to the player
+		// find the side whose inverted normal vector best matches the vector to the player
 		double maxDot = Double.NEGATIVE_INFINITY;
-		m_sideFacingPlayer = null;
+		m_sideShipForward = null;
 		for( BlockSide side : BlockSide.xzSides() )
 		{
-			double dot = side.getDx()*dx + side.getDz()*dz;
+			double dot = -side.getDx()*dx + -side.getDz()*dz;
 			
 			if( dot > maxDot )
 			{
 				maxDot = dot;
-				m_sideFacingPlayer = side;
+				m_sideShipForward = side;
 			}
 		}
 	}
@@ -117,26 +119,30 @@ public class GuiShipPaddle extends GuiCloseable
 	public void updateScreen( )
 	{
 		// get the action, if any
-		Action action = null;
+		PilotAction action = null;
 		if( Keyboard.isKeyDown( mc.gameSettings.keyBindForward.keyCode ) )
 		{
-			action = Action.Forward;
+			action = PilotAction.Forward;
 		}
 		else if( Keyboard.isKeyDown( mc.gameSettings.keyBindBack.keyCode ) )
 		{
-			action = Action.Backward;
+			action = PilotAction.Backward;
 		}
 		// UNDONE: handle rotation!!
+		// UNDONE: handle multiple simultaneous actions!
 		
-		if( action != null )
+		if( action != m_lastAction )
 		{
+			// we are moving
+			
 			// send a packet to the server
-			PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, action, m_sideFacingPlayer );
+			PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, action, m_sideShipForward );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			
 			// and apply locally
-			action.pilotShip( m_ship, m_sideFacingPlayer );
+			m_ship.setPilotAction( action, m_sideShipForward );
 		}
+		m_lastAction = action;
 	}
 	
 	@Override

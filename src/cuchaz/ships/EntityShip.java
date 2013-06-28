@@ -14,6 +14,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import cuchaz.modsShared.BlockSide;
 
 public class EntityShip extends Entity
 {
@@ -26,6 +27,8 @@ public class EntityShip extends Entity
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
 	private EntityShipBlock[] m_blockEntitiesArray;
 	private ShipPhysics m_physics;
+	private PilotAction m_pilotAction;
+	private BlockSide m_sideShipForward;
 	
 	private transient AxisAlignedBB m_nextBox;
 	
@@ -41,6 +44,8 @@ public class EntityShip extends Entity
 		m_blockEntities = null;
 		m_blockEntitiesArray = null;
 		m_physics = null;
+		m_pilotAction = null;
+		m_sideShipForward = null;
 		
 		m_nextBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 	}
@@ -226,11 +231,8 @@ public class EntityShip extends Entity
 		double upForce = m_physics.getNetUpForce( getWaterHeight() - posY );
 		motionY += upForce;
 		
-		// dampen the velocity
-		final double DampeningFactor = 0.9;
-		motionX *= DampeningFactor;
-		motionY *= DampeningFactor;
-		motionZ *= DampeningFactor;
+		// handle thrust
+		applyThrust();
 		
 		// UNDONE: when the up force is small, maybe just put the ship at the equilibrium position?
 		
@@ -289,8 +291,49 @@ public class EntityShip extends Entity
 		}
 		
 		// UNDONE: move entities we collided with
+		
+		// dampen the velocity for next time
+		// UNDONE: base on mass?
+		final double DampeningFactor = 0.9;
+		motionX *= DampeningFactor;
+		motionY *= DampeningFactor;
+		motionZ *= DampeningFactor;
 	}
 	
+	private void applyThrust( )
+	{
+		if( m_pilotAction == null )
+		{
+			// just coast
+		}
+		else
+		{
+			// full ahead, captain!!
+			m_pilotAction.setShipThrust( this, m_sideShipForward );
+		}
+		
+		// impose the max speed
+		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
+		double maxSpeed = getShipType().getMaxSpeed();
+		if( speed > maxSpeed )
+		{
+			double fixFactor = maxSpeed/speed;
+			motionX *= fixFactor;
+			motionY *= fixFactor;
+			motionZ *= fixFactor;
+		}
+		
+		// TEMP
+		System.out.println( String.format( "%s Speed: %.4f",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			speed
+		) );
+		
+		// UNDONE: motion too fast drops the player off the raft!!
+		// this appears to be because of server->client ship position updates
+		// switch to using the client position as the master and then update the server via packet stream? 
+	}
+
 	private void adjustMotionBecauseOfBlockCollisions( )
 	{
 		// UNDONE: we can probably optimize the piss out of this function
@@ -523,28 +566,9 @@ public class EntityShip extends Entity
 		box.maxZ = z + (float)max.posZ + 1;
 	}
 	
-	public void moveByPilot( int dx, int dy, int dz )
+	public void setPilotAction( PilotAction action, BlockSide sideShipForward )
 	{
-		// UNDONE: acceleration should come from thrusters
-		// also, do mass calculation
-		double acceleration = 0.1;
-		
-		// apply acceleration
-		motionX += dx*acceleration;
-		motionY += dy*acceleration;
-		motionZ += dz*acceleration;
-		
-		// impose the max speed
-		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
-		double maxSpeed = getShipType().getMaxSpeed();
-		if( speed > maxSpeed )
-		{
-			double fixFactor = maxSpeed/speed;
-			motionX *= fixFactor;
-			motionY *= fixFactor;
-			motionZ *= fixFactor;
-		}
-		
-		// UNDONE: motion too fast drops the player off the raft!!
+		m_pilotAction = action;
+		m_sideShipForward = sideShipForward;
 	}
 }

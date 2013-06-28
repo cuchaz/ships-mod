@@ -8,73 +8,28 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.PilotAction;
 
 public class PacketPilotShip extends Packet
 {
 	public static final String Channel = "pilotShip";
 	
-	public static enum Action
-	{
-		Forward
-		{
-			@Override
-			public void pilotShip( EntityShip ship, BlockSide sideFacingPlayer )
-			{
-				ship.moveByPilot(
-					-sideFacingPlayer.getDx(),
-					-sideFacingPlayer.getDy(),
-					-sideFacingPlayer.getDz()
-				);
-			}
-		},
-		Backward
-		{
-			@Override
-			public void pilotShip( EntityShip ship, BlockSide sideFacingPlayer )
-			{
-				ship.moveByPilot(
-					sideFacingPlayer.getDx(),
-					sideFacingPlayer.getDy(),
-					sideFacingPlayer.getDz()
-				);
-			}
-		},
-		Left
-		{
-			@Override
-			public void pilotShip( EntityShip ship, BlockSide sideFacingPlayer )
-			{
-				// UNDONE
-			}
-		},
-		Right
-		{
-			@Override
-			public void pilotShip( EntityShip ship, BlockSide sideFacingPlayer )
-			{
-				// UNDONE
-			}
-		};
-		
-		public abstract void pilotShip( EntityShip ship, BlockSide sideFacingPlayer );
-	}
-	
 	private int m_entityId;
-	private Action m_action;
-	private BlockSide m_sideFacingPlayer;
+	private PilotAction m_action;
+	private BlockSide m_sideShipForward;
 	
 	public PacketPilotShip( )
 	{
 		super( Channel );
 	}
 	
-	public PacketPilotShip( int entityId, Action action, BlockSide sideFacingPlayer )
+	public PacketPilotShip( int entityId, PilotAction action, BlockSide sideFacingPlayer )
 	{
 		this();
 		
 		m_entityId = entityId;
 		m_action = action;
-		m_sideFacingPlayer = sideFacingPlayer;
+		m_sideShipForward = sideFacingPlayer;
 	}
 	
 	@Override
@@ -82,8 +37,15 @@ public class PacketPilotShip extends Packet
 	throws IOException
 	{
 		out.writeInt( m_entityId );
-		out.writeInt( m_action.ordinal() );
-		out.writeByte( m_sideFacingPlayer.ordinal() );
+		if( m_action == null )
+		{
+			out.writeInt( -1 );
+		}
+		else
+		{
+			out.writeInt( m_action.ordinal() );
+		}
+		out.writeByte( m_sideShipForward.ordinal() );
 	}
 	
 	@Override
@@ -91,8 +53,9 @@ public class PacketPilotShip extends Packet
 	throws IOException
 	{
 		m_entityId = in.readInt();
-		m_action = Action.values()[in.readInt()];
-		m_sideFacingPlayer = BlockSide.values()[in.readByte()];
+		int actionId = in.readInt();
+		m_action = actionId >= 0 ? PilotAction.values()[actionId] : null;
+		m_sideShipForward = BlockSide.values()[in.readByte()];
 	}
 	
 	@Override
@@ -107,6 +70,6 @@ public class PacketPilotShip extends Packet
 		EntityShip ship = (EntityShip)entity;
 		
 		// handle ship movement
-		m_action.pilotShip( ship, m_sideFacingPlayer );
+		ship.setPilotAction( m_action, m_sideShipForward );
 	}
 }
