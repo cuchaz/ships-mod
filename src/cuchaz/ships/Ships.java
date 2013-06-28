@@ -23,6 +23,7 @@ import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketBuildShip;
 import cuchaz.ships.packets.PacketHandler;
+import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketUnbuildShip;
 
 @Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
@@ -30,7 +31,7 @@ import cuchaz.ships.packets.PacketUnbuildShip;
 	clientSideRequired = true,
 	serverSideRequired = true,
 	// NOTE: 20-character limit for channel names
-	channels = { PacketBuildShip.Channel, PacketUnbuildShip.Channel },
+	channels = { PacketBuildShip.Channel, PacketUnbuildShip.Channel, PacketPilotShip.Channel },
 	packetHandler = PacketHandler.class
 )
 

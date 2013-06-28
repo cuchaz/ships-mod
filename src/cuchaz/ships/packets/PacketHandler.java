@@ -18,6 +18,7 @@ public class PacketHandler implements IPacketHandler
 		m_packetTypes = new HashMap<String,Packet>();
 		m_packetTypes.put( PacketBuildShip.Channel, new PacketBuildShip() );
 		m_packetTypes.put( PacketUnbuildShip.Channel, new PacketUnbuildShip() );
+		m_packetTypes.put( PacketPilotShip.Channel, new PacketPilotShip() );
 	}
 	
 	@Override

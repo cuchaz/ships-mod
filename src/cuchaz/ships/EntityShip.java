@@ -64,6 +64,7 @@ public class EntityShip extends Entity
 		motionY = 0.0;
 		motionZ = 0.0;
 		
+		/*
 		if( !worldObj.isRemote )
 		{
 			// TEMP: set the position
@@ -71,6 +72,7 @@ public class EntityShip extends Entity
 			posY = 63.12;
 			posZ = 274;
 		}
+		*/
 		
 		m_blocks = blocks;
 		blocks.setShip( this );
@@ -329,18 +331,18 @@ public class EntityShip extends Entity
 			}
 		}
 		
+		// no collisions?
+		if( collisions.isEmpty() )
+		{
+			return;
+		}
+		
 		// TEMP: tell us what collided
 		System.out.println( String.format(
 			"%s colliding with %d blocks!",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			collisions.size()
 		) );
-		
-		// no collisions?
-		if( collisions.isEmpty() )
-		{
-			return;
-		}
 		
 		// find a scaling of the motion vector that prevents the collision
 		// hint: it's between 0 and 1
@@ -523,7 +525,7 @@ public class EntityShip extends Entity
 	
 	public void moveByPilot( int dx, int dy, int dz )
 	{
-		// TEMP: acceleration should come from thrusters
+		// UNDONE: acceleration should come from thrusters
 		// also, do mass calculation
 		double acceleration = 0.1;
 		
@@ -542,5 +544,7 @@ public class EntityShip extends Entity
 			motionY *= fixFactor;
 			motionZ *= fixFactor;
 		}
+		
+		// UNDONE: motion too fast drops the player off the raft!!
 	}
 }

@@ -10,11 +10,14 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.client.TextureFXManager;
+import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.EntityShipBlock;
 import cuchaz.ships.Ships;
+import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketPilotShip.Action;
 
 public class GuiShipPaddle extends GuiCloseable
 {
@@ -32,26 +35,24 @@ public class GuiShipPaddle extends GuiCloseable
 		
 		// which xz side is facing the player?
 		EntityShipBlock shipBlock = ship.getShipBlockEntity();
-		if( m_sideFacingPlayer == BlockSide.Top || m_sideFacingPlayer == BlockSide.Bottom )
+		
+		// get a vector from the block to the player
+		double dx = player.posX - shipBlock.posX;
+		double dz = player.posZ - shipBlock.posZ;
+		
+		// UNDONE: rotate into ship coords
+		
+		// find the side whose normal vector best matches the vector to the player
+		double maxDot = Double.NEGATIVE_INFINITY;
+		m_sideFacingPlayer = null;
+		for( BlockSide side : BlockSide.xzSides() )
 		{
-			// get a vector from the block to the player
-			double dx = player.posX - shipBlock.posX;
-			double dz = player.posZ - shipBlock.posZ;
+			double dot = side.getDx()*dx + side.getDz()*dz;
 			
-			// UNDONE: rotate into ship coords
-			
-			// find the side whose normal vector best matches the vector to the player
-			double maxDot = Double.NEGATIVE_INFINITY;
-			m_sideFacingPlayer = null;
-			for( BlockSide side : BlockSide.xzSides() )
+			if( dot > maxDot )
 			{
-				double dot = side.getDx()*dx + side.getDz()*dz;
-				
-				if( dot > maxDot )
-				{
-					maxDot = dot;
-					m_sideFacingPlayer = side;
-				}
+				maxDot = dot;
+				m_sideFacingPlayer = side;
 			}
 		}
 	}
@@ -115,25 +116,36 @@ public class GuiShipPaddle extends GuiCloseable
 	@Override
 	public void updateScreen( )
 	{
-		// handle ship movement
+		// get the action, if any
+		Action action = null;
 		if( Keyboard.isKeyDown( mc.gameSettings.keyBindForward.keyCode ) )
 		{
-			m_ship.moveByPilot(
-				m_sideFacingPlayer.getDx(),
-				m_sideFacingPlayer.getDy(),
-				m_sideFacingPlayer.getDz()
-			);
+			action = Action.Forward;
 		}
 		else if( Keyboard.isKeyDown( mc.gameSettings.keyBindBack.keyCode ) )
 		{
-			m_ship.moveByPilot(
-				-m_sideFacingPlayer.getDx(),
-				-m_sideFacingPlayer.getDy(),
-				-m_sideFacingPlayer.getDz()
-			);
+			action = Action.Backward;
 		}
-		
-		// UNDONE: send a packet to the server
 		// UNDONE: handle rotation!!
+		
+		if( action != null )
+		{
+			// send a packet to the server
+			PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, action, m_sideFacingPlayer );
+			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+			
+			// and apply locally
+			action.pilotShip( m_ship, m_sideFacingPlayer );
+		}
+	}
+	
+	@Override
+	protected void mouseClicked( int x, int y, int button )
+	{
+		// NOTE: button 1 is the RMB
+		if( button == 1 )
+		{
+			close();
+		}
 	}
 }
