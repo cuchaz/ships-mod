@@ -202,6 +202,25 @@ public class EntityShip extends Entity
 	}
 	
 	@Override
+	public void setPositionAndRotation2( double x, double y, double z, float yaw, float pitch, int alwaysThree )
+	{
+		// NOTE: this function should really be called onGetUpdatedPositionFromServer()
+		
+		// what's the motion delta?
+		double dx = x - posX;
+		double dy = y - posY;
+		double dz = z - posZ;
+		
+		// update the ship position, and riders too
+		List<Entity> riders = getRiders();
+		
+		setPosition( x, y, z );
+        setRotation( yaw, pitch );
+        
+		moveRiders( riders, dx, dy, dz );
+	}
+	
+	@Override
 	public void onUpdate( )
 	{
 		// on the client, see if the blocks loaded yet
@@ -271,30 +290,13 @@ public class EntityShip extends Entity
 			posZ + motionZ
 		);
 		
-		// move riders
-		for( Entity rider : riders )
-		{
-			rider.setPosition(
-				rider.posX + motionX,
-				rider.posY + motionY,
-				rider.posZ + motionZ
-			);
-			
-			// snap riders to the surface if they're really close
-			// UNDONE: maybe after proper collisions, we can get rid of this
-			double riderY = rider.posY - rider.yOffset - posY;
-			int targetY = (int)( riderY + 0.5 );
-			if( Math.abs( riderY - targetY ) < 0.1 && rider.motionY <= 0 )
-			{
-				rider.setPosition( rider.posX, targetY + posY + rider.yOffset, rider.posZ );
-			}
-		}
+		moveRiders( riders, motionX, motionY, motionZ );
 		
 		// UNDONE: move entities we collided with
 		
 		// dampen the velocity for next time
-		// UNDONE: base on mass?
-		final double DampeningFactor = 0.9;
+		// UNDONE: base on mass, submerged surface area??
+		final double DampeningFactor = 0.95;
 		motionX *= DampeningFactor;
 		motionY *= DampeningFactor;
 		motionZ *= DampeningFactor;
@@ -309,9 +311,10 @@ public class EntityShip extends Entity
 		else
 		{
 			// full ahead, captain!!
-			m_pilotAction.setShipThrust( this, m_sideShipForward );
+			m_pilotAction.adjustShipVelocity( this, m_sideShipForward );
 		}
 		
+		// need to be careful though about ship speed. Players that move too fast get kicked
 		// impose the max speed
 		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
 		double maxSpeed = getShipType().getMaxSpeed();
@@ -322,18 +325,8 @@ public class EntityShip extends Entity
 			motionY *= fixFactor;
 			motionZ *= fixFactor;
 		}
-		
-		// TEMP
-		System.out.println( String.format( "%s Speed: %.4f",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			speed
-		) );
-		
-		// UNDONE: motion too fast drops the player off the raft!!
-		// this appears to be because of server->client ship position updates
-		// switch to using the client position as the master and then update the server via packet stream? 
 	}
-
+	
 	private void adjustMotionBecauseOfBlockCollisions( )
 	{
 		// UNDONE: we can probably optimize the piss out of this function
@@ -547,6 +540,28 @@ public class EntityShip extends Entity
 		
 		final double Epsilon = 0.2;
 		return Math.abs( yBlockTop - yEntityBottom ) <= Epsilon;
+	}
+	
+	private void moveRiders( List<Entity> riders, double dx, double dy, double dz )
+	{
+		// move riders
+		for( Entity rider : riders )
+		{
+			rider.setPosition(
+				rider.posX + dx,
+				rider.posY + dy,
+				rider.posZ + dz
+			);
+			
+			// snap riders to the surface if they're really close
+			// UNDONE: maybe after proper collisions, we can get rid of this
+			double riderY = rider.posY - rider.yOffset - posY;
+			int targetY = (int)( riderY + 0.5 );
+			if( Math.abs( riderY - targetY ) < 0.1 && rider.motionY <= 0 )
+			{
+				rider.setPosition( rider.posX, targetY + posY + rider.yOffset, rider.posZ );
+			}
+		}
 	}
 	
 	private void computeBoundingBox( AxisAlignedBB box, double x, double y, double z )

@@ -2,7 +2,9 @@ package cuchaz.ships;
 
 public enum ShipType
 {
-	Raft( 16, true, 0.4 );
+	// NOTE: players that move too fast get kicked
+	// Player's can't move more than 10 blocks per client->server update
+	Raft( 16, true, 0.3 );
 	
 	private int m_maxNumBlocks;
 	private boolean m_isPaddleable;

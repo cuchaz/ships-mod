@@ -7,7 +7,7 @@ public enum PilotAction
 	Forward
 	{
 		@Override
-		public void setShipThrust( EntityShip ship, BlockSide forwardShipFace )
+		public void adjustShipVelocity( EntityShip ship, BlockSide forwardShipFace )
 		{
 			ship.motionX += forwardShipFace.getDx()*Acceleration;
 			ship.motionY += forwardShipFace.getDy()*Acceleration;
@@ -17,7 +17,7 @@ public enum PilotAction
 	Backward
 	{
 		@Override
-		public void setShipThrust( EntityShip ship, BlockSide forwardShipFace )
+		public void adjustShipVelocity( EntityShip ship, BlockSide forwardShipFace )
 		{
 			ship.motionX -= forwardShipFace.getDx()*Acceleration;
 			ship.motionY -= forwardShipFace.getDy()*Acceleration;
@@ -27,7 +27,7 @@ public enum PilotAction
 	Left
 	{
 		@Override
-		public void setShipThrust( EntityShip ship, BlockSide forwardShipFace )
+		public void adjustShipVelocity( EntityShip ship, BlockSide forwardShipFace )
 		{
 			// UNDONE
 		}
@@ -35,14 +35,14 @@ public enum PilotAction
 	Right
 	{
 		@Override
-		public void setShipThrust( EntityShip ship, BlockSide forwardShipFace )
+		public void adjustShipVelocity( EntityShip ship, BlockSide forwardShipFace )
 		{
 			// UNDONE
 		}
 	};
 	
 	// TEMP: acceleration should come from thrusters (modified by mass)!
-	private static double Acceleration = 0.015;
+	private static double Acceleration = 0.01;
 	
-	public abstract void setShipThrust( EntityShip ship, BlockSide forwardShipFace );
+	public abstract void adjustShipVelocity( EntityShip ship, BlockSide forwardShipFace );
 }

@@ -39,8 +39,8 @@ public class GuiShipPaddle extends GuiCloseable
 		EntityShipBlock shipBlock = ship.getShipBlockEntity();
 		
 		// get a vector from the block to the player
-		double dx = player.posX - shipBlock.posX;
-		double dz = player.posZ - shipBlock.posZ;
+		double dx = player.posX - ( shipBlock.posX + 0.5 );
+		double dz = player.posZ - ( shipBlock.posZ + 0.5 );
 		
 		// UNDONE: rotate into ship coords
 		
