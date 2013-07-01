@@ -23,14 +23,14 @@ public class GuiShipPaddle extends GuiCloseable
 {
 	private EntityShip m_ship;
 	private BlockSide m_sideShipForward;
-	private PilotAction m_lastAction;
+	private int m_lastActions;
 	
 	public GuiShipPaddle( Container container, EntityShip ship, EntityPlayer player )
 	{
 		super( container );
 		
 		m_ship = ship;
-		m_lastAction = null;
+		m_lastActions = 0;
 		
 		xSize = 110;
 		ySize = 25;
@@ -70,6 +70,8 @@ public class GuiShipPaddle extends GuiCloseable
 		allowUserInput = true;
 		mc.inGameHasFocus = true;
         mc.mouseHelper.grabMouseCursor();
+        
+        PilotAction.setActionCodes( mc.gameSettings );
 	}
 	
 	@Override
@@ -118,31 +120,21 @@ public class GuiShipPaddle extends GuiCloseable
 	@Override
 	public void updateScreen( )
 	{
-		// get the action, if any
-		PilotAction action = null;
-		if( Keyboard.isKeyDown( mc.gameSettings.keyBindForward.keyCode ) )
-		{
-			action = PilotAction.Forward;
-		}
-		else if( Keyboard.isKeyDown( mc.gameSettings.keyBindBack.keyCode ) )
-		{
-			action = PilotAction.Backward;
-		}
-		// UNDONE: handle rotation!!
-		// UNDONE: handle multiple simultaneous actions!
+		// get the actions, if any
+		int actions = PilotAction.getActiveActions( mc.gameSettings );
 		
-		if( action != m_lastAction )
+		if( actions != m_lastActions )
 		{
-			// we are moving
+			// something changed
 			
 			// send a packet to the server
-			PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, action, m_sideShipForward );
+			PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, actions, m_sideShipForward );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			
 			// and apply locally
-			m_ship.setPilotAction( action, m_sideShipForward );
+			m_ship.setPilotActions( actions, m_sideShipForward );
 		}
-		m_lastAction = action;
+		m_lastActions = actions;
 	}
 	
 	@Override

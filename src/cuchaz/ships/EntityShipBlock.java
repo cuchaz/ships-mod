@@ -23,13 +23,7 @@ public class EntityShipBlock extends Entity
 		m_ship = ship;
 		this.coords = coords;
 		
-		// init defaults
-		setSize( 1.0f, 1.0f );
-		setPosition(
-			coords.posX + m_ship.posX,
-			coords.posY + m_ship.posY,
-			coords.posZ + m_ship.posZ
-		);
+		updatePositionAndRotationFromShip( ship );
 		yOffset = 0.0f;
 	}
 	
@@ -55,12 +49,37 @@ public class EntityShipBlock extends Entity
     }
 	
 	@Override
-	public void setPosition( double x, double y, double z )
+	public void setPositionAndRotation( double x, double y, double z, float yaw, float pitch )
 	{
 		posX = x;
-        posY = y;
-        posZ = z;
-		boundingBox.setBounds( x, y, z, x+1, y+1, z+1 );
+		posY = y;
+		posZ = z;
+		rotationYaw = yaw;
+		rotationPitch = pitch;
+		
+		// update the bounding box
+		double cos = MathHelper.cos( rotationYaw );
+		double sin = MathHelper.sin( rotationYaw );
+		double halfSize = Math.max(
+			Math.abs( cos - sin ),
+			Math.abs( sin + cos )
+		)/2;
+		
+		width = (float)halfSize*2;
+		height = (float)halfSize*2;
+		boundingBox.setBounds( x - halfSize, y - halfSize, z - halfSize, x + halfSize, y + halfSize, z + halfSize );
+	}
+	
+	@Override
+	public void setPosition( double x, double y, double z )
+	{
+		setPositionAndRotation( x, y, z, rotationYaw, rotationPitch );
+	}
+	
+	@Override
+	public void setRotation( float yaw, float pitch )
+	{
+		setPositionAndRotation( posX, posY, posZ, yaw, pitch );
 	}
 	
 	@Override
@@ -94,6 +113,21 @@ public class EntityShipBlock extends Entity
 			player,
 			pos.sideHit,
 			(float)pos.hitVec.xCoord, (float)pos.hitVec.yCoord, (float)pos.hitVec.zCoord
+		);
+	}
+	
+	public void updatePositionAndRotationFromShip( EntityShip ship )
+	{
+		double shipX = ship.blocksToShipX( coords.posX + 0.5 );
+		double shipY = ship.blocksToShipY( coords.posY + 0.5 );
+		double shipZ = ship.blocksToShipZ( coords.posZ + 0.5 );
+		
+		setPositionAndRotation(
+			ship.shipToWorldX( shipX, shipZ ),
+			ship.shipToWorldY( shipY ),
+			ship.shipToWorldZ( shipX, shipZ ),
+			ship.rotationYaw,
+			ship.rotationPitch
 		);
 	}
 	

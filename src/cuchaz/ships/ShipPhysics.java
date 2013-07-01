@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.Vec3;
 
 public class ShipPhysics
 {
@@ -46,6 +47,24 @@ public class ShipPhysics
 		{
 			m_shipMass += MaterialProperties.getMass( getBlockMaterial( coords ) );
 		}
+	}
+	
+	public Vec3 getCenterOfMass( )
+	{
+		Vec3 com = Vec3.createVectorHelper( 0, 0, 0 );
+		double totalMass = 0.0;
+		for( ChunkCoordinates coords : m_blocks.coords() )
+		{
+			double mass = MaterialProperties.getMass( getBlockMaterial( coords ) );
+			totalMass += mass;
+			com.xCoord += mass*( coords.posX + 0.5 );
+			com.yCoord += mass*( coords.posY + 0.5 );
+			com.zCoord += mass*( coords.posZ + 0.5 );
+		}
+		com.xCoord /= totalMass;
+		com.yCoord /= totalMass;
+		com.zCoord /= totalMass;
+		return com;
 	}
 	
 	public double getNetUpForce( double waterHeight )

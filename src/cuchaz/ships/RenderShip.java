@@ -28,12 +28,14 @@ public class RenderShip extends Render
 		doRender( (EntityShip)entity, x, y, z, yaw, partialTickTime );
 	}
 	
-	public void doRender( EntityShip ship, double cameraX, double cameraY, double cameraZ, float yaw, float partialTickTime )
+	public void doRender( EntityShip ship, double x, double y, double z, float yaw, float partialTickTime )
 	{
 		m_renderBlocks.blockAccess = ship.getBlocks();
 		
 		GL11.glPushMatrix();
-		GL11.glTranslatef( (float)cameraX, (float)cameraY, (float)cameraZ );
+		GL11.glTranslated( x, y, z );
+		GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
+		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 		loadTexture( "/terrain.png" );
 		
 		// draw all the blocks!
@@ -43,13 +45,28 @@ public class RenderShip extends Render
 			block.setBlockBoundsBasedOnState( m_renderBlocks.blockAccess, coords.posX, coords.posY, coords.posZ );
 			m_renderBlocks.setRenderBoundsFromBlock( block );
 			renderUnlitBlock( block, coords.posX, coords.posY, coords.posZ );
-			
-			// TEMP
-			//renderPosition( ship, ship.getBlockEntity( coords ) );
-			//renderHitbox( ship, ship.getBlockEntity( coords ) );
 		}
 		
 		GL11.glPopMatrix();
+		
+		// render the block entity bounding boxes
+		if( true )
+		{
+			GL11.glPushMatrix();
+			GL11.glTranslated( x, y, z );
+			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
+			
+			renderAxis( ship );
+			//renderHitbox( ship );
+			
+			for( ChunkCoordinates coords : ship.getBlocks().coords() )
+			{
+				renderPosition( ship.getBlockEntity( coords ) );
+				renderHitbox( ship.getBlockEntity( coords ) );
+			}
+			
+			GL11.glPopMatrix();
+		}
 	}
 	
 	public void renderUnlitBlock( Block block, int x, int y, int z )
@@ -69,30 +86,46 @@ public class RenderShip extends Render
 		}
 	}
 	
-	private void renderPosition( EntityShip ship, Entity entity )
+	private void renderPosition( Entity entity )
 	{
 		final double halfwidth = 0.05;
 		
 		renderBox(
-			entity.posX - halfwidth - ship.posX,
-			entity.posX + halfwidth - ship.posX,
-			entity.posY - halfwidth - ship.posY,
-			entity.posY + halfwidth - ship.posY,
-			entity.posZ - halfwidth - ship.posZ,
-			entity.posZ + halfwidth - ship.posZ,
+			entity.posX - halfwidth,
+			entity.posX + halfwidth,
+			entity.posY - halfwidth,
+			entity.posY + halfwidth,
+			entity.posZ - halfwidth,
+			entity.posZ + halfwidth,
 			ColorUtils.getColor( 0, 255, 0 )
 		);
 	}
 	
-	private void renderHitbox( EntityShip ship, Entity entity )
+	private void renderAxis( Entity entity )
+	{
+		final double halfwidth = 0.05;
+		final double halfHeight = 2.0;
+		
+		renderBox(
+			entity.posX - halfwidth,
+			entity.posX + halfwidth,
+			entity.posY - halfHeight,
+			entity.posY + halfHeight,
+			entity.posZ - halfwidth,
+			entity.posZ + halfwidth,
+			ColorUtils.getColor( 0, 0, 255 )
+		);
+	}
+	
+	private void renderHitbox( Entity entity )
 	{
 		renderBox(
-			entity.boundingBox.minX - ship.posX,
-			entity.boundingBox.maxX - ship.posX,
-			entity.boundingBox.minY - ship.posY,
-			entity.boundingBox.maxY - ship.posY,
-			entity.boundingBox.minZ - ship.posZ,
-			entity.boundingBox.maxZ - ship.posZ,
+			entity.boundingBox.minX,
+			entity.boundingBox.maxX,
+			entity.boundingBox.minY,
+			entity.boundingBox.maxY,
+			entity.boundingBox.minZ,
+			entity.boundingBox.maxZ,
 			ColorUtils.getColor( 255, 0, 0 )
 		);
 	}
@@ -111,6 +144,7 @@ public class RenderShip extends Render
 		GL11.glDisable( GL11.GL_LIGHTING );
 		GL11.glDisable( GL11.GL_CULL_FACE );
 		GL11.glEnable( GL11.GL_BLEND );
+		GL11.glBlendFunc( GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA );
 		
 		Tessellator tessellator = Tessellator.instance;
 		tessellator.startDrawingQuads();

@@ -15,7 +15,7 @@ public class PacketPilotShip extends Packet
 	public static final String Channel = "pilotShip";
 	
 	private int m_entityId;
-	private PilotAction m_action;
+	private int m_actions;
 	private BlockSide m_sideShipForward;
 	
 	public PacketPilotShip( )
@@ -23,12 +23,12 @@ public class PacketPilotShip extends Packet
 		super( Channel );
 	}
 	
-	public PacketPilotShip( int entityId, PilotAction action, BlockSide sideFacingPlayer )
+	public PacketPilotShip( int entityId, int actions, BlockSide sideFacingPlayer )
 	{
 		this();
 		
 		m_entityId = entityId;
-		m_action = action;
+		m_actions = actions;
 		m_sideShipForward = sideFacingPlayer;
 	}
 	
@@ -37,14 +37,7 @@ public class PacketPilotShip extends Packet
 	throws IOException
 	{
 		out.writeInt( m_entityId );
-		if( m_action == null )
-		{
-			out.writeInt( -1 );
-		}
-		else
-		{
-			out.writeInt( m_action.ordinal() );
-		}
+		out.writeInt( m_actions );
 		out.writeByte( m_sideShipForward.ordinal() );
 	}
 	
@@ -53,8 +46,7 @@ public class PacketPilotShip extends Packet
 	throws IOException
 	{
 		m_entityId = in.readInt();
-		int actionId = in.readInt();
-		m_action = actionId >= 0 ? PilotAction.values()[actionId] : null;
+		m_actions = in.readInt();
 		m_sideShipForward = BlockSide.values()[in.readByte()];
 	}
 	
@@ -70,6 +62,6 @@ public class PacketPilotShip extends Packet
 		EntityShip ship = (EntityShip)entity;
 		
 		// handle ship movement
-		ship.setPilotAction( m_action, m_sideShipForward );
+		ship.setPilotActions( m_actions, m_sideShipForward );
 	}
 }
