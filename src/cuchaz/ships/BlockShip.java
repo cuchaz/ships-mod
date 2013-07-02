@@ -58,7 +58,8 @@ public class BlockShip extends Block
 		if( world instanceof ShipWorld )
 		{
 			// can the player paddle this ship?
-			boolean isPaddleEquipped = player.getCurrentEquippedItem().getItem().itemID == Ships.ItemPaddle.itemID;
+			boolean isPaddleEquipped = player.getCurrentEquippedItem() != null
+				&& player.getCurrentEquippedItem().getItem().itemID == Ships.ItemPaddle.itemID;
 			EntityShip ship = ((ShipWorld)world).getShip();
 			if( isPaddleEquipped && ship.getShipType().isPaddleable() /* TEMP && ship.isEntityCloseEnoughToRide( player ) */ )
 			{

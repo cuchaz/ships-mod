@@ -134,9 +134,9 @@ public class EntityShipBlock extends Entity
 	public MovingObjectPosition getPlayerMovingObjectPosition( EntityPlayer player )
 	{
 		Vec3 eyeVec = worldObj.getWorldVec3Pool().getVecFromPool(
-			player.posX - m_ship.posX,
-			player.posY + player.getEyeHeight() - m_ship.posY,
-			player.posZ - m_ship.posZ
+			player.posX,
+			player.posY + player.getEyeHeight(),
+			player.posZ
 		);
         
 		final double toRadians = Math.PI / 180.0;
@@ -153,6 +153,12 @@ public class EntityShipBlock extends Entity
 			sinPitch * dist,
 			cosYaw * -cosPitch * dist
 		);
+		
+		// convert the vectors into blocks space
+		m_ship.worldToShip( eyeVec );
+		m_ship.worldToShip( toVec );
+		m_ship.shipToBlocks( eyeVec );
+		m_ship.shipToBlocks( toVec );
 		
 		return collisionRayTrace( eyeVec, toVec );
 	}

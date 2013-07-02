@@ -57,7 +57,7 @@ public class RenderShip extends Render
 			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
 			
 			renderAxis( ship );
-			//renderHitbox( ship );
+			renderHitbox( ship );
 			
 			for( ChunkCoordinates coords : ship.getBlocks().coords() )
 			{

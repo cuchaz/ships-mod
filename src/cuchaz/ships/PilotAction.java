@@ -13,9 +13,9 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
 		{
-			ship.motionX += forwardShipFace.getDx()*LinearAcceleration;
-			ship.motionY += forwardShipFace.getDy()*LinearAcceleration;
-			ship.motionZ += forwardShipFace.getDz()*LinearAcceleration;
+			ship.motionX += ship.shipToWorldX( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
+			ship.motionY += ship.shipToWorldY( forwardShipFace.getDy() )*LinearAcceleration;
+			ship.motionZ += ship.shipToWorldZ( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
 		}
 	},
 	Backward
@@ -23,9 +23,9 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
 		{
-			ship.motionX -= forwardShipFace.getDx()*LinearAcceleration;
-			ship.motionY -= forwardShipFace.getDy()*LinearAcceleration;
-			ship.motionZ -= forwardShipFace.getDz()*LinearAcceleration;
+			ship.motionX -= ship.shipToWorldX( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
+			ship.motionY -= ship.shipToWorldY( forwardShipFace.getDy() )*LinearAcceleration;
+			ship.motionZ -= ship.shipToWorldZ( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
 		}
 	},
 	Left

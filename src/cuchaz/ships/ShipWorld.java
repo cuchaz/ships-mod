@@ -5,15 +5,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import org.apache.commons.codec.binary.Base64;
+
+import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.BoxCorner;
+import cuchaz.modsShared.RotatedBB;
 
 public class ShipWorld extends DetatchedWorld
 {
@@ -277,5 +284,66 @@ public class ShipWorld extends DetatchedWorld
 	public String getDataString( )
 	{
 		return Base64.encodeBase64String( getData() );
+	}
+	
+	public List<ChunkCoordinates> xzRangeQuery( int y, RotatedBB box )
+	{
+		// UNDONE: we can probably optimize this using a better algorithm
+		
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		
+		// get the bounds in x and z
+		int minX = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int minZ = Integer.MAX_VALUE;
+		int maxZ = Integer.MIN_VALUE;
+		for( BoxCorner corner : BlockSide.Top.getCorners() )
+		{
+			box.getCorner( p, corner );
+			int x = MathHelper.floor_double( p.xCoord );
+			int z = MathHelper.floor_double( p.zCoord );
+			
+			minX = Math.min( minX, x );
+			maxX = Math.max( maxX, x );
+			minZ = Math.min( minZ, z );
+			maxZ = Math.max( maxZ, z );
+		}
+		
+		// TEMP
+		System.out.println( String.format(
+			"%s xzRangeQuery bounds [%d,%d],[%d,%d], y=%d",
+			isRemote ? "CLIENT" : "SERVER",
+			minX, maxX, minZ, maxZ, y
+		) );
+		
+		// search over the blocks in the range
+		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		for( int x=minX; x<=maxX; x++ )
+		{
+			for( int z=minZ; z<=maxZ; z++ )
+			{
+				// is there even a block here?
+				if( getBlockId( x, y, z ) == 0 )
+				{
+					continue;
+				}
+				
+				if( blockIntersectsBoxXZ( x, z, box ) )
+				{
+					blocks.add( new ChunkCoordinates( x, y, z ) );
+				}
+			}
+		}
+		return blocks;
+	}
+	
+	private boolean blockIntersectsBoxXZ( int x, int z, RotatedBB box )
+	{
+		// return true if any xz corner of the block is in the rotated box
+		double y = ( box.getMinY() + box.getMaxY() )/2;
+		return box.containsPoint( x + 0, y, z + 0 )
+			|| box.containsPoint( x + 0, y, z + 1 )
+			|| box.containsPoint( x + 1, y, z + 0 )
+			|| box.containsPoint( x + 1, y, z + 1 );
 	}
 }
