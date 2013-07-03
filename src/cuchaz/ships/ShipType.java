@@ -4,7 +4,7 @@ public enum ShipType
 {
 	// NOTE: players that move too fast get kicked
 	// Player's can't move more than 10 blocks per client->server update
-	Raft( 16, true, 0.2, 10.0f);
+	Raft( 16, true, 0.2, 5.0f);
 	
 	private int m_maxNumBlocks;
 	private boolean m_isPaddleable;

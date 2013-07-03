@@ -309,13 +309,6 @@ public class ShipWorld extends DetatchedWorld
 			maxZ = Math.max( maxZ, z );
 		}
 		
-		// TEMP
-		System.out.println( String.format(
-			"%s xzRangeQuery bounds [%d,%d],[%d,%d], y=%d",
-			isRemote ? "CLIENT" : "SERVER",
-			minX, maxX, minZ, maxZ, y
-		) );
-		
 		// search over the blocks in the range
 		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
 		for( int x=minX; x<=maxX; x++ )
@@ -344,6 +337,27 @@ public class ShipWorld extends DetatchedWorld
 		return box.containsPoint( x + 0, y, z + 0 )
 			|| box.containsPoint( x + 0, y, z + 1 )
 			|| box.containsPoint( x + 1, y, z + 0 )
-			|| box.containsPoint( x + 1, y, z + 1 );
+			|| box.containsPoint( x + 1, y, z + 1 )
+			|| anyCornerIsInBlockXZ( box, x, z );
+	}
+	
+	private boolean anyCornerIsInBlockXZ( RotatedBB box, int x, int z )
+	{
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		for( BoxCorner corner : BlockSide.Top.getCorners() )
+		{
+			box.getCorner( p, corner );
+			if( isPointInBlockXZ( p.xCoord, p.zCoord, x, z ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isPointInBlockXZ( double px, double pz, int blockX, int blockZ )
+	{
+		return px >= blockX && px <= blockX + 1
+			&& pz >= blockZ && pz <= blockZ + 1;
 	}
 }

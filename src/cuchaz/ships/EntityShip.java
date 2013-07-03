@@ -17,6 +17,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BoxCorner;
+import cuchaz.modsShared.CircleRange;
+import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
 
 public class EntityShip extends Entity
@@ -25,6 +27,8 @@ public class EntityShip extends Entity
 	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdShipType = 3;
 	private static final int WatcherIdWaterHeight = 4;
+	
+	private static final double RiderEpsilon = 0.2;
 	
 	public float motionYaw;
 	
@@ -93,6 +97,14 @@ public class EntityShip extends Entity
 		m_blocks = blocks;
 		blocks.setShip( this );
 		m_physics = new ShipPhysics( m_blocks );
+		
+		// TEMP: put the ship back
+		if( false )
+		{
+			posX = 141;
+			posY = 64;
+			posZ = 282;
+		}
 		
 		// get the ship center of mass so we can convert between ship/block spaces
 		Vec3 centerOfMass = m_physics.getCenterOfMass();
@@ -261,26 +273,6 @@ public class EntityShip extends Entity
 		// handle thrust
 		applyThrust();
 		
-		// get rid of infinitesimal motion
-		final double LinearThreshold = 0.01;
-		final double RotationalThreshold = 0.1;
-		if( Math.abs( motionX ) < LinearThreshold )
-		{
-			motionX = 0;
-		}
-		if( Math.abs( motionY ) < LinearThreshold )
-		{
-			motionY = 0;
-		}
-		if( Math.abs( motionZ ) < LinearThreshold )
-		{
-			motionZ = 0;
-		}
-		if( Math.abs( motionYaw ) < RotationalThreshold )
-		{
-			motionYaw = 0.0f;
-		}
-		
 		// UNDONE: update this to be rotation-aware!
 		//adjustMotionBecauseOfBlockCollisions();
 		
@@ -292,29 +284,42 @@ public class EntityShip extends Entity
 		// did we get an updated position from the server?
 		if( m_hasInfoFromServer )
 		{
+			// position deltas are easy
 			dx += m_xFromServer - posX;
 			dy += m_yFromServer - posY;
 			dz += m_zFromServer - posZ;
 			
-			// just apply the rotations
-			setRotation( m_yawFromServer, m_pitchFromServer );
+			// we need fancy math to get the correct rotation delta
+			double yawRadClient = CircleRange.mapMinusPiToPi( Math.toRadians( rotationYaw ) );
+			double yawRadServer = CircleRange.mapMinusPiToPi( Math.toRadians( m_yawFromServer ) );
+			double yawDelta = CircleRange.newByShortSegment( yawRadClient, yawRadServer ).getLength();
+			
+			// was the rotation delta actually positive?
+			if( !CompareReal.eq( CircleRange.mapMinusPiToPi( yawRadClient + yawDelta ), yawRadServer ) )
+			{
+				// nope. it's a negative delta
+				yawDelta = -yawDelta;
+			}
+			yawDelta = Math.toDegrees( yawDelta );
+			
+			// TEMP
+			System.out.println( String.format( "Update from server dYaw=%.1f", yawDelta ) );
+			
+			dYaw += yawDelta;
+			
+			// just apply the pitch directly
+			rotationPitch = m_pitchFromServer;
 			
 			m_hasInfoFromServer = false;
 		}
 		
 		// did we even move?
-		if( dx == 0.0 && dy == 0.0 && dz == 0.0 && dYaw == 0.0f /* TEMP */ && false )
+		if( dx == 0.0 && dy == 0.0 && dz == 0.0 && dYaw == 0.0f )
 		{
 			return;
 		}
 		
 		List<Entity> riders = getRiders();
-		
-		// TEMP
-//		System.out.println( String.format( "%s riders: %d",
-//			worldObj.isRemote ? "CLIENT" : "SERVER",
-//			riders.size()
-//		) );
 		
 		// apply motion
 		setRotation(
@@ -327,19 +332,15 @@ public class EntityShip extends Entity
 			posZ + dz
 		);
 		
+		// UNDONE BUGBUG riders slide off on turns... float precision problem?
+		
 		// update nearby entities
-		moveRiders( riders, dx, dy, dz );
+		moveRiders( riders, dx, dy, dz, dYaw );
 		// UNDONE: update this!
 		//moveCollidingEntities( dx, dy, dz );
 		
 		// reduce the velocity for next time
-		// UNDONE: base on mass, submerged surface area??
-		final double LinearDrag = 0.01;
-		final float RotationalDrag = 0.5f;
-		motionX -= Math.signum( motionX )*LinearDrag;
-		motionY -= Math.signum( motionY )*LinearDrag;
-		motionZ -= Math.signum( motionZ )*LinearDrag;
-		motionYaw -= Math.signum( motionYaw )*RotationalDrag;
+		applyDrag();
 	}
 	
 	public void worldToShip( Vec3 v )
@@ -452,23 +453,23 @@ public class EntityShip extends Entity
 	
 	public RotatedBB worldToBlocks( AxisAlignedBB box )
 	{
-		box = box.copy();
+		// transform the box center into block space
+		Vec3 center = Vec3.createVectorHelper(
+			( box.minX + box.maxX )/2,
+			( box.minY + box.maxY )/2,
+			( box.minZ + box.maxZ )/2
+		);
+		worldToShip( center );
+		shipToBlocks( center );
 		
-		// translate into ship space
-		box.minX -= posX;
-		box.maxX -= posX;
-		box.minY -= posY;
-		box.maxY -= posY;
-		box.minZ -= posZ;
-		box.maxZ -= posZ;
-		
-		// translate into blocks space
-		box.minX -= m_shipBlockX;
-		box.maxX -= m_shipBlockX;
-		box.minY -= m_shipBlockY;
-		box.maxY -= m_shipBlockY;
-		box.minZ -= m_shipBlockZ;
-		box.maxZ -= m_shipBlockZ;
+		// build a box of the same dimensions here in blocks space
+		double dxh = ( box.maxX - box.minX )/2;
+		double dyh = ( box.maxY - box.minY )/2;
+		double dzh = ( box.maxZ - box.minZ )/2;
+		box = AxisAlignedBB.getBoundingBox(
+			center.xCoord - dxh, center.yCoord - dyh, center.zCoord - dzh,
+			center.xCoord + dxh, center.yCoord + dyh, center.zCoord + dzh
+		);
 		
 		return new RotatedBB( box, -rotationYaw );
 	}
@@ -501,6 +502,39 @@ public class EntityShip extends Entity
 			{
 				motionYaw = Math.signum( motionYaw )*getShipType().getMaxRotationalSpeed();
 			}
+		}
+	}
+	
+	private void applyDrag( )
+	{
+		// UNDONE: drag based on mass, submerged surface area??
+		final double LinearDrag = 0.01;
+		final float RotationalDrag = 0.5f;
+		
+		// apply the position drag
+		double dragLength = Math.sqrt( LinearDrag*LinearDrag*3 );
+		double length = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
+		if( length > dragLength )
+		{
+			motionX -= motionX/length*LinearDrag;
+			motionY -= motionY/length*LinearDrag;
+			motionZ -= motionZ/length*LinearDrag;
+		}
+		else
+		{
+			motionX = 0;
+			motionY = 0;
+			motionZ = 0;
+		}
+		
+		// apply rotational drag
+		if( (float)Math.abs( motionYaw ) > RotationalDrag )
+		{
+			motionYaw -= Math.signum( motionYaw )*RotationalDrag;
+		}
+		else
+		{
+			motionYaw = 0;
 		}
 	}
 	
@@ -648,7 +682,7 @@ public class EntityShip extends Entity
 	
 	private List<Entity> getRiders( )
 	{
-		final double Expand = 0.1;
+		final double Expand = 0.5;
 		AxisAlignedBB checkBox = AxisAlignedBB.getAABBPool().getAABB(
 			boundingBox.minX - Expand,
 			boundingBox.minY - Expand,
@@ -677,25 +711,14 @@ public class EntityShip extends Entity
 	public boolean isEntityCloseEnoughToRide( Entity entity )
 	{
 		// get the closest block y the entity could be standing on
-		int y = (int)( shipToBlocksY( worldToShipY( entity.posY - entity.yOffset ) ) + 0.5 ) - 1;
+		int y = (int)( shipToBlocksY( worldToShipY( entity.boundingBox.minY ) ) + 0.5 ) - 1;
 		
 		// convert the entity box into block coordinates
 		RotatedBB box = worldToBlocks( entity.boundingBox );
 		
-		List<ChunkCoordinates> possibleBlocks = m_blocks.xzRangeQuery( y, box );
-		
-		// TEMP
-		System.out.println( String.format(
-			"%s entity %s at y=%.2f has %d possible blocks",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			entity.getClass().getSimpleName(),
-			shipToBlocksY( worldToShipY( entity.posY - entity.yOffset ) ),
-			possibleBlocks.size()
-		) );
-		
-		for( ChunkCoordinates coords : possibleBlocks )
+		for( ChunkCoordinates coords : m_blocks.xzRangeQuery( y, box ) )
 		{
-			if( isEntityCloseEnoughToRide( entity, coords ) )
+			if( isBoxCloseEnoughToRide( box, coords ) )
 			{
 				return true;
 			}
@@ -704,33 +727,53 @@ public class EntityShip extends Entity
 		return false;
 	}
 	
-	private boolean isEntityCloseEnoughToRide( Entity entity, ChunkCoordinates coords )
+	private boolean isBoxCloseEnoughToRide( RotatedBB box, ChunkCoordinates coords )
 	{
 		// is the entity close enough to the top of the block?
 		double yBlockTop = coords.posY + 1;
-		double yEntityBottom = entity.boundingBox.minY - posY;
-		
-		final double Epsilon = 0.2;
-		return Math.abs( yBlockTop - yEntityBottom ) <= Epsilon;
+		return Math.abs( yBlockTop - box.getMinY() ) <= RiderEpsilon;
 	}
 	
-	private void moveRiders( List<Entity> riders, double dx, double dy, double dz )
+	private void moveRiders( List<Entity> riders, double dx, double dy, double dz, float dYaw )
 	{
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		
 		// move riders
 		for( Entity rider : riders )
 		{
-			rider.setPosition(
-				rider.posX + dx,
-				rider.posY + dy,
-				rider.posZ + dz
+			// apply rotation of position
+			p.xCoord = rider.posX;
+			p.yCoord = rider.posY;
+			p.zCoord = rider.posZ;
+			worldToShip( p );
+			float yawRad = (float)Math.toRadians( dYaw );
+			float cos = MathHelper.cos( yawRad );
+			float sin = MathHelper.sin( yawRad );
+			double x = p.xCoord*cos + p.zCoord*sin;
+			double z = -p.xCoord*sin + p.zCoord*cos;
+			p.xCoord = x;
+			p.zCoord = z;
+			shipToWorld( p );
+			
+			// apply translation
+			p.xCoord += dx;
+			p.yCoord += dy;
+			p.zCoord += dz;
+			
+			rider.setPositionAndRotation(
+				p.xCoord, p.yCoord, p.zCoord,
+				rider.rotationYaw - dYaw,
+				rider.rotationPitch
 			);
 			
-			// snap riders to the surface if they're really close so they don't cause further collisions
-			double riderY = rider.posY - rider.yOffset - posY;
+			// snap riders to the surface of the ship
+			double riderY = shipToBlocksY( worldToShipY( rider.boundingBox.minY ) );
 			int targetY = (int)( riderY + 0.5 );
-			if( Math.abs( riderY - targetY ) < 0.1 && rider.motionY <= 0 )
+			double correction = targetY - riderY;
+			if( correction != 0.0 && Math.abs( correction ) < RiderEpsilon && rider.motionY <= 0 )
 			{
-				rider.setPosition( rider.posX, targetY + posY + rider.yOffset, rider.posZ );
+				rider.moveEntity( 0, correction, 0 );
+				rider.onGround = true;
 			}
 		}
 	}
@@ -893,10 +936,8 @@ public class EntityShip extends Entity
 		box.maxZ = z + blocksToShipZ( max.posZ + 1 );
 		
 		// now rotate by the yaw
-		// UNDONE: optimize out the new and copy
-		RotatedBB rotatedBox = new RotatedBB( box.copy(), yaw );
-		
-		// UNDONE NEXTTIME: box is rotating about its centroid... needs to rotate about the center of the ship
+		// UNDONE: optimize out the new
+		RotatedBB rotatedBox = new RotatedBB( box.copy(), yaw, posX, posZ );
 		
 		// compute the new xz bounds
 		box.minX = Integer.MAX_VALUE;

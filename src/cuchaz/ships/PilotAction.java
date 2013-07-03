@@ -1,6 +1,7 @@
 package cuchaz.ships;
 
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.util.MathHelper;
 
 import org.lwjgl.input.Keyboard;
 
@@ -13,9 +14,13 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
 		{
-			ship.motionX += ship.shipToWorldX( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
-			ship.motionY += ship.shipToWorldY( forwardShipFace.getDy() )*LinearAcceleration;
-			ship.motionZ += ship.shipToWorldZ( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
+			float yawRad = (float)Math.toRadians( ship.rotationYaw );
+			float cos = MathHelper.cos( yawRad );
+			float sin = MathHelper.sin( yawRad );
+			double dx = forwardShipFace.getDx()*cos + forwardShipFace.getDz()*sin;
+			double dz = -forwardShipFace.getDx()*sin + forwardShipFace.getDz()*cos;
+			ship.motionX += dx*LinearAcceleration;
+			ship.motionZ += dz*LinearAcceleration;
 		}
 	},
 	Backward
@@ -23,9 +28,13 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
 		{
-			ship.motionX -= ship.shipToWorldX( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
-			ship.motionY -= ship.shipToWorldY( forwardShipFace.getDy() )*LinearAcceleration;
-			ship.motionZ -= ship.shipToWorldZ( forwardShipFace.getDx(), forwardShipFace.getDz() )*LinearAcceleration;
+			float yawRad = (float)Math.toRadians( ship.rotationYaw );
+			float cos = MathHelper.cos( yawRad );
+			float sin = MathHelper.sin( yawRad );
+			double dx = forwardShipFace.getDx()*cos + forwardShipFace.getDz()*sin;
+			double dz = -forwardShipFace.getDx()*sin + forwardShipFace.getDz()*cos;
+			ship.motionX -= dx*LinearAcceleration;
+			ship.motionZ -= dz*LinearAcceleration;
 		}
 	},
 	Left

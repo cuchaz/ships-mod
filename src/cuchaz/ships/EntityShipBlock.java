@@ -58,8 +58,9 @@ public class EntityShipBlock extends Entity
 		rotationPitch = pitch;
 		
 		// update the bounding box
-		double cos = MathHelper.cos( rotationYaw );
-		double sin = MathHelper.sin( rotationYaw );
+		float yawRad = (float)Math.toRadians( rotationYaw );
+		double cos = MathHelper.cos( yawRad );
+		double sin = MathHelper.sin( yawRad );
 		double halfSize = Math.max(
 			Math.abs( cos - sin ),
 			Math.abs( sin + cos )
@@ -67,7 +68,10 @@ public class EntityShipBlock extends Entity
 		
 		width = (float)halfSize*2;
 		height = (float)halfSize*2;
-		boundingBox.setBounds( x - halfSize, y - halfSize, z - halfSize, x + halfSize, y + halfSize, z + halfSize );
+		boundingBox.setBounds(
+			x - halfSize, y - 0.5, z - halfSize,
+			x + halfSize, y + 0.5, z + halfSize
+		);
 	}
 	
 	@Override

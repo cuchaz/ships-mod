@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.util.MathHelper;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -39,10 +40,17 @@ public class GuiShipPaddle extends GuiCloseable
 		EntityShipBlock shipBlock = ship.getShipBlockEntity();
 		
 		// get a vector from the block to the player
-		double dx = player.posX - ( shipBlock.posX + 0.5 );
-		double dz = player.posZ - ( shipBlock.posZ + 0.5 );
+		double dx = player.posX - shipBlock.posX;
+		double dz = player.posZ - shipBlock.posZ;
 		
-		// UNDONE: rotate into ship coords
+		// rotate into ship space
+		float yawRad = (float)Math.toRadians( -ship.rotationYaw );
+		float cos = MathHelper.cos( yawRad );
+		float sin = MathHelper.sin( yawRad );
+		double x = dx*cos + dz*sin;
+		double z = -dx*sin + dz*cos;
+		dx = x;
+		dz = z;
 		
 		// find the side whose inverted normal vector best matches the vector to the player
 		double maxDot = Double.NEGATIVE_INFINITY;
@@ -57,6 +65,9 @@ public class GuiShipPaddle extends GuiCloseable
 				m_sideShipForward = side;
 			}
 		}
+		
+		// TEMP
+		System.out.println( "Side: " + m_sideShipForward );
 	}
 	
 	@Override
@@ -126,13 +137,7 @@ public class GuiShipPaddle extends GuiCloseable
 		if( actions != m_lastActions )
 		{
 			// something changed
-			
-			// send a packet to the server
-			PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, actions, m_sideShipForward );
-			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
-			
-			// and apply locally
-			m_ship.setPilotActions( actions, m_sideShipForward );
+			applyActions( actions );
 		}
 		m_lastActions = actions;
 	}
@@ -145,5 +150,22 @@ public class GuiShipPaddle extends GuiCloseable
 		{
 			close();
 		}
+	}
+	
+	@Override
+	public void onGuiClosed( )
+	{
+		// make sure we stop piloting the ship
+		applyActions( 0 );
+	}
+	
+	private void applyActions( int actions )
+	{
+		// send a packet to the server
+		PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, actions, m_sideShipForward );
+		PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+		
+		// and apply locally
+		m_ship.setPilotActions( actions, m_sideShipForward );
 	}
 }
