@@ -8,7 +8,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.PilotAction;
 
 public class PacketPilotShip extends Packet
 {
