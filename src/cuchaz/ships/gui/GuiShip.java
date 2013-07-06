@@ -3,14 +3,15 @@ package cuchaz.ships.gui;
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import static cuchaz.ships.gui.GuiSettings.LineSpacing;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
+import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.inventory.Container;
 
 import org.lwjgl.opengl.GL11;
 
-import cuchaz.ships.Ships;
-
 public abstract class GuiShip extends GuiCloseable
 {
+	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/ship.png" );
+	
 	public GuiShip( Container container )
 	{
 		super( container );
@@ -23,7 +24,10 @@ public abstract class GuiShip extends GuiCloseable
 	protected void drawGuiContainerBackgroundLayer( float renderPartialTicks, int mouseX, int mouseY )
 	{
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		mc.renderEngine.bindTexture( Ships.TexturesPath + "/gui/ship.png" );
+		
+		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
+		this.mc.func_110434_K().func_110577_a( BackgroundTexture );
+		
 		drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
 	}
 	

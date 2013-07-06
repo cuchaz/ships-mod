@@ -5,6 +5,7 @@ import static cuchaz.ships.gui.GuiSettings.TopMargin;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Icon;
@@ -21,6 +22,8 @@ import cuchaz.ships.packets.PacketBuildShip;
 
 public class GuiShipBuild extends GuiShip
 {
+	private static final ResourceLocation ShipTexture = new ResourceLocation( "/terrain.png" );
+	
 	private ShipBuilder m_shipBuilder;
 	private GuiButton m_buttonBuild;
 	
@@ -138,7 +141,8 @@ public class GuiShipBuild extends GuiShip
 		drawColoredBlock( x, y + maxHeight - waterRectHeight, maxWidth, waterRectHeight, WaterColor );
 		
 		// draw the ship blocks
-		mc.renderEngine.bindTexture( "/terrain.png" );
+		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
+		this.mc.func_110434_K().func_110577_a( ShipTexture );
 		for( int u=envelope.getUMin(); u<=envelope.getUMax(); u++ )
 		{
 			for( int v=envelope.getVMin(); v<=envelope.getVMax(); v++ )

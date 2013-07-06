@@ -99,7 +99,8 @@ public class EntityShipBlock extends Entity
 	}
 	
 	@Override
-	public boolean interact( EntityPlayer player )
+	// I think this used to be deobfuscated as interact() in an older MCP version
+	public boolean func_130002_c( EntityPlayer player )
 	{
 		// activate the block
 		MovingObjectPosition pos = getPlayerMovingObjectPosition( player );

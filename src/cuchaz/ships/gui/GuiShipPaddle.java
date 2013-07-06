@@ -1,8 +1,7 @@
 package cuchaz.ships.gui;
 
-import java.awt.Dimension;
-
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.MathHelper;
@@ -10,18 +9,20 @@ import net.minecraft.util.MathHelper;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.client.TextureFXManager;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.EntityShipBlock;
 import cuchaz.ships.PilotAction;
-import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketPilotShip;
 
 public class GuiShipPaddle extends GuiCloseable
 {
+	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/shipPaddle.png" );
+	private static final int TextureWidth = 128;
+	private static final int TextureHeight = 32;
+	
 	private EntityShip m_ship;
 	private BlockSide m_sideShipForward;
 	private int m_lastActions;
@@ -107,11 +108,11 @@ public class GuiShipPaddle extends GuiCloseable
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 		
 		// load the texture
-		final String TextureName = Ships.TexturesPath + "/gui/shipPaddle.png";
-		mc.renderEngine.bindTexture( TextureName );
-		Dimension dim = TextureFXManager.instance().getTextureDimensions( TextureName );
-        double umax = (double)xSize/dim.width;
-        double vmax = (double)ySize/dim.height;
+		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
+		this.mc.func_110434_K().func_110577_a( BackgroundTexture );
+		
+        double umax = (double)xSize/TextureWidth;
+        double vmax = (double)ySize/TextureHeight;
 		
 		Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();

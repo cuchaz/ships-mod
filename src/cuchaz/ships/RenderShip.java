@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Icon;
@@ -18,11 +19,19 @@ import cuchaz.modsShared.Vector3;
 
 public class RenderShip extends Render
 {
+	private static final ResourceLocation ShipTexture = new ResourceLocation( "/terrain.png" );
+	
 	private RenderBlocks m_renderBlocks;
 	
 	public RenderShip( )
 	{
 		m_renderBlocks = new RenderBlocks();
+	}
+	
+	@Override
+	protected ResourceLocation func_110775_a( Entity entity )
+	{
+		return ShipTexture;
 	}
 	
 	@Override
@@ -39,7 +48,9 @@ public class RenderShip extends Render
 		GL11.glTranslated( x, y, z );
 		GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
-		loadTexture( "/terrain.png" );
+		
+		// this call loads the ship texture (the terrain/blocks texture)
+		func_110777_b( ship );
 		
 		// draw all the blocks!
 		for( ChunkCoordinates coords : ship.getBlocks().coords() )

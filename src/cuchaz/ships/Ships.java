@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.Mod.PostInit;
@@ -40,8 +41,6 @@ public class Ships
 	@Instance( "cuchaz.ships" )
 	public static Ships instance;
 	
-	public static final String TexturesPath = "/mods/ships/textures/";
-	
 	// (apparently the most robust id picking strategy is almost complete randomness)
 	// item registration: use ids [7321-7325]
 	public static final ItemPaddle ItemPaddle = new ItemPaddle( 7321 );
@@ -49,13 +48,13 @@ public class Ships
 	// block registration: use ids [3170-3190]
 	public BlockShip BlockShip = new BlockShip( 3170 );
 	
-	@PreInit
+	@EventHandler
 	public void preInit( FMLPreInitializationEvent event )
 	{
 		// nothing to do
 	}
 	
-	@Init
+	@EventHandler
 	public void load( FMLInitializationEvent event )
 	{
 		loadThings();
@@ -133,7 +132,7 @@ public class Ships
 		);
 	}
 
-	@PostInit
+	@EventHandler
 	public void postInit( FMLPostInitializationEvent event )
 	{
 		// nothing to do
