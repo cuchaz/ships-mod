@@ -100,7 +100,7 @@ public class EntityShip extends Entity
 		if( true )
 		{
 			posX = 224;
-			posY = 64;
+			posY = 63.4;
 			posZ = 269;
 		}
 		
@@ -233,6 +233,12 @@ public class EntityShip extends Entity
 			blocksToShip( p );
 			shipToWorld( p );
 			
+			block.prevPosX = block.posX;
+			block.prevPosY = block.posY;
+			block.prevPosZ = block.posZ;
+			block.prevRotationYaw = block.rotationYaw;
+			block.prevRotationPitch = block.rotationPitch;
+			
 			block.setPositionAndRotation(
 				p.xCoord,
 				p.yCoord,
@@ -289,24 +295,24 @@ public class EntityShip extends Entity
 		adjustMotionDueToThrust();
 		adjustMotionDueToBlockCollisions();
 		
+		// TEMP
+		if( true )
+		{
+			motionZ += ( 270 - posZ )/50.0;
+		}
+		
 		double dx = motionX;
 		double dy = motionY;
 		double dz = motionZ;
 		float dYaw = motionYaw;
 		
 		// did we get an updated position from the server?
-		if( m_hasInfoFromServer /* TEMP */ && false )
+		if( m_hasInfoFromServer )
 		{
 			// position deltas are easy
 			dx += m_xFromServer - posX;
 			dy += m_yFromServer - posY;
 			dz += m_zFromServer - posZ;
-			
-			// TEMP
-			System.out.println( String.format(
-				"got deltas from server: (%.2f,%.2f)",
-				m_xFromServer - posX, m_yFromServer - posY, m_zFromServer - posZ
-			) );
 			
 			// we need fancy math to get the correct rotation delta
 			double yawRadClient = CircleRange.mapMinusPiToPi( Math.toRadians( rotationYaw ) );
@@ -338,6 +344,11 @@ public class EntityShip extends Entity
 		List<Entity> riders = getRiders();
 		
 		// apply motion
+		prevPosX = posX;
+		prevPosY = posY;
+		prevPosZ = posZ;
+		prevRotationYaw = rotationYaw;
+		prevRotationPitch = rotationPitch;
 		setRotation(
 			rotationYaw + dYaw,
 			rotationPitch
@@ -349,10 +360,11 @@ public class EntityShip extends Entity
 		);
 		
 		moveRiders( riders, dx, dy, dz, dYaw );
-		//moveCollidingEntities( dx, dy, dz );
+		moveCollidingEntities( riders );
 		
 		// reduce the velocity for next time
-		applyDrag();
+		// TEMP
+		//adjustMotionDueToDrag();
 	}
 	
 	public void worldToShip( Vec3 v )
@@ -517,7 +529,7 @@ public class EntityShip extends Entity
 		}
 	}
 	
-	private void applyDrag( )
+	private void adjustMotionDueToDrag( )
 	{
 		// UNDONE: drag based on mass, submerged surface area??
 		final double LinearDrag = 0.01;
@@ -588,10 +600,12 @@ public class EntityShip extends Entity
  		}
  		
  		// compute the scaling to avoid the collision
- 		// it's ok if the world block doesn't actually collide. In that case, the scaling will be > 1 and will be ignored
+ 		// it's ok if the world block doesn't actually collide with every nearby world block
+ 		// in that case, the scaling will be > 1 and will be ignored
  		double s = 1.0;
  		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
  		AxisAlignedBB updatedShipBlock = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+ 		int numCollisions = 0;
 		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
         {
 			// get the next position of the ship block
@@ -614,6 +628,7 @@ public class EntityShip extends Entity
 					continue;
 				}
 				
+				numCollisions++;
 				s = Math.min( s, getScalingToAvoidCollision( motionX, motionY, motionZ, blockEntity.getBoundingBox(), worldBlock ) );
 			}
         }
@@ -623,7 +638,11 @@ public class EntityShip extends Entity
 		motionY *= s;
 		motionZ *= s;
 		
-		// UNDONE: update rotation too
+		// update rotation too
+		if( numCollisions > 0 )
+		{
+			motionYaw = 0;
+		}
 	}
 	
 	private double getScalingToAvoidCollision( double dx, double dy, double dz, AxisAlignedBB shipBox, AxisAlignedBB externalBox )
@@ -758,113 +777,104 @@ public class EntityShip extends Entity
 		}
 	}
 	
-	private void moveCollidingEntities( double dx, double dy, double dz )
+	private void moveCollidingEntities( List<Entity> riders )
 	{
 		@SuppressWarnings( "unchecked" )
 		List<Entity> entities = worldObj.getEntitiesWithinAABB( Entity.class, boundingBox );
 		
-		List<ChunkCoordinates> collidingBlocks = new ArrayList<ChunkCoordinates>();
-		
 		for( Entity entity : entities )
 		{
-			collidingBlocks.clear();
-			
 			// don't collide with self
 			if( entity == this )
 			{
 				continue;
 			}
 			
-			// do a range query to get all the blocks that are colliding with the entity
-			AxisAlignedBB entityBox = entity.boundingBox;
-			for( int x=MathHelper.floor_double( entityBox.minX - posX ); x<=MathHelper.floor_double( entityBox.maxX - posX ); x++ )
-			{
-				for( int y=MathHelper.floor_double( entityBox.minY - posY ); y<=MathHelper.floor_double( entityBox.maxY - posY ); y++ )
-				{
-					for( int z=MathHelper.floor_double( entityBox.minZ - posZ ); z<=MathHelper.floor_double( entityBox.maxZ - posZ ); z++ )
-					{
-						if( m_blocks.getBlockId( x, y, z ) != 0 )
-						{
-							collidingBlocks.add( new ChunkCoordinates( x, y, z ) );
-						}
-					}
-				}
-			}
+			// is this entity is a rider?
+			// UNDONE: could use more efficient check
+			boolean isRider = riders.contains( entity );
 			
-			if( collidingBlocks.isEmpty() )
+			moveCollidingEntity( entity, isRider );
+		}
+	}
+	
+	private void moveCollidingEntity( Entity entity, boolean isRider )
+	{
+		// UNDONE: collisions isn't quite perfect yet.
+		// The displacements aren't quite the right size for the observed z-overlap!
+		
+		// find the displacement that moves the entity out of the way of the blocks
+		double maxDisplacement = 0.0;
+		double maxDx = 0;
+		double maxDy = 0;
+		double maxDz = 0;
+		
+		// UNDONE: optimize this range query. Do something smarter than brute force
+		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
+		{
+			// is this block actually colliding with the entity?
+			if( !blockEntity.getBoundingBox().intersectsWith( entity.boundingBox ) )
 			{
 				continue;
 			}
 			
-			// TEMP
-			System.out.println( String.format(
-				"%s entity %s collides with %d blocks",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				entity.getClass().getSimpleName(), collidingBlocks.size()
-			) );
+			// get the actual motion vector of the block accounting for rotation
+			double dxBlock = blockEntity.posX - blockEntity.prevPosX;
+			double dyBlock = blockEntity.posY - blockEntity.prevPosY;
+			double dzBlock = blockEntity.posZ - blockEntity.prevPosZ;
 			
-			// find the scaling of dx,dy,dz that moves the entity out of the way of the blocks
-			double maxScaling = 0.0;
-			for( ChunkCoordinates coords : collidingBlocks )
+			// is the ship block actually moving towards the entity?
+			Vec3 toEntity = Vec3.createVectorHelper(
+				entity.posX - blockEntity.posX,
+				entity.posY - blockEntity.posY,
+				entity.posZ - blockEntity.posZ
+			);
+			Vec3 motion = Vec3.createVectorHelper( dxBlock, dyBlock, dzBlock );
+			boolean isMovingTowardsEntity = toEntity.dotProduct( motion ) > 0.0;
+			if( !isMovingTowardsEntity )
 			{
-				EntityShipBlock blockEntity = m_blockEntities.get( coords );
-				if( blockEntity == null )
-				{
-					continue;
-				}
-				
-				// is the ship block actually moving towards the entity?
-				Vec3 toEntity = Vec3.createVectorHelper(
-					entity.posX - blockEntity.posX,
-					entity.posY - blockEntity.posY,
-					entity.posZ - blockEntity.posZ
-				);
-				Vec3 motion = Vec3.createVectorHelper( dx, dy, dz );
-				boolean isMovingTowardsEntity = toEntity.dotProduct( motion ) > 0.0;
-				if( !isMovingTowardsEntity )
-				{
-					// TEMP
-					System.out.println( String.format(
-						"%s block moving away",
-						worldObj.isRemote ? "CLIENT" : "SERVER"
-					) );
-					
-					continue;
-				}
-				
-				AxisAlignedBB blockBox = blockEntity.getBoundingBox();
-				double scaling = getScalingToPushBox( dx, dy, dz, blockBox, entityBox );
-				
-				// TEMP
-				System.out.println( String.format(
-					"%s entity %s scaling for block is %.4f",
-					worldObj.isRemote ? "CLIENT" : "SERVER",
-					entity.getClass().getSimpleName(), scaling
-				) );
-				
-				maxScaling = Math.max( maxScaling, scaling );
+				continue;
+			}
+			
+			double scaling = getScalingToPushBox( dxBlock, dyBlock, dzBlock, blockEntity.getBoundingBox(), entity.boundingBox );
+			
+			// calculate the displacement
+			double displacement = scaling*Math.sqrt( dxBlock*dxBlock + dyBlock*dyBlock + dzBlock*dzBlock );
+			
+			if( displacement > maxDisplacement )
+			{
+				maxDisplacement = displacement;
+				maxDx = scaling*dxBlock;
+				maxDy = scaling*dyBlock;
+				maxDz = scaling*dzBlock;
 			}
 			
 			// TEMP
 			System.out.println( String.format(
-				"%s moving entity %s: %.4f (dist=%.2f)",
+				"%s entity %s displcement for block: %.4f (%.2f,%.2f,%.2f), z overlap: %.4f",
 				worldObj.isRemote ? "CLIENT" : "SERVER",
-				entity.getClass().getSimpleName(), maxScaling,
-				maxScaling*Math.sqrt( dx*dx + dy*dy + dz*dz )
+				entity.getClass().getSimpleName(), displacement,
+				scaling*dxBlock, scaling*dyBlock, scaling*dzBlock,
+				Math.min( blockEntity.getBoundingBox().maxZ - entity.boundingBox.minZ, entity.boundingBox.maxZ - blockEntity.getBoundingBox().minZ )
 			) );
-			
-			// move the entity out of the way of the blocks
-			entity.setPosition(
-				entity.posX + dx*maxScaling,
-				entity.posY + dy*maxScaling,
-				entity.posZ + dz*maxScaling
-			);
 		}
+		
+		// don't update y-positions for riders
+		if( isRider )
+		{
+			maxDy = 0;
+		}
+		
+		// move the entity out of the way of the blocks
+		entity.setPosition(
+			entity.posX + maxDx,
+			entity.posY + maxDy,
+			entity.posZ + maxDz
+		);
 	}
 	
 	private double getScalingToPushBox( double dx, double dy, double dz, AxisAlignedBB shipBox, AxisAlignedBB externalBox )
 	{
-		// UNDONE: merge with other scaling func?
 		double sx = 0;
 		if( dx > 0 )
 		{
@@ -895,7 +905,8 @@ public class EntityShip extends Entity
 			sz = ( shipBox.minZ - externalBox.maxZ )/dz;
 		}
 		
-		return Math.max( sx, Math.max( sy, sz ) );
+		// clamp scalings to <= 1
+		return Math.min( 1, Math.max( sx, Math.max( sy, sz ) ) );
 	}
 	
 	private void computeBoundingBox( AxisAlignedBB box, double x, double y, double z, float yaw )
