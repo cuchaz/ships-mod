@@ -5,6 +5,7 @@ import static cuchaz.ships.gui.GuiSettings.TopMargin;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ChunkCoordinates;
@@ -22,7 +23,7 @@ import cuchaz.ships.packets.PacketBuildShip;
 
 public class GuiShipBuild extends GuiShip
 {
-	private static final ResourceLocation ShipTexture = new ResourceLocation( "/terrain.png" );
+	private static final ResourceLocation ShipTexture = TextureMap.field_110575_b;
 	
 	private ShipBuilder m_shipBuilder;
 	private GuiButton m_buttonBuild;

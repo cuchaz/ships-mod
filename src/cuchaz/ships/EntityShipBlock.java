@@ -23,7 +23,6 @@ public class EntityShipBlock extends Entity
 		m_ship = ship;
 		this.coords = coords;
 		
-		updatePositionAndRotationFromShip( ship );
 		yOffset = 0.0f;
 	}
 	
@@ -58,20 +57,9 @@ public class EntityShipBlock extends Entity
 		rotationPitch = pitch;
 		
 		// update the bounding box
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		double cos = MathHelper.cos( yawRad );
-		double sin = MathHelper.sin( yawRad );
-		double halfSize = Math.max(
-			Math.abs( cos - sin ),
-			Math.abs( sin + cos )
-		)/2;
-		
-		width = (float)halfSize*2;
-		height = (float)halfSize*2;
-		boundingBox.setBounds(
-			x - halfSize, y - 0.5, z - halfSize,
-			x + halfSize, y + 0.5, z + halfSize
-		);
+		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
+		width = (float)( boundingBox.maxX - boundingBox.minX );
+		height = (float)( boundingBox.maxY - boundingBox.minY );
 	}
 	
 	@Override
@@ -121,18 +109,27 @@ public class EntityShipBlock extends Entity
 		);
 	}
 	
-	public void updatePositionAndRotationFromShip( EntityShip ship )
+	public void getBlockPosition( Vec3 p )
 	{
-		double shipX = ship.blocksToShipX( coords.posX + 0.5 );
-		double shipY = ship.blocksToShipY( coords.posY + 0.5 );
-		double shipZ = ship.blocksToShipZ( coords.posZ + 0.5 );
+		// add a half so the entities are centered on the block box
+		p.xCoord = coords.posX + 0.5;
+		p.yCoord = coords.posY + 0.5;
+		p.zCoord = coords.posZ + 0.5;
+	}
+	
+	public static void computeBoundingBox( AxisAlignedBB out, double x, double y, double z, float yaw )
+	{
+		float yawRad = (float)Math.toRadians( yaw );
+		double cos = MathHelper.cos( yawRad );
+		double sin = MathHelper.sin( yawRad );
+		double halfSize =  Math.max(
+			Math.abs( cos - sin ),
+			Math.abs( sin + cos )
+		)/2;
 		
-		setPositionAndRotation(
-			ship.shipToWorldX( shipX, shipZ ),
-			ship.shipToWorldY( shipY ),
-			ship.shipToWorldZ( shipX, shipZ ),
-			ship.rotationYaw,
-			ship.rotationPitch
+		out.setBounds(
+			x - halfSize, y - 0.5, z - halfSize,
+			x + halfSize, y + 0.5, z + halfSize
 		);
 	}
 	

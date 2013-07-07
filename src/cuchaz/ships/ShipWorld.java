@@ -286,6 +286,21 @@ public class ShipWorld extends DetatchedWorld
 		return Base64.encodeBase64String( getData() );
 	}
 	
+	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
+	{
+		// get the bounds in y
+		int minY = MathHelper.floor_double( box.getMinY() );
+		int maxY = MathHelper.floor_double( box.getMaxY() );
+		
+		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		for( int y=minY; y<=maxY; y++ )
+		{
+			// add up the blocks from the xz range query
+			blocks.addAll( xzRangeQuery( y, box ) );
+		}
+		return blocks;
+	}
+	
 	public List<ChunkCoordinates> xzRangeQuery( int y, RotatedBB box )
 	{
 		// UNDONE: we can probably optimize this using a better algorithm

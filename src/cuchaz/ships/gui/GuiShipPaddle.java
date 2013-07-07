@@ -66,9 +66,6 @@ public class GuiShipPaddle extends GuiCloseable
 				m_sideShipForward = side;
 			}
 		}
-		
-		// TEMP
-		System.out.println( "Side: " + m_sideShipForward );
 	}
 	
 	@Override

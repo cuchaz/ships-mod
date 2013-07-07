@@ -1,10 +1,8 @@
 package cuchaz.ships;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
@@ -99,11 +97,11 @@ public class EntityShip extends Entity
 		m_physics = new ShipPhysics( m_blocks );
 		
 		// TEMP: put the ship back
-		if( false )
+		if( true )
 		{
-			posX = 141;
+			posX = 224;
 			posY = 64;
-			posZ = 282;
+			posZ = 269;
 		}
 		
 		// get the ship center of mass so we can convert between ship/block spaces
@@ -128,6 +126,7 @@ public class EntityShip extends Entity
 		m_blockEntities.values().toArray( m_blockEntitiesArray );
 		
 		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
+		updateBlockEntityPositions();
 		
 		// TEMP
 		System.out.println( String.format(
@@ -215,14 +214,32 @@ public class EntityShip extends Entity
         posY = y;
         posZ = z;
 		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
-		
-		if( m_blockEntitiesArray != null )
+		updateBlockEntityPositions();
+	}
+	
+	private void updateBlockEntityPositions( )
+	{
+		if( m_blockEntitiesArray == null )
 		{
-			// update blocks
-			for( EntityShipBlock block : m_blockEntitiesArray )
-			{
-				block.updatePositionAndRotationFromShip( this );
-			}
+			return;
+		}
+		
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		
+		for( EntityShipBlock block : m_blockEntitiesArray )
+		{
+			// compute the block position
+			block.getBlockPosition( p );
+			blocksToShip( p );
+			shipToWorld( p );
+			
+			block.setPositionAndRotation(
+				p.xCoord,
+				p.yCoord,
+				p.zCoord,
+				rotationYaw,
+				rotationPitch
+			);
 		}
 	}
 	
@@ -266,15 +283,11 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		// simulate the vertical forces
-		double upForce = m_physics.getNetUpForce( getWaterHeight() - posY );
-		motionY += upForce;
+		// simulate the weight/buoyancy forces
+		motionY += m_physics.getNetUpForce( getWaterHeight() - posY );
 		
-		// handle thrust
-		applyThrust();
-		
-		// UNDONE: update this to be rotation-aware!
-		//adjustMotionBecauseOfBlockCollisions();
+		adjustMotionDueToThrust();
+		adjustMotionDueToBlockCollisions();
 		
 		double dx = motionX;
 		double dy = motionY;
@@ -282,12 +295,18 @@ public class EntityShip extends Entity
 		float dYaw = motionYaw;
 		
 		// did we get an updated position from the server?
-		if( m_hasInfoFromServer )
+		if( m_hasInfoFromServer /* TEMP */ && false )
 		{
 			// position deltas are easy
 			dx += m_xFromServer - posX;
 			dy += m_yFromServer - posY;
 			dz += m_zFromServer - posZ;
+			
+			// TEMP
+			System.out.println( String.format(
+				"got deltas from server: (%.2f,%.2f)",
+				m_xFromServer - posX, m_yFromServer - posY, m_zFromServer - posZ
+			) );
 			
 			// we need fancy math to get the correct rotation delta
 			double yawRadClient = CircleRange.mapMinusPiToPi( Math.toRadians( rotationYaw ) );
@@ -301,9 +320,6 @@ public class EntityShip extends Entity
 				yawDelta = -yawDelta;
 			}
 			yawDelta = Math.toDegrees( yawDelta );
-			
-			// TEMP
-			System.out.println( String.format( "Update from server dYaw=%.1f", yawDelta ) );
 			
 			dYaw += yawDelta;
 			
@@ -332,11 +348,7 @@ public class EntityShip extends Entity
 			posZ + dz
 		);
 		
-		// UNDONE BUGBUG riders slide off on turns... float precision problem?
-		
-		// update nearby entities
 		moveRiders( riders, dx, dy, dz, dYaw );
-		// UNDONE: update this!
 		//moveCollidingEntities( dx, dy, dz );
 		
 		// reduce the velocity for next time
@@ -429,7 +441,7 @@ public class EntityShip extends Entity
 		return z - m_shipBlockZ;
 	}
 	
-	public void blockstoShip( Vec3 v )
+	public void blocksToShip( Vec3 v )
 	{
 		v.xCoord = blocksToShipX( v.xCoord );
 		v.yCoord = blocksToShipY( v.yCoord );
@@ -474,7 +486,7 @@ public class EntityShip extends Entity
 		return new RotatedBB( box, -rotationYaw );
 	}
 	
-	private void applyThrust( )
+	private void adjustMotionDueToThrust( )
 	{
 		if( m_pilotActions == 0 )
 		{
@@ -538,19 +550,16 @@ public class EntityShip extends Entity
 		}
 	}
 	
-	private void adjustMotionBecauseOfBlockCollisions( )
+	private void adjustMotionDueToBlockCollisions( )
 	{
-		// UNDONE: we can probably optimize the piss out of this function
-		// especially by getting rid of the intermediate data structures
-		
-		// UNDONE: check for changes in rotation too...
+		// UNDONE: we can probably optimize this quite a bit
 		
 		// where would we move to?
 		AxisAlignedBB nextBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		computeBoundingBox( nextBox, posX + motionX, posY + motionY, posZ + motionZ, rotationYaw + motionYaw );
 		
 		// do a range query to get colliding world blocks
-		List<AxisAlignedBB> collidingWorldBlocks = new ArrayList<AxisAlignedBB>();
+		List<AxisAlignedBB> nearbyWorldBlocks = new ArrayList<AxisAlignedBB>();
         int minX = MathHelper.floor_double( nextBox.minX );
         int maxX = MathHelper.floor_double( nextBox.maxX );
         int minY = MathHelper.floor_double( nextBox.minY );
@@ -566,87 +575,59 @@ public class EntityShip extends Entity
                     Block block = Block.blocksList[worldObj.getBlockId( x, y, z )];
                     if( block != null )
                     {
-                        block.addCollisionBoxesToList( worldObj, x, y, z, nextBox, collidingWorldBlocks, this );
+                        block.addCollisionBoxesToList( worldObj, x, y, z, nextBox, nearbyWorldBlocks, this );
                     }
                 }
             }
         }
         
-		// find out which ship blocks collide with each world block
-		// NOTE: the map should hash on instance for AxisAlignedBB
-		Map<AxisAlignedBB,List<ChunkCoordinates>> collisions = new HashMap<AxisAlignedBB,List<ChunkCoordinates>>();
-		for( AxisAlignedBB worldBlock : collidingWorldBlocks )
-		{
-			List<ChunkCoordinates> collidingShipBlocks = getCollidingShipBlocks( worldBlock );
-			if( !collidingShipBlocks.isEmpty() )
+        // no collisions?
+ 		if( nearbyWorldBlocks.isEmpty() )
+ 		{
+ 			return;
+ 		}
+ 		
+ 		// compute the scaling to avoid the collision
+ 		// it's ok if the world block doesn't actually collide. In that case, the scaling will be > 1 and will be ignored
+ 		double s = 1.0;
+ 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+ 		AxisAlignedBB updatedShipBlock = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
+        {
+			// get the next position of the ship block
+			blockEntity.getBlockPosition( p );
+			// HACKHACK: temporarily adjust the ship's yaw to fool shipToWorld()
+			rotationYaw += motionYaw;
+			blocksToShip( p );
+			shipToWorld( p );
+			p.xCoord += motionX;
+			p.yCoord += motionY;
+			p.zCoord += motionZ;
+			EntityShipBlock.computeBoundingBox( updatedShipBlock, p.xCoord, p.yCoord, p.zCoord, rotationYaw );
+			rotationYaw -= motionYaw;
+			
+			for( AxisAlignedBB worldBlock : nearbyWorldBlocks )
 			{
-				collisions.put( worldBlock, collidingShipBlocks );
+				// would the boxes actually collide?
+				if( !worldBlock.intersectsWith( updatedShipBlock ) )
+				{
+					continue;
+				}
+				
+				s = Math.min( s, getScalingToAvoidCollision( motionX, motionY, motionZ, blockEntity.getBoundingBox(), worldBlock ) );
 			}
-		}
-		
-		// no collisions?
-		if( collisions.isEmpty() )
-		{
-			return;
-		}
-		
-		// TEMP: tell us what collided
-		System.out.println( String.format(
-			"%s colliding with %d blocks!",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			collisions.size()
-		) );
-		
-		// find a scaling of the motion vector that prevents the collision
-		// hint: it's between 0 and 1
-		double s = 1.0;
-		for( Map.Entry<AxisAlignedBB,List<ChunkCoordinates>> entry : collisions.entrySet() )
-		{
-			AxisAlignedBB worldBlock = entry.getKey();
-			List<ChunkCoordinates> shipBlocks = entry.getValue();
-			for( ChunkCoordinates coords : shipBlocks )
-			{
-				AxisAlignedBB shipBlock = m_blockEntities.get( coords ).getBoundingBox();
-				s = Math.min( s, getScalingToAvoidCollision( motionX, motionY, motionZ, shipBlock, worldBlock ) );
-			}
-		}
+        }
 		
 		// avoid the collision
 		motionX *= s;
 		motionY *= s;
 		motionZ *= s;
-	}
-	
-	private List<ChunkCoordinates> getCollidingShipBlocks( AxisAlignedBB worldBlock )
-	{
-		// do a range query in ship space (at the next position)
-		List<ChunkCoordinates> collidingShipBlocks = new ArrayList<ChunkCoordinates>();
-		int minX = MathHelper.floor_double( worldBlock.minX - ( posX + motionX ) );
-        int maxX = MathHelper.floor_double( worldBlock.maxX - ( posX + motionX ) );
-        int minY = MathHelper.floor_double( worldBlock.minY - ( posY + motionY ) );
-        int maxY = MathHelper.floor_double( worldBlock.maxY - ( posY + motionY ) );
-        int minZ = MathHelper.floor_double( worldBlock.minZ - ( posZ + motionZ ) );
-        int maxZ = MathHelper.floor_double( worldBlock.maxZ - ( posZ + motionZ ) );
-        ChunkCoordinates coords = new ChunkCoordinates( 0, 0, 0 );
-        for( coords.posX=minX; coords.posX<=maxX; coords.posX++ )
-        {
-            for( coords.posZ=minZ; coords.posZ<maxZ; coords.posZ++ )
-            {
-                for( coords.posY=minY; coords.posY<=maxY; coords.posY++ )
-                {
-                	if( getBlockEntity( coords ) != null )
-                	{
-                		collidingShipBlocks.add( new ChunkCoordinates( coords ) );
-                	}
-                }
-            }
-        }
-        return collidingShipBlocks;
+		
+		// UNDONE: update rotation too
 	}
 	
 	private double getScalingToAvoidCollision( double dx, double dy, double dz, AxisAlignedBB shipBox, AxisAlignedBB externalBox )
 	{
-		// UNDONE: merge with other scaling func?
 		double sx = 0;
 		if( dx > 0 )
 		{
@@ -677,7 +658,14 @@ public class EntityShip extends Entity
 			sz = ( externalBox.maxZ - shipBox.minZ )/dz;
 		}
 		
-		return Math.max( sx, Math.max( sy, sz ) );
+		double s = Math.max( sx, Math.max( sy, sz ) );
+		
+		// if the scaling we get is below zero, there was no real collision to worry about
+		if( s < 0 )
+		{
+			return 1.0;
+		}
+		return s;
 	}
 	
 	private List<Entity> getRiders( )
@@ -695,11 +683,12 @@ public class EntityShip extends Entity
 		List<Entity> entities = worldObj.getEntitiesWithinAABB( Entity.class, checkBox );
 		
 		// remove any entities from the list not close enough to be considered riding
+		// also remove entities that are floating or moving upwards (e.g. jumping)
 		Iterator<Entity> iter = entities.iterator();
 		while( iter.hasNext() )
 		{
 			Entity entity = iter.next();
-			if( entity == this || !isEntityCloseEnoughToRide( entity ) )
+			if( entity == this || entity.motionY >= 0 || !isEntityCloseEnoughToRide( entity ) )
 			{
 				iter.remove();
 			}
@@ -741,10 +730,10 @@ public class EntityShip extends Entity
 		// move riders
 		for( Entity rider : riders )
 		{
-			// apply rotation of position
-			p.xCoord = rider.posX;
-			p.yCoord = rider.posY;
-			p.zCoord = rider.posZ;
+			// apply rotation of position relative to the ship center
+			p.xCoord = rider.posX + dx;
+			p.yCoord = rider.posY + dy;
+			p.zCoord = rider.posZ + dz;
 			worldToShip( p );
 			float yawRad = (float)Math.toRadians( dYaw );
 			float cos = MathHelper.cos( yawRad );
@@ -754,27 +743,18 @@ public class EntityShip extends Entity
 			p.xCoord = x;
 			p.zCoord = z;
 			shipToWorld( p );
+			dx += ( p.xCoord - dx ) - rider.posX;
+			dz += ( p.zCoord - dz ) - rider.posZ;
 			
-			// apply translation
-			p.xCoord += dx;
-			p.yCoord += dy;
-			p.zCoord += dz;
-			
-			rider.setPositionAndRotation(
-				p.xCoord, p.yCoord, p.zCoord,
-				rider.rotationYaw - dYaw,
-				rider.rotationPitch
-			);
-			
-			// snap riders to the surface of the ship
+			// adjust the translation to snap riders to the surface of the ship
 			double riderY = shipToBlocksY( worldToShipY( rider.boundingBox.minY ) );
 			int targetY = (int)( riderY + 0.5 );
-			double correction = targetY - riderY;
-			if( correction != 0.0 && Math.abs( correction ) < RiderEpsilon && rider.motionY <= 0 )
-			{
-				rider.moveEntity( 0, correction, 0 );
-				rider.onGround = true;
-			}
+			dy += targetY - riderY;
+			
+			// apply the transformation
+			rider.rotationYaw -= dYaw;
+			rider.moveEntity( dx, dy, dz );
+			rider.onGround = true;
 		}
 	}
 	
@@ -937,7 +917,7 @@ public class EntityShip extends Entity
 		
 		// now rotate by the yaw
 		// UNDONE: optimize out the new
-		RotatedBB rotatedBox = new RotatedBB( box.copy(), yaw, posX, posZ );
+		RotatedBB rotatedBox = new RotatedBB( box.copy(), yaw, x, z );
 		
 		// compute the new xz bounds
 		box.minX = Integer.MAX_VALUE;

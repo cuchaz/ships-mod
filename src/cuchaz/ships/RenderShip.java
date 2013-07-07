@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ChunkCoordinates;
@@ -19,7 +20,7 @@ import cuchaz.modsShared.Vector3;
 
 public class RenderShip extends Render
 {
-	private static final ResourceLocation ShipTexture = new ResourceLocation( "/terrain.png" );
+	private static final ResourceLocation ShipTexture = TextureMap.field_110575_b;
 	
 	private RenderBlocks m_renderBlocks;
 	
