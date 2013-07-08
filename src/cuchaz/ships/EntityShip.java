@@ -97,7 +97,7 @@ public class EntityShip extends Entity
 		m_physics = new ShipPhysics( m_blocks );
 		
 		// TEMP: put the ship back
-		if( true )
+		if( false )
 		{
 			posX = 224;
 			posY = 63.4;
@@ -295,8 +295,8 @@ public class EntityShip extends Entity
 		adjustMotionDueToThrust();
 		adjustMotionDueToBlockCollisions();
 		
-		// TEMP
-		if( true )
+		// TEMP: oscillate so we can test entity collision
+		if( false )
 		{
 			motionZ += ( 270 - posZ )/50.0;
 		}
@@ -360,11 +360,10 @@ public class EntityShip extends Entity
 		);
 		
 		moveRiders( riders, dx, dy, dz, dYaw );
-		moveCollidingEntities( riders );
+		//moveCollidingEntities( riders );
 		
 		// reduce the velocity for next time
-		// TEMP
-		//adjustMotionDueToDrag();
+		adjustMotionDueToDrag();
 	}
 	
 	public void worldToShip( Vec3 v )
@@ -871,6 +870,7 @@ public class EntityShip extends Entity
 			entity.posY + maxDy,
 			entity.posZ + maxDz
 		);
+		// UNDONE: change to moveEntity() and get rid of rider snap?
 	}
 	
 	private double getScalingToPushBox( double dx, double dy, double dz, AxisAlignedBB shipBox, AxisAlignedBB externalBox )

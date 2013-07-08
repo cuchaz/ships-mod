@@ -64,8 +64,8 @@ public class RenderShip extends Render
 		
 		GL11.glPopMatrix();
 		
-		// render the block entity bounding boxes
-		if( true )
+		// render debug information
+		if( false )
 		{
 			GL11.glPushMatrix();
 			GL11.glTranslated( x, y, z );
