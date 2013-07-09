@@ -11,12 +11,12 @@ import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipUnbuilder;
 import cuchaz.ships.packets.PacketUnbuildShip;
 
-public class GuiShipUnbuild extends GuiShip
+public class GuiShipUnlaunch extends GuiShip
 {
 	private EntityShip m_ship;
 	private GuiButton m_buttonUnmakeShip;
 	
-	public GuiShipUnbuild( Container container, EntityShip ship )
+	public GuiShipUnlaunch( Container container, EntityShip ship )
 	{
 		super( container );
 		
@@ -37,7 +37,7 @@ public class GuiShipUnbuild extends GuiShip
 			guiTop + ySize - TopMargin - 20,
 			80,
 			20,
-			GuiString.ShipUnbuild.getLocalizedText()
+			GuiString.ShipUnlaunch.getLocalizedText()
 		);
 		ShipUnbuilder unbuilder = new ShipUnbuilder( m_ship );
 		m_buttonUnmakeShip.enabled = unbuilder.isShipInValidUnbuildPosition();

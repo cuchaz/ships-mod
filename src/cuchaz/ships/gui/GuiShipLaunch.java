@@ -17,22 +17,22 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
-import cuchaz.ships.ShipBuilder;
-import cuchaz.ships.ShipBuilder.BuildFlag;
+import cuchaz.ships.ShipLauncher;
+import cuchaz.ships.ShipLauncher.LaunchFlag;
 import cuchaz.ships.packets.PacketBuildShip;
 
-public class GuiShipBuild extends GuiShip
+public class GuiShipLaunch extends GuiShip
 {
 	private static final ResourceLocation ShipTexture = TextureMap.field_110575_b;
 	
-	private ShipBuilder m_shipBuilder;
+	private ShipLauncher m_shipLauncher;
 	private GuiButton m_buttonBuild;
 	
-	public GuiShipBuild( Container container, ShipBuilder shipBuilder )
+	public GuiShipLaunch( Container container, ShipLauncher shipLauncher )
 	{
 		super( container );
 		
-		m_shipBuilder = shipBuilder;
+		m_shipLauncher = shipLauncher;
 		
 		m_buttonBuild = null;
 	}
@@ -49,9 +49,9 @@ public class GuiShipBuild extends GuiShip
 			guiTop + ySize - TopMargin - 20,
 			80,
 			20,
-			GuiString.ShipBuild.getLocalizedText()
+			GuiString.ShipLaunch.getLocalizedText()
 		);
-		m_buttonBuild.enabled = m_shipBuilder.isValidToBuild();
+		m_buttonBuild.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add( m_buttonBuild );
 	}
 	
@@ -61,7 +61,7 @@ public class GuiShipBuild extends GuiShip
 		if( button.id == m_buttonBuild.id )
 		{
 			// tell the server to spawn a ship
-			PacketBuildShip packet = new PacketBuildShip( m_shipBuilder.getX(), m_shipBuilder.getY(), m_shipBuilder.getZ() );
+			PacketBuildShip packet = new PacketBuildShip( m_shipLauncher.getX(), m_shipLauncher.getY(), m_shipLauncher.getZ() );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}
@@ -77,11 +77,11 @@ public class GuiShipBuild extends GuiShip
 		String valueText;
 		
 		// right number of blocks
-		if( m_shipBuilder.getBuildFlag( BuildFlag.RightNumberOfBlocks ) )
+		if( m_shipLauncher.getLaunchFlag( LaunchFlag.RightNumberOfBlocks ) )
 		{
 			valueText = String.format( "%d / %d",
-				m_shipBuilder.getNumBlocks(),
-				m_shipBuilder.getShipType().getMaxNumBlocks()
+				m_shipLauncher.getNumBlocks(),
+				m_shipLauncher.getShipType().getMaxNumBlocks()
 			);
 		}
 		else
@@ -90,32 +90,56 @@ public class GuiShipBuild extends GuiShip
 		}
 		drawText( String.format( "%s: %s", GuiString.ShipNumBlocks.getLocalizedText(), valueText ), 1, textColor );
 		
-		// has water below
-		valueText = getYesNoText( m_shipBuilder.getBuildFlag( BuildFlag.HasWaterBelow ) );
-		drawText( String.format( "%s: %s", GuiString.ShipInOrAboveWater.getLocalizedText(), valueText ), 2, textColor );
-		
-		// has air above
-		valueText = getYesNoText( m_shipBuilder.getBuildFlag( BuildFlag.HasAirAbove ) );
-		drawText( String.format( "%s: %s", GuiString.ShipHasAirAbove.getLocalizedText(), valueText ), 3, textColor );
-		
-		// found water height
-		valueText = getYesNoText( m_shipBuilder.getBuildFlag( BuildFlag.FoundWaterHeight ) );
-		drawText( String.format( "%s: %s", GuiString.ShipFoundWaterHeight.getLocalizedText(), valueText ), 4, textColor );
+		// draw the launch flags
+		drawYesNoText(
+			GuiString.ShipInOrAboveWater.getLocalizedText(),
+			m_shipLauncher.getLaunchFlag( LaunchFlag.HasWaterBelow ),
+			2
+		);
+		drawYesNoText(
+			GuiString.ShipHasAirAbove.getLocalizedText(),
+			m_shipLauncher.getLaunchFlag( LaunchFlag.HasAirAbove ),
+			3
+		);
+		drawYesNoText(
+			GuiString.ShipFoundWaterHeight.getLocalizedText(),
+			m_shipLauncher.getLaunchFlag( LaunchFlag.FoundWaterHeight ),
+			4
+		);
+		drawYesNoText(
+			GuiString.ShipWillItFloat.getLocalizedText(),
+			m_shipLauncher.getLaunchFlag( LaunchFlag.WillItFloat ),
+			5
+		);
 		
 		// draw the ship and show the water height
 		final int ShipHeight = 64;
-		BlockSide shipSide = m_shipBuilder.getShipSide();
+		BlockSide shipSide = m_shipLauncher.getShipSide();
 		if( shipSide != null )
 		{
-			drawShipSide( shipSide, LeftMargin, getLineY( 5 ), xSize - LeftMargin*2, ShipHeight );
+			drawShipSide( shipSide, LeftMargin, getLineY( 6 ), xSize - LeftMargin*2, ShipHeight );
 		}
-		
-		// UNDONE: choose a ship name
 	}
 	
+	private void drawYesNoText( String labelText, boolean isYes, int lineNum )
+	{
+		final int TextColor = ColorUtils.getGrey( 64 );
+		final int YesColor = ColorUtils.getColor( 0, 160, 0 );
+		final int NoColor = ColorUtils.getColor( 160, 0, 0 );
+		
+		// draw the label
+		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		
+		// draw the value
+		String valueText = isYes ? "Yes" : "No";
+		int valueColor = isYes ? YesColor : NoColor;
+		int valueWidth = fontRenderer.getStringWidth( valueText );
+		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );
+	}
+
 	private void drawShipSide( BlockSide side, int x, int y, int maxWidth, int maxHeight )
 	{
-		BlockArray envelope = m_shipBuilder.getShipEnvelope( side );
+		BlockArray envelope = m_shipLauncher.getShipEnvelope( side );
 		
 		// compute the block size
 		double blockSize = Math.min(
@@ -124,17 +148,18 @@ public class GuiShipBuild extends GuiShip
 		);
 		
 		// shink the block size so we have some border
-		blockSize *= 0.8;double actualWidth = (double)envelope.getWidth()*blockSize;
+		blockSize *= 0.8;
 		
-		double actualHeight = (double)envelope.getHeight()*blockSize;
+		double shipWidth = (double)envelope.getWidth()*blockSize;
+		double shipHeight = (double)envelope.getHeight()*blockSize;
 		
 		// compute the water height
-		double waterHeight = m_shipBuilder.getEquilibriumWaterHeight();
+		double waterHeight = m_shipLauncher.getEquilibriumWaterHeight();
 		
-		double waterRectHeight = height;
+		double waterRectHeight = maxHeight;
 		if( !Double.isNaN( waterHeight ) )
 		{
-			waterRectHeight = ( waterHeight - envelope.getVMin() )*blockSize + ( maxHeight - actualHeight )/2.0;
+			waterRectHeight = Math.min( maxHeight, ( waterHeight - envelope.getVMin() )*blockSize + ( maxHeight - shipHeight )/2.0 );
 		}
 		
 		// draw the water rect
@@ -155,14 +180,14 @@ public class GuiShipBuild extends GuiShip
 				}
 				
 				// get the block texture
-				Block block = Block.blocksList[m_shipBuilder.getWorld().getBlockId( coords.posX, coords.posY, coords.posZ )];
-				int meta = m_shipBuilder.getWorld().getBlockMetadata( coords.posX, coords.posY, coords.posZ );
-				Icon icon = block.getBlockTexture( m_shipBuilder.getWorld(), coords.posX, coords.posY, coords.posZ, meta );
+				Block block = Block.blocksList[m_shipLauncher.getWorld().getBlockId( coords.posX, coords.posY, coords.posZ )];
+				int meta = m_shipLauncher.getWorld().getBlockMetadata( coords.posX, coords.posY, coords.posZ );
+				Icon icon = block.getBlockTexture( m_shipLauncher.getWorld(), coords.posX, coords.posY, coords.posZ, meta );
 				
 				// draw a block right on the GUI
 				drawScaledBlock(
-					( maxWidth - actualWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
-					( maxHeight - actualHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
+					( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
+					( maxHeight - shipHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
 					blockSize,
 					blockSize,
 					icon

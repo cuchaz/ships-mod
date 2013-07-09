@@ -10,11 +10,12 @@ public enum GuiString
 	ShipDashboard( "Ship Dashboard" ),
 	ShipNumBlocks( "Blocks" ),
 	ShipTooLarge( "Ship is too large!" ),
-	ShipBuild( "Build Ship" ),
-	ShipUnbuild( "Unbuild Ship" ),
+	ShipLaunch( "Launch Ship" ),
+	ShipUnlaunch( "Dock Ship" ),
 	ShipInOrAboveWater( "Ship in or above water" ),
 	ShipHasAirAbove( "Ship has air above" ),
-	ShipFoundWaterHeight( "Found water height" );
+	ShipFoundWaterHeight( "Found water surface" ),
+	ShipWillItFloat( "Will it float" );
 	
 	private String m_unlocalizedText;
 	

@@ -14,14 +14,15 @@ import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
 
-public class ShipBuilder
+public class ShipLauncher
 {
-	public static enum BuildFlag
+	public static enum LaunchFlag
 	{
 		RightNumberOfBlocks,
 		HasWaterBelow,
 		HasAirAbove,
-		FoundWaterHeight;
+		FoundWaterHeight,
+		WillItFloat;
 	}
 	
 	private World m_world;
@@ -30,11 +31,13 @@ public class ShipBuilder
 	private int m_z;
 	private ShipType m_shipType;
 	private List<ChunkCoordinates> m_blocks; // NOTE: blocks are in world coordinates
-	private List<Boolean> m_buildFlags;
+	private List<Boolean> m_launchFlags;
 	private Envelopes m_envelopes;
+	private ShipWorld m_shipWorld;
+	private ShipPhysics m_shipPhysics;
 	private double m_equilibriumWaterHeight;
 	
-	public ShipBuilder( World world, int x, int y, int z )
+	public ShipLauncher( World world, int x, int y, int z )
 	{
 		m_world = world;
 		m_x = x;
@@ -64,15 +67,19 @@ public class ShipBuilder
 			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
 			
 			m_envelopes = new Envelopes( m_blocks );
-			m_equilibriumWaterHeight = new ShipPhysics( new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks ) ).getEquilibriumWaterHeight();
+			m_shipWorld = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
+			m_shipPhysics = new ShipPhysics( m_shipWorld );
+			m_equilibriumWaterHeight = m_shipPhysics.getEquilibriumWaterHeight();
 		}
 		else
 		{
 			m_envelopes = null;
+			m_shipWorld = null;
+			m_shipPhysics = null;
 			m_equilibriumWaterHeight = Double.NaN;
 		}
 		
-		computeBuildFlags();
+		computeLaunchFlags();
 	}
 	
 	public int getX( )
@@ -106,21 +113,21 @@ public class ShipBuilder
 		return m_blocks.size() - 1;
 	}
 	
-	public boolean getBuildFlag( BuildFlag flag )
+	public boolean getLaunchFlag( LaunchFlag flag )
 	{
-		return m_buildFlags.get( flag.ordinal() );
+		return m_launchFlags.get( flag.ordinal() );
 	}
-	private void setBuildFlag( BuildFlag flag, boolean val )
+	private void setLaunchFlag( LaunchFlag flag, boolean val )
 	{
-		m_buildFlags.set( flag.ordinal(), val );
+		m_launchFlags.set( flag.ordinal(), val );
 	}
 	
-	public boolean isValidToBuild( )
+	public boolean isLaunchable( )
 	{
 		boolean isValid = true;
-		for( BuildFlag flag : BuildFlag.values() )
+		for( LaunchFlag flag : LaunchFlag.values() )
 		{
-			isValid = isValid && getBuildFlag( flag );
+			isValid = isValid && getLaunchFlag( flag );
 		}
 		return isValid;
 	}
@@ -166,7 +173,7 @@ public class ShipBuilder
 		return m_equilibriumWaterHeight + m_y;
 	}
 	
-	public EntityShip build( )
+	public EntityShip launch( )
 	{
 		int waterHeight = computeWaterHeight();
 		
@@ -176,6 +183,10 @@ public class ShipBuilder
 		ship.setShipType( m_shipType );
 		ship.setWaterHeight( waterHeight );
 		ship.setBlocks( new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks ) );
+		
+		// NEXTTIME: need to fix weird new bug with ship launching...
+		// ship entity appears in the wrong position?
+		// Maybe it's a problem with translations between ship space and world space?
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{
@@ -249,56 +260,63 @@ public class ShipBuilder
 		return -1;
 	}
 	
-	private void computeBuildFlags( )
+	private void computeLaunchFlags( )
 	{
 		// init the flags
-		m_buildFlags = new ArrayList<Boolean>( BuildFlag.values().length );
-		for( int i=0; i<BuildFlag.values().length; i++ )
+		m_launchFlags = new ArrayList<Boolean>( LaunchFlag.values().length );
+		for( int i=0; i<LaunchFlag.values().length; i++ )
 		{
-			m_buildFlags.add( false );
+			m_launchFlags.add( false );
 		}
 		
 		// right number of blocks
-		setBuildFlag( BuildFlag.RightNumberOfBlocks,
+		setLaunchFlag( LaunchFlag.RightNumberOfBlocks,
 			m_blocks != null
 			&& !m_blocks.isEmpty()
 			&& m_blocks.size() <= m_shipType.getMaxNumBlocks()
 		);
 		
 		// has water below
-		setBuildFlag( BuildFlag.HasWaterBelow, false );
+		setLaunchFlag( LaunchFlag.HasWaterBelow, false );
 		if( m_blocks != null )
 		{
-			setBuildFlag( BuildFlag.HasWaterBelow, true );
+			setLaunchFlag( LaunchFlag.HasWaterBelow, true );
 			for( ChunkCoordinates coords : m_envelopes.getEnvelope( BlockSide.Bottom ) )
 			{
 				if( !hasWaterBelow( coords ) )
 				{
-					setBuildFlag( BuildFlag.HasWaterBelow, false );
+					setLaunchFlag( LaunchFlag.HasWaterBelow, false );
 					break;
 				}
 			}
 		}
 		
 		// has air above
-		setBuildFlag( BuildFlag.HasAirAbove, false );
+		setLaunchFlag( LaunchFlag.HasAirAbove, false );
 		if( m_blocks != null )
 		{
 			for( ChunkCoordinates coords : m_envelopes.getEnvelope( BlockSide.Top ) )
 			{
 				if( m_world.getBlockMaterial( coords.posX, coords.posY + 1, coords.posZ ) == Material.air )
 				{
-					setBuildFlag( BuildFlag.HasAirAbove, true );
+					setLaunchFlag( LaunchFlag.HasAirAbove, true );
 					break;
 				}
 			}
 		}
 		
 		// found water height
-		setBuildFlag( BuildFlag.FoundWaterHeight, false );
+		setLaunchFlag( LaunchFlag.FoundWaterHeight, false );
 		if( m_blocks != null )
 		{
-			setBuildFlag( BuildFlag.FoundWaterHeight, computeWaterHeight() != -1 );
+			setLaunchFlag( LaunchFlag.FoundWaterHeight, computeWaterHeight() != -1 );
+		}
+		
+		// will it float
+		setLaunchFlag( LaunchFlag.WillItFloat, false );
+		if( m_blocks != null )
+		{
+			setLaunchFlag( LaunchFlag.WillItFloat, m_equilibriumWaterHeight - m_y < m_shipWorld.getMax().posY + 1 );
 		}
 	}
 	
