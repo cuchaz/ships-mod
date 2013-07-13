@@ -76,23 +76,33 @@ public class MaterialProperties
 	    m_properties.put( Material.fire, new Entry( 0.0, false ) );
 	}
 	
-	public static double getMass( Material material )
-	{
-		return m_properties.get( material ).mass;
-	}
-	
 	public static double getMass( Block block )
 	{
-		return getMass( block.blockMaterial );
-	}
-	
-	public static boolean isWatertight( Material material )
-	{
-		return m_properties.get( material ).isWatertight;
+		if( block == null )
+		{
+			return 0;
+		}
+		return m_properties.get( block.blockMaterial ).mass;
 	}
 	
 	public static boolean isWatertight( Block block )
 	{
-		return isWatertight( block.blockMaterial );
+		if( block == null )
+		{
+			return false;
+		}
+		return m_properties.get( block.blockMaterial ).isWatertight;
+	}
+	
+	public static boolean isSeparatorBlock( Block block )
+	{
+		if( block == null )
+		{
+			return true;
+		}
+		
+		return block.blockMaterial.isLiquid() || block.blockMaterial == Material.fire;
+		
+		// UNDONE: add dock blocks
 	}
 }

@@ -8,7 +8,7 @@ import net.minecraft.inventory.Container;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.ShipUnbuilder;
+import cuchaz.ships.ShipUnlauncher;
 import cuchaz.ships.packets.PacketUnbuildShip;
 
 public class GuiShipUnlaunch extends GuiShip
@@ -39,8 +39,8 @@ public class GuiShipUnlaunch extends GuiShip
 			20,
 			GuiString.ShipUnlaunch.getLocalizedText()
 		);
-		ShipUnbuilder unbuilder = new ShipUnbuilder( m_ship );
-		m_buttonUnmakeShip.enabled = unbuilder.isShipInValidUnbuildPosition();
+		ShipUnlauncher unbuilder = new ShipUnlauncher( m_ship );
+		m_buttonUnmakeShip.enabled = unbuilder.isUnlaunchable();
 		buttonList.add( m_buttonUnmakeShip );
 	}
 	

@@ -3,7 +3,7 @@ package cuchaz.ships;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.minecraft.block.material.Material;
+import net.minecraft.block.Block;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 
@@ -26,7 +26,7 @@ public class ShipPhysics
 			// UNDONE: get trapped air blocks too
 			
 			// skip non-watertight blocks
-			if( !MaterialProperties.isWatertight( getBlockMaterial( coords ) ) )
+			if( !MaterialProperties.isWatertight( getBlock( coords ) ) )
 			{
 				continue;
 			}
@@ -45,7 +45,7 @@ public class ShipPhysics
 		m_shipMass = 0.0;
 		for( ChunkCoordinates coords : m_blocks.coords() )
 		{
-			m_shipMass += MaterialProperties.getMass( getBlockMaterial( coords ) );
+			m_shipMass += MaterialProperties.getMass( getBlock( coords ) );
 		}
 	}
 	
@@ -55,7 +55,7 @@ public class ShipPhysics
 		double totalMass = 0.0;
 		for( ChunkCoordinates coords : m_blocks.coords() )
 		{
-			double mass = MaterialProperties.getMass( getBlockMaterial( coords ) );
+			double mass = MaterialProperties.getMass( getBlock( coords ) );
 			totalMass += mass;
 			com.xCoord += mass*( coords.posX + 0.5 );
 			com.yCoord += mass*( coords.posY + 0.5 );
@@ -133,14 +133,14 @@ public class ShipPhysics
 		}
 	}
 	
-	private Material getBlockMaterial( ChunkCoordinates coords )
+	private Block getBlock( ChunkCoordinates coords )
 	{
-		return m_blocks.getBlockMaterial( coords.posX, coords.posY, coords.posZ );
+		return Block.blocksList[m_blocks.getBlockId( coords.posX, coords.posY, coords.posZ )];
 	}
 	
 	private double getWaterMass( int y, double waterHeight )
 	{
 		// UNDONE: use the surface height make the mass increase with depth
-		return MaterialProperties.getMass( Material.water );
+		return MaterialProperties.getMass( Block.waterStill );
 	}
 }

@@ -1,6 +1,5 @@
 package cuchaz.ships;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -18,11 +17,84 @@ public class ShipLauncher
 {
 	public static enum LaunchFlag
 	{
-		RightNumberOfBlocks,
-		HasWaterBelow,
-		HasAirAbove,
-		FoundWaterHeight,
-		WillItFloat;
+		RightNumberOfBlocks
+		{
+			@Override
+			public boolean computeValue( ShipLauncher launcher )
+			{
+				return launcher.m_blocks != null
+					&& !launcher.m_blocks.isEmpty()
+					&& launcher.m_blocks.size() <= launcher.m_shipType.getMaxNumBlocks();
+			}
+		},
+		HasWaterBelow
+		{
+			@Override
+			public boolean computeValue( ShipLauncher launcher )
+			{
+				if( launcher.m_blocks == null )
+				{
+					return false;
+				}
+				
+				for( ChunkCoordinates coords : launcher.m_envelopes.getEnvelope( BlockSide.Bottom ) )
+				{
+					if( !launcher.hasWaterBelow( coords ) )
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+		},
+		HasAirAbove
+		{
+			@Override
+			public boolean computeValue( ShipLauncher launcher )
+			{
+				if( launcher.m_blocks == null )
+				{
+					return false;
+				}
+				
+				for( ChunkCoordinates coords : launcher.m_envelopes.getEnvelope( BlockSide.Top ) )
+				{
+					if( launcher.m_world.getBlockMaterial( coords.posX, coords.posY + 1, coords.posZ ) == Material.air )
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+		},
+		FoundWaterHeight
+		{
+			@Override
+			public boolean computeValue( ShipLauncher launcher )
+			{
+				if( launcher.m_blocks == null )
+				{
+					return false;
+				}
+				
+				return launcher.computeWaterHeight() != -1;
+			}
+		},
+		WillItFloat
+		{
+			@Override
+			public boolean computeValue( ShipLauncher launcher )
+			{
+				if( launcher.m_blocks == null )
+				{
+					return false;
+				}
+				
+				return launcher.m_equilibriumWaterHeight - launcher.m_y < launcher.m_shipWorld.getMax().posY + 1;
+			}
+		};
+
+		public abstract boolean computeValue( ShipLauncher launcher );
 	}
 	
 	private World m_world;
@@ -56,7 +128,7 @@ public class ShipLauncher
 				@Override
 				public boolean isValid( IBlockAccess world, int x, int y, int z )
 				{
-					return !isShipSeparatorBlock( world, x, y, z );
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( x, y, z )] );
 				}
 			}
 		);
@@ -79,7 +151,11 @@ public class ShipLauncher
 			m_equilibriumWaterHeight = Double.NaN;
 		}
 		
-		computeLaunchFlags();
+		// compute the launch flags
+		for( LaunchFlag flag : LaunchFlag.values() )
+		{
+			setLaunchFlag( flag, flag.computeValue( this ) );
+		}
 	}
 	
 	public int getX( )
@@ -258,74 +334,6 @@ public class ShipLauncher
 		}
 		
 		return -1;
-	}
-	
-	private void computeLaunchFlags( )
-	{
-		// init the flags
-		m_launchFlags = new ArrayList<Boolean>( LaunchFlag.values().length );
-		for( int i=0; i<LaunchFlag.values().length; i++ )
-		{
-			m_launchFlags.add( false );
-		}
-		
-		// right number of blocks
-		setLaunchFlag( LaunchFlag.RightNumberOfBlocks,
-			m_blocks != null
-			&& !m_blocks.isEmpty()
-			&& m_blocks.size() <= m_shipType.getMaxNumBlocks()
-		);
-		
-		// has water below
-		setLaunchFlag( LaunchFlag.HasWaterBelow, false );
-		if( m_blocks != null )
-		{
-			setLaunchFlag( LaunchFlag.HasWaterBelow, true );
-			for( ChunkCoordinates coords : m_envelopes.getEnvelope( BlockSide.Bottom ) )
-			{
-				if( !hasWaterBelow( coords ) )
-				{
-					setLaunchFlag( LaunchFlag.HasWaterBelow, false );
-					break;
-				}
-			}
-		}
-		
-		// has air above
-		setLaunchFlag( LaunchFlag.HasAirAbove, false );
-		if( m_blocks != null )
-		{
-			for( ChunkCoordinates coords : m_envelopes.getEnvelope( BlockSide.Top ) )
-			{
-				if( m_world.getBlockMaterial( coords.posX, coords.posY + 1, coords.posZ ) == Material.air )
-				{
-					setLaunchFlag( LaunchFlag.HasAirAbove, true );
-					break;
-				}
-			}
-		}
-		
-		// found water height
-		setLaunchFlag( LaunchFlag.FoundWaterHeight, false );
-		if( m_blocks != null )
-		{
-			setLaunchFlag( LaunchFlag.FoundWaterHeight, computeWaterHeight() != -1 );
-		}
-		
-		// will it float
-		setLaunchFlag( LaunchFlag.WillItFloat, false );
-		if( m_blocks != null )
-		{
-			setLaunchFlag( LaunchFlag.WillItFloat, m_equilibriumWaterHeight - m_y < m_shipWorld.getMax().posY + 1 );
-		}
-	}
-	
-	private boolean isShipSeparatorBlock( IBlockAccess world, int x, int y, int z )
-	{
-		Material material = world.getBlockMaterial( x, y, z );
-		return material == Material.air || material.isLiquid() || material == Material.fire;
-		
-		// UNDONE: add dock blocks
 	}
 	
 	private boolean hasWaterBelow( ChunkCoordinates coords )
