@@ -7,20 +7,20 @@ import java.io.IOException;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.ShipLauncher;
 
-public class PacketBuildShip extends Packet
+public class PacketLaunchShip extends Packet
 {
-	public static final String Channel = "buildShip";
+	public static final String Channel = "launchShip";
 	
 	private int m_x;
 	private int m_y;
 	private int m_z;
 	
-	public PacketBuildShip( )
+	public PacketLaunchShip( )
 	{
 		super( Channel );
 	}
 	
-	public PacketBuildShip( int x, int y, int z )
+	public PacketLaunchShip( int x, int y, int z )
 	{
 		this();
 		
@@ -51,10 +51,10 @@ public class PacketBuildShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// spawn the ship
-		ShipLauncher builder = new ShipLauncher( player.worldObj, m_x, m_y, m_z );
-		if( builder.isLaunchable() )
+		ShipLauncher launcher = new ShipLauncher( player.worldObj, m_x, m_y, m_z );
+		if( launcher.isLaunchable() )
 		{
-			builder.launch();
+			launcher.launch();
 		}
 	}
 }

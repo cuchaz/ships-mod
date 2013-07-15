@@ -157,6 +157,16 @@ public class ShipWorld extends DetatchedWorld
 		}
 	}
 	
+	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence )
+	{
+		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+		{
+			ChunkCoordinates coords = correspondence.get( entry.getKey() );
+			BlockStorage storage = entry.getValue();
+			storage.copyToWorld( world, new ChunkCoordinates( coords.posX, coords.posY, coords.posZ ) );
+		}
+	}
+	
 	public EntityShip getShip( )
 	{
 		return m_ship;

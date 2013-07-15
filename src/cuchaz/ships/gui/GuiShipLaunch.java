@@ -19,14 +19,14 @@ import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLauncher.LaunchFlag;
-import cuchaz.ships.packets.PacketBuildShip;
+import cuchaz.ships.packets.PacketLaunchShip;
 
 public class GuiShipLaunch extends GuiShip
 {
 	private static final ResourceLocation ShipTexture = TextureMap.field_110575_b;
 	
 	private ShipLauncher m_shipLauncher;
-	private GuiButton m_buttonBuild;
+	private GuiButton m_buttonLaunchShip;
 	
 	public GuiShipLaunch( Container container, ShipLauncher shipLauncher )
 	{
@@ -34,7 +34,7 @@ public class GuiShipLaunch extends GuiShip
 		
 		m_shipLauncher = shipLauncher;
 		
-		m_buttonBuild = null;
+		m_buttonLaunchShip = null;
 	}
 	
 	@Override
@@ -44,24 +44,24 @@ public class GuiShipLaunch extends GuiShip
 		super.initGui();
 		
 		// add the buttons
-		m_buttonBuild = new GuiButton( 
+		m_buttonLaunchShip = new GuiButton( 
 			0, guiLeft + LeftMargin,
 			guiTop + ySize - TopMargin - 20,
 			80,
 			20,
 			GuiString.ShipLaunch.getLocalizedText()
 		);
-		m_buttonBuild.enabled = m_shipLauncher.isLaunchable();
-		buttonList.add( m_buttonBuild );
+		m_buttonLaunchShip.enabled = m_shipLauncher.isLaunchable();
+		buttonList.add( m_buttonLaunchShip );
 	}
 	
 	@Override
 	protected void actionPerformed( GuiButton button )
 	{
-		if( button.id == m_buttonBuild.id )
+		if( button.id == m_buttonLaunchShip.id )
 		{
 			// tell the server to spawn a ship
-			PacketBuildShip packet = new PacketBuildShip( m_shipLauncher.getX(), m_shipLauncher.getY(), m_shipLauncher.getZ() );
+			PacketLaunchShip packet = new PacketLaunchShip( m_shipLauncher.getX(), m_shipLauncher.getY(), m_shipLauncher.getZ() );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}
@@ -121,22 +121,6 @@ public class GuiShipLaunch extends GuiShip
 		}
 	}
 	
-	private void drawYesNoText( String labelText, boolean isYes, int lineNum )
-	{
-		final int TextColor = ColorUtils.getGrey( 64 );
-		final int YesColor = ColorUtils.getColor( 0, 160, 0 );
-		final int NoColor = ColorUtils.getColor( 160, 0, 0 );
-		
-		// draw the label
-		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
-		
-		// draw the value
-		String valueText = isYes ? "Yes" : "No";
-		int valueColor = isYes ? YesColor : NoColor;
-		int valueWidth = fontRenderer.getStringWidth( valueText );
-		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );
-	}
-
 	private void drawShipSide( BlockSide side, int x, int y, int maxWidth, int maxHeight )
 	{
 		BlockArray envelope = m_shipLauncher.getShipEnvelope( side );

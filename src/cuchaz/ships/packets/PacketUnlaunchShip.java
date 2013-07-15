@@ -9,18 +9,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipUnlauncher;
 
-public class PacketUnbuildShip extends Packet
+public class PacketUnlaunchShip extends Packet
 {
-	public static final String Channel = "unbuildShip";
+	public static final String Channel = "unlaunchShip";
 	
 	private int m_entityId;
 	
-	public PacketUnbuildShip( )
+	public PacketUnlaunchShip( )
 	{
 		super( Channel );
 	}
 	
-	public PacketUnbuildShip( int entityId )
+	public PacketUnlaunchShip( int entityId )
 	{
 		this();
 		
@@ -52,11 +52,11 @@ public class PacketUnbuildShip extends Packet
 		}
 		EntityShip ship = (EntityShip)entity;
 		
-		// unbuild the ship
-		ShipUnlauncher unbuilder = new ShipUnlauncher( ship );
-		if( unbuilder.isUnlaunchable() )
+		// unlaunch the ship
+		ShipUnlauncher unlauncher = new ShipUnlauncher( ship );
+		if( unlauncher.isUnlaunchable() )
 		{
-			unbuilder.unlaunch();
+			unlauncher.unlaunch();
 		}
 	}
 }

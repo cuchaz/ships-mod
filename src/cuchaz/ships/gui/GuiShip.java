@@ -8,6 +8,8 @@ import net.minecraft.inventory.Container;
 
 import org.lwjgl.opengl.GL11;
 
+import cuchaz.modsShared.ColorUtils;
+
 public abstract class GuiShip extends GuiCloseable
 {
 	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/ship.png" );
@@ -39,6 +41,22 @@ public abstract class GuiShip extends GuiCloseable
 	protected String getYesNoText( boolean flag )
 	{
 		return flag ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText();
+	}
+	
+	protected void drawYesNoText( String labelText, boolean isYes, int lineNum )
+	{
+		final int TextColor = ColorUtils.getGrey( 64 );
+		final int YesColor = ColorUtils.getColor( 0, 160, 0 );
+		final int NoColor = ColorUtils.getColor( 160, 0, 0 );
+		
+		// draw the label
+		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		
+		// draw the value
+		String valueText = isYes ? "Yes" : "No";
+		int valueColor = isYes ? YesColor : NoColor;
+		int valueWidth = fontRenderer.getStringWidth( valueText );
+		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );
 	}
 	
 	protected int getLineY( int lineNum )

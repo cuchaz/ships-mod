@@ -19,17 +19,17 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
-import cuchaz.ships.packets.PacketBuildShip;
+import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketPilotShip;
-import cuchaz.ships.packets.PacketUnbuildShip;
+import cuchaz.ships.packets.PacketUnlaunchShip;
 
 @Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
 @NetworkMod(
 	clientSideRequired = true,
 	serverSideRequired = true,
 	// NOTE: 20-character limit for channel names
-	channels = { PacketBuildShip.Channel, PacketUnbuildShip.Channel, PacketPilotShip.Channel },
+	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel },
 	packetHandler = PacketHandler.class
 )
 

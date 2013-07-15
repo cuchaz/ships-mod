@@ -1,10 +1,12 @@
 package cuchaz.ships;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockArray;
@@ -152,9 +154,10 @@ public class ShipLauncher
 		}
 		
 		// compute the launch flags
+		m_launchFlags = new ArrayList<Boolean>();
 		for( LaunchFlag flag : LaunchFlag.values() )
 		{
-			setLaunchFlag( flag, flag.computeValue( this ) );
+			m_launchFlags.add( flag.computeValue( this ) );
 		}
 	}
 	
@@ -253,16 +256,20 @@ public class ShipLauncher
 	{
 		int waterHeight = computeWaterHeight();
 		
+		ShipWorld blocks = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
+		Vec3 centerOfMass = new ShipPhysics( blocks ).getCenterOfMass();
+		
 		// spawn a ship entity
 		EntityShip ship = new EntityShip( m_world );
-		ship.setPositionAndRotation( m_x, m_y, m_z, 0, 0 );
+		ship.setPositionAndRotation(
+			m_x + centerOfMass.xCoord,
+			m_y + centerOfMass.yCoord,
+			m_z + centerOfMass.zCoord,
+			0, 0
+		);
 		ship.setShipType( m_shipType );
 		ship.setWaterHeight( waterHeight );
-		ship.setBlocks( new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks ) );
-		
-		// NEXTTIME: need to fix weird new bug with ship launching...
-		// ship entity appears in the wrong position?
-		// Maybe it's a problem with translations between ship space and world space?
+		ship.setBlocks( blocks );
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{

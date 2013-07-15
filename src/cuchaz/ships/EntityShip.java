@@ -99,9 +99,9 @@ public class EntityShip extends Entity
 		// TEMP: put the ship back
 		if( false )
 		{
-			posX = 224;
+			posX = 136;
 			posY = 63.4;
-			posZ = 269;
+			posZ = 274;
 		}
 		
 		// get the ship center of mass so we can convert between ship/block spaces
@@ -686,7 +686,7 @@ public class EntityShip extends Entity
 		return s;
 	}
 	
-	private List<Entity> getRiders( )
+	public List<Entity> getRiders( )
 	{
 		final double Expand = 0.5;
 		AxisAlignedBB checkBox = AxisAlignedBB.getAABBPool().getAABB(
