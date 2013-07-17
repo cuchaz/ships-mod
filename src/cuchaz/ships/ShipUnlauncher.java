@@ -62,10 +62,6 @@ public class ShipUnlauncher
 							continue;
 						}
 						
-						// TEMP
-						Block block = getBlock( unlauncher.m_ship.worldObj, neighborCoords );
-						System.out.println( "Neighbor block: " + ( block == null ? "air" : block.getUnlocalizedName() ) );
-						
 						if( !MaterialProperties.isSeparatorBlock( getBlock( unlauncher.m_ship.worldObj, neighborCoords ) ) )
 						{
 							return false;
@@ -144,10 +140,6 @@ public class ShipUnlauncher
 	public boolean getUnlaunchFlag( UnlaunchFlag flag )
 	{
 		return m_unlaunchFlags.get( flag.ordinal() );
-	}
-	private void setUnlaunchFlag( UnlaunchFlag flag, boolean val )
-	{
-		m_unlaunchFlags.set( flag.ordinal(), val );
 	}
 	
 	public boolean isUnlaunchable( )

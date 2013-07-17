@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
@@ -19,6 +21,9 @@ import net.minecraft.world.World;
 import org.apache.commons.codec.binary.Base64;
 
 import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
+import cuchaz.modsShared.BlockUtils.BlockValidator;
 import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.RotatedBB;
 
@@ -36,7 +41,7 @@ public class ShipWorld extends DetatchedWorld
 			blockId = 0;
 			blockMeta = 0;
 		}
-
+		
 		public void writeData( DataOutputStream out )
 		throws IOException
 		{
@@ -70,6 +75,9 @@ public class ShipWorld extends DetatchedWorld
 	private EntityShip m_ship;
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
+	private TreeSet<ChunkCoordinates> m_outerBoundary;
+	private List<TreeSet<ChunkCoordinates>> m_holes;
+	private TreeMap<Integer,TreeSet<ChunkCoordinates>> m_trappedAir;
 	
 	private ShipWorld( World world )
 	{
@@ -79,6 +87,9 @@ public class ShipWorld extends DetatchedWorld
 		m_ship = null;
 		m_blocks = null;
 		m_airBlockStorage = new BlockStorage();
+		m_outerBoundary = null;
+		m_holes = null;
+		m_trappedAir = null;
 	}
 	
 	public ShipWorld( World world, ChunkCoordinates originCoords, List<ChunkCoordinates> blocks )
@@ -101,6 +112,9 @@ public class ShipWorld extends DetatchedWorld
 			);
 			m_blocks.put( relativeCoords, storage );
 		}
+		
+		computeBoundaryAndHoles();
+		computeTrappedAir();
 	}
 	
 	public ShipWorld( World world, byte[] data )
@@ -134,6 +148,10 @@ public class ShipWorld extends DetatchedWorld
 					
 					m_blocks.put( coords, storage );
 				}
+				
+				// update secondary structures
+				computeBoundaryAndHoles();
+				computeTrappedAir();
 			}
 		}
 		catch( IOException ex )
@@ -384,5 +402,196 @@ public class ShipWorld extends DetatchedWorld
 	{
 		return px >= blockX && px <= blockX + 1
 			&& pz >= blockZ && pz <= blockZ + 1;
+	}
+	
+	private void computeBoundaryAndHoles( )
+	{
+		// first, get all boundary blocks
+		final TreeSet<ChunkCoordinates> boundaryBlocks = new TreeSet<ChunkCoordinates>();
+		ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
+		for( ChunkCoordinates coords : m_blocks.keySet() )
+		{
+			// for each neighbor
+			for( BlockSide side : BlockSide.values() )
+			{
+				neighborCoords.posX = coords.posX + side.getDx();
+				neighborCoords.posY = coords.posY + side.getDy();
+				neighborCoords.posZ = coords.posZ + side.getDz();
+				
+				// if it's not a ship block, it's a boundary block
+				if( !m_blocks.keySet().contains( neighborCoords ) )
+				{
+					boundaryBlocks.add( new ChunkCoordinates( neighborCoords ) );
+				}
+			}
+		}
+		
+		// boundaryBlocks will have some number of connected components. Find them all and classify each as inner/outer
+		m_holes = new ArrayList<TreeSet<ChunkCoordinates>>();
+		while( !boundaryBlocks.isEmpty() )
+		{
+			// get a block
+			ChunkCoordinates coords = boundaryBlocks.first();
+			
+			// do BFS from this block to find the connected component
+			TreeSet<ChunkCoordinates> component = new TreeSet<ChunkCoordinates>( BlockUtils.searchForBlocks(
+				coords,
+				boundaryBlocks.size(),
+				new BlockValidator( )
+				{
+					@Override
+					public boolean isValid( ChunkCoordinates coords )
+					{
+						return boundaryBlocks.contains( coords );
+					}
+				}
+			) );
+			
+			// remove the component from the boundary blocks
+			boundaryBlocks.removeAll( component );
+			
+			// is this component the outer boundary?
+			if( isConnectedToShell( component.first() ) )
+			{
+				if( m_outerBoundary != null )
+				{
+					throw new Error( "Cannot have more than one outer boundary!" );
+				}
+				
+				m_outerBoundary = component;
+			}
+			else
+			{
+				// compute the hole from the boundary
+				m_holes.add( getHoleFromInnerBoundary( component ) );
+			}
+		}
+	}
+	
+	private boolean isConnectedToShell( ChunkCoordinates coords )
+	{
+		// UNDONE: modify for y-limit
+		
+		// determine the shell dimensions
+		final ChunkCoordinates min = getMin();
+		final ChunkCoordinates max = getMax();
+		
+		// don't check more blocks than can fit in the shell
+		int volume = ( max.posX - min.posX + 3 ) * ( max.posY - min.posY + 3 ) * ( max.posZ - min.posZ + 3 );
+		
+		Boolean result = BlockUtils.searchForCondition(
+			coords,
+			volume,
+			new BlockConditionValidator( )
+			{
+				@Override
+				public boolean isValid( ChunkCoordinates coords )
+				{
+					return !m_blocks.keySet().contains( coords );
+				}
+
+				@Override
+				public boolean isConditionMet( ChunkCoordinates coords )
+				{
+					return coords.posX < min.posX || coords.posX > max.posX
+						|| coords.posY < min.posY || coords.posY > max.posY
+						|| coords.posZ < min.posZ || coords.posZ > max.posZ;
+				}
+			}
+		);
+		
+		// just in case...
+		if( result == null )
+		{
+			throw new Error( "We evaluated too many blocks checking for the shell. This shouldn't have happened." );
+		}
+		
+		return result;
+	}
+	
+	private TreeSet<ChunkCoordinates> getHoleFromInnerBoundary( TreeSet<ChunkCoordinates> component )
+	{
+		// get the number of blocks inside the shell to use as an upper bound
+		ChunkCoordinates min = getMin();
+		ChunkCoordinates max = getMax();
+		int volume = ( max.posX - min.posX + 1 ) * ( max.posY - min.posY + 1 ) * ( max.posZ - min.posZ + 1 );
+		
+		// use BFS to find the enclosed volume
+		List<ChunkCoordinates> holeBlocks = BlockUtils.searchForBlocks(
+			component.first(),
+			volume,
+			new BlockValidator( )
+			{
+				@Override
+				public boolean isValid( ChunkCoordinates coords )
+				{
+					return !m_blocks.keySet().contains( coords );
+				}
+			}
+		);
+		
+		// just in case...
+		if( holeBlocks == null )
+		{
+			throw new Error( "Found too many enclosed blocks!" );
+		}
+		
+		return new TreeSet<ChunkCoordinates>( holeBlocks );
+	}
+	
+	private void computeTrappedAir( )
+	{
+		// needs blocks and boundaries
+		if( m_blocks == null )
+		{
+			throw new Error( "Need blocks!" );
+		}
+		if( m_outerBoundary == null || m_holes == null )
+		{
+			throw new Error( "Need boundaries!" );
+		}
+		
+		TreeSet<ChunkCoordinates> shipBlocks = new TreeSet<ChunkCoordinates>();
+		TreeSet<ChunkCoordinates> outerBoundaryBlocks = new TreeSet<ChunkCoordinates>();
+		
+		// get the y-range
+		int minY = getMin().posY;
+		int maxY = getMax().posY;
+		
+		// check the ship layer-by layer starting from the bottom
+		m_trappedAir = new TreeMap<Integer,TreeSet<ChunkCoordinates>>();
+		for( int waterLevel=minY; waterLevel<=maxY+1; waterLevel++ )
+		{
+			TreeSet<ChunkCoordinates> trappedAirAtThisWaterLevel = new TreeSet<ChunkCoordinates>();
+			
+			for( int y=minY; y<=waterLevel; y++ )
+			{
+				// UNDONE: this could be optimized if we could answer y= queries efficiently
+				
+				// inner boundary blocks are always trapped air
+				for( Set<ChunkCoordinates> innerBoundary : m_holes )
+				{
+					for( ChunkCoordinates coords : innerBoundary )
+					{
+						if( coords.posY == y )
+						{
+							trappedAirAtThisWaterLevel.add( coords );
+						}
+					}
+				}
+				
+				// add all the ship blocks on this layer
+				for( ChunkCoordinates coords : m_blocks.keySet() )
+				{
+					if( coords.posY == y )
+					{
+						shipBlocks.add( coords );
+					}
+				}
+				
+				// UNDONE: handle blocks on the outer boundary
+				// do a y-capped fill to find the "volume" blocks
+			}
+		}
 	}
 }

@@ -7,7 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
@@ -111,7 +110,7 @@ public class ShipLauncher
 	private ShipPhysics m_shipPhysics;
 	private double m_equilibriumWaterHeight;
 	
-	public ShipLauncher( World world, int x, int y, int z )
+	public ShipLauncher( final World world, int x, int y, int z )
 	{
 		m_world = world;
 		m_x = x;
@@ -122,15 +121,15 @@ public class ShipLauncher
 		m_shipType = Ships.instance.BlockShip.getShipType( world, x, y, z );
 		
 		// find all the blocks connected to the ship block
-		m_blocks = BlockUtils.graphSearch(
-			world, x, y, z,
+		m_blocks = BlockUtils.searchForBlocks(
+			x, y, z,
 			m_shipType.getMaxNumBlocks(),
 			new BlockUtils.BlockValidator( )
 			{
 				@Override
-				public boolean isValid( IBlockAccess world, int x, int y, int z )
+				public boolean isValid( ChunkCoordinates coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( x, y, z )] );
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
 				}
 			}
 		);
@@ -195,10 +194,6 @@ public class ShipLauncher
 	public boolean getLaunchFlag( LaunchFlag flag )
 	{
 		return m_launchFlags.get( flag.ordinal() );
-	}
-	private void setLaunchFlag( LaunchFlag flag, boolean val )
-	{
-		m_launchFlags.set( flag.ordinal(), val );
 	}
 	
 	public boolean isLaunchable( )
