@@ -138,10 +138,10 @@ public class GuiShipLaunch extends GuiShip
 		double shipHeight = (double)envelope.getHeight()*blockSize;
 		
 		// compute the water height
-		double waterHeight = m_shipLauncher.getEquilibriumWaterHeight();
+		Double waterHeight = m_shipLauncher.getEquilibriumWaterHeight();
 		
 		double waterRectHeight = maxHeight;
-		if( !Double.isNaN( waterHeight ) )
+		if( waterHeight != null )
 		{
 			waterRectHeight = Math.min( maxHeight, ( waterHeight - envelope.getVMin() )*blockSize + ( maxHeight - shipHeight )/2.0 );
 		}

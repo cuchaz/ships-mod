@@ -86,7 +86,7 @@ public class ShipLauncher
 			@Override
 			public boolean computeValue( ShipLauncher launcher )
 			{
-				if( launcher.m_blocks == null )
+				if( launcher.m_blocks == null || launcher.m_equilibriumWaterHeight == null )
 				{
 					return false;
 				}
@@ -108,7 +108,7 @@ public class ShipLauncher
 	private Envelopes m_envelopes;
 	private ShipWorld m_shipWorld;
 	private ShipPhysics m_shipPhysics;
-	private double m_equilibriumWaterHeight;
+	private Double m_equilibriumWaterHeight;
 	
 	public ShipLauncher( final World world, int x, int y, int z )
 	{
@@ -149,7 +149,7 @@ public class ShipLauncher
 			m_envelopes = null;
 			m_shipWorld = null;
 			m_shipPhysics = null;
-			m_equilibriumWaterHeight = Double.NaN;
+			m_equilibriumWaterHeight = null;
 		}
 		
 		// compute the launch flags
@@ -241,8 +241,13 @@ public class ShipLauncher
 		return m_envelopes.getEnvelope( side );
 	}
 	
-	public double getEquilibriumWaterHeight( )
+	public Double getEquilibriumWaterHeight( )
 	{
+		if( m_equilibriumWaterHeight == null )
+		{
+			return null;
+		}
+		
 		// convert to world coordinates
 		return m_equilibriumWaterHeight + m_y;
 	}

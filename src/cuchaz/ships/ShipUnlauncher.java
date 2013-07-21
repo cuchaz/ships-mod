@@ -175,4 +175,16 @@ public class ShipUnlauncher
 			entity.moveEntity( dx, dy, dz );
 		}
 	}
+	
+	public void snapToNearestDirection( )
+	{
+		// NOTE: math on circles is hard. Use the CircleRange class
+		double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( m_ship.rotationYaw ) );
+		double snappedYaw = (int)( yaw/Math.PI*2 + 0.5 )*Math.PI/2.0;
+		m_ship.setPositionAndRotation(
+			m_ship.posX, m_ship.posY, m_ship.posZ,
+			(float)snappedYaw,
+			m_ship.rotationPitch
+		);
+	}
 }

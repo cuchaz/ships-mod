@@ -279,8 +279,6 @@ public class EntityShip extends Entity
 					setBlocks( new ShipWorld( worldObj, blockData ) );
 				}
 			}
-			
-			// UNDONE: find a way to tell if blocks were changed
 		}
 		
 		// don't do any updating until we get blocks
@@ -289,8 +287,20 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		// simulate the weight/buoyancy forces
-		motionY += m_physics.getNetUpForce( getWaterHeight() - posY );
+		// TEMP
+		if( !worldObj.isRemote )
+		{
+			System.out.println( String.format( "%s START ship pos: %.1f, ship motion: %8f",
+				worldObj.isRemote ? "CLIENT" : "SERVER",
+				posY,
+				motionY
+			) );
+		}
+		
+		/* TEMP
+		
+		double waterHeight = shipToBlocksY( worldToShipY( getWaterHeight() ) );
+		motionY += m_physics.getNetUpForce( waterHeight );
 		
 		adjustMotionDueToThrust();
 		adjustMotionDueToBlockCollisions();
@@ -299,6 +309,20 @@ public class EntityShip extends Entity
 		if( false )
 		{
 			motionZ += ( 270 - posZ )/50.0;
+		}
+		
+		// simulate the weight/buoyancy forces
+		// TEMP
+		if( !worldObj.isRemote )
+		{
+			System.out.println( String.format( "%s ship pos: %.1f, ship motion: %8f, water in world: %d, water in ship: %.1f, water in blocks: %.1f",
+				worldObj.isRemote ? "CLIENT" : "SERVER",
+				posY,
+				motionY,
+				getWaterHeight(),
+				worldToShipY( getWaterHeight() ),
+				shipToBlocksY( worldToShipY( getWaterHeight() ) )
+			) );
 		}
 		
 		double dx = motionX;
@@ -335,37 +359,82 @@ public class EntityShip extends Entity
 			m_hasInfoFromServer = false;
 		}
 		
-		// did we even move?
-		if( dx == 0.0 && dy == 0.0 && dz == 0.0 && dYaw == 0.0f )
+		// did we even move a noticeable amount?
+		final double Epsilon = 1e-4;
+		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
 		{
-			return;
+			List<Entity> riders = getRiders();
+			
+			// apply motion
+			prevPosX = posX;
+			prevPosY = posY;
+			prevPosZ = posZ;
+			prevRotationYaw = rotationYaw;
+			prevRotationPitch = rotationPitch;
+			setRotation(
+				rotationYaw + dYaw,
+				rotationPitch
+			);
+			setPosition(
+				posX + dx,
+				posY + dy,
+				posZ + dz
+			);
+			
+			moveRiders( riders, dx, dy, dz, dYaw );
+			//moveCollidingEntities( riders );
 		}
 		
-		List<Entity> riders = getRiders();
-		
-		// apply motion
-		prevPosX = posX;
-		prevPosY = posY;
-		prevPosZ = posZ;
-		prevRotationYaw = rotationYaw;
-		prevRotationPitch = rotationPitch;
-		setRotation(
-			rotationYaw + dYaw,
-			rotationPitch
-		);
-		setPosition(
-			posX + dx,
-			posY + dy,
-			posZ + dz
-		);
-		
-		moveRiders( riders, dx, dy, dz, dYaw );
-		//moveCollidingEntities( riders );
+		// did the ship sink?
+		if( isSunk( waterHeight ) )
+		{
+			// TEMP
+			System.out.println( String.format( "%s Ship Sunk!",
+				worldObj.isRemote ? "CLIENT" : "SERVER"
+			) );
+			
+			// unlaunch the ship at the bottom of the ocean
+			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
+			unlauncher.snapToNearestDirection();
+			unlauncher.unlaunch();
+		}
 		
 		// reduce the velocity for next time
 		adjustMotionDueToDrag();
+		
+		*/
+		
+		// TEMP
+		if( !worldObj.isRemote )
+		{
+			System.out.println( String.format( "%s STOP  ship pos: %.1f, ship motion: %8f",
+				worldObj.isRemote ? "CLIENT" : "SERVER",
+				posY,
+				motionY
+			) );
+		}
 	}
 	
+	private boolean isSunk( double waterHeight )
+	{
+		// is the ship completely underwater?
+		boolean isFalling = motionY < 0;
+		boolean isUnderwater = waterHeight > m_blocks.getMax().posY + 1;
+		
+		// TEMP
+		if( !worldObj.isRemote )
+		{
+			System.out.println( String.format( "%s isSunk() motionY = %.2f, onGround = %b, isUnderwater = %b",
+				worldObj.isRemote ? "CLIENT" : "SERVER",
+				motionY,
+				onGround,
+				isUnderwater
+			) );
+		}
+		
+		return isFalling && this.onGround && isUnderwater;
+	}
+
 	public void worldToShip( Vec3 v )
 	{
 		double x = worldToShipX( v.xCoord, v.zCoord );
