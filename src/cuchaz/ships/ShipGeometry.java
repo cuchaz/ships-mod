@@ -6,15 +6,21 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BoxCorner;
+import cuchaz.modsShared.RotatedBB;
 import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
-
-import net.minecraft.util.ChunkCoordinates;
+import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.modsShared.Envelopes;
 
 public class ShipGeometry
 {
 	private TreeSet<ChunkCoordinates> m_blocks;
+	private Envelopes m_envelopes;
 	private List<TreeSet<ChunkCoordinates>> m_outerBoundaries;
 	private List<TreeSet<ChunkCoordinates>> m_holes;
 	private TreeMap<Integer,TreeSet<ChunkCoordinates>> m_trappedAir;
@@ -23,12 +29,18 @@ public class ShipGeometry
 	{
 		m_blocks = new TreeSet<ChunkCoordinates>( blocks );
 		
+		m_envelopes = new Envelopes( m_blocks );
 		m_outerBoundaries = null;
 		m_holes = null;
 		m_trappedAir = null;
 		
 		computeBoundaryAndHoles();
 		computeTrappedAir();
+	}
+	
+	public Envelopes getEnvelopes( )
+	{
+		return m_envelopes;
 	}
 	
 	public List<TreeSet<ChunkCoordinates>> getOuterBoundaries( )
@@ -44,6 +56,100 @@ public class ShipGeometry
 	public TreeSet<ChunkCoordinates> getTrappedAir( int y )
 	{
 		return m_trappedAir.get( y );
+	}
+	
+
+	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
+	{
+		// get the bounds in y
+		int minY = MathHelper.floor_double( box.getMinY() );
+		int maxY = MathHelper.floor_double( box.getMaxY() );
+		
+		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		for( int y=minY; y<=maxY; y++ )
+		{
+			// add up the blocks from the xz range query
+			blocks.addAll( xzRangeQuery( y, box ) );
+		}
+		return blocks;
+	}
+	
+	public List<ChunkCoordinates> xzRangeQuery( int y, RotatedBB box )
+	{
+		// UNDONE: we can probably optimize this using a better algorithm
+		
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		
+		// get the bounds in x and z
+		int minX = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int minZ = Integer.MAX_VALUE;
+		int maxZ = Integer.MIN_VALUE;
+		for( BoxCorner corner : BlockSide.Top.getCorners() )
+		{
+			box.getCorner( p, corner );
+			int x = MathHelper.floor_double( p.xCoord );
+			int z = MathHelper.floor_double( p.zCoord );
+			
+			minX = Math.min( minX, x );
+			maxX = Math.max( maxX, x );
+			minZ = Math.min( minZ, z );
+			maxZ = Math.max( maxZ, z );
+		}
+		
+		// search over the blocks in the range
+		ChunkCoordinates coords = new ChunkCoordinates();
+		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		for( int x=minX; x<=maxX; x++ )
+		{
+			for( int z=minZ; z<=maxZ; z++ )
+			{
+				coords.set( x, y, z );
+				
+				// is there even a block here?
+				if( !m_blocks.contains( coords ) )
+				{
+					continue;
+				}
+				
+				if( blockIntersectsBoxXZ( x, z, box ) )
+				{
+					blocks.add( new ChunkCoordinates( coords ) );
+				}
+			}
+		}
+		return blocks;
+	}
+	
+	private boolean blockIntersectsBoxXZ( int x, int z, RotatedBB box )
+	{
+		// return true if any xz corner of the block is in the rotated box
+		double y = ( box.getMinY() + box.getMaxY() )/2;
+		return box.containsPoint( x + 0, y, z + 0 )
+			|| box.containsPoint( x + 0, y, z + 1 )
+			|| box.containsPoint( x + 1, y, z + 0 )
+			|| box.containsPoint( x + 1, y, z + 1 )
+			|| anyCornerIsInBlockXZ( box, x, z );
+	}
+	
+	private boolean anyCornerIsInBlockXZ( RotatedBB box, int x, int z )
+	{
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		for( BoxCorner corner : BlockSide.Top.getCorners() )
+		{
+			box.getCorner( p, corner );
+			if( isPointInBlockXZ( p.xCoord, p.zCoord, x, z ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isPointInBlockXZ( double px, double pz, int blockX, int blockZ )
+	{
+		return px >= blockX && px <= blockX + 1
+			&& pz >= blockZ && pz <= blockZ + 1;
 	}
 	
 	private void computeBoundaryAndHoles( )
@@ -94,9 +200,8 @@ public class ShipGeometry
 	private boolean isConnectedToShell( ChunkCoordinates coords, final Integer maxY )
 	{
 		// don't check more blocks than can fit in the shell
-		final ChunkCoordinates min = m_blocks.first();
-		final ChunkCoordinates max = m_blocks.last();
-		int volume = ( max.posX - min.posX + 3 ) * ( max.posY - min.posY + 3 ) * ( max.posZ - min.posZ + 3 );
+		final BoundingBoxInt box = m_envelopes.getBoundingBox();
+		int volume = ( box.getDx() + 3 )*( box.getDy() + 3 )*( box.getDz() + 3 );
 		
 		Boolean result = BlockUtils.searchForCondition(
 			coords,
@@ -113,9 +218,7 @@ public class ShipGeometry
 				public boolean isConditionMet( ChunkCoordinates coords )
 				{
 					// is this a shell block?
-					return coords.posX < min.posX || coords.posX > max.posX
-						|| coords.posY < min.posY || coords.posY > max.posY
-						|| coords.posZ < min.posZ || coords.posZ > max.posZ;
+					return !box.containsPoint( coords );
 				}
 			}
 		);
@@ -142,8 +245,8 @@ public class ShipGeometry
 		}
 		
 		// get the y-range
-		int minY = m_blocks.first().posY;
-		int maxY = m_blocks.last().posY;
+		int minY = m_envelopes.getBoundingBox().minY;
+		int maxY = m_envelopes.getBoundingBox().maxY;
 		
 		// check the ship layer-by layer starting from the bottom
 		m_trappedAir = new TreeMap<Integer,TreeSet<ChunkCoordinates>>();

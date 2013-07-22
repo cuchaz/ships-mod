@@ -4,7 +4,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -41,24 +41,19 @@ public class GuiShipPaddle extends GuiCloseable
 		EntityShipBlock shipBlock = ship.getShipBlockEntity();
 		
 		// get a vector from the block to the player
-		double dx = player.posX - shipBlock.posX;
-		double dz = player.posZ - shipBlock.posZ;
-		
-		// rotate into ship space
-		float yawRad = (float)Math.toRadians( -ship.rotationYaw );
-		float cos = MathHelper.cos( yawRad );
-		float sin = MathHelper.sin( yawRad );
-		double x = dx*cos + dz*sin;
-		double z = -dx*sin + dz*cos;
-		dx = x;
-		dz = z;
+		Vec3 direction = Vec3.createVectorHelper(
+			player.posX - shipBlock.posX,
+			0,
+			player.posZ - shipBlock.posZ
+		);
+		ship.worldToShipDirection( direction );
 		
 		// find the side whose inverted normal vector best matches the vector to the player
 		double maxDot = Double.NEGATIVE_INFINITY;
 		m_sideShipForward = null;
 		for( BlockSide side : BlockSide.xzSides() )
 		{
-			double dot = -side.getDx()*dx + -side.getDz()*dz;
+			double dot = -side.getDx()*direction.xCoord + -side.getDz()*direction.yCoord;
 			
 			if( dot > maxDot )
 			{

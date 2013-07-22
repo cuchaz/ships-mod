@@ -38,7 +38,7 @@ public class ShipLauncher
 					return false;
 				}
 				
-				for( ChunkCoordinates coords : launcher.m_envelopes.getEnvelope( BlockSide.Bottom ) )
+				for( ChunkCoordinates coords : launcher.getShipEnvelope( BlockSide.Bottom ) )
 				{
 					if( !launcher.hasWaterBelow( coords ) )
 					{
@@ -58,9 +58,12 @@ public class ShipLauncher
 					return false;
 				}
 				
-				for( ChunkCoordinates coords : launcher.m_envelopes.getEnvelope( BlockSide.Top ) )
+				for( ChunkCoordinates coords : launcher.getShipEnvelope( BlockSide.Top ) )
 				{
-					if( launcher.m_world.getBlockMaterial( coords.posX, coords.posY + 1, coords.posZ ) == Material.air )
+					int worldX = coords.posX + launcher.m_x;
+					int worldY = coords.posY + launcher.m_y;
+					int worldZ = coords.posZ + launcher.m_z;
+					if( launcher.m_world.getBlockMaterial( worldX, worldY + 1, worldZ ) == Material.air )
 					{
 						return true;
 					}
@@ -91,7 +94,7 @@ public class ShipLauncher
 					return false;
 				}
 				
-				return launcher.m_equilibriumWaterHeight - launcher.m_y < launcher.m_shipWorld.getMax().posY + 1;
+				return launcher.m_equilibriumWaterHeight < launcher.getShipBoundingBox().maxY + 1;
 			}
 		};
 
@@ -105,7 +108,6 @@ public class ShipLauncher
 	private ShipType m_shipType;
 	private List<ChunkCoordinates> m_blocks; // NOTE: blocks are in world coordinates
 	private List<Boolean> m_launchFlags;
-	private Envelopes m_envelopes;
 	private ShipWorld m_shipWorld;
 	private ShipPhysics m_shipPhysics;
 	private Double m_equilibriumWaterHeight;
@@ -139,14 +141,12 @@ public class ShipLauncher
 			// also add the ship block
 			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
 			
-			m_envelopes = new Envelopes( m_blocks );
 			m_shipWorld = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
 			m_shipPhysics = new ShipPhysics( m_shipWorld );
 			m_equilibriumWaterHeight = m_shipPhysics.getEquilibriumWaterHeight();
 		}
 		else
 		{
-			m_envelopes = null;
 			m_shipWorld = null;
 			m_shipPhysics = null;
 			m_equilibriumWaterHeight = null;
@@ -180,9 +180,9 @@ public class ShipLauncher
 		return m_shipType;
 	}
 	
-	public World getWorld( )
+	public ShipWorld getShipWorld( )
 	{
-		return m_world;
+		return m_shipWorld;
 	}
 	
 	public int getNumBlocks( )
@@ -208,13 +208,13 @@ public class ShipLauncher
 	
 	public BlockSide getShipSide( )
 	{
-		if( m_envelopes == null )
+		if( getShipBoundingBox() == null )
 		{
 			return null;
 		}
 		
 		// return the widest side of north,west
-		if( m_envelopes.getBoundingBox().getDx() > m_envelopes.getBoundingBox().getDz() )
+		if( getShipBoundingBox().getDx() > getShipBoundingBox().getDz() )
 		{
 			return BlockSide.West;
 		}
@@ -223,8 +223,13 @@ public class ShipLauncher
 	
 	public BlockSide getShipFront( )
 	{
+		if( getShipBoundingBox() == null )
+		{
+			return null;
+		}
+		
 		// return the thinnest side of north,west
-		if( m_envelopes.getBoundingBox().getDx() > m_envelopes.getBoundingBox().getDz() )
+		if( getShipBoundingBox().getDx() > getShipBoundingBox().getDz() )
 		{
 			return BlockSide.North;
 		}
@@ -233,31 +238,34 @@ public class ShipLauncher
 	
 	public BoundingBoxInt getShipBoundingBox( )
 	{
-		return m_envelopes.getBoundingBox();
-	}
-	
-	public BlockArray getShipEnvelope( BlockSide side )
-	{
-		return m_envelopes.getEnvelope( side );
-	}
-	
-	public Double getEquilibriumWaterHeight( )
-	{
-		if( m_equilibriumWaterHeight == null )
+		if( m_shipWorld == null )
 		{
 			return null;
 		}
 		
-		// convert to world coordinates
-		return m_equilibriumWaterHeight + m_y;
+		return m_shipWorld.getGeometry().getEnvelopes().getBoundingBox();
+	}
+	
+	public BlockArray getShipEnvelope( BlockSide side )
+	{
+		if( m_shipWorld == null )
+		{
+			return null;
+		}
+		
+		return m_shipWorld.getGeometry().getEnvelopes().getEnvelope( side );
+	}
+	
+	public Double getEquilibriumWaterHeight( )
+	{
+		return m_equilibriumWaterHeight;
 	}
 	
 	public EntityShip launch( )
 	{
 		int waterHeight = computeWaterHeight();
 		
-		ShipWorld blocks = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
-		Vec3 centerOfMass = new ShipPhysics( blocks ).getCenterOfMass();
+		Vec3 centerOfMass = new ShipPhysics( m_shipWorld ).getCenterOfMass();
 		
 		// spawn a ship entity
 		EntityShip ship = new EntityShip( m_world );
@@ -269,36 +277,48 @@ public class ShipLauncher
 		);
 		ship.setShipType( m_shipType );
 		ship.setWaterHeight( waterHeight );
-		ship.setBlocks( blocks );
+		ship.setBlocks( m_shipWorld );
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{
+			System.err.println( String.format( "Could not spawn ship in world at (%d,%d,%d)", ship.posX, ship.posY, ship.posZ ) );
 			return null;
 		}
 		
 		// remove all the blocks from the world
 		for( ChunkCoordinates coords : m_blocks )
 		{
-			if( coords.posY >= waterHeight )
-			{
-				m_world.setBlockToAir( coords.posX, coords.posY, coords.posZ );
-			}
-			else
-			{
-				m_world.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
-			}
+			setBlockToWaterOrAir( m_world, coords, waterHeight );
 		}
-		m_world.setBlockToAir( m_x, m_y, m_z );
+		setBlockToWaterOrAir( m_world, m_x, m_y, m_z, waterHeight );
 		
 		return ship;
+	}
+	
+	private void setBlockToWaterOrAir( World world, ChunkCoordinates coords, int waterHeight )
+	{
+		setBlockToWaterOrAir( world, coords.posX, coords.posY, coords.posZ, waterHeight );
+	}
+	
+	private void setBlockToWaterOrAir( World world, int x, int y, int z, int waterHeight )
+	{
+		if( y >= waterHeight )
+		{
+			world.setBlockToAir( x, y, z );
+		}
+		else
+		{
+			world.setBlock( x, y, z, Block.waterStill.blockID );
+		}
 	}
 	
 	private int computeWaterHeight( )
 	{
 		// for each column in the ship or outside it
-		for( int x=m_envelopes.getBoundingBox().minX-1; x<=m_envelopes.getBoundingBox().maxX+1; x++ )
+		Envelopes envelopes = m_shipWorld.getGeometry().getEnvelopes();
+		for( int x=envelopes.getBoundingBox().minX-1; x<=envelopes.getBoundingBox().maxX+1; x++ )
 		{
-			for( int z=m_envelopes.getBoundingBox().minZ-1; z<=m_envelopes.getBoundingBox().maxZ+1; z++ )
+			for( int z=envelopes.getBoundingBox().minZ-1; z<=envelopes.getBoundingBox().maxZ+1; z++ )
 			{
 				int waterHeight = computeWaterHeight( x, z );
 				if( waterHeight != -1 )
@@ -310,10 +330,13 @@ public class ShipLauncher
 		return -1;
 	}
 
-	private int computeWaterHeight( int x, int z )
+	private int computeWaterHeight( int blockX, int blockZ )
 	{
 		// start at the top of the box
-		int y = m_envelopes.getBoundingBox().maxY+1;
+		Envelopes envelopes = m_shipWorld.getGeometry().getEnvelopes();
+		int x = blockX + m_x;
+		int y = envelopes.getBoundingBox().maxY+1 + m_y;
+		int z = blockZ + m_z;
 		
 		// drop until we hit air
 		boolean foundAir = false;
@@ -345,10 +368,15 @@ public class ShipLauncher
 	
 	private boolean hasWaterBelow( ChunkCoordinates coords )
 	{
+		// convert the block coords to world coords
+		int worldX = coords.posX + m_x;
+		int worldY = coords.posY + m_y;
+		int worldZ = coords.posZ + m_z;
+		
 		// drop down until we hit something other than air
-		for( int y=coords.posY-1; y>=0; y-- )
+		for( int y=worldY-1; y>=0; y-- )
 		{
-			Material material = m_world.getBlockMaterial( coords.posX, y, coords.posZ );
+			Material material = m_world.getBlockMaterial( worldX, y, worldZ );
 			
 			if( material == Material.air )
 			{

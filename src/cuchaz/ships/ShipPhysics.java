@@ -7,6 +7,9 @@ import net.minecraft.block.Block;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
+import cuchaz.modsShared.BlockArray;
+import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.Envelopes;
 
 public class ShipPhysics
 {
@@ -45,8 +48,8 @@ public class ShipPhysics
 		
 		m_geometry = new ShipGeometry( watertightBlocks );
 		
-		int minY = m_blocks.getMin().posY;
-		int maxY = m_blocks.getMax().posY;
+		int minY = m_blocks.getBoundingBox().minY;
+		int maxY = m_blocks.getBoundingBox().maxY;
 		
 		// initialize displacement
 		m_displacement = new TreeMap<Integer,DisplacementEntry>();
@@ -125,6 +128,12 @@ public class ShipPhysics
 	
 	public double getNetUpForce( double waterHeight )
 	{
+		// the net up force is the difference of the weight and the buoyancy
+		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*AccelerationGravity;
+	}
+	
+	public double getDisplacedWaterMass( double waterHeight )
+	{
 		// get the surface block level
 		int surfaceLevel = MathHelper.floor_double( waterHeight );
 		DisplacementEntry entry = m_displacement.get( surfaceLevel );
@@ -137,15 +146,14 @@ public class ShipPhysics
 			displacedWaterMass = ( (double)entry.numBlocksUnderwater + (double)entry.numBlocksAtSurface*surfaceFraction )*getWaterBlockMass();
 		}
 		
-		// the net up force is the difference of the weight and the buoyancy
-		return ( displacedWaterMass - m_shipMass )*AccelerationGravity;
+		return displacedWaterMass;
 	}
 	
 	public Double getEquilibriumWaterHeight( )
 	{
 		// travel up each layer until we find the one that displaces too much water
-		int minY = m_blocks.getMin().posY;
-		int maxY = m_blocks.getMax().posY;
+		int minY = m_blocks.getBoundingBox().minY;
+		int maxY = m_blocks.getBoundingBox().maxY;
 		for( int y=minY; y<=maxY+1; y++ )
 		{
 			// assume water completely submerges this layer
@@ -166,22 +174,43 @@ public class ShipPhysics
 		return null;
 	}
 	
+	public void getDrag( Vec3 out, double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
+	{
+		final double AirDragRate = 0.01;
+		final double WaterDragRate = 0.1;
+		
+		// how fast are we going?
+		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
+		
+		// divide the leading envelope into air vs water
+		double airSurfaceArea = 0;
+		double waterSurfaceArea = 0;
+		BlockArray leadingEnvelope = envelopes.getEnvelope( side );
+		for( ChunkCoordinates coords : leadingEnvelope )
+		{
+			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
+			waterSurfaceArea += fractionSubmerged;
+			airSurfaceArea += 1 - fractionSubmerged;
+		}
+		
+		// compute the drag coefficient
+		double drag = logisticFunction( speed, AirDragRate*airSurfaceArea + WaterDragRate*waterSurfaceArea );
+		
+		// TEMP
+		System.out.println( String.format( "Drag: speed=%.4f, airSurfaceArea=%.2f, waterSurfaceArea=%.2f, drag=%.4f",
+			speed, airSurfaceArea, waterSurfaceArea, drag
+		) );
+		
+		// build the drag vector
+		out.xCoord = -motionX*drag;
+		out.yCoord = -motionY*drag;
+		out.zCoord = -motionZ*drag;
+	}
+	
 	private double getBlockFractionSubmerged( int y, double waterHeight )
 	{
-		double bottom = y;
-		double top = y + 1;
-		if( top <= waterHeight )
-		{
-			return 1.0;
-		}
-		else if( bottom >= waterHeight )
-		{
-			return 0;
-		}
-		else
-		{
-			return waterHeight - bottom;
-		}
+		// can use any NSEW side
+		return BlockSide.North.getFractionSubmerged( y, waterHeight );
 	}
 	
 	private Block getBlock( ChunkCoordinates coords )
@@ -193,5 +222,10 @@ public class ShipPhysics
 	{
 		// UNDONE: use the surface height make the mass increase with depth
 		return MaterialProperties.getMass( Block.waterStill );
+	}
+	
+	private double logisticFunction( double x, double rate )
+	{
+		return 1.0/( 1.0 + Math.exp( -rate*x ) ) - 0.5;
 	}
 }

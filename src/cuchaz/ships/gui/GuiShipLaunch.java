@@ -164,9 +164,9 @@ public class GuiShipLaunch extends GuiShip
 				}
 				
 				// get the block texture
-				Block block = Block.blocksList[m_shipLauncher.getWorld().getBlockId( coords.posX, coords.posY, coords.posZ )];
-				int meta = m_shipLauncher.getWorld().getBlockMetadata( coords.posX, coords.posY, coords.posZ );
-				Icon icon = block.getBlockTexture( m_shipLauncher.getWorld(), coords.posX, coords.posY, coords.posZ, meta );
+				Block block = Block.blocksList[m_shipLauncher.getShipWorld().getBlockId( coords.posX, coords.posY, coords.posZ )];
+				int meta = m_shipLauncher.getShipWorld().getBlockMetadata( coords.posX, coords.posY, coords.posZ );
+				Icon icon = block.getBlockTexture( m_shipLauncher.getShipWorld(), coords.posX, coords.posY, coords.posZ, meta );
 				
 				// draw a block right on the GUI
 				drawScaledBlock(

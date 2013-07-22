@@ -99,9 +99,10 @@ public class EntityShip extends Entity
 		// TEMP: put the ship back
 		if( false )
 		{
-			posX = 136;
-			posY = 63.4;
-			posZ = 274;
+			//posX = 136;
+			posY = 64;
+			motionY = 0;
+			//posZ = 274;
 		}
 		
 		// get the ship center of mass so we can convert between ship/block spaces
@@ -287,22 +288,11 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		// TEMP
-		if( !worldObj.isRemote )
-		{
-			System.out.println( String.format( "%s START ship pos: %.1f, ship motion: %8f",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				posY,
-				motionY
-			) );
-		}
-		
-		/* TEMP
-		
 		double waterHeight = shipToBlocksY( worldToShipY( getWaterHeight() ) );
 		motionY += m_physics.getNetUpForce( waterHeight );
 		
 		adjustMotionDueToThrust();
+		adjustMotionDueToDrag( waterHeight );
 		adjustMotionDueToBlockCollisions();
 		
 		// TEMP: oscillate so we can test entity collision
@@ -398,41 +388,15 @@ public class EntityShip extends Entity
 			unlauncher.snapToNearestDirection();
 			unlauncher.unlaunch();
 		}
-		
-		// reduce the velocity for next time
-		adjustMotionDueToDrag();
-		
-		*/
-		
-		// TEMP
-		if( !worldObj.isRemote )
-		{
-			System.out.println( String.format( "%s STOP  ship pos: %.1f, ship motion: %8f",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				posY,
-				motionY
-			) );
-		}
 	}
 	
 	private boolean isSunk( double waterHeight )
 	{
 		// is the ship completely underwater?
-		boolean isFalling = motionY < 0;
-		boolean isUnderwater = waterHeight > m_blocks.getMax().posY + 1;
+		boolean isUnderwater = waterHeight > m_blocks.getBoundingBox().maxY + 1;
 		
-		// TEMP
-		if( !worldObj.isRemote )
-		{
-			System.out.println( String.format( "%s isSunk() motionY = %.2f, onGround = %b, isUnderwater = %b",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				motionY,
-				onGround,
-				isUnderwater
-			) );
-		}
-		
-		return isFalling && this.onGround && isUnderwater;
+		// UNDONE: will have to use something smarter for submarines!
+		return motionY == 0 && isUnderwater;
 	}
 
 	public void worldToShip( Vec3 v )
@@ -443,6 +407,19 @@ public class EntityShip extends Entity
 		
 		v.xCoord = x;
 		v.yCoord = y;
+		v.zCoord = z;
+	}
+	
+	public void worldToShipDirection( Vec3 v )
+	{
+		// just apply the rotation
+		float yawRad = (float)Math.toRadians( rotationYaw );
+		float cos = MathHelper.cos( yawRad );
+		float sin = MathHelper.sin( yawRad );
+		double x = v.xCoord*cos - v.zCoord*sin;
+		double z = v.xCoord*sin + v.zCoord*cos;
+		
+		v.xCoord = x;
 		v.zCoord = z;
 	}
 	
@@ -475,6 +452,19 @@ public class EntityShip extends Entity
 		
 		v.xCoord = x;
 		v.yCoord = y;
+		v.zCoord = z;
+	}
+	
+	public void shipToWorldDirection( Vec3 v )
+	{
+		// just apply the rotation
+		float yawRad = (float)Math.toRadians( rotationYaw );
+		float cos = MathHelper.cos( yawRad );
+		float sin = MathHelper.sin( yawRad );
+		double x = v.xCoord*cos + v.zCoord*sin;
+		double z = -v.xCoord*sin + v.zCoord*cos;
+		
+		v.xCoord = x;
 		v.zCoord = z;
 	}
 	
@@ -597,27 +587,42 @@ public class EntityShip extends Entity
 		}
 	}
 	
-	private void adjustMotionDueToDrag( )
+	private void adjustMotionDueToDrag( double waterHeight )
 	{
-		// UNDONE: drag based on mass, submerged surface area??
-		final double LinearDrag = 0.01;
 		final float RotationalDrag = 0.5f;
 		
+		// NEXTTIME: need to adjust drag and buoyancy so the ship doesn't oscillate up and down!
+		
+		// which side (relative to the ship) are we headed?
+		Vec3 motion = Vec3.createVectorHelper( motionX, motionY, motionZ );
+		worldToShipDirection( motion );
+		BlockSide bestSide = null;
+		double bestDot = Double.NEGATIVE_INFINITY;
+		for( BlockSide side : BlockSide.values() )
+		{
+			double dot = side.getDx()*motion.xCoord + side.getDy()*motion.yCoord + side.getDz()*motion.zCoord;
+			if( dot > bestDot )
+			{
+				bestDot = dot;
+				bestSide = side;
+			}
+		}
+		
+		// TEMP
+		System.out.println( String.format( "%s Drag: motion=(%.2f,%.2f,%.2f), side=%s",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			motion.xCoord, motion.yCoord, motion.zCoord,
+			bestSide
+		) );
+		
+		assert( bestSide != null );
+		
 		// apply the position drag
-		double dragLength = Math.sqrt( LinearDrag*LinearDrag*3 );
-		double length = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
-		if( length > dragLength )
-		{
-			motionX -= motionX/length*LinearDrag;
-			motionY -= motionY/length*LinearDrag;
-			motionZ -= motionZ/length*LinearDrag;
-		}
-		else
-		{
-			motionX = 0;
-			motionY = 0;
-			motionZ = 0;
-		}
+		Vec3 drag = Vec3.createVectorHelper( 0, 0, 0 );
+		m_physics.getDrag( drag, waterHeight, motionX, motionY, motionZ, bestSide, m_blocks.getGeometry().getEnvelopes() );
+		motionX += drag.xCoord;
+		motionY += drag.yCoord;
+		motionZ += drag.zCoord;
 		
 		// apply rotational drag
 		if( (float)Math.abs( motionYaw ) > RotationalDrag )
@@ -792,7 +797,7 @@ public class EntityShip extends Entity
 		// convert the entity box into block coordinates
 		RotatedBB box = worldToBlocks( entity.boundingBox );
 		
-		for( ChunkCoordinates coords : m_blocks.xzRangeQuery( y, box ) )
+		for( ChunkCoordinates coords : m_blocks.getGeometry().xzRangeQuery( y, box ) )
 		{
 			if( isBoxCloseEnoughToRide( box, coords ) )
 			{
@@ -986,14 +991,12 @@ public class EntityShip extends Entity
 		}
 		
 		// make an un-rotated box in world-space
-		ChunkCoordinates min = m_blocks.getMin();
-		box.minX = x + blocksToShipX( min.posX );
-		box.minY = y + blocksToShipY( min.posY );
-		box.minZ = z + blocksToShipZ( min.posZ );
-		ChunkCoordinates max = m_blocks.getMax();
-		box.maxX = x + blocksToShipX( max.posX + 1 );
-		box.maxY = y + blocksToShipY( max.posY + 1 );
-		box.maxZ = z + blocksToShipZ( max.posZ + 1 );
+		box.minX = x + blocksToShipX( m_blocks.getBoundingBox().minX );
+		box.minY = y + blocksToShipY( m_blocks.getBoundingBox().minY );
+		box.minZ = z + blocksToShipZ( m_blocks.getBoundingBox().minZ );
+		box.maxX = x + blocksToShipX( m_blocks.getBoundingBox().maxX + 1 );
+		box.maxY = y + blocksToShipY( m_blocks.getBoundingBox().maxY + 1 );
+		box.maxZ = z + blocksToShipZ( m_blocks.getBoundingBox().maxZ + 1 );
 		
 		// now rotate by the yaw
 		// UNDONE: optimize out the new

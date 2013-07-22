@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,15 +12,11 @@ import java.util.TreeMap;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import org.apache.commons.codec.binary.Base64;
 
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BoxCorner;
-import cuchaz.modsShared.RotatedBB;
+import cuchaz.modsShared.BoundingBoxInt;
 
 public class ShipWorld extends DetatchedWorld
 {
@@ -71,6 +66,7 @@ public class ShipWorld extends DetatchedWorld
 	private EntityShip m_ship;
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
+	private ShipGeometry m_geometry;
 	
 	private ShipWorld( World world )
 	{
@@ -102,6 +98,8 @@ public class ShipWorld extends DetatchedWorld
 			);
 			m_blocks.put( relativeCoords, storage );
 		}
+		
+		computeDependentFields();
 	}
 	
 	public ShipWorld( World world, byte[] data )
@@ -135,12 +133,19 @@ public class ShipWorld extends DetatchedWorld
 					
 					m_blocks.put( coords, storage );
 				}
+				
+				computeDependentFields();
 			}
 		}
 		catch( IOException ex )
 		{
 			throw new Error( "Unable to deserialize blocks!", ex );
 		}
+	}
+	
+	private void computeDependentFields( )
+	{
+		m_geometry = new ShipGeometry( m_blocks.keySet() );
 	}
 	
 	public ShipWorld( World world, String data )
@@ -185,6 +190,16 @@ public class ShipWorld extends DetatchedWorld
 	public Set<ChunkCoordinates> coords( )
 	{
 		return m_blocks.keySet();
+	}
+	
+	public ShipGeometry getGeometry( )
+	{
+		return m_geometry;
+	}
+	
+	public BoundingBoxInt getBoundingBox( )
+	{
+		return m_geometry.getEnvelopes().getBoundingBox();
 	}
 	
 	public BlockStorage getStorage( ChunkCoordinates coords )
@@ -235,16 +250,6 @@ public class ShipWorld extends DetatchedWorld
 		return false;
 	}
 	
-	public ChunkCoordinates getMin( )
-	{
-		return m_blocks.firstKey();
-	}
-	
-	public ChunkCoordinates getMax( )
-	{
-		return m_blocks.lastKey();
-	}
-	
 	public byte[] getData( )
 	{
 		ByteArrayOutputStream data = new ByteArrayOutputStream();
@@ -281,95 +286,5 @@ public class ShipWorld extends DetatchedWorld
 	public String getDataString( )
 	{
 		return Base64.encodeBase64String( getData() );
-	}
-	
-	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
-	{
-		// get the bounds in y
-		int minY = MathHelper.floor_double( box.getMinY() );
-		int maxY = MathHelper.floor_double( box.getMaxY() );
-		
-		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
-		for( int y=minY; y<=maxY; y++ )
-		{
-			// add up the blocks from the xz range query
-			blocks.addAll( xzRangeQuery( y, box ) );
-		}
-		return blocks;
-	}
-	
-	public List<ChunkCoordinates> xzRangeQuery( int y, RotatedBB box )
-	{
-		// UNDONE: we can probably optimize this using a better algorithm
-		
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		
-		// get the bounds in x and z
-		int minX = Integer.MAX_VALUE;
-		int maxX = Integer.MIN_VALUE;
-		int minZ = Integer.MAX_VALUE;
-		int maxZ = Integer.MIN_VALUE;
-		for( BoxCorner corner : BlockSide.Top.getCorners() )
-		{
-			box.getCorner( p, corner );
-			int x = MathHelper.floor_double( p.xCoord );
-			int z = MathHelper.floor_double( p.zCoord );
-			
-			minX = Math.min( minX, x );
-			maxX = Math.max( maxX, x );
-			minZ = Math.min( minZ, z );
-			maxZ = Math.max( maxZ, z );
-		}
-		
-		// search over the blocks in the range
-		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
-		for( int x=minX; x<=maxX; x++ )
-		{
-			for( int z=minZ; z<=maxZ; z++ )
-			{
-				// is there even a block here?
-				if( getBlockId( x, y, z ) == 0 )
-				{
-					continue;
-				}
-				
-				if( blockIntersectsBoxXZ( x, z, box ) )
-				{
-					blocks.add( new ChunkCoordinates( x, y, z ) );
-				}
-			}
-		}
-		return blocks;
-	}
-	
-	private boolean blockIntersectsBoxXZ( int x, int z, RotatedBB box )
-	{
-		// return true if any xz corner of the block is in the rotated box
-		double y = ( box.getMinY() + box.getMaxY() )/2;
-		return box.containsPoint( x + 0, y, z + 0 )
-			|| box.containsPoint( x + 0, y, z + 1 )
-			|| box.containsPoint( x + 1, y, z + 0 )
-			|| box.containsPoint( x + 1, y, z + 1 )
-			|| anyCornerIsInBlockXZ( box, x, z );
-	}
-	
-	private boolean anyCornerIsInBlockXZ( RotatedBB box, int x, int z )
-	{
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		for( BoxCorner corner : BlockSide.Top.getCorners() )
-		{
-			box.getCorner( p, corner );
-			if( isPointInBlockXZ( p.xCoord, p.zCoord, x, z ) )
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean isPointInBlockXZ( double px, double pz, int blockX, int blockZ )
-	{
-		return px >= blockX && px <= blockX + 1
-			&& pz >= blockZ && pz <= blockZ + 1;
 	}
 }
