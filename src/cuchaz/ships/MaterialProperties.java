@@ -101,7 +101,7 @@ public class MaterialProperties
 			return true;
 		}
 		
-		return block.blockMaterial.isLiquid() || block.blockMaterial == Material.fire;
+		return block.blockMaterial.isLiquid() || block.blockMaterial == Material.fire || block.blockMaterial == Ships.MaterialAirWall;
 		
 		// UNDONE: add dock blocks
 	}

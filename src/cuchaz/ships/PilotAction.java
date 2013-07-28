@@ -55,7 +55,7 @@ public enum PilotAction
 	};
 	
 	// TEMP: acceleration should come from thrusters (modified by mass)!
-	private static double LinearAcceleration = 0.02;
+	private static double LinearAcceleration = 0.04;
 	private static float RotationalAcceleration = 1.0f;
 	
 	private int m_keyCode;

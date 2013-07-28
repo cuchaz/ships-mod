@@ -28,7 +28,6 @@ public class ShipPhysics
 	}
 	
 	private ShipWorld m_blocks;
-	private ShipGeometry m_geometry;
 	private TreeMap<Integer,DisplacementEntry> m_displacement;
 	private double m_shipMass;
 	
@@ -45,8 +44,6 @@ public class ShipPhysics
 				watertightBlocks.add( coords );
 			}
 		}
-		
-		m_geometry = new ShipGeometry( watertightBlocks );
 		
 		int minY = m_blocks.getBoundingBox().minY;
 		int maxY = m_blocks.getBoundingBox().maxY;
@@ -79,7 +76,7 @@ public class ShipPhysics
 		for( int y=minY; y<=maxY+1; y++ )
 		{
 			DisplacementEntry entry = m_displacement.get( y );
-			for( ChunkCoordinates coords : m_geometry.getTrappedAir( y ) )
+			for( ChunkCoordinates coords : m_blocks.getGeometry().getTrappedAir( y ) )
 			{
 				if( y == coords.posY )
 				{
@@ -174,10 +171,10 @@ public class ShipPhysics
 		return null;
 	}
 	
-	public void getDrag( Vec3 out, double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
+	public double getDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
 	{
 		final double AirDragRate = 0.01;
-		final double WaterDragRate = 0.1;
+		final double WaterDragRate = 0.5;
 		
 		// how fast are we going?
 		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
@@ -194,17 +191,7 @@ public class ShipPhysics
 		}
 		
 		// compute the drag coefficient
-		double drag = logisticFunction( speed, AirDragRate*airSurfaceArea + WaterDragRate*waterSurfaceArea );
-		
-		// TEMP
-		System.out.println( String.format( "Drag: speed=%.4f, airSurfaceArea=%.2f, waterSurfaceArea=%.2f, drag=%.4f",
-			speed, airSurfaceArea, waterSurfaceArea, drag
-		) );
-		
-		// build the drag vector
-		out.xCoord = -motionX*drag;
-		out.yCoord = -motionY*drag;
-		out.zCoord = -motionZ*drag;
+		return logisticFunction( speed, AirDragRate*airSurfaceArea + WaterDragRate*waterSurfaceArea );
 	}
 	
 	private double getBlockFractionSubmerged( int y, double waterHeight )
@@ -226,6 +213,6 @@ public class ShipPhysics
 	
 	private double logisticFunction( double x, double rate )
 	{
-		return 1.0/( 1.0 + Math.exp( -rate*x ) ) - 0.5;
+		return 2.0/( 1.0 + Math.exp( -rate*x - 0.1 ) ) - 1;
 	}
 }

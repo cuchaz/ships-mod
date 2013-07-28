@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
@@ -45,6 +47,7 @@ public class EntityShip extends Entity
 	private double m_zFromServer;
 	private float m_yawFromServer;
 	private float m_pitchFromServer;
+	private TreeSet<ChunkCoordinates> m_previouslyDisplacedWaterBlocks;
 	
 	public EntityShip( World world )
 	{
@@ -70,6 +73,7 @@ public class EntityShip extends Entity
 		m_zFromServer = 0;
 		m_yawFromServer = 0;
 		m_pitchFromServer = 0;
+		m_previouslyDisplacedWaterBlocks = null;
 	}
 	
 	@Override
@@ -301,20 +305,6 @@ public class EntityShip extends Entity
 			motionZ += ( 270 - posZ )/50.0;
 		}
 		
-		// simulate the weight/buoyancy forces
-		// TEMP
-		if( !worldObj.isRemote )
-		{
-			System.out.println( String.format( "%s ship pos: %.1f, ship motion: %8f, water in world: %d, water in ship: %.1f, water in blocks: %.1f",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				posY,
-				motionY,
-				getWaterHeight(),
-				worldToShipY( getWaterHeight() ),
-				shipToBlocksY( worldToShipY( getWaterHeight() ) )
-			) );
-		}
-		
 		double dx = motionX;
 		double dy = motionY;
 		double dz = motionZ;
@@ -373,6 +363,7 @@ public class EntityShip extends Entity
 			
 			moveRiders( riders, dx, dy, dz, dYaw );
 			//moveCollidingEntities( riders );
+			moveWater( waterHeight );
 		}
 		
 		// did the ship sink?
@@ -393,7 +384,7 @@ public class EntityShip extends Entity
 	private boolean isSunk( double waterHeight )
 	{
 		// is the ship completely underwater?
-		boolean isUnderwater = waterHeight > m_blocks.getBoundingBox().maxY + 1;
+		boolean isUnderwater = waterHeight > m_blocks.getBoundingBox().maxY + 1.5;
 		
 		// UNDONE: will have to use something smarter for submarines!
 		return motionY == 0 && isUnderwater;
@@ -567,18 +558,6 @@ public class EntityShip extends Entity
 			// full ahead, captain!!
 			PilotAction.applyToShip( this, m_pilotActions, m_sideShipForward );
 			
-			// need to be careful though about ship speed. Players that move too fast get kicked
-			// impose the max speed
-			double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
-			double maxSpeed = getShipType().getMaxLinearSpeed();
-			if( speed > maxSpeed )
-			{
-				double fixFactor = maxSpeed/speed;
-				motionX *= fixFactor;
-				motionY *= fixFactor;
-				motionZ *= fixFactor;
-			}
-			
 			// apply max rotational speed too
 			if( Math.abs( motionYaw ) > getShipType().getMaxRotationalSpeed() )
 			{
@@ -590,8 +569,6 @@ public class EntityShip extends Entity
 	private void adjustMotionDueToDrag( double waterHeight )
 	{
 		final float RotationalDrag = 0.5f;
-		
-		// NEXTTIME: need to adjust drag and buoyancy so the ship doesn't oscillate up and down!
 		
 		// which side (relative to the ship) are we headed?
 		Vec3 motion = Vec3.createVectorHelper( motionX, motionY, motionZ );
@@ -607,22 +584,14 @@ public class EntityShip extends Entity
 				bestSide = side;
 			}
 		}
-		
-		// TEMP
-		System.out.println( String.format( "%s Drag: motion=(%.2f,%.2f,%.2f), side=%s",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			motion.xCoord, motion.yCoord, motion.zCoord,
-			bestSide
-		) );
-		
 		assert( bestSide != null );
 		
 		// apply the position drag
-		Vec3 drag = Vec3.createVectorHelper( 0, 0, 0 );
-		m_physics.getDrag( drag, waterHeight, motionX, motionY, motionZ, bestSide, m_blocks.getGeometry().getEnvelopes() );
-		motionX += drag.xCoord;
-		motionY += drag.yCoord;
-		motionZ += drag.zCoord;
+		double drag = m_physics.getDragCoefficient( waterHeight, motionX, motionY, motionZ, bestSide, m_blocks.getGeometry().getEnvelopes() );
+		double omdrag = 1.0 - drag;
+		motionX *= omdrag;
+		motionY *= omdrag;
+		motionZ *= omdrag;
 		
 		// apply rotational drag
 		if( (float)Math.abs( motionYaw ) > RotationalDrag )
@@ -653,7 +622,7 @@ public class EntityShip extends Entity
         int maxZ = MathHelper.floor_double( nextBox.maxZ );
         for( int x=minX; x<=maxX; x++ )
         {
-            for( int z=minZ; z<maxZ; z++ )
+            for( int z=minZ; z<=maxZ; z++ )
             {
                 for( int y=minY; y<=maxY; y++ )
                 {
@@ -981,6 +950,84 @@ public class EntityShip extends Entity
 		
 		// clamp scalings to <= 1
 		return Math.min( 1, Math.max( sx, Math.max( sy, sz ) ) );
+	}
+	
+	private void moveWater( double waterHeightBlocks )
+	{
+		// NEXTTIME: ship isn't getting correct displacement! Maybe trapped air is wrong?
+		
+		// get all the trapped air blocks
+		int surfaceLevelBlocks = MathHelper.floor_double( waterHeightBlocks );
+		TreeSet<ChunkCoordinates> trappedAirBlocks = m_blocks.getGeometry().getTrappedAir( surfaceLevelBlocks );
+		if( trappedAirBlocks == null )
+		{
+			// the ship is sinking or out of the water
+			return;
+		}
+		
+		int surfaceLevelWorld = getWaterHeight();
+		
+		// find the world water blocks that intersect the trapped air blocks
+		TreeSet<ChunkCoordinates> displacedWaterBlocks = new TreeSet<ChunkCoordinates>();
+		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		for( ChunkCoordinates coords : trappedAirBlocks )
+		{
+			// compute the bounding box for the air block
+			p.xCoord = coords.posX + 0.5;
+			p.yCoord = coords.posY + 0.5;
+			p.zCoord = coords.posZ + 0.5;
+			blocksToShip( p );
+			shipToWorld( p );
+			EntityShipBlock.computeBoundingBox( box, p.xCoord, p.yCoord, p.zCoord, rotationYaw );
+			
+			// query for all the world water blocks that intersect it
+			int minX = MathHelper.floor_double( box.minX );
+			int maxX = MathHelper.floor_double( box.maxX );
+			int minY = MathHelper.floor_double( box.minY );
+			int maxY = Math.min( MathHelper.floor_double( box.maxY ), surfaceLevelWorld - 1 );
+			int minZ = MathHelper.floor_double( box.minZ );
+			int maxZ = MathHelper.floor_double( box.maxZ );
+			for( int x=minX; x<=maxX; x++ )
+			{
+				for( int z=minZ; z<=maxZ; z++ )
+				{
+					for( int y=minY; y<=maxY; y++ )
+					{
+						Material material = worldObj.getBlockMaterial( x, y, z );
+						if( material == Material.water || material == Material.air || material == Ships.MaterialAirWall )
+						{
+							displacedWaterBlocks.add( new ChunkCoordinates( x, y, z ) );
+						}
+					}
+				}
+			}
+		}
+		
+		// which are new blocks to displace?
+		for( ChunkCoordinates coords : displacedWaterBlocks )
+		{
+			if( m_previouslyDisplacedWaterBlocks == null || !m_previouslyDisplacedWaterBlocks.contains( coords ) )
+			{
+				worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Ships.BlockAirWall.blockID );
+			}
+		}
+		
+		// which blocks are no longer displaced?
+		if( m_previouslyDisplacedWaterBlocks != null )
+		{
+			for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
+			{
+				if( !displacedWaterBlocks.contains( coords ) )
+				{
+					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+					
+					// UNDONE: can get the fill effect back by only turning the surface level into air
+				}
+			}
+		}
+		
+		m_previouslyDisplacedWaterBlocks = displacedWaterBlocks;
 	}
 	
 	private void computeBoundingBox( AxisAlignedBB box, double x, double y, double z, float yaw )

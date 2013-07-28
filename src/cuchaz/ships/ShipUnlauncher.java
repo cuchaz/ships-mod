@@ -154,6 +154,13 @@ public class ShipUnlauncher
 	
 	public void unlaunch( )
 	{
+		List<Entity> riders = m_ship.getRiders();
+		
+		// TEMP
+		System.out.println( String.format( "Unlaunching ship with %d riders...",
+			riders.size()
+		) );
+		
 		// remove the ship entity
 		m_ship.setDead();
 		
@@ -170,9 +177,9 @@ public class ShipUnlauncher
 		double dz = targetShipBlock.posZ - sourceShipBlock.zCoord;
 		
 		// move all riders
-		for( Entity entity : m_ship.getRiders() )
+		for( Entity entity : riders )
 		{
-			entity.moveEntity( dx, dy, dz );
+			entity.setPosition( entity.posX + dx, entity.posY + dy, entity.posZ + dz );
 		}
 	}
 	

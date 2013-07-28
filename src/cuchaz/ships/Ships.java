@@ -1,5 +1,7 @@
 package cuchaz.ships;
 
+import net.minecraft.block.material.MapColor;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -19,8 +21,8 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
-import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketHandler;
+import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 
@@ -38,12 +40,17 @@ public class Ships
 	@Instance( "cuchaz.ships" )
 	public static Ships instance;
 	
+	// materials
+	public static final Material MaterialAirWall = new MaterialAirWall( MapColor.airColor );
+	
 	// (apparently the most robust id picking strategy is almost complete randomness)
 	// item registration: use ids [7321-7325]
 	public static final ItemPaddle ItemPaddle = new ItemPaddle( 7321 );
+	public static final ItemMagicBucket ItemMagicBucket = new ItemMagicBucket( 7322 );
 	
 	// block registration: use ids [3170-3190]
-	public BlockShip BlockShip = new BlockShip( 3170 );
+	public static final BlockShip BlockShip = new BlockShip( 3170 );
+	public static final BlockAirWall BlockAirWall = new BlockAirWall( 3171 );
 	
 	@EventHandler
 	public void preInit( FMLPreInitializationEvent event )
@@ -82,9 +89,11 @@ public class Ships
 	{
 		// blocks
 		GameRegistry.registerBlock( BlockShip, "blockShip" );
+		GameRegistry.registerBlock( BlockAirWall, "blockAirWall" );
 		
 		// items
 		GameRegistry.registerItem( ItemPaddle, "paddle" );
+		GameRegistry.registerItem( ItemMagicBucket, "magicBucket" );
 		
 		// entities
 		final int EntityShipId = 174;
@@ -96,9 +105,11 @@ public class Ships
 	{
 		// block names
 		LanguageRegistry.addName( BlockShip, "Ship" );
+		LanguageRegistry.addName( BlockAirWall, "Air Wall" );
 		
 		// item names
 		LanguageRegistry.addName( ItemPaddle, "Paddle" );
+		LanguageRegistry.addName( ItemMagicBucket, "Magic Bucket" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
@@ -112,6 +123,7 @@ public class Ships
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		ItemStack redstoneStack = new ItemStack( Item.redstone );
 		ItemStack stickStack = new ItemStack( Item.stick );
+		ItemStack goldStack = new ItemStack( Item.ingotGold );
 		
 		// ship
 		GameRegistry.addRecipe(
@@ -126,6 +138,13 @@ public class Ships
 			new ItemStack( ItemPaddle, 1 ),
 			" xx", " xx", "x  ",
 			'x', stickStack
+		);
+		
+		// magic bucket
+		GameRegistry.addRecipe(
+			new ItemStack( ItemMagicBucket, 1 ),
+			"   ", "x x", " x ",
+			'x', goldStack
 		);
 	}
 

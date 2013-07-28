@@ -53,8 +53,7 @@ public class GuiShipPaddle extends GuiCloseable
 		m_sideShipForward = null;
 		for( BlockSide side : BlockSide.xzSides() )
 		{
-			double dot = -side.getDx()*direction.xCoord + -side.getDz()*direction.yCoord;
-			
+			double dot = -side.getDx()*direction.xCoord + -side.getDz()*direction.zCoord;
 			if( dot > maxDot )
 			{
 				maxDot = dot;

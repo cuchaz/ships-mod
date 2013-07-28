@@ -3,6 +3,7 @@ package cuchaz.ships;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.Icon;
 import net.minecraft.world.World;
@@ -24,6 +25,7 @@ public class BlockShip extends Block
 		setResistance( 10.0F );
 		setStepSound( soundMetalFootstep );
 		setUnlocalizedName( "blockShip" );
+		setCreativeTab( CreativeTabs.tabTransport );
 	}
 	
 	@Override
