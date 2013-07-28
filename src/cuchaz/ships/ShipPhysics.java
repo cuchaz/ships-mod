@@ -30,6 +30,7 @@ public class ShipPhysics
 	private ShipWorld m_blocks;
 	private TreeMap<Integer,DisplacementEntry> m_displacement;
 	private double m_shipMass;
+	private double m_equilibriumWaterHeight;
 	
 	public ShipPhysics( ShipWorld blocks )
 	{
@@ -96,6 +97,8 @@ public class ShipPhysics
 			m_shipMass += MaterialProperties.getMass( getBlock( coords ) );
 		}
 		
+		m_equilibriumWaterHeight = computeEquilibriumWaterHeight();
+		
 		/* TEMP: tell me the displacement blocks
 		for( int y=minY; y<=maxY+1; y++ )
 		{
@@ -148,27 +151,7 @@ public class ShipPhysics
 	
 	public Double getEquilibriumWaterHeight( )
 	{
-		// travel up each layer until we find the one that displaces too much water
-		int minY = m_blocks.getBoundingBox().minY;
-		int maxY = m_blocks.getBoundingBox().maxY;
-		for( int y=minY; y<=maxY+1; y++ )
-		{
-			// assume water completely submerges this layer
-			DisplacementEntry entry = m_displacement.get( y );
-			double displacedWaterMass = ( entry.numBlocksUnderwater + entry.numBlocksAtSurface )*getWaterBlockMass();
-			
-			// did we displace too much water?
-			if( displacedWaterMass > m_shipMass )
-			{
-				// good, the water height is in this block level
-				
-				// now solve for the water height
-				return y + ( m_shipMass - entry.numBlocksUnderwater*getWaterBlockMass() )/entry.numBlocksAtSurface/getWaterBlockMass();
-			}
-		}
-		
-		// The ship will sink!
-		return null;
+		return m_equilibriumWaterHeight;
 	}
 	
 	public double getDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
@@ -192,6 +175,31 @@ public class ShipPhysics
 		
 		// compute the drag coefficient
 		return logisticFunction( speed, AirDragRate*airSurfaceArea + WaterDragRate*waterSurfaceArea );
+	}
+	
+	private Double computeEquilibriumWaterHeight( )
+	{
+		// travel up each layer until we find the one that displaces too much water
+		int minY = m_blocks.getBoundingBox().minY;
+		int maxY = m_blocks.getBoundingBox().maxY;
+		for( int y=minY; y<=maxY+1; y++ )
+		{
+			// assume water completely submerges this layer
+			DisplacementEntry entry = m_displacement.get( y );
+			double displacedWaterMass = ( entry.numBlocksUnderwater + entry.numBlocksAtSurface )*getWaterBlockMass();
+			
+			// did we displace too much water?
+			if( displacedWaterMass > m_shipMass )
+			{
+				// good, the water height is in this block level
+				
+				// now solve for the water height
+				return y + ( m_shipMass - entry.numBlocksUnderwater*getWaterBlockMass() )/entry.numBlocksAtSurface/getWaterBlockMass();
+			}
+		}
+		
+		// The ship will sink!
+		return null;
 	}
 	
 	private double getBlockFractionSubmerged( int y, double waterHeight )

@@ -258,6 +258,7 @@ public class EntityShip extends Entity
 	public void setPositionAndRotation2( double x, double y, double z, float yaw, float pitch, int alwaysThree )
 	{
 		// NOTE: this function should really be called onGetUpdatedPositionFromServer()
+		// also, server positions are off by as much as 0.03 in {x,y,z}
 		
 		// just save the info and we'll deal with it on the next update tick
 		m_hasInfoFromServer = true;
@@ -292,11 +293,18 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		double waterHeight = shipToBlocksY( worldToShipY( getWaterHeight() ) );
-		motionY += m_physics.getNetUpForce( waterHeight );
+		double waterHeightInBlockSpace = shipToBlocksY( worldToShipY( getWaterHeight() ) );
+		
+		// only simulate buoyancy if we're outside of the epsilon for the equilibrium y pos
+		final double EquilibriumWaterHeightEpsilon = 0.05;
+		double distToEquilibrium = waterHeightInBlockSpace - m_physics.getEquilibriumWaterHeight();
+		if( Math.abs( distToEquilibrium ) > EquilibriumWaterHeightEpsilon )
+		{
+			motionY += m_physics.getNetUpForce( waterHeightInBlockSpace );
+		}
 		
 		adjustMotionDueToThrust();
-		adjustMotionDueToDrag( waterHeight );
+		adjustMotionDueToDrag( waterHeightInBlockSpace );
 		adjustMotionDueToBlockCollisions();
 		
 		// TEMP: oscillate so we can test entity collision
@@ -339,8 +347,19 @@ public class EntityShip extends Entity
 			m_hasInfoFromServer = false;
 		}
 		
+		final double Epsilon = 1e-2;
+		
+		/* TEMP
+		System.out.println( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), distE=%.4f, d=(%.4f,%.4f,%.4f), dYaw=%.1f, isNoticable=%b",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			posX, posY, posZ,
+			distToEquilibrium,
+			dx, dy, dz, dYaw,
+			Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon
+		) );
+		*/
+		
 		// did we even move a noticeable amount?
-		final double Epsilon = 1e-4;
 		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
 		{
 			List<Entity> riders = getRiders();
@@ -363,11 +382,11 @@ public class EntityShip extends Entity
 			
 			moveRiders( riders, dx, dy, dz, dYaw );
 			//moveCollidingEntities( riders );
-			moveWater( waterHeight );
+			moveWater( waterHeightInBlockSpace );
 		}
 		
 		// did the ship sink?
-		if( isSunk( waterHeight ) )
+		if( isSunk( waterHeightInBlockSpace ) )
 		{
 			// TEMP
 			System.out.println( String.format( "%s Ship Sunk!",
@@ -956,6 +975,8 @@ public class EntityShip extends Entity
 	{
 		// NEXTTIME: ship isn't getting correct displacement! Maybe trapped air is wrong?
 		
+		System.out.println( String.format( "%s moveWater()", worldObj.isRemote ? "CLIENT" : "SERVER" ) );
+		
 		// get all the trapped air blocks
 		int surfaceLevelBlocks = MathHelper.floor_double( waterHeightBlocks );
 		TreeSet<ChunkCoordinates> trappedAirBlocks = m_blocks.getGeometry().getTrappedAir( surfaceLevelBlocks );
@@ -1003,6 +1024,24 @@ public class EntityShip extends Entity
 				}
 			}
 		}
+		
+		// TEMP
+		System.out.println( String.format( "%s Trapped Air %d:", worldObj.isRemote ? "CLIENT" : "SERVER", trappedAirBlocks.size() ) );
+		System.out.print( "\t" );
+		for( ChunkCoordinates coords : trappedAirBlocks )
+		{
+			System.out.print( String.format( "(%d,%d,%d)", coords.posX, coords.posY, coords.posZ ) );
+		}
+		System.out.print( "\n" );
+		/*
+		System.out.println( String.format( "%s Displaced Water %d:", worldObj.isRemote ? "CLIENT" : "SERVER", displacedWaterBlocks.size() ) );
+		System.out.print( "\t" );
+		for( ChunkCoordinates coords : displacedWaterBlocks )
+		{
+			System.out.print( String.format( "(%d,%d,%d)", coords.posX, coords.posY, coords.posZ ) );
+		}
+		System.out.print( "\n" );
+		*/
 		
 		// which are new blocks to displace?
 		for( ChunkCoordinates coords : displacedWaterBlocks )
