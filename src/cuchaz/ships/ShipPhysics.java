@@ -30,7 +30,7 @@ public class ShipPhysics
 	private ShipWorld m_blocks;
 	private TreeMap<Integer,DisplacementEntry> m_displacement;
 	private double m_shipMass;
-	private double m_equilibriumWaterHeight;
+	private Double m_equilibriumWaterHeight;
 	
 	public ShipPhysics( ShipWorld blocks )
 	{

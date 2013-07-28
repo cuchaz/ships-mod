@@ -147,6 +147,15 @@ public class EntityShip extends Entity
 	{
 		super.setDead();
 		
+		// remove all the air wall blocks
+		if( m_previouslyDisplacedWaterBlocks != null )
+		{
+			for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
+			{
+				worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+			}
+		}
+		
 		// TEMP
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip died!" );
 	}
@@ -347,7 +356,7 @@ public class EntityShip extends Entity
 			m_hasInfoFromServer = false;
 		}
 		
-		final double Epsilon = 1e-2;
+		final double Epsilon = 1e-3;
 		
 		/* TEMP
 		System.out.println( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), distE=%.4f, d=(%.4f,%.4f,%.4f), dYaw=%.1f, isNoticable=%b",
@@ -973,10 +982,6 @@ public class EntityShip extends Entity
 	
 	private void moveWater( double waterHeightBlocks )
 	{
-		// NEXTTIME: ship isn't getting correct displacement! Maybe trapped air is wrong?
-		
-		System.out.println( String.format( "%s moveWater()", worldObj.isRemote ? "CLIENT" : "SERVER" ) );
-		
 		// get all the trapped air blocks
 		int surfaceLevelBlocks = MathHelper.floor_double( waterHeightBlocks );
 		TreeSet<ChunkCoordinates> trappedAirBlocks = m_blocks.getGeometry().getTrappedAir( surfaceLevelBlocks );
@@ -1002,6 +1007,14 @@ public class EntityShip extends Entity
 			shipToWorld( p );
 			EntityShipBlock.computeBoundingBox( box, p.xCoord, p.yCoord, p.zCoord, rotationYaw );
 			
+			// grow the bounding box just a bit so we get more robust collisions
+			box.minX -= 0.1;
+			box.minY -= 0.1;
+			box.minZ -= 0.1;
+			box.maxX += 0.1;
+			box.maxY += 0.1;
+			box.maxZ += 0.1;
+			
 			// query for all the world water blocks that intersect it
 			int minX = MathHelper.floor_double( box.minX );
 			int maxX = MathHelper.floor_double( box.maxX );
@@ -1025,24 +1038,6 @@ public class EntityShip extends Entity
 			}
 		}
 		
-		// TEMP
-		System.out.println( String.format( "%s Trapped Air %d:", worldObj.isRemote ? "CLIENT" : "SERVER", trappedAirBlocks.size() ) );
-		System.out.print( "\t" );
-		for( ChunkCoordinates coords : trappedAirBlocks )
-		{
-			System.out.print( String.format( "(%d,%d,%d)", coords.posX, coords.posY, coords.posZ ) );
-		}
-		System.out.print( "\n" );
-		/*
-		System.out.println( String.format( "%s Displaced Water %d:", worldObj.isRemote ? "CLIENT" : "SERVER", displacedWaterBlocks.size() ) );
-		System.out.print( "\t" );
-		for( ChunkCoordinates coords : displacedWaterBlocks )
-		{
-			System.out.print( String.format( "(%d,%d,%d)", coords.posX, coords.posY, coords.posZ ) );
-		}
-		System.out.print( "\n" );
-		*/
-		
 		// which are new blocks to displace?
 		for( ChunkCoordinates coords : displacedWaterBlocks )
 		{
@@ -1061,7 +1056,7 @@ public class EntityShip extends Entity
 				{
 					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
 					
-					// UNDONE: can get the fill effect back by only turning the surface level into air
+					// UNDONE: can get the fill effect back by only turning the surface level into air?
 				}
 			}
 		}
