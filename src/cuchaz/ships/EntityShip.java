@@ -90,6 +90,14 @@ public class EntityShip extends Entity
 	
 	public void setBlocks( ShipWorld blocks )
 	{
+		// if the blocks are invalid, just kill the ship
+		if( !blocks.isValid() )
+		{
+			setDead();
+			System.err.println( "Ship world is invalid. Killed ship." );
+			return;
+		}
+		
 		// reset the motion again. For some reason, the client entity gets bogus velocities from somewhere...
 		motionX = 0.0;
 		motionY = 0.0;

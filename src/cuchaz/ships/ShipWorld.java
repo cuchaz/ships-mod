@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
@@ -24,8 +26,6 @@ public class ShipWorld extends DetatchedWorld
 	{
 		public int blockId;
 		public int blockMeta;
-		
-		// UNDONE: save other block data?
 		
 		public BlockStorage( )
 		{
@@ -67,6 +67,7 @@ public class ShipWorld extends DetatchedWorld
 	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
 	private ShipGeometry m_geometry;
+	private TreeMap<ChunkCoordinates,TileEntity> m_tileEntities;
 	
 	private ShipWorld( World world )
 	{
@@ -76,6 +77,7 @@ public class ShipWorld extends DetatchedWorld
 		m_ship = null;
 		m_blocks = null;
 		m_airBlockStorage = new BlockStorage();
+		m_tileEntities = null;
 	}
 	
 	public ShipWorld( World world, ChunkCoordinates originCoords, List<ChunkCoordinates> blocks )
@@ -99,6 +101,39 @@ public class ShipWorld extends DetatchedWorld
 			m_blocks.put( relativeCoords, storage );
 		}
 		
+		// copy the tile entities
+		m_tileEntities = new TreeMap<ChunkCoordinates,TileEntity>();
+		for( ChunkCoordinates worldCoords : blocks )
+		{
+			// does this block have a tile entity?
+			TileEntity tileEntity = world.getBlockTileEntity( worldCoords.posX, worldCoords.posY, worldCoords.posZ );
+			if( tileEntity == null )
+			{
+				continue;
+			}
+			
+			ChunkCoordinates relativeCoords = new ChunkCoordinates(
+				worldCoords.posX - originCoords.posX,
+				worldCoords.posY - originCoords.posY,
+				worldCoords.posZ - originCoords.posZ
+			);
+			
+			// copy the tile entity
+			NBTTagCompound nbt = new NBTTagCompound();
+			tileEntity.writeToNBT( nbt );
+			TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+			
+			// initialize the tile entity
+			tileEntityCopy.setWorldObj( this );
+			tileEntityCopy.xCoord = relativeCoords.posX;
+			tileEntityCopy.yCoord = relativeCoords.posY;
+			tileEntityCopy.zCoord = relativeCoords.posZ;
+			tileEntityCopy.validate();
+			
+			// save it to the ship world
+			m_tileEntities.put( relativeCoords, tileEntityCopy );
+		}
+		
 		computeDependentFields();
 	}
 	
@@ -111,7 +146,7 @@ public class ShipWorld extends DetatchedWorld
 		{
 			// read the version number
 			int version = in.readInt();
-			if( version != 0 )
+			if( version != 1 )
 			{
 				System.err.println( "ShipBlocks persistence version " + version + " not supported! Blocks loading skipped!" );
 			}
@@ -134,6 +169,26 @@ public class ShipWorld extends DetatchedWorld
 					m_blocks.put( coords, storage );
 				}
 				
+				// read the tile entities
+				m_tileEntities = new TreeMap<ChunkCoordinates,TileEntity>();
+				int numTileEntities = in.readInt();
+				for( int i=0; i<numTileEntities; i++ )
+				{
+					// create the tile entity
+					NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+					TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
+					ChunkCoordinates coords = new ChunkCoordinates(
+						tileEntity.xCoord,
+						tileEntity.yCoord,
+						tileEntity.zCoord
+					);
+					m_tileEntities.put( coords, tileEntity );
+					
+					// restore it to the world
+					tileEntity.setWorldObj( this );
+					tileEntity.validate();
+				}
+				
 				computeDependentFields();
 			}
 		}
@@ -153,23 +208,33 @@ public class ShipWorld extends DetatchedWorld
 		this( world, Base64.decodeBase64( data ) );
 	}
 	
-	public void restoreToWorld( World world, int x, int y, int z )
-	{
-		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
-		{
-			ChunkCoordinates coords = entry.getKey();
-			BlockStorage storage = entry.getValue();
-			storage.copyToWorld( world, new ChunkCoordinates( coords.posX + x, coords.posY + y, coords.posZ + z ) );
-		}
-	}
-	
 	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence )
 	{
 		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
 		{
-			ChunkCoordinates coords = correspondence.get( entry.getKey() );
+			ChunkCoordinates coordsShip = entry.getKey();
+			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
 			BlockStorage storage = entry.getValue();
-			storage.copyToWorld( world, new ChunkCoordinates( coords.posX, coords.posY, coords.posZ ) );
+			
+			// restore the block
+			storage.copyToWorld( world, coordsWorld );
+			
+			// restore any tile entities if needed
+			TileEntity tileEntity = getBlockTileEntity( coordsShip );
+			if( tileEntity != null )
+			{
+				// copy the tile entity
+				NBTTagCompound nbt = new NBTTagCompound();
+				tileEntity.writeToNBT( nbt );
+				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+				tileEntityCopy.validate();
+				
+				// put the tile entity into the world first
+				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
+				
+				// then set the block
+				storage.copyToWorld( world, coordsWorld );
+			}
 		}
 	}
 	
@@ -180,6 +245,11 @@ public class ShipWorld extends DetatchedWorld
 	public void setShip( EntityShip val )
 	{
 		m_ship = val;
+	}
+	
+	public boolean isValid( )
+	{
+		return m_blocks != null;
 	}
 	
 	public int getNumBlocks( )
@@ -227,8 +297,13 @@ public class ShipWorld extends DetatchedWorld
 	@Override
 	public TileEntity getBlockTileEntity( int x, int y, int z )
 	{
-		// UNDONE: support tile entities?
-		return null;
+		m_lookupCoords.set( x, y, z );
+		return getBlockTileEntity( m_lookupCoords );
+	}
+	
+	public TileEntity getBlockTileEntity( ChunkCoordinates coords )
+	{
+		return m_tileEntities.get( coords );
 	}
 	
 	@Override
@@ -246,8 +321,14 @@ public class ShipWorld extends DetatchedWorld
 	@Override
 	public boolean setBlock( int par1, int par2, int par3, int par4, int par5, int par6 )
 	{
-		// do nothing. Blocks are immutable
+		// do nothing. Ships are immutable
 		return false;
+	}
+	
+	@Override
+	public void setBlockTileEntity( int x, int y, int z, TileEntity tileEntity )
+	{
+		// do nothing. Ships are immutable
 	}
 	
 	public byte[] getData( )
@@ -260,7 +341,7 @@ public class ShipWorld extends DetatchedWorld
 		try
 		{
 			// write out persistence version number
-			out.writeInt( 0 );
+			out.writeInt( 1 );
 			
 			// write out the blocks
 			out.writeInt( m_blocks.size() );
@@ -273,6 +354,15 @@ public class ShipWorld extends DetatchedWorld
 				out.writeInt( coords.posY );
 				out.writeInt( coords.posZ );
 				storage.writeData( out );
+			}
+			
+			// write out the tile entities
+			out.writeInt( m_tileEntities.size() );
+			for( TileEntity tileEntity : m_tileEntities.values() )
+			{
+				NBTTagCompound nbt = new NBTTagCompound();
+				tileEntity.writeToNBT( nbt );
+				NBTBase.writeNamedTag( nbt, out );
 			}
 		}
 		catch( IOException ex )
