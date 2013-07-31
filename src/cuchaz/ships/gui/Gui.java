@@ -5,8 +5,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
 import cuchaz.ships.ContainerShip;
+import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
-import cuchaz.ships.ShipWorld;
+import cuchaz.ships.ShipLocator;
 import cuchaz.ships.Ships;
 
 public enum Gui
@@ -36,7 +37,12 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipUnlaunch( new ContainerShip(), ((ShipWorld)world).getShip() );
+			EntityShip ship = ShipLocator.getFromPlayerLocation( world, player );
+			if( ship == null )
+			{
+				return null;
+			}
+			return new GuiShipUnlaunch( new ContainerShip(), ship );
 		}
 	},
 	PaddleShip
@@ -50,7 +56,12 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipPaddle( new ContainerShip(), ((ShipWorld)world).getShip(), player );
+			EntityShip ship = ShipLocator.getFromPlayerLocation( world, player );
+			if( ship == null )
+			{
+				return null;
+			}
+			return new GuiShipPaddle( new ContainerShip(), ship, player );
 		}
 	};
 	

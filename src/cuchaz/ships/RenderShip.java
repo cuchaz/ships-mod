@@ -8,11 +8,9 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.Icon;
 
 import org.lwjgl.opengl.GL11;
 
-import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.Matrix3;
@@ -59,7 +57,7 @@ public class RenderShip extends Render
 			Block block = Block.blocksList[ship.getBlocks().getBlockId( coords )];
 			block.setBlockBoundsBasedOnState( m_renderBlocks.blockAccess, coords.posX, coords.posY, coords.posZ );
 			m_renderBlocks.setRenderBoundsFromBlock( block );
-			renderUnlitBlock( block, coords.posX, coords.posY, coords.posZ );
+			RenderBlockType.getById( block.getRenderType() ).render( m_renderBlocks, block, coords.posX, coords.posY, coords.posZ, partialTickTime );
 		}
 		
 		GL11.glPopMatrix();
@@ -82,23 +80,6 @@ public class RenderShip extends Render
 			}
 			
 			GL11.glPopMatrix();
-		}
-	}
-	
-	public void renderUnlitBlock( Block block, int x, int y, int z )
-	{
-		Tessellator tessellator = Tessellator.instance;
-		for( BlockSide side : BlockSide.values() )
-		{
-			if( m_renderBlocks.renderAllFaces || block.shouldSideBeRendered( m_renderBlocks.blockAccess, x + side.getDx(), y + side.getDy(), z + side.getDz(), side.getId() ) )
-			{
-				Icon icon = m_renderBlocks.getBlockIcon( block, m_renderBlocks.blockAccess, x, y, z, side.getId() );
-				
-				tessellator.startDrawingQuads();
-				tessellator.setNormal( (float)side.getDx(), (float)side.getDy(), (float)side.getDz() );
-				side.renderSide( m_renderBlocks, block, (double)x, (double)y, (double)z, icon );
-				tessellator.draw();
-			}
 		}
 	}
 	
