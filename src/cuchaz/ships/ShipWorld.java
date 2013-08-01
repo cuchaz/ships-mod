@@ -23,6 +23,7 @@ import net.minecraftforge.common.ForgeDirection;
 import org.apache.commons.codec.binary.Base64;
 
 import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.ships.proxy.TileEntityProxyFactory;
 
 public class ShipWorld extends DetatchedWorld
 {
@@ -125,7 +126,7 @@ public class ShipWorld extends DetatchedWorld
 			// copy the tile entity
 			NBTTagCompound nbt = new NBTTagCompound();
 			tileEntity.writeToNBT( nbt );
-			TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+			TileEntity tileEntityCopy = ClassIntrumenter.instrument( TileEntity.createAndLoadEntity( nbt ) );
 			
 			// initialize the tile entity
 			tileEntityCopy.setWorldObj( this );
@@ -180,7 +181,7 @@ public class ShipWorld extends DetatchedWorld
 				{
 					// create the tile entity
 					NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
-					TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
+					TileEntity tileEntity = ClassIntrumenter.instrument( TileEntity.createAndLoadEntity( nbt ) );
 					ChunkCoordinates coords = new ChunkCoordinates(
 						tileEntity.xCoord,
 						tileEntity.yCoord,
@@ -353,10 +354,16 @@ public class ShipWorld extends DetatchedWorld
     }
 	
 	@Override
+	@SuppressWarnings( "rawtypes" )
 	public List getEntitiesWithinAABB( Class theClass, AxisAlignedBB box )
 	{
 		// there are no entities in ship world
 		return new ArrayList();
+		
+		// UNDONE: actually do this query?
+		// get the AABB for the query box in world coords
+		// get the entities from the real world
+		// transform them into ship world
 	}
 	
 	public byte[] getData( )
