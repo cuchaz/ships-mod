@@ -23,7 +23,6 @@ import net.minecraftforge.common.ForgeDirection;
 import org.apache.commons.codec.binary.Base64;
 
 import cuchaz.modsShared.BoundingBoxInt;
-import cuchaz.ships.proxy.TileEntityProxyFactory;
 
 public class ShipWorld extends DetatchedWorld
 {
@@ -126,7 +125,7 @@ public class ShipWorld extends DetatchedWorld
 			// copy the tile entity
 			NBTTagCompound nbt = new NBTTagCompound();
 			tileEntity.writeToNBT( nbt );
-			TileEntity tileEntityCopy = ClassIntrumenter.instrument( TileEntity.createAndLoadEntity( nbt ) );
+			TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
 			
 			// initialize the tile entity
 			tileEntityCopy.setWorldObj( this );
@@ -181,7 +180,7 @@ public class ShipWorld extends DetatchedWorld
 				{
 					// create the tile entity
 					NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
-					TileEntity tileEntity = ClassIntrumenter.instrument( TileEntity.createAndLoadEntity( nbt ) );
+					TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
 					ChunkCoordinates coords = new ChunkCoordinates(
 						tileEntity.xCoord,
 						tileEntity.yCoord,
