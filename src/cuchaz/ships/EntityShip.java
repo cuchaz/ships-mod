@@ -3,6 +3,8 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -10,6 +12,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
@@ -138,6 +141,12 @@ public class EntityShip extends Entity
 		m_blockEntitiesArray = new EntityShipBlock[m_blockEntities.size()];
 		m_blockEntities.values().toArray( m_blockEntitiesArray );
 		
+		// renumber the block entities so the client and server are in sync
+		for( int i=0; i<m_blockEntitiesArray.length; i++ )
+		{
+			m_blockEntitiesArray[i].entityId = entityId + i + 1;
+		}
+		
 		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
 		updateBlockEntityPositions();
 		
@@ -237,6 +246,7 @@ public class EntityShip extends Entity
         posZ = z;
 		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
 		updateBlockEntityPositions();
+		updateTileEntityPositions();
 	}
 	
 	private void updateBlockEntityPositions( )
@@ -268,6 +278,44 @@ public class EntityShip extends Entity
 				rotationYaw,
 				rotationPitch
 			);
+		}
+	}
+	
+	private void updateTileEntityPositions( )
+	{
+		// NEXTTIME: tile entities need to get their block info, so the xyz has to be in block space
+		// but tile entities also need to implement canInteractWith( player ), so the xyz has to be in world space
+		// what a conundrum...
+		
+		if( m_blocks == null )
+		{
+			return;
+		}
+		
+		// do we even have any tile entities?
+		Set<Entry<ChunkCoordinates,TileEntity>> tileEntities = m_blocks.tileEntities();
+		if( tileEntities.isEmpty() )
+		{
+			return;
+		}
+		
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		for( Entry<ChunkCoordinates,TileEntity> entry : m_blocks.tileEntities() )
+		{
+			ChunkCoordinates coords = entry.getKey();
+			TileEntity tileEntity = entry.getValue();
+			
+			// compute the block position
+			p.xCoord = coords.posX;
+			p.yCoord = coords.posY;
+			p.zCoord = coords.posZ;
+			blocksToShip( p );
+			shipToWorld( p );
+			
+			// sadly, we have to snap round to the nearest block
+			tileEntity.xCoord = MathHelper.floor_double( p.xCoord + 0.5 );
+			tileEntity.yCoord = MathHelper.floor_double( p.yCoord + 0.5 );
+			tileEntity.zCoord = MathHelper.floor_double( p.zCoord + 0.5 );
 		}
 	}
 	
@@ -767,6 +815,8 @@ public class EntityShip extends Entity
 	
 	public List<Entity> getRiders( )
 	{
+		// UNDONE: cache this. It only needs to be updated every tick
+		
 		final double Expand = 0.5;
 		AxisAlignedBB checkBox = AxisAlignedBB.getAABBPool().getAABB(
 			boundingBox.minX - Expand,

@@ -5,20 +5,25 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeDirection;
 
 import org.apache.commons.codec.binary.Base64;
 
 import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.ships.proxy.TileEntityProxyFactory;
 
 public class ShipWorld extends DetatchedWorld
 {
@@ -121,7 +126,7 @@ public class ShipWorld extends DetatchedWorld
 			// copy the tile entity
 			NBTTagCompound nbt = new NBTTagCompound();
 			tileEntity.writeToNBT( nbt );
-			TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+			TileEntity tileEntityCopy = ClassIntrumenter.instrument( TileEntity.createAndLoadEntity( nbt ) );
 			
 			// initialize the tile entity
 			tileEntityCopy.setWorldObj( this );
@@ -176,7 +181,7 @@ public class ShipWorld extends DetatchedWorld
 				{
 					// create the tile entity
 					NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
-					TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
+					TileEntity tileEntity = ClassIntrumenter.instrument( TileEntity.createAndLoadEntity( nbt ) );
 					ChunkCoordinates coords = new ChunkCoordinates(
 						tileEntity.xCoord,
 						tileEntity.yCoord,
@@ -262,6 +267,11 @@ public class ShipWorld extends DetatchedWorld
 		return m_blocks.keySet();
 	}
 	
+	public Set<Map.Entry<ChunkCoordinates,TileEntity>> tileEntities( )
+	{
+		return m_tileEntities.entrySet();
+	}
+	
 	public ShipGeometry getGeometry( )
 	{
 		return m_geometry;
@@ -329,6 +339,31 @@ public class ShipWorld extends DetatchedWorld
 	public void setBlockTileEntity( int x, int y, int z, TileEntity tileEntity )
 	{
 		// do nothing. Ships are immutable
+	}
+	
+	@Override
+    public boolean isBlockSolidOnSide( int x, int y, int z, ForgeDirection side, boolean defaultValue )
+    {
+		m_lookupCoords.set( x, y, z );
+        Block block = Block.blocksList[getBlockId( m_lookupCoords )];
+        if( block == null )
+        {
+        	return defaultValue;
+        }
+        return block.isBlockSolidOnSide( this, x, y, z, side );
+    }
+	
+	@Override
+	@SuppressWarnings( "rawtypes" )
+	public List getEntitiesWithinAABB( Class theClass, AxisAlignedBB box )
+	{
+		// there are no entities in ship world
+		return new ArrayList();
+		
+		// UNDONE: actually do this query?
+		// get the AABB for the query box in world coords
+		// get the entities from the real world
+		// transform them into ship world
 	}
 	
 	public byte[] getData( )

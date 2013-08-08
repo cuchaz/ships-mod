@@ -100,6 +100,13 @@ public class EntityShipBlock extends Entity
 			return false;
 		}
 		
+		// TEMP
+		System.out.println( String.format( "%s EntityShipBlock.interact( %d ): %s",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			entityId,
+			getBlock().getUnlocalizedName()
+		) );
+		
 		return getBlock().onBlockActivated(
 			m_ship.getBlocks(),
 			coords.posX, coords.posY, coords.posZ,
