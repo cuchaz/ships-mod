@@ -1,18 +1,23 @@
 package cuchaz.ships;
 
+import java.util.Arrays;
+
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+
 import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.DummyModContainer;
+import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.Mod.Instance;
+import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -26,7 +31,8 @@ import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 
-@Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
+// no longer needed for a coremod
+// @Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
 @NetworkMod(
 	clientSideRequired = true,
 	serverSideRequired = true,
@@ -34,8 +40,7 @@ import cuchaz.ships.packets.PacketUnlaunchShip;
 	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel },
 	packetHandler = PacketHandler.class
 )
-
-public class Ships
+public class Ships extends DummyModContainer
 {
 	@Instance( "cuchaz.ships" )
 	public static Ships instance;
@@ -52,13 +57,26 @@ public class Ships
 	public static final BlockShip BlockShip = new BlockShip( 3170 );
 	public static final BlockAirWall BlockAirWall = new BlockAirWall( 3171 );
 	
-	@EventHandler
-	public void preInit( FMLPreInitializationEvent event )
+	public Ships( )
 	{
-		// nothing to do
+		super( new ModMetadata() );
+		ModMetadata meta = getMetadata();
+		meta.modId = "cuchaz.ships";
+		meta.name = "Ships";
+		meta.version = "0.1";
+		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
+		meta.description = "Build sailable ships out of blocks.";
+		meta.url = "";
 	}
 	
-	@EventHandler
+	@Override
+	public boolean registerBus( EventBus bus, LoadController controller )
+	{
+		bus.register( this );
+		return true;
+	}
+	
+	@Subscribe
 	public void load( FMLInitializationEvent event )
 	{
 		loadThings();
@@ -146,11 +164,5 @@ public class Ships
 			"   ", "x x", " x ",
 			'x', goldStack
 		);
-	}
-
-	@EventHandler
-	public void postInit( FMLPostInitializationEvent event )
-	{
-		// nothing to do
 	}
 }
