@@ -212,7 +212,7 @@ public class ShipWorld extends DetatchedWorld
 		this( world, Base64.decodeBase64( data ) );
 	}
 	
-	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence )
+	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence, int waterSurfaceLevelBlocks )
 	{
 		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
 		{
@@ -239,6 +239,13 @@ public class ShipWorld extends DetatchedWorld
 				// then set the block
 				storage.copyToWorld( world, coordsWorld );
 			}
+		}
+		
+		// bail out the boat if needed (it might have water in the trapped air blocks)
+		for( ChunkCoordinates coordsShip : m_geometry.getTrappedAir( waterSurfaceLevelBlocks ) )
+		{
+			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
+			world.setBlockToAir( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ );
 		}
 	}
 	

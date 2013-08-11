@@ -2,7 +2,7 @@ package cuchaz.ships;
 
 public enum ShipType
 {
-	Raft( 64, true, 3.0f );
+	Raft( 1024, true, 3.0f );
 	
 	private int m_maxNumBlocks;
 	private boolean m_isPaddleable;

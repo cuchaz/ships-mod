@@ -37,9 +37,11 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			EntityShip ship = ShipLocator.getFromPlayerLocation( world, player );
+			// NOTE: world is always the real world, not the ship world
+			EntityShip ship = ShipLocator.getFromPlayerLook( player );
 			if( ship == null )
 			{
+				System.out.println( "Unable to locate ship!" );
 				return null;
 			}
 			return new GuiShipUnlaunch( new ContainerShip(), ship );
@@ -56,7 +58,7 @@ public enum Gui
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			EntityShip ship = ShipLocator.getFromPlayerLocation( world, player );
+			EntityShip ship = ShipLocator.getFromPlayerLocation( player );
 			if( ship == null )
 			{
 				return null;

@@ -84,13 +84,14 @@ public class ShipUnlauncher
 	private EntityShip m_ship;
 	private List<Boolean> m_unlaunchFlags;
 	private TreeMap<ChunkCoordinates,ChunkCoordinates> m_correspondence;
+	private int m_waterSurfaceLevelBlocks;
 	
 	public ShipUnlauncher( EntityShip ship )
 	{
 		m_ship = ship;
 		
 		// compute the block correspondence
-		m_correspondence = computeCorresopndence();
+		computeCorrespondence();
 		
 		// compute the unlaunch flags
 		m_unlaunchFlags = new ArrayList<Boolean>();
@@ -100,7 +101,7 @@ public class ShipUnlauncher
 		}
 	}
 	
-	private TreeMap<ChunkCoordinates,ChunkCoordinates> computeCorresopndence( )
+	private void computeCorrespondence( )
 	{
 		// get the ship block position
 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
@@ -108,9 +109,20 @@ public class ShipUnlauncher
 		m_ship.shipToWorld( p );
 		ChunkCoordinates shipBlock = new ChunkCoordinates(
 			MathHelper.floor_double( p.xCoord + 0.5 ),
-			MathHelper.floor_double( p.yCoord + 0.5 ),
+			MathHelper.floor_double( p.yCoord + 1.0 ),
 			MathHelper.floor_double( p.zCoord + 0.5 )
 		);
+		
+		// determine the water surface level
+		m_waterSurfaceLevelBlocks = m_ship.getWaterHeight() - shipBlock.posY - 1;
+		
+		// TEMP
+		System.out.println( String.format( "restoring! Water level: %d,%d num air: %d", m_ship.getWaterHeight(), m_waterSurfaceLevelBlocks, m_ship.getBlocks().getGeometry().getTrappedAir( m_waterSurfaceLevelBlocks ).size() ) );
+		
+		// get the set of coords we care about
+		TreeSet<ChunkCoordinates> allCoords = new TreeSet<ChunkCoordinates>();
+		allCoords.addAll( m_ship.getBlocks().coords() );
+		allCoords.addAll( m_ship.getBlocks().getGeometry().getTrappedAir( m_waterSurfaceLevelBlocks ) );
 		
 		// compute the snap rotation
 		double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( m_ship.rotationYaw ) );
@@ -119,8 +131,8 @@ public class ShipUnlauncher
 		int sin = new int[] { 0, 1, 0, -1 }[rotation];
 		
 		// compute the actual correspondence
-		TreeMap<ChunkCoordinates,ChunkCoordinates> correspondence = new TreeMap<ChunkCoordinates,ChunkCoordinates>();
-		for( ChunkCoordinates coords : m_ship.getBlocks().coords() )
+		m_correspondence = new TreeMap<ChunkCoordinates,ChunkCoordinates>();
+		for( ChunkCoordinates coords : allCoords )
 		{
 			// rotate the coords
 			int x = coords.posX*cos + coords.posZ*sin;
@@ -132,9 +144,8 @@ public class ShipUnlauncher
 			worldCoords.posY += shipBlock.posY;
 			worldCoords.posZ += shipBlock.posZ;
 			
-			correspondence.put( coords, worldCoords );
+			m_correspondence.put( coords, worldCoords );
 		}
-		return correspondence;
 	}
 	
 	public boolean getUnlaunchFlag( UnlaunchFlag flag )
@@ -165,7 +176,7 @@ public class ShipUnlauncher
 		m_ship.setDead();
 		
 		// restore all the blocks
-		m_ship.getBlocks().restoreToWorld( m_ship.worldObj, m_correspondence );
+		m_ship.getBlocks().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
 		
 		// compute the unlaunch delta
 		Vec3 sourceShipBlock = Vec3.createVectorHelper( 0, 0, 0 );

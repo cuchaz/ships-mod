@@ -17,7 +17,7 @@ public class ItemMagicBucket extends Item
 		super( itemId );
 		
 		maxStackSize = 1;
-		setCreativeTab( CreativeTabs.tabMisc );
+		setCreativeTab( CreativeTabs.tabTools );
 		setUnlocalizedName( "magicBucket" );
 	}
 	

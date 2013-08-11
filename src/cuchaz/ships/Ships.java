@@ -1,5 +1,10 @@
 package cuchaz.ships;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.JarURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 
 import net.minecraft.block.material.MapColor;
@@ -15,9 +20,10 @@ import com.google.common.eventbus.Subscribe;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
-import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.ModMetadata;
+import cpw.mods.fml.common.event.FMLConstructionEvent;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.network.FMLNetworkHandler;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -31,8 +37,11 @@ import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 
-// no longer needed for a coremod
-// @Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
+
+// NEXTTIME: split back into two mods. cpw says coremods can't register things.
+
+// coremods can't use the mod annotation
+//@Mod( modid="cuchaz.ships", name="Ships", version="0.1" )
 @NetworkMod(
 	clientSideRequired = true,
 	serverSideRequired = true,
@@ -42,8 +51,7 @@ import cuchaz.ships.packets.PacketUnlaunchShip;
 )
 public class Ships extends DummyModContainer
 {
-	@Instance( "cuchaz.ships" )
-	public static Ships instance;
+	public static Ships instance = null;
 	
 	// materials
 	public static final Material MaterialAirWall = new MaterialAirWall( MapColor.airColor );
@@ -52,10 +60,17 @@ public class Ships extends DummyModContainer
 	// item registration: use ids [7321-7325]
 	public static final ItemPaddle ItemPaddle = new ItemPaddle( 7321 );
 	public static final ItemMagicBucket ItemMagicBucket = new ItemMagicBucket( 7322 );
+	public static final ItemMagicShipLevitator ItemMagicShipLevitator = new ItemMagicShipLevitator( 7323 );
 	
 	// block registration: use ids [3170-3190]
 	public static final BlockShip BlockShip = new BlockShip( 3170 );
 	public static final BlockAirWall BlockAirWall = new BlockAirWall( 3171 );
+	
+	// entity registration
+	public static final int EntityShipId = 174;
+	
+	// data members
+	private File m_source;
 	
 	public Ships( )
 	{
@@ -67,6 +82,44 @@ public class Ships extends DummyModContainer
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "";
+		
+		// make sure the instance semantics are preserved in coremod land
+		if( instance != null )
+		{
+			throw new Error( "There can be only one!" );
+		}
+		instance = this;
+		
+		// determine the mod source
+		m_source = null;
+		URL url = getClass().getProtectionDomain().getCodeSource().getLocation();
+		try
+		{
+			// NOTE: urls look like this:
+			// jar:file:/C:/proj/parser/jar/parser.jar!/test.xml
+			// file:/C:/proj/parser/jar/parser.jar
+			if( url.getProtocol().equalsIgnoreCase( "jar" ) )
+			{
+				JarURLConnection connection = (JarURLConnection)url.openConnection();
+				m_source = new File( connection.getJarFileURL().toURI() );
+			}
+			else if( url.getProtocol().equalsIgnoreCase( "file" ) )
+			{
+				m_source = new File( url.toURI() );
+			}
+			else
+			{
+				throw new Error( "Unable to determine mod source: " + url.toString() );
+			}
+		}
+		catch( IOException ex )
+		{
+			throw new Error( "Unable to determine mod source: " + url.toString(), ex );
+		}
+		catch( URISyntaxException ex )
+		{
+			throw new Error( "Unable to determine mod source: " + url.toString(), ex );
+		}
 	}
 	
 	@Override
@@ -76,31 +129,80 @@ public class Ships extends DummyModContainer
 		return true;
 	}
 	
+	@Override
+	public Object getMod( )
+	{
+		return this;
+	}
+	
+	@Override
+    public boolean isNetworkMod( )
+    {
+        return true;
+    }
+	
+	@Override
+	public File getSource( )
+	{
+		return m_source;
+	}
+	
+	@Subscribe
+	public void construct( FMLConstructionEvent event )
+	{
+		// whomever calls this method apparently swallows exceptions, so let's report them here
+		try
+		{
+			// add our container to the ASM data table
+			event.getASMHarvestedData().addContainer( this );
+	        
+			// register network stuff
+			boolean result = FMLNetworkHandler.instance().registerNetworkMod( this, getClass(), event.getASMHarvestedData() );
+			
+			// TEMP
+			System.out.println( "\n\nConstructed mod!! " + result + "\n\n" );
+		}
+		catch( RuntimeException ex )
+		{
+			ex.printStackTrace( System.out );
+			throw ex;
+		}
+	}
+	
 	@Subscribe
 	public void load( FMLInitializationEvent event )
 	{
-		loadThings();
-		loadLanguage();
-		loadRecipes();
-		
-		// set renderers
-		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
-		
-		// GUI hooks
-		NetworkRegistry.instance().registerGuiHandler( this, new IGuiHandler( )
+		// whomever calls this method apparently swallows exceptions, so let's report them here
+		try
 		{
-			@Override
-			public Object getServerGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
-			{
-				return Gui.values()[id].getContainer( player, world, x, y, z );
-			}
+			loadThings();
+			loadLanguage();
+			loadRecipes();
 			
-			@Override
-			public Object getClientGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
+			// set renderers
+			RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
+			
+			// GUI hooks
+			NetworkRegistry.instance().registerGuiHandler( this, new IGuiHandler( )
 			{
-				return Gui.values()[id].getGui( player, world, x, y, z );
-			}
-		} );
+				@Override
+				public Object getServerGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
+				{
+					return Gui.values()[id].getContainer( player, world, x, y, z );
+				}
+				
+				@Override
+				public Object getClientGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
+				{
+					return Gui.values()[id].getGui( player, world, x, y, z );
+				}
+			} );
+		}
+		catch( RuntimeException ex )
+		{
+			ex.printStackTrace( System.out );
+			throw ex;
+		}
 	}
 	
 	private void loadThings( )
@@ -112,11 +214,11 @@ public class Ships extends DummyModContainer
 		// items
 		GameRegistry.registerItem( ItemPaddle, "paddle" );
 		GameRegistry.registerItem( ItemMagicBucket, "magicBucket" );
+		GameRegistry.registerItem( ItemMagicShipLevitator, "magicShipLevitator" );
 		
 		// entities
-		final int EntityShipId = 174;
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
-		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, instance, 256, 10, true );
+		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, this, 256, 10, true );
 	}
 	
 	private void loadLanguage( )
@@ -128,6 +230,7 @@ public class Ships extends DummyModContainer
 		// item names
 		LanguageRegistry.addName( ItemPaddle, "Paddle" );
 		LanguageRegistry.addName( ItemMagicBucket, "Magic Bucket" );
+		LanguageRegistry.addName( ItemMagicShipLevitator, "Magic Ship Levitator" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )

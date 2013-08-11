@@ -1,6 +1,7 @@
 package cuchaz.ships;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
@@ -47,5 +48,11 @@ public class BlockAirWall extends Block
 	public boolean shouldSideBeRendered( IBlockAccess world, int x, int y, int z, int side )
 	{
 		return false;
+	}
+	
+	@Override
+	public void registerIcons( IconRegister iconRegister )
+	{
+		// do nothing
 	}
 }

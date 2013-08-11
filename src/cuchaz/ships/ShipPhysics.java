@@ -13,7 +13,7 @@ import cuchaz.modsShared.Envelopes;
 
 public class ShipPhysics
 {
-	private static final double AccelerationGravity = 0.01;
+	private static final double AccelerationGravity = 0.006;
 	
 	private static class DisplacementEntry
 	{
@@ -157,7 +157,7 @@ public class ShipPhysics
 	public double getDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
 	{
 		final double AirDragRate = 0.01;
-		final double WaterDragRate = 0.5;
+		final double WaterDragRate = 0.3;
 		
 		// how fast are we going?
 		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );

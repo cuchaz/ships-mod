@@ -120,7 +120,7 @@ public class ShipLauncher
 		m_z = z;
 		
 		// get the ship type from the block
-		m_shipType = Ships.instance.BlockShip.getShipType( world, x, y, z );
+		m_shipType = Ships.BlockShip.getShipType( world, x, y, z );
 		
 		// find all the blocks connected to the ship block
 		m_blocks = BlockUtils.searchForBlocks(

@@ -26,6 +26,11 @@ public class EntityShipBlock extends Entity
 		yOffset = 0.0f;
 	}
 	
+	public EntityShip getShip( )
+	{
+		return m_ship;
+	}
+	
 	@Override
 	protected void entityInit( )
 	{

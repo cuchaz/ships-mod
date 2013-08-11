@@ -3,8 +3,8 @@ package cuchaz.ships.gui;
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import static cuchaz.ships.gui.GuiSettings.LineSpacing;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
-import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.inventory.Container;
+import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 

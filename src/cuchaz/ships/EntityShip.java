@@ -169,7 +169,10 @@ public class EntityShip extends Entity
 		{
 			for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
 			{
-				worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+				if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.BlockAirWall.blockID )
+				{
+					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+				}
 			}
 		}
 		
@@ -337,6 +340,12 @@ public class EntityShip extends Entity
 	@Override
 	public void onUpdate( )
 	{
+		// did we die already?
+		if( isDead )
+		{
+			return;
+		}
+		
 		// on the client, see if the blocks loaded yet
 		if( worldObj.isRemote )
 		{

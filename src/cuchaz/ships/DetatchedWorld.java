@@ -2,12 +2,9 @@ package cuchaz.ships;
 
 import java.io.File;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
@@ -17,71 +14,75 @@ import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class DetatchedWorld extends World
 {
+	private static class SaveHandler implements ISaveHandler
+	{
+		@Override
+		public WorldInfo loadWorldInfo( )
+		{
+			return null;
+		}
+
+		@Override
+		public void checkSessionLock( )
+		throws MinecraftException
+		{
+		}
+
+		@Override
+		public IChunkLoader getChunkLoader( WorldProvider worldprovider )
+		{
+			return null;
+		}
+
+		@Override
+		public void saveWorldInfoWithPlayer( WorldInfo worldinfo, NBTTagCompound nbttagcompound )
+		{
+		}
+
+		@Override
+		public void saveWorldInfo( WorldInfo worldinfo )
+		{
+		}
+
+		@Override
+		public IPlayerFileData getSaveHandler( )
+		{
+			return null;
+		}
+
+		@Override
+		public void flush( )
+		{
+		}
+
+		@Override
+		public File getMapFileFromName( String s )
+		{
+			return null;
+		}
+
+		@Override
+		public String getWorldDirectoryName( )
+		{
+			return null;
+		}
+	}
+	
 	public DetatchedWorld( World realWorld, String worldName )
 	{
 		// none of these values have to actually work, but we just need to get past the World constructor
 		super(
-			new ISaveHandler( )
-			{
-				@Override
-				public WorldInfo loadWorldInfo( )
-				{
-					return null;
-				}
-
-				@Override
-				public void checkSessionLock( )
-				throws MinecraftException
-				{
-				}
-
-				@Override
-				public IChunkLoader getChunkLoader( WorldProvider worldprovider )
-				{
-					return null;
-				}
-
-				@Override
-				public void saveWorldInfoWithPlayer( WorldInfo worldinfo, NBTTagCompound nbttagcompound )
-				{
-				}
-
-				@Override
-				public void saveWorldInfo( WorldInfo worldinfo )
-				{
-				}
-
-				@Override
-				public IPlayerFileData getSaveHandler( )
-				{
-					return null;
-				}
-
-				@Override
-				public void flush( )
-				{
-				}
-
-				@Override
-				public File getMapFileFromName( String s )
-				{
-					return null;
-				}
-
-				@Override
-				public String getWorldDirectoryName( )
-				{
-					return null;
-				}
-			},
-			worldName,
-			new WorldSettings( realWorld.getWorldInfo() ),
-			realWorld.provider,
-			MinecraftServer.getServer().theProfiler,
-			realWorld.getWorldLogAgent()
+        	new SaveHandler(),
+        	worldName,
+        	new WorldSettings( realWorld.getWorldInfo() ),
+        	realWorld.provider,
+        	new Profiler(),
+        	realWorld.getWorldLogAgent()
 		);
 		
 		// world constructors try to take over the existing world
