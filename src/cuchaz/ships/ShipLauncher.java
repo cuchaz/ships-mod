@@ -302,6 +302,8 @@ public class ShipLauncher
 	
 	private void setBlockToWaterOrAir( World world, int x, int y, int z, int waterHeight )
 	{
+		// UNDONE: when we break the block, use the ridiculously-named BlockUtils.setBlockAndMetaWithoutTellingOldBlockItGotBroken()
+		
 		if( y >= waterHeight )
 		{
 			world.setBlockToAir( x, y, z );

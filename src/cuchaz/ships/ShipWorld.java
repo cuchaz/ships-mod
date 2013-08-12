@@ -37,15 +37,13 @@ public class ShipWorld extends DetatchedWorld
 			blockMeta = 0;
 		}
 		
-		public void writeData( DataOutputStream out )
-		throws IOException
+		public void writeData( DataOutputStream out ) throws IOException
 		{
 			out.writeInt( blockId );
 			out.writeInt( blockMeta );
 		}
-
-		public void readData( DataInputStream in )
-		throws IOException
+		
+		public void readData( DataInputStream in ) throws IOException
 		{
 			blockId = in.readInt();
 			blockMeta = in.readInt();
@@ -64,19 +62,19 @@ public class ShipWorld extends DetatchedWorld
 		}
 	}
 	
-	// NOTE: this static var is ok since the logic loop is single-threaded
-	private static ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
+	// NOTE: this member var is ok since the client/server are single-threaded
+	private ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
 	
 	private EntityShip m_ship;
-	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
+	private TreeMap<ChunkCoordinates, BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
 	private ShipGeometry m_geometry;
-	private TreeMap<ChunkCoordinates,TileEntity> m_tileEntities;
+	private TreeMap<ChunkCoordinates, TileEntity> m_tileEntities;
 	
 	private ShipWorld( World world )
 	{
 		super( world, "Ship" );
-	    
+		
 		// init defaults
 		m_ship = null;
 		m_blocks = null;
@@ -88,7 +86,7 @@ public class ShipWorld extends DetatchedWorld
 	{
 		this( world );
 		
-		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
+		m_blocks = new TreeMap<ChunkCoordinates, BlockStorage>();
 		
 		// save the rest of the blocks
 		for( ChunkCoordinates worldCoords : blocks )
@@ -97,16 +95,12 @@ public class ShipWorld extends DetatchedWorld
 			storage.copyFromWorld( world, worldCoords );
 			
 			// make all the blocks relative to the ship block
-			ChunkCoordinates relativeCoords = new ChunkCoordinates(
-				worldCoords.posX - originCoords.posX,
-				worldCoords.posY - originCoords.posY,
-				worldCoords.posZ - originCoords.posZ
-			);
+			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
 			m_blocks.put( relativeCoords, storage );
 		}
 		
 		// copy the tile entities
-		m_tileEntities = new TreeMap<ChunkCoordinates,TileEntity>();
+		m_tileEntities = new TreeMap<ChunkCoordinates, TileEntity>();
 		for( ChunkCoordinates worldCoords : blocks )
 		{
 			// does this block have a tile entity?
@@ -116,11 +110,7 @@ public class ShipWorld extends DetatchedWorld
 				continue;
 			}
 			
-			ChunkCoordinates relativeCoords = new ChunkCoordinates(
-				worldCoords.posX - originCoords.posX,
-				worldCoords.posY - originCoords.posY,
-				worldCoords.posZ - originCoords.posZ
-			);
+			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
 			
 			// copy the tile entity
 			NBTTagCompound nbt = new NBTTagCompound();
@@ -157,15 +147,11 @@ public class ShipWorld extends DetatchedWorld
 			else
 			{
 				// read the blocks
-				m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
+				m_blocks = new TreeMap<ChunkCoordinates, BlockStorage>();
 				int numBlocks = in.readInt();
-				for( int i=0; i<numBlocks; i++ )
+				for( int i = 0; i < numBlocks; i++ )
 				{
-					ChunkCoordinates coords = new ChunkCoordinates(
-						in.readInt(),
-						in.readInt(),
-						in.readInt()
-					);
+					ChunkCoordinates coords = new ChunkCoordinates( in.readInt(), in.readInt(), in.readInt() );
 					
 					BlockStorage storage = new BlockStorage();
 					storage.readData( in );
@@ -174,23 +160,20 @@ public class ShipWorld extends DetatchedWorld
 				}
 				
 				// read the tile entities
-				m_tileEntities = new TreeMap<ChunkCoordinates,TileEntity>();
+				m_tileEntities = new TreeMap<ChunkCoordinates, TileEntity>();
 				int numTileEntities = in.readInt();
-				for( int i=0; i<numTileEntities; i++ )
+				for( int i = 0; i < numTileEntities; i++ )
 				{
 					// create the tile entity
 					NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
 					TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
-					ChunkCoordinates coords = new ChunkCoordinates(
-						tileEntity.xCoord,
-						tileEntity.yCoord,
-						tileEntity.zCoord
-					);
-					m_tileEntities.put( coords, tileEntity );
+					ChunkCoordinates coords = new ChunkCoordinates( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 					
 					// restore it to the world
 					tileEntity.setWorldObj( this );
 					tileEntity.validate();
+					
+					m_tileEntities.put( coords, tileEntity );
 				}
 				
 				computeDependentFields();
@@ -212,16 +195,13 @@ public class ShipWorld extends DetatchedWorld
 		this( world, Base64.decodeBase64( data ) );
 	}
 	
-	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence, int waterSurfaceLevelBlocks )
+	public void restoreToWorld( World world, Map<ChunkCoordinates, ChunkCoordinates> correspondence, int waterSurfaceLevelBlocks )
 	{
-		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+		for( Map.Entry<ChunkCoordinates, BlockStorage> entry : m_blocks.entrySet() )
 		{
 			ChunkCoordinates coordsShip = entry.getKey();
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
 			BlockStorage storage = entry.getValue();
-			
-			// restore the block
-			storage.copyToWorld( world, coordsWorld );
 			
 			// restore any tile entities if needed
 			TileEntity tileEntity = getBlockTileEntity( coordsShip );
@@ -233,15 +213,16 @@ public class ShipWorld extends DetatchedWorld
 				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
 				tileEntityCopy.validate();
 				
-				// put the tile entity into the world first
+				// put the tile entity into the world before restoring the block
 				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
-				
-				// then set the block
-				storage.copyToWorld( world, coordsWorld );
 			}
+			
+			// restore the block
+			storage.copyToWorld( world, coordsWorld );
 		}
 		
-		// bail out the boat if needed (it might have water in the trapped air blocks)
+		// bail out the boat if needed (it might have water in the trapped air
+		// blocks)
 		for( ChunkCoordinates coordsShip : m_geometry.getTrappedAir( waterSurfaceLevelBlocks ) )
 		{
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
@@ -253,6 +234,7 @@ public class ShipWorld extends DetatchedWorld
 	{
 		return m_ship;
 	}
+	
 	public void setShip( EntityShip val )
 	{
 		m_ship = val;
@@ -273,7 +255,7 @@ public class ShipWorld extends DetatchedWorld
 		return m_blocks.keySet();
 	}
 	
-	public Set<Map.Entry<ChunkCoordinates,TileEntity>> tileEntities( )
+	public Set<Map.Entry<ChunkCoordinates, TileEntity>> tileEntities( )
 	{
 		return m_tileEntities.entrySet();
 	}
@@ -348,16 +330,16 @@ public class ShipWorld extends DetatchedWorld
 	}
 	
 	@Override
-    public boolean isBlockSolidOnSide( int x, int y, int z, ForgeDirection side, boolean defaultValue )
-    {
+	public boolean isBlockSolidOnSide( int x, int y, int z, ForgeDirection side, boolean defaultValue )
+	{
 		m_lookupCoords.set( x, y, z );
-        Block block = Block.blocksList[getBlockId( m_lookupCoords )];
-        if( block == null )
-        {
-        	return defaultValue;
-        }
-        return block.isBlockSolidOnSide( this, x, y, z, side );
-    }
+		Block block = Block.blocksList[getBlockId( m_lookupCoords )];
+		if( block == null )
+		{
+			return defaultValue;
+		}
+		return block.isBlockSolidOnSide( this, x, y, z, side );
+	}
 	
 	@Override
 	@SuppressWarnings( "rawtypes" )
@@ -370,6 +352,12 @@ public class ShipWorld extends DetatchedWorld
 		// get the AABB for the query box in world coords
 		// get the entities from the real world
 		// transform them into ship world
+	}
+	
+	@Override
+	public void updateTileEntityChunkAndDoNothing( int x, int y, int z, TileEntity tileEntity )
+	{
+		// don't need to do anything
 	}
 	
 	public byte[] getData( )
@@ -386,7 +374,7 @@ public class ShipWorld extends DetatchedWorld
 			
 			// write out the blocks
 			out.writeInt( m_blocks.size() );
-			for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+			for( Map.Entry<ChunkCoordinates, BlockStorage> entry : m_blocks.entrySet() )
 			{
 				ChunkCoordinates coords = entry.getKey();
 				BlockStorage storage = entry.getValue();

@@ -116,9 +116,6 @@ public class ShipUnlauncher
 		// determine the water surface level
 		m_waterSurfaceLevelBlocks = m_ship.getWaterHeight() - shipBlock.posY - 1;
 		
-		// TEMP
-		System.out.println( String.format( "restoring! Water level: %d,%d num air: %d", m_ship.getWaterHeight(), m_waterSurfaceLevelBlocks, m_ship.getBlocks().getGeometry().getTrappedAir( m_waterSurfaceLevelBlocks ).size() ) );
-		
 		// get the set of coords we care about
 		TreeSet<ChunkCoordinates> allCoords = new TreeSet<ChunkCoordinates>();
 		allCoords.addAll( m_ship.getBlocks().coords() );
