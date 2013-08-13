@@ -28,7 +28,7 @@ public class CoreModPlugin implements IFMLLoadingPlugin
 	@Override
 	public String getModContainerClass( )
 	{
-		return "cuchaz.ships.asm.CoreModContainer";
+		return "cuchaz.ships.Ships";
 	}
 	
 	@Override
