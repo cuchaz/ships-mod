@@ -288,30 +288,14 @@ public class ShipLauncher
 		// remove all the blocks from the world
 		for( ChunkCoordinates coords : m_blocks )
 		{
-			setBlockToWaterOrAir( m_world, coords, waterHeight );
+			BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ );
+			if( coords.posY < waterHeight )
+			{
+				m_world.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+			}
 		}
-		setBlockToWaterOrAir( m_world, m_x, m_y, m_z, waterHeight );
 		
 		return ship;
-	}
-	
-	private void setBlockToWaterOrAir( World world, ChunkCoordinates coords, int waterHeight )
-	{
-		setBlockToWaterOrAir( world, coords.posX, coords.posY, coords.posZ, waterHeight );
-	}
-	
-	private void setBlockToWaterOrAir( World world, int x, int y, int z, int waterHeight )
-	{
-		// UNDONE: when we break the block, use the ridiculously-named BlockUtils.setBlockAndMetaWithoutTellingOldBlockItGotBroken()
-		
-		if( y >= waterHeight )
-		{
-			world.setBlockToAir( x, y, z );
-		}
-		else
-		{
-			world.setBlock( x, y, z, Block.waterStill.blockID );
-		}
 	}
 	
 	private int computeWaterHeight( )
@@ -361,6 +345,7 @@ public class ShipLauncher
 		{
 			if( m_world.getBlockMaterial( x, y, z ).isLiquid() )
 			{
+				// add 1 to return the entityY sense instead of the blockY sense
 				return y + 1;
 			}
 		}

@@ -298,6 +298,9 @@ public class EntityShip extends Entity
 	@Override
 	public void onUpdate( )
 	{
+		// TEMP
+		//if( true ) setDead();
+		
 		// did we die already?
 		if( isDead )
 		{
@@ -1010,9 +1013,9 @@ public class EntityShip extends Entity
 		// get all the trapped air blocks
 		int surfaceLevelBlocks = MathHelper.floor_double( waterHeightBlocks );
 		TreeSet<ChunkCoordinates> trappedAirBlocks = m_blocks.getGeometry().getTrappedAir( surfaceLevelBlocks );
-		if( trappedAirBlocks == null )
+		if( trappedAirBlocks.isEmpty() )
 		{
-			// the ship is sinking or out of the water
+			// the ship is out of the water
 			return;
 		}
 		

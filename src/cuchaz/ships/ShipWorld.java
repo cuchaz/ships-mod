@@ -12,9 +12,11 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
@@ -57,8 +59,11 @@ public class ShipWorld extends DetatchedWorld
 		
 		public void copyToWorld( World world, ChunkCoordinates coords )
 		{
-			world.setBlock( coords.posX, coords.posY, coords.posZ, blockId );
-			world.setBlockMetadataWithNotify( coords.posX, coords.posY, coords.posZ, blockMeta, 3 );
+			// NEXTTIME: treasure chests change orientation after docking!
+			// is it a metadata issue?
+			// also, check out Chest.update() to find out why the animations/sounds aren't working
+			
+			world.setBlock( coords.posX, coords.posY, coords.posZ, blockId, blockMeta, 3 );
 		}
 	}
 	
@@ -88,13 +93,13 @@ public class ShipWorld extends DetatchedWorld
 		
 		m_blocks = new TreeMap<ChunkCoordinates, BlockStorage>();
 		
-		// save the rest of the blocks
+		// save the blocks
 		for( ChunkCoordinates worldCoords : blocks )
 		{
 			BlockStorage storage = new BlockStorage();
 			storage.copyFromWorld( world, worldCoords );
 			
-			// make all the blocks relative to the ship block
+			// make all the blocks relative to the origin block
 			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
 			m_blocks.put( relativeCoords, storage );
 		}
@@ -195,15 +200,29 @@ public class ShipWorld extends DetatchedWorld
 		this( world, Base64.decodeBase64( data ) );
 	}
 	
+	// TEMP
+	private static int getNumStacks( IInventory inventory )
+	{
+		int count = 0;
+		for( int i=0; i<inventory.getSizeInventory(); i++ )
+		{
+			if( inventory.getStackInSlot( i ) != null )
+			{
+				count++;
+			}
+		}
+		return count;
+	}
+	
 	public void restoreToWorld( World world, Map<ChunkCoordinates, ChunkCoordinates> correspondence, int waterSurfaceLevelBlocks )
 	{
-		for( Map.Entry<ChunkCoordinates, BlockStorage> entry : m_blocks.entrySet() )
+		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
 		{
 			ChunkCoordinates coordsShip = entry.getKey();
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
 			BlockStorage storage = entry.getValue();
 			
-			// restore any tile entities if needed
+			// is there a tile entity?
 			TileEntity tileEntity = getBlockTileEntity( coordsShip );
 			if( tileEntity != null )
 			{
@@ -213,12 +232,31 @@ public class ShipWorld extends DetatchedWorld
 				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
 				tileEntityCopy.validate();
 				
-				// put the tile entity into the world before restoring the block
+				// TEMP
+				if( tileEntity instanceof TileEntityChest )
+				{
+					TileEntityChest shipChest = (TileEntityChest)tileEntity;
+					TileEntityChest worldChest = (TileEntityChest)tileEntityCopy;
+					System.out.println( String.format( "%s restoring chest to (%d,%d,%d)\n\tship: %d stacks %s\n\tnew world: %d stacks %s\n\tcurrent world: %s",
+						world.isRemote ? "CLIENT" : "SERVER",
+						coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ,
+						getNumStacks( shipChest ),
+						shipChest.toString(),
+						getNumStacks( worldChest ),
+						worldChest.toString(),
+						world.getBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ )
+					) );
+				}
+				
+				// restore the block before the tile entity
+				storage.copyToWorld( world, coordsWorld );
 				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
 			}
-			
-			// restore the block
-			storage.copyToWorld( world, coordsWorld );
+			else
+			{
+				// just restore the block
+				storage.copyToWorld( world, coordsWorld );
+			}
 		}
 		
 		// bail out the boat if needed (it might have water in the trapped air

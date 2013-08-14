@@ -55,7 +55,14 @@ public class ShipGeometry
 	
 	public TreeSet<ChunkCoordinates> getTrappedAir( int y )
 	{
-		return m_trappedAir.get( y );
+		// if y is too big, clamp it. ie when the ship is underwater, we get the max trapped air
+		y = Math.min( y, m_trappedAir.lastKey() );
+		TreeSet<ChunkCoordinates> coords = m_trappedAir.get( y );
+		if( coords == null )
+		{
+			coords = new TreeSet<ChunkCoordinates>();
+		}
+		return coords;
 	}
 	
 
