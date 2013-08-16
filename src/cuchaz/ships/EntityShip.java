@@ -298,9 +298,6 @@ public class EntityShip extends Entity
 	@Override
 	public void onUpdate( )
 	{
-		// TEMP
-		//if( true ) setDead();
-		
 		// did we die already?
 		if( isDead )
 		{
@@ -432,6 +429,11 @@ public class EntityShip extends Entity
 			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
 			unlauncher.snapToNearestDirection();
 			unlauncher.unlaunch();
+		}
+		else
+		{
+			// update the world
+			m_blocks.updateEntities();
 		}
 	}
 	

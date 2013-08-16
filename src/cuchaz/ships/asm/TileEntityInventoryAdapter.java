@@ -4,23 +4,20 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class TileEntityAdapter extends ClassVisitor
+public class TileEntityInventoryAdapter extends ClassVisitor
 {
-	// UNDONE: how does obfuscation play into all of this??
-	
 	private static final String InventoryInterfaceName = "net/minecraft/inventory/IInventory";
 	private static final String TileEntityClassName = "net/minecraft/tileentity/TileEntity";
 	private static final String PlayerClassName = "net/minecraft/entity/player/EntityPlayer";
 	
 	private static final String Intermediary = "cuchaz/ships/asm/ShipTileEntityIntermediary";
 	
-	private String m_className;
 	private String m_superName;
 	private String[] m_interfaces;
 	
-	public TileEntityAdapter( int api, ClassVisitor visitor )
+	public TileEntityInventoryAdapter( int api, ClassVisitor cv )
 	{
-		super( api, visitor );
+		super( api, cv );
 	}
 	
 	@Override
@@ -29,7 +26,6 @@ public class TileEntityAdapter extends ClassVisitor
 		super.visit( version, access, name, signature, superName, interfaces );
 		
 		// save the class details for later visit methods
-		m_className = name;
 		m_superName = superName;
 		m_interfaces = interfaces;
 	}
@@ -38,16 +34,14 @@ public class TileEntityAdapter extends ClassVisitor
 	public MethodVisitor visitMethod( int access, final String methodName, String methodDesc, String signature, String[] exceptions )
 	{
 		// should we transform this method?
-		String targetMethodDesc = String.format( "(L%s;)Z", PlayerClassName );
-		if( implementsInterface( InventoryInterfaceName ) && m_superName.equals( TileEntityClassName ) && methodName.equals( "isUseableByPlayer" ) && methodDesc.equals( targetMethodDesc ) )
+		if( implementsInterface( InventoryInterfaceName ) && m_superName.equals( TileEntityClassName ) && methodName.equals( "isUseableByPlayer" ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )
 		{
-			// change field accesses to use getters and setters
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
 			{
 				@Override
 				public void visitMethodInsn( int opcode, String calledOwner, String calledName, String calledDesc )
 				{
-					// should we transform this call?
+					// should we transform this method call?
 					if( opcode == Opcodes.INVOKEVIRTUAL && calledOwner.equals( PlayerClassName ) && calledName.equals( "getDistanceSq" ) && calledDesc.equals( "(DDD)D" ) )
 					{
 						// we're replacing this method call

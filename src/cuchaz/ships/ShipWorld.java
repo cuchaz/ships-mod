@@ -59,10 +59,6 @@ public class ShipWorld extends DetatchedWorld
 		
 		public void copyToWorld( World world, ChunkCoordinates coords )
 		{
-			// NEXTTIME: treasure chests change orientation after docking!
-			// is it a metadata issue?
-			// also, check out Chest.update() to find out why the animations/sounds aren't working
-			
 			world.setBlock( coords.posX, coords.posY, coords.posZ, blockId, blockMeta, 3 );
 		}
 	}
@@ -232,6 +228,10 @@ public class ShipWorld extends DetatchedWorld
 				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
 				tileEntityCopy.validate();
 				
+				// NEXTTIME: treasure chests change orientation after docking!
+				// is it a metadata issue?
+				// also, check out Chest.update() to find out why the animations/sounds aren't working
+				
 				// TEMP
 				if( tileEntity instanceof TileEntityChest )
 				{
@@ -396,6 +396,21 @@ public class ShipWorld extends DetatchedWorld
 	public void updateTileEntityChunkAndDoNothing( int x, int y, int z, TileEntity tileEntity )
 	{
 		// don't need to do anything
+	}
+	
+	@Override
+	public void updateEntities( )
+	{
+		// update the tile entities
+		for( TileEntity entity : m_tileEntities.values() )
+		{
+			entity.updateEntity();
+		}
+	}
+	
+	@Override
+	public void addBlockEvent( int par1, int par2, int par3, int par4, int par5, int par6 )
+	{
 	}
 	
 	public byte[] getData( )
