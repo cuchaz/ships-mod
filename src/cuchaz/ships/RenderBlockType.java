@@ -5,6 +5,8 @@ import java.util.TreeMap;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
@@ -17,6 +19,9 @@ public enum RenderBlockType
 		@Override
 		public void render( RenderBlocks rb, Block block, int x, int y, int z, float partialTickTime )
 		{
+			// loads the terrain/blocks texture
+			RenderManager.instance.renderEngine.func_110577_a( TextureMap.field_110575_b );
+			
 			Tessellator tessellator = Tessellator.instance;
 			for( BlockSide side : BlockSide.values() )
 			{

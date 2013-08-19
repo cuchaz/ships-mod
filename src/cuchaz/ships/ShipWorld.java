@@ -12,19 +12,22 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.packet.Packet62LevelSound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeDirection;
 
 import org.apache.commons.codec.binary.Base64;
 
 import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.ships.packets.PacketShipBlockEvent;
 
 public class ShipWorld extends DetatchedWorld
 {
@@ -196,20 +199,6 @@ public class ShipWorld extends DetatchedWorld
 		this( world, Base64.decodeBase64( data ) );
 	}
 	
-	// TEMP
-	private static int getNumStacks( IInventory inventory )
-	{
-		int count = 0;
-		for( int i=0; i<inventory.getSizeInventory(); i++ )
-		{
-			if( inventory.getStackInSlot( i ) != null )
-			{
-				count++;
-			}
-		}
-		return count;
-	}
-	
 	public void restoreToWorld( World world, Map<ChunkCoordinates, ChunkCoordinates> correspondence, int waterSurfaceLevelBlocks )
 	{
 		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
@@ -228,29 +217,13 @@ public class ShipWorld extends DetatchedWorld
 				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
 				tileEntityCopy.validate();
 				
-				// NEXTTIME: treasure chests change orientation after docking!
-				// is it a metadata issue?
-				// also, check out Chest.update() to find out why the animations/sounds aren't working
-				
-				// TEMP
-				if( tileEntity instanceof TileEntityChest )
-				{
-					TileEntityChest shipChest = (TileEntityChest)tileEntity;
-					TileEntityChest worldChest = (TileEntityChest)tileEntityCopy;
-					System.out.println( String.format( "%s restoring chest to (%d,%d,%d)\n\tship: %d stacks %s\n\tnew world: %d stacks %s\n\tcurrent world: %s",
-						world.isRemote ? "CLIENT" : "SERVER",
-						coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ,
-						getNumStacks( shipChest ),
-						shipChest.toString(),
-						getNumStacks( worldChest ),
-						worldChest.toString(),
-						world.getBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ )
-					) );
-				}
-				
 				// restore the block before the tile entity
 				storage.copyToWorld( world, coordsWorld );
 				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
+				
+				// copy the metadata back because something weird with the tile entity changes it
+				Chunk chunk = world.getChunkFromChunkCoords( coordsWorld.posX >> 4, coordsWorld.posZ >> 4 );
+				chunk.setBlockMetadata( coordsWorld.posX & 15, coordsWorld.posY, coordsWorld.posZ & 15, storage.blockMeta );
 			}
 			else
 			{
@@ -259,8 +232,7 @@ public class ShipWorld extends DetatchedWorld
 			}
 		}
 		
-		// bail out the boat if needed (it might have water in the trapped air
-		// blocks)
+		// bail out the boat if needed (it might have water in the trapped air blocks)
 		for( ChunkCoordinates coordsShip : m_geometry.getTrappedAir( waterSurfaceLevelBlocks ) )
 		{
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
@@ -409,9 +381,57 @@ public class ShipWorld extends DetatchedWorld
 	}
 	
 	@Override
-	public void addBlockEvent( int par1, int par2, int par3, int par4, int par5, int par6 )
+	public void addBlockEvent( int x, int y, int z, int blockId, int eventId, int eventParam )
 	{
+		if( m_ship == null || blockId == 0 || getBlockId( x, y, z ) != blockId )
+		{
+			return;
+		}
+		
+		// on the client, just deliver to the block
+		boolean eventWasAccepted = Block.blocksList[blockId].onBlockEventReceived( this, x, y, z, eventId, eventParam );
+		
+		// on the server, also send a packet to the client
+		if( !isRemote && eventWasAccepted )
+		{
+			// get the pos in world space
+			Vec3 v = Vec3.createVectorHelper( x, y, z );
+			m_ship.blocksToShip( v );
+			m_ship.shipToWorld( v );
+			
+			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
+				v.xCoord, v.yCoord, v.zCoord, 64,
+				m_ship.worldObj.provider.dimensionId,
+				new PacketShipBlockEvent( m_ship.entityId, x, y, z, blockId, eventId, eventParam ).getCustomPacket()
+			);
+		}
 	}
+	
+	@Override
+	public void playSoundEffect( double x, double y, double z, String sound, float volume, float pitch )
+    {
+		if( sound == null )
+		{
+			return;
+		}
+		
+		// on the server, send a packet to the clients
+		if( !isRemote )
+		{
+			// get the pos in world space
+			Vec3 v = Vec3.createVectorHelper( x, y, z );
+			m_ship.blocksToShip( v );
+			m_ship.shipToWorld( v );
+			
+			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
+				v.xCoord, v.yCoord, v.zCoord, volume > 1.0F ? (double)(16.0F * volume) : 16.0D,
+				m_ship.worldObj.provider.dimensionId,
+				new Packet62LevelSound( sound, v.xCoord, v.yCoord, v.zCoord, volume, pitch )
+			);
+		}
+		
+		// on the client, just ignore. Sounds actually get played by the packet handler
+    }
 	
 	public byte[] getData( )
 	{

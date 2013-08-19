@@ -23,11 +23,12 @@ public class CoreModTransformer implements IClassTransformer
 		// route everything through our generic adapters
 		adapters.add( TileEntityInventoryAdapter.class );
 		
-		// now add class-specific adapters
+		/* now add class-specific adapters
         if( name.equals( "net/minecraft/network/packet/Packet54PlayNoteBlock" ) )
         {
         	adapters.add( BlockEventPacketAdapter.class );
         }
+        */
         
 		// run the transformations
         ClassReader reader = new ClassReader( classData );

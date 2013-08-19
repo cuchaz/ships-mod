@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
@@ -18,8 +17,6 @@ import cuchaz.modsShared.Vector3;
 
 public class RenderShip extends Render
 {
-	private static final ResourceLocation ShipTexture = TextureMap.field_110575_b;
-	
 	private RenderBlocks m_renderBlocks;
 	
 	public RenderShip( )
@@ -30,7 +27,8 @@ public class RenderShip extends Render
 	@Override
 	protected ResourceLocation func_110775_a( Entity entity )
 	{
-		return ShipTexture;
+		// this isn't used, but it's required by subclasses of Render
+		return null;
 	}
 	
 	@Override
@@ -48,8 +46,7 @@ public class RenderShip extends Render
 		GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 		
-		// this call loads the ship texture (the terrain/blocks texture)
-		func_110777_b( ship );
+		// UNDONE: do view frustum culling for blocks
 		
 		// draw all the blocks!
 		for( ChunkCoordinates coords : ship.getBlocks().coords() )
@@ -134,13 +131,6 @@ public class RenderShip extends Render
 	
 	private void renderBox( double xm, double xp, double ym, double yp, double zm, double zp, int color )
 	{
-		/*
-		System.out.println( String.format(
-			"renderBox [%.2f,%.2f] [%.2f,%.2f] [%.2f,%.2f]",
-			xm, xp, ym, yp, zm, zp
-		) );
-		*/
-		
 		GL11.glDepthMask( false );
 		GL11.glDisable( GL11.GL_TEXTURE_2D );
 		GL11.glDisable( GL11.GL_LIGHTING );
@@ -183,8 +173,6 @@ public class RenderShip extends Render
 	
 	private void renderVector( double x, double y, double z, double dx, double dy, double dz, int color )
 	{
-		// UNDONE: optimize out the new calls
-		
 		// get the vector in world-space
 		Vector3 v = new Vector3( dx, dy, dz );
 		

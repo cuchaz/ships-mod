@@ -32,13 +32,14 @@ import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketShipBlockEvent;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 
 // Mod annotations don't work in core mod land
 //@Mod( modid="cuchaz.ships", name="Ships", version="0.1", useMetadata=false, dependencies="required-after:cuchaz.ships.core@[0.1,)" )
 @NetworkMod(
 	// NOTE: 20-character limit for channel names
-	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel },
+	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel },
 	packetHandler = PacketHandler.class
 )
 public class Ships extends DummyModContainer
