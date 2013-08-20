@@ -21,11 +21,11 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeDirection;
 
 import org.apache.commons.codec.binary.Base64;
 
+import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
@@ -62,7 +62,7 @@ public class ShipWorld extends DetatchedWorld
 		
 		public void copyToWorld( World world, ChunkCoordinates coords )
 		{
-			world.setBlock( coords.posX, coords.posY, coords.posZ, blockId, blockMeta, 3 );
+			BlockUtils.changeBlockWithoutNotifyingIt( world, coords.posX, coords.posY, coords.posZ, blockId, blockMeta );
 		}
 	}
 	
@@ -220,10 +220,6 @@ public class ShipWorld extends DetatchedWorld
 				// restore the block before the tile entity
 				storage.copyToWorld( world, coordsWorld );
 				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
-				
-				// copy the metadata back because something weird with the tile entity changes it
-				Chunk chunk = world.getChunkFromChunkCoords( coordsWorld.posX >> 4, coordsWorld.posZ >> 4 );
-				chunk.setBlockMetadata( coordsWorld.posX & 15, coordsWorld.posY, coordsWorld.posZ & 15, storage.blockMeta );
 			}
 			else
 			{
@@ -278,6 +274,12 @@ public class ShipWorld extends DetatchedWorld
 	public BoundingBoxInt getBoundingBox( )
 	{
 		return m_geometry.getEnvelopes().getBoundingBox();
+	}
+	
+	public BlockStorage getStorage( int x, int y, int z )
+	{
+		m_lookupCoords.set( x, y, z );
+		return getStorage( m_lookupCoords );
 	}
 	
 	public BlockStorage getStorage( ChunkCoordinates coords )
@@ -337,6 +339,29 @@ public class ShipWorld extends DetatchedWorld
 	public void setBlockTileEntity( int x, int y, int z, TileEntity tileEntity )
 	{
 		// do nothing. Ships are immutable
+	}
+	
+	@Override
+	public boolean setBlockMetadataWithNotify( int x, int y, int z, int meta, int flags )
+	{
+		BlockStorage storage = getStorage( x, y, z );
+		if( storage.blockId == 0 )
+		{
+			return false;
+		}
+		
+		// update the metadata
+		storage.blockMeta = meta;
+		
+		// handle updates
+		if( ( flags & 2 ) != 0 && ( !isRemote || ( flags & 4 ) == 0 ) )
+		{
+			// on the client do nothing
+			// UNDONE: on the server, broadcast the changes to the clients
+			//this.theWorldServer.getPlayerManager().markBlockForUpdate( x, y, z );
+		}
+		
+		return true;
 	}
 	
 	@Override
