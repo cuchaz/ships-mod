@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTBase;
@@ -27,6 +28,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
 public class ShipWorld extends DetatchedWorld
@@ -70,10 +72,11 @@ public class ShipWorld extends DetatchedWorld
 	private ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
 	
 	private EntityShip m_ship;
-	private TreeMap<ChunkCoordinates, BlockStorage> m_blocks;
+	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
 	private ShipGeometry m_geometry;
-	private TreeMap<ChunkCoordinates, TileEntity> m_tileEntities;
+	private TreeMap<ChunkCoordinates,TileEntity> m_tileEntities;
+	private TreeSet<ChunkCoordinates> m_changedBlocks;
 	
 	private ShipWorld( World world )
 	{
@@ -84,6 +87,7 @@ public class ShipWorld extends DetatchedWorld
 		m_blocks = null;
 		m_airBlockStorage = new BlockStorage();
 		m_tileEntities = null;
+		m_changedBlocks = new TreeSet<ChunkCoordinates>();
 	}
 	
 	public ShipWorld( World world, ChunkCoordinates originCoords, List<ChunkCoordinates> blocks )
@@ -331,6 +335,8 @@ public class ShipWorld extends DetatchedWorld
 	@Override
 	public boolean setBlock( int par1, int par2, int par3, int par4, int par5, int par6 )
 	{
+		// UNDONE: allow benign block changes, like for the furnace
+		
 		// do nothing. Ships are immutable
 		return false;
 	}
@@ -342,7 +348,7 @@ public class ShipWorld extends DetatchedWorld
 	}
 	
 	@Override
-	public boolean setBlockMetadataWithNotify( int x, int y, int z, int meta, int flags )
+	public boolean setBlockMetadataWithNotify( int x, int y, int z, int meta, int ignored )
 	{
 		BlockStorage storage = getStorage( x, y, z );
 		if( storage.blockId == 0 )
@@ -353,15 +359,57 @@ public class ShipWorld extends DetatchedWorld
 		// update the metadata
 		storage.blockMeta = meta;
 		
-		// handle updates
-		if( ( flags & 2 ) != 0 && ( !isRemote || ( flags & 4 ) == 0 ) )
+		// on the client do nothing more
+		// on the server, buffer the changes to be broadcast to the client
+		if( !isRemote )
 		{
-			// on the client do nothing
-			// UNDONE: on the server, broadcast the changes to the clients
-			//this.theWorldServer.getPlayerManager().markBlockForUpdate( x, y, z );
+			m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
 		}
 		
 		return true;
+	}
+	
+	public void applyBlockChange( int x, int y, int z, int newBlockId, int newMeta )
+	{
+		m_lookupCoords.set( x, y, z );
+		applyBlockChange( m_lookupCoords, newBlockId, newMeta );
+	}
+	
+	public void applyBlockChange( ChunkCoordinates coords, int newBlockId, int newMeta )
+	{
+		// NOTE: called only by the PacketChangedBlocks handler
+		
+		// ignore all block removals
+		if( newBlockId == 0 )
+		{
+			return;
+		}
+		
+		BlockStorage storage = getStorage( coords );
+		
+		// ignore all changes to air blocks
+		if( storage.blockId == 0 )
+		{
+			return;
+		}
+		
+		// ignore all blockId changes (for now)
+		if( storage.blockId != newBlockId )
+		{
+			return;
+		}
+				
+		// UNDONE: make exceptions for benign block changes like furnaces
+
+		// apply the change
+		storage.blockMeta = newMeta;
+		
+		// notify the tile entity if needed
+		TileEntity tileEntity = getBlockTileEntity( coords );
+		if( tileEntity != null )
+		{
+			tileEntity.updateContainingBlockInfo();
+		}
 	}
 	
 	@Override
@@ -398,11 +446,33 @@ public class ShipWorld extends DetatchedWorld
 	@Override
 	public void updateEntities( )
 	{
+		m_changedBlocks.clear();
+		
 		// update the tile entities
 		for( TileEntity entity : m_tileEntities.values() )
 		{
 			entity.updateEntity();
 		}
+		
+		// on the server, push any accumulated changes to the client
+		if( !isRemote )
+		{
+			pushBlockChangesToClients();
+		}
+	}
+	
+	private void pushBlockChangesToClients( )
+	{
+		if( m_ship == null )
+		{
+			return;
+		}
+		
+		MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
+			m_ship.posX, m_ship.posY, m_ship.posZ, 64,
+			m_ship.worldObj.provider.dimensionId,
+			new PacketChangedBlocks( m_ship, m_changedBlocks ).getCustomPacket()
+		);
 	}
 	
 	@Override

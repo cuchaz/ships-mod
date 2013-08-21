@@ -29,6 +29,7 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
 import cuchaz.modsShared.FMLHacker;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
+import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
@@ -39,7 +40,7 @@ import cuchaz.ships.packets.PacketUnlaunchShip;
 //@Mod( modid="cuchaz.ships", name="Ships", version="0.1", useMetadata=false, dependencies="required-after:cuchaz.ships.core@[0.1,)" )
 @NetworkMod(
 	// NOTE: 20-character limit for channel names
-	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel },
+	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel },
 	packetHandler = PacketHandler.class
 )
 public class Ships extends DummyModContainer

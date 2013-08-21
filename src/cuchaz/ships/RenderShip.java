@@ -10,6 +10,7 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.Matrix3;
@@ -70,11 +71,30 @@ public class RenderShip extends Render
 			renderHitbox( ship );
 			renderVector( ship.posX, ship.posY + 2, ship.posZ, ship.motionX*10, ship.motionY*10, ship.motionZ*10, ColorUtils.getColor( 255, 255, 0 ) );
 			
+			// render the world coordinate axes
+			renderVector( ship.posX, ship.posY + 2, ship.posZ, 1, 0, 0, ColorUtils.getColor( 255, 0, 0 ) );
+			renderVector( ship.posX, ship.posY + 2, ship.posZ, 0, 1, 0, ColorUtils.getColor( 0, 255, 0 ) );
+			renderVector( ship.posX, ship.posY + 2, ship.posZ, 0, 0, 1, ColorUtils.getColor( 0, 0, 255 ) );
+			
 			for( ChunkCoordinates coords : ship.getBlocks().coords() )
 			{
 				renderPosition( ship.getBlockEntity( coords ) );
 				renderHitbox( ship.getBlockEntity( coords ) );
 			}
+			
+			GL11.glPopMatrix();
+			
+			// render the ship coordinate axes
+			GL11.glPushMatrix();
+			GL11.glTranslated( x, y, z );
+			GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
+			GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
+			renderVector( 0, 1, 0, 1, 0, 0, ColorUtils.getColor( 255, 0, 0 ) );
+			renderVector( 0, 1, 0, 0, 1, 0, ColorUtils.getColor( 0, 255, 0 ) );
+			renderVector( 0, 1, 0, 0, 0, 1, ColorUtils.getColor( 0, 0, 255 ) );
+			
+			renderVector( 0, 2, 0, BlockSide.East.getDx(), BlockSide.East.getDy(), BlockSide.East.getDz(), ColorUtils.getColor( 255, 0, 0 ) );
+			renderVector( 0, 2, 0, BlockSide.South.getDx(), BlockSide.South.getDy(), BlockSide.South.getDz(), ColorUtils.getColor( 0, 0, 255 ) );
 			
 			GL11.glPopMatrix();
 		}
@@ -112,19 +132,21 @@ public class RenderShip extends Render
 			entity.posY + HalfHeight,
 			entity.posZ - Halfwidth,
 			entity.posZ + Halfwidth,
-			ColorUtils.getColor( 0, 0, 255 )
+			ColorUtils.getGrey( 180 )
 		);
 	}
 	
 	private void renderHitbox( Entity entity )
 	{
+		// pad the hitbox by a small delta to avoid rendering glitches
+		final double delta = 0.01;
 		renderBox(
-			entity.boundingBox.minX,
-			entity.boundingBox.maxX,
-			entity.boundingBox.minY,
-			entity.boundingBox.maxY,
-			entity.boundingBox.minZ,
-			entity.boundingBox.maxZ,
+			entity.boundingBox.minX - delta,
+			entity.boundingBox.maxX + delta,
+			entity.boundingBox.minY - delta,
+			entity.boundingBox.maxY + delta,
+			entity.boundingBox.minZ - delta,
+			entity.boundingBox.maxZ + delta,
 			ColorUtils.getColor( 255, 0, 0 )
 		);
 	}
