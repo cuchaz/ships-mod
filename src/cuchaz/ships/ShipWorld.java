@@ -333,83 +333,78 @@ public class ShipWorld extends DetatchedWorld
 	}
 	
 	@Override
-	public boolean setBlock( int par1, int par2, int par3, int par4, int par5, int par6 )
+	public boolean setBlock( int x, int y, int z, int newBlockId, int newMeta, int ignored )
 	{
-		// UNDONE: allow benign block changes, like for the furnace
-		
-		// do nothing. Ships are immutable
+		if( applyBlockChange( x, y, z, newBlockId, newMeta ) )
+		{
+			// on the client do nothing more
+			// on the server, buffer the changes to be broadcast to the client
+			if( !isRemote )
+			{
+				m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
+			}
+			return true;
+		}
 		return false;
 	}
 	
 	@Override
 	public void setBlockTileEntity( int x, int y, int z, TileEntity tileEntity )
 	{
-		// do nothing. Ships are immutable
+		// do nothing. tile entities are handled differently
 	}
 	
 	@Override
 	public boolean setBlockMetadataWithNotify( int x, int y, int z, int meta, int ignored )
 	{
-		BlockStorage storage = getStorage( x, y, z );
-		if( storage.blockId == 0 )
+		if( applyBlockChange( x, y, z, getBlockId( x, y, z ), meta ) )
 		{
-			return false;
+			// on the client do nothing more
+			// on the server, buffer the changes to be broadcast to the client
+			if( !isRemote )
+			{
+				m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
+			}
+			return true;
 		}
-		
-		// update the metadata
-		storage.blockMeta = meta;
-		
-		// on the client do nothing more
-		// on the server, buffer the changes to be broadcast to the client
-		if( !isRemote )
-		{
-			m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
-		}
-		
-		return true;
+		return false;
 	}
 	
-	public void applyBlockChange( int x, int y, int z, int newBlockId, int newMeta )
+	public boolean applyBlockChange( int x, int y, int z, int newBlockId, int newMeta )
 	{
 		m_lookupCoords.set( x, y, z );
-		applyBlockChange( m_lookupCoords, newBlockId, newMeta );
+		return applyBlockChange( m_lookupCoords, newBlockId, newMeta );
 	}
 	
-	public void applyBlockChange( ChunkCoordinates coords, int newBlockId, int newMeta )
+	public boolean applyBlockChange( ChunkCoordinates coords, int newBlockId, int newMeta )
 	{
-		// NOTE: called only by the PacketChangedBlocks handler
-		
-		// ignore all block removals
-		if( newBlockId == 0 )
-		{
-			return;
-		}
-		
+		// lookup the affected block
 		BlockStorage storage = getStorage( coords );
+		int oldBlockId = storage.blockId;
 		
-		// ignore all changes to air blocks
-		if( storage.blockId == 0 )
+		// only allow benign changes to blocks
+		boolean isAllowed = false
+			// allow metadata changes
+			|| ( oldBlockId == newBlockId )
+			// allow furnace block changes
+			|| ( oldBlockId == Block.furnaceBurning.blockID && newBlockId == Block.furnaceIdle.blockID )
+			|| ( oldBlockId == Block.furnaceIdle.blockID && newBlockId == Block.furnaceBurning.blockID );
+		
+		if( isAllowed )
 		{
-			return;
+			// apply the change
+			storage.blockId = newBlockId;
+			storage.blockMeta = newMeta;
+			
+			// notify the tile entity if needed
+			TileEntity tileEntity = getBlockTileEntity( coords );
+			if( tileEntity != null )
+			{
+				tileEntity.updateContainingBlockInfo();
+			}
 		}
 		
-		// ignore all blockId changes (for now)
-		if( storage.blockId != newBlockId )
-		{
-			return;
-		}
-				
-		// UNDONE: make exceptions for benign block changes like furnaces
-
-		// apply the change
-		storage.blockMeta = newMeta;
-		
-		// notify the tile entity if needed
-		TileEntity tileEntity = getBlockTileEntity( coords );
-		if( tileEntity != null )
-		{
-			tileEntity.updateContainingBlockInfo();
-		}
+		return isAllowed;
 	}
 	
 	@Override
@@ -446,18 +441,19 @@ public class ShipWorld extends DetatchedWorld
 	@Override
 	public void updateEntities( )
 	{
-		m_changedBlocks.clear();
-		
 		// update the tile entities
 		for( TileEntity entity : m_tileEntities.values() )
 		{
 			entity.updateEntity();
 		}
 		
+		// UNDONE: do block ticks for furnace particles
+		
 		// on the server, push any accumulated changes to the client
-		if( !isRemote )
+		if( !isRemote && !m_changedBlocks.isEmpty() )
 		{
 			pushBlockChangesToClients();
+			m_changedBlocks.clear();
 		}
 	}
 	

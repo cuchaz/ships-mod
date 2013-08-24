@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
@@ -32,7 +33,7 @@ public class ShipIntermediary
 		return translateDistance( tileEntity.worldObj, player, tileEntityX, tileEntityY, tileEntityZ );
 	}
 	
-	public static double getEntityDistanceSq( EntityPlayer player, double containerX, double containerY, double containerZ, ContainerWorkbench container )
+	public static double getEntityDistanceSq( EntityPlayer player, double containerX, double containerY, double containerZ, Container container )
 	{
 		// get private data from the container
 		World world = null;

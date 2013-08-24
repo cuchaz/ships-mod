@@ -20,6 +20,7 @@ public class PacketHandler implements IPacketHandler
 		m_packetTypes.put( PacketUnlaunchShip.Channel, new PacketUnlaunchShip() );
 		m_packetTypes.put( PacketPilotShip.Channel, new PacketPilotShip() );
 		m_packetTypes.put( PacketShipBlockEvent.Channel, new PacketShipBlockEvent() );
+		m_packetTypes.put( PacketChangedBlocks.Channel, new PacketChangedBlocks() );
 	}
 	
 	@Override
@@ -32,6 +33,10 @@ public class PacketHandler implements IPacketHandler
 		{
 			packet.readCustomPacket( customPacket );
 			packet.onPacketReceived( player );
+		}
+		else
+		{
+			System.err.println( "Received packet on unregistered channel: " + customPacket.channel );
 		}
 	}
 }

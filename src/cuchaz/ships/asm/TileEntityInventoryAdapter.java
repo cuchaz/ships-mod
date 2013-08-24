@@ -1,5 +1,8 @@
 package cuchaz.ships.asm;
 
+import java.io.IOException;
+
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -8,7 +11,7 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 {
 	private static final String InventoryInterfaceName = "net/minecraft/inventory/IInventory";
 	private static final String TileEntityClassName = "net/minecraft/tileentity/TileEntity";
-	private static final String WorkbenchContainerClassName = "net/minecraft/inventory/ContainerWorkbench";
+	private static final String ContainerClassName = "net/minecraft/inventory/Container";
 	private static final String PlayerClassName = "net/minecraft/entity/player/EntityPlayer";
 	private static final String InventoryPlayerClassName = "net/minecraft/entity/player/InventoryPlayer";
 	private static final String WorldClassName = "net/minecraft/world/World";
@@ -38,14 +41,12 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 	@Override
 	public MethodVisitor visitMethod( int access, final String methodName, String methodDesc, String signature, String[] exceptions )
 	{
-		// UNDONE: generalize to all world-based container subclasses
-		// like ContainerRepair, ContainerEnchantment
-		
 		// should we transform this method?
-		final boolean isInventoryMethod = implementsInterface( InventoryInterfaceName ) && m_superName.equals( TileEntityClassName ) && methodName.equals( "isUseableByPlayer" );
-		final boolean isWorkbenchContainerMethod = m_name.equals( WorkbenchContainerClassName ) && methodName.equals( "canInteractWith" );
-		final boolean isContainerConstructor = m_name.equals( WorkbenchContainerClassName ) && methodName.equals( "<init>" );
-		if( ( isInventoryMethod || isWorkbenchContainerMethod ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )
+		// for performance, check method names first, class interitance second, and finally interfaces third
+		final boolean isTileEntityInventoryIsUseableByPlayer = methodName.equals( "isUseableByPlayer" ) && extendsClass( TileEntityClassName ) && implementsInterface( InventoryInterfaceName );
+		final boolean isContainerCanInteractWith = methodName.equals( "canInteractWith" ) && extendsClass( ContainerClassName );
+		final boolean isContainerConstructor = methodName.equals( "<init>" ) && extendsClass( ContainerClassName );
+		if( ( isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )
 		{
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
 			{
@@ -57,13 +58,13 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 					{
 						// get the this type
 						String thisType = null;
-						if( isInventoryMethod )
+						if( isTileEntityInventoryIsUseableByPlayer )
 						{
 							thisType = TileEntityClassName;
 						}
-						else if( isWorkbenchContainerMethod )
+						else if( isContainerCanInteractWith )
 						{
-							thisType = WorkbenchContainerClassName;
+							thisType = ContainerClassName;
 						}
 						else
 						{
@@ -71,19 +72,18 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 						}
 						
 						// we're replacing this method call
-						// invokevirtual net.minecraft.entity.player.EntityPlayer.getDistanceSq(double, double, double) : double [187]
+						// invokevirtual
+						// net.minecraft.entity.player.EntityPlayer.getDistanceSq(double,
+						// double, double) : double [187]
 						// with
-						// ShipIntermediary.getEntityDistanceSq( player, x, y, z, this )
+						// ShipIntermediary.getEntityDistanceSq( player, x, y,
+						// z, this )
 						// plan:
 						// currently on the argument stack: player, x, y, z
-						// so just push the this instance on the stack and invoke the intermediary method
+						// so just push the this instance on the stack and
+						// invoke the intermediary method
 						mv.visitVarInsn( Opcodes.ALOAD, 0 );
-						mv.visitMethodInsn(
-							Opcodes.INVOKESTATIC,
-							Intermediary,
-							"getEntityDistanceSq",
-							String.format( "(L%s;DDDL%s;)D", PlayerClassName, thisType )
-						);
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, Intermediary, "getEntityDistanceSq", String.format( "(L%s;DDDL%s;)D", PlayerClassName, thisType ) );
 					}
 					else
 					{
@@ -105,17 +105,14 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 						// we're replacing this field setter
 						// this.worldObj = worldObj
 						// with
-						// this.worldObj = ShipIntermediary.translateWorld( worldObj, player )
+						// this.worldObj = ShipIntermediary.translateWorld(
+						// worldObj, player )
 						// plan:
 						// currently on the argument stack: this, worldObj
-						// so just push the player instance on the stack, invoke the intermediary method, then recall the setter
+						// so just push the player instance on the stack, invoke
+						// the intermediary method, then recall the setter
 						mv.visitVarInsn( Opcodes.ALOAD, 1 );
-						mv.visitMethodInsn(
-							Opcodes.INVOKESTATIC,
-							Intermediary,
-							"translateWorld",
-							String.format( "(L%s;L%s;)L%s;", WorldClassName, InventoryPlayerClassName, WorldClassName )
-						);
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, Intermediary, "translateWorld", String.format( "(L%s;L%s;)L%s;", WorldClassName, InventoryPlayerClassName, WorldClassName ) );
 						mv.visitFieldInsn( Opcodes.PUTFIELD, owner, name, desc );
 					}
 					else
@@ -131,15 +128,74 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 		}
 	}
 	
+	private boolean extendsClass( String targetClassName )
+	{
+		return extendsClass( m_superName, targetClassName );
+	}
+	
+	private boolean extendsClass( String className, String targetClassName )
+	{
+		// base case
+		if( className.equalsIgnoreCase( targetClassName ) )
+		{
+			return true;
+		}
+		
+		// load the super class and test recursively
+		try
+		{
+			ClassReader classReader = new ClassReader( className.replace( '.', '/' ) );
+			String superClassName = classReader.getSuperName();
+			if( superClassName != null )
+			{
+				return extendsClass( superClassName, targetClassName );
+			}
+		}
+		catch( IOException ex )
+		{
+			ex.printStackTrace( System.err );
+		}
+		
+		return false;
+	}
+	
 	private boolean implementsInterface( String targetInterfaceName )
 	{
-		for( String interfaceName : m_interfaces )
+		for( String i : m_interfaces )
 		{
-			if( interfaceName.equalsIgnoreCase( targetInterfaceName ) )
+			if( implementsInterface( i, targetInterfaceName ) )
 			{
 				return true;
 			}
 		}
+		return false;
+	}
+	
+	private boolean implementsInterface( String interfaceName, String targetInterfaceName )
+	{
+		// base case
+		if( interfaceName.equalsIgnoreCase( targetInterfaceName ) )
+		{
+			return true;
+		}
+		
+		// recurse
+		try
+		{
+			ClassReader classReader = new ClassReader( interfaceName.replace( '.', '/' ) );
+			for( String i : classReader.getInterfaces() )
+			{
+				if( implementsInterface( i, targetInterfaceName ) )
+				{
+					return true;
+				}
+			}
+		}
+		catch( IOException ex )
+		{
+			ex.printStackTrace( System.err );
+		}
+		
 		return false;
 	}
 }
