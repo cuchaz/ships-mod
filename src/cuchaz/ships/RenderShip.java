@@ -2,8 +2,10 @@ package cuchaz.ships;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
@@ -47,17 +49,20 @@ public class RenderShip extends Render
 		GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 		
+		RenderHelper.disableStandardItemLighting();
+		
 		// UNDONE: do view frustum culling for blocks
 		
 		// draw all the blocks!
 		for( ChunkCoordinates coords : ship.getBlocks().coords() )
 		{
 			Block block = Block.blocksList[ship.getBlocks().getBlockId( coords )];
-			block.setBlockBoundsBasedOnState( m_renderBlocks.blockAccess, coords.posX, coords.posY, coords.posZ );
-			m_renderBlocks.setRenderBoundsFromBlock( block );
 			RenderBlockType.getById( block.getRenderType() ).render( m_renderBlocks, block, coords.posX, coords.posY, coords.posZ, partialTickTime );
+			
+			// TileEntityRenderer.instance.hasSpecialRenderer(tileentity)
 		}
 		
+		RenderHelper.enableStandardItemLighting();
 		GL11.glPopMatrix();
 		
 		// render debug information
@@ -98,6 +103,12 @@ public class RenderShip extends Render
 			
 			GL11.glPopMatrix();
 		}
+	}
+	
+	@Override
+	public void doRenderShadowAndFire( Entity entity, double x, double y, double z, float yaw, float partialTickTime )
+	{
+		// don't render entity shadows
 	}
 	
 	private void renderPosition( Entity entity )

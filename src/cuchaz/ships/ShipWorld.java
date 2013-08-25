@@ -8,11 +8,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet62LevelSound;
@@ -20,7 +23,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 
@@ -420,6 +425,24 @@ public class ShipWorld extends DetatchedWorld
 	}
 	
 	@Override
+	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int blockBrightness )
+	{
+		if( m_ship == null )
+		{
+			return 0;
+		}
+		
+		// convert the block position into a world block
+		Vec3 v = Vec3.createVectorHelper( x, y, z );
+		m_ship.blocksToShip( v );
+		m_ship.shipToWorld( v );
+		x = MathHelper.floor_double( v.xCoord );
+		y = MathHelper.floor_double( v.yCoord );
+		z = MathHelper.floor_double( v.zCoord );
+		return m_ship.worldObj.getLightBrightnessForSkyBlocks( x, y, z, blockBrightness );
+	}
+	
+	@Override
 	@SuppressWarnings( "rawtypes" )
 	public List getEntitiesWithinAABB( Class theClass, AxisAlignedBB box )
 	{
@@ -447,7 +470,31 @@ public class ShipWorld extends DetatchedWorld
 			entity.updateEntity();
 		}
 		
-		// UNDONE: do block ticks for furnace particles
+		// on the client, do random update ticks
+		if( isRemote && m_ship != null )
+		{
+			// get the player position on the ship
+			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+			Vec3 v = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
+			m_ship.worldToShip( v );
+			m_ship.shipToBlocks( v );
+			int playerX = MathHelper.floor_double( v.xCoord );
+			int playerY = MathHelper.floor_double( v.yCoord );
+			int playerZ = MathHelper.floor_double( v.zCoord );
+			
+			Random random = new Random();
+			for( int i=0; i<1000; i++ )
+			{
+				int x = playerX + random.nextInt( 16 ) - random.nextInt( 16 );
+				int y = playerY + random.nextInt( 16 ) - random.nextInt( 16 );
+				int z = playerZ + random.nextInt( 16 ) - random.nextInt( 16 );
+				int blockId = getBlockId( x, y, z );
+				if( blockId > 0 )
+				{
+					Block.blocksList[blockId].randomDisplayTick( this, x, y, z, random );
+				}
+			}
+		}
 		
 		// on the server, push any accumulated changes to the client
 		if( !isRemote && !m_changedBlocks.isEmpty() )
@@ -523,6 +570,34 @@ public class ShipWorld extends DetatchedWorld
 		
 		// on the client, just ignore. Sounds actually get played by the packet handler
     }
+	
+	@Override
+	public void spawnParticle( String name, double x, double y, double z, double motionX, double motionY, double motionZ )
+	{
+		if( m_ship == null )
+		{
+			return;
+		}
+		
+		// transform the position to world coordinates
+		Vec3 v = Vec3.createVectorHelper( x, y, z );
+		m_ship.blocksToShip( v );
+		m_ship.shipToWorld( v );
+		x = v.xCoord;
+		y = v.yCoord;
+		z = v.zCoord;
+		
+		// transform the velocity vector too
+		v.xCoord = motionX;
+		v.yCoord = motionY;
+		v.zCoord = motionZ;
+		m_ship.shipToWorldDirection( v );
+		motionX = v.xCoord;
+		motionY = v.yCoord;
+		motionZ = v.zCoord;
+		
+		m_ship.worldObj.spawnParticle( name, x, y, z, motionX, motionY, motionZ );
+	}
 	
 	public byte[] getData( )
 	{

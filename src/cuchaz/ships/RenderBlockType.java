@@ -21,30 +21,32 @@ public enum RenderBlockType
 		{
 			// loads the terrain/blocks texture
 			RenderManager.instance.renderEngine.func_110577_a( TextureMap.field_110575_b );
+
+			block.setBlockBoundsBasedOnState( rb.blockAccess, x, y, z );
+			rb.setRenderBoundsFromBlock( block );
 			
 			Tessellator tessellator = Tessellator.instance;
-			for( BlockSide side : BlockSide.values() )
-			{
-				if( rb.renderAllFaces || block.shouldSideBeRendered( rb.blockAccess, x + side.getDx(), y + side.getDy(), z + side.getDz(), side.getId() ) )
-				{
-					Icon icon = rb.getBlockIcon( block, rb.blockAccess, x, y, z, side.getId() );
-					tessellator.startDrawingQuads();
-					tessellator.setNormal( (float)side.getDx(), (float)side.getDy(), (float)side.getDz() );
-					side.renderSide( rb, block, (double)x, (double)y, (double)z, icon );
-					tessellator.draw();
-				}
-			}
+			tessellator.startDrawingQuads();
+			//rb.renderBlockByRenderType( block, x, y, z );
+			rb.renderStandardBlockWithColorMultiplier( block, x, y, z, 1.0f, 1.0f, 1.0f );
+			tessellator.draw();
 		}
 	},
-	Torch( 2 )
+	SpecialBlock( 38, 2 )
 	{
 		@Override
 		public void render( RenderBlocks rb, Block block, int x, int y, int z, float partialTickTime )
 		{
-			// UNDONE
+			// loads the terrain/blocks texture
+			RenderManager.instance.renderEngine.func_110577_a( TextureMap.field_110575_b );
+			
+			Tessellator tessellator = Tessellator.instance;
+			tessellator.startDrawingQuads();
+			rb.renderBlockByRenderType( block, x, y, z );
+			tessellator.draw();
 		}
 	},
-	Chest( 22 )
+	TileEntity( 22 )
 	{
 		@Override
 		public void render( RenderBlocks rb, Block block, int x, int y, int z, float partialTickTime )
@@ -53,7 +55,7 @@ public enum RenderBlockType
 		}
 	};
 	
-	private int m_id;
+	private int[] m_ids;
 	
 	private static TreeMap<Integer,RenderBlockType> m_map;
 	
@@ -62,18 +64,21 @@ public enum RenderBlockType
 		m_map = new TreeMap<Integer,RenderBlockType>();
 		for( RenderBlockType type : values() )
 		{
-			m_map.put( type.m_id, type );
+			for( int id : type.m_ids )
+			{
+				m_map.put( id, type );
+			}
 		}
 	}
 	
-	private RenderBlockType( int id )
+	private RenderBlockType( int ... ids )
 	{
-		m_id = id;
+		m_ids = ids;
 	}
 	
-	public int getId( )
+	public int[] getIds( )
 	{
-		return m_id;
+		return m_ids;
 	}
 	
 	public static RenderBlockType getById( int id )
