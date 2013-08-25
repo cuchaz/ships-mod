@@ -108,15 +108,6 @@ public class EntityShip extends Entity
 		blocks.setShip( this );
 		m_physics = new ShipPhysics( m_blocks );
 		
-		// TEMP: put the ship back
-		if( false )
-		{
-			//posX = 136;
-			posY = 64;
-			motionY = 0;
-			//posZ = 274;
-		}
-		
 		// get the ship center of mass so we can convert between ship/block spaces
 		Vec3 centerOfMass = m_physics.getCenterOfMass();
 		m_shipBlockX = -centerOfMass.xCoord;
@@ -128,10 +119,18 @@ public class EntityShip extends Entity
 		
 		// build the sub entities
 		m_blockEntities = new TreeMap<ChunkCoordinates, EntityShipBlock>();
-		for( ChunkCoordinates block : m_blocks.coords() )
+		for( ChunkCoordinates coords : m_blocks.coords() )
 		{
-			EntityShipBlock entityBlock = new EntityShipBlock( worldObj, this, block );
-			m_blockEntities.put( block, entityBlock );
+			// if the block doesn't have a collision box, then we don't need a block entity
+			Block block = Block.blocksList[m_blocks.getBlockId( coords )];
+			AxisAlignedBB box = block.getCollisionBoundingBoxFromPool( m_blocks, coords.posX, coords.posY, coords.posZ );
+			if( box == null )
+			{
+				continue;
+			}
+			
+			EntityShipBlock entityBlock = new EntityShipBlock( worldObj, this, coords );
+			m_blockEntities.put( coords, entityBlock );
 		}
 		
 		// flatten to an array
@@ -339,12 +338,6 @@ public class EntityShip extends Entity
 		adjustMotionDueToDrag( waterHeightInBlockSpace );
 		adjustMotionDueToBlockCollisions();
 		
-		// TEMP: oscillate so we can test entity collision
-		if( false )
-		{
-			motionZ += ( 270 - posZ )/50.0;
-		}
-		
 		double dx = motionX;
 		double dy = motionY;
 		double dz = motionZ;
@@ -413,6 +406,7 @@ public class EntityShip extends Entity
 			);
 			
 			moveRiders( riders, dx, dy, dz, dYaw );
+			// UNDONE: get entity collision working again!
 			//moveCollidingEntities( riders );
 			moveWater( waterHeightInBlockSpace );
 		}
@@ -429,11 +423,16 @@ public class EntityShip extends Entity
 			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
 			unlauncher.snapToNearestDirection();
 			unlauncher.unlaunch();
+			return;
 		}
-		else
+		
+		// update the world
+		m_blocks.updateEntities();
+		
+		// update the block entity bounds
+		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
 		{
-			// update the world
-			m_blocks.updateEntities();
+			
 		}
 	}
 	

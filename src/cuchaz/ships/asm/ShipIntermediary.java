@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -42,22 +41,15 @@ public class ShipIntermediary
 		int z = 0;
 		try
 		{
-			Field fieldWorld = ContainerWorkbench.class.getDeclaredField( "worldObj" );
-			fieldWorld.setAccessible( true );
+			// UNDONE: how does obfuscation play into this?
+			Field fieldWorld = getField( container, "worldObj", "theWorld", "worldPointer" );
 			world = (World)fieldWorld.get( container );
-			Field fieldX = ContainerWorkbench.class.getDeclaredField( "posX" );
-			fieldX.setAccessible( true );
+			Field fieldX = getField( container, "posX", "field_82861_i" );
 			x = fieldX.getInt( container );
-			Field fieldY = ContainerWorkbench.class.getDeclaredField( "posY" );
-			fieldY.setAccessible( true );
+			Field fieldY = getField( container, "posY", "field_82858_j" );
 			y = fieldY.getInt( container );
-			Field fieldZ = ContainerWorkbench.class.getDeclaredField( "posZ" );
-			fieldZ.setAccessible( true );
+			Field fieldZ = getField( container, "posZ", "field_82859_k" );
 			z = fieldZ.getInt( container );
-		}
-		catch( NoSuchFieldException ex )
-		{
-			ex.printStackTrace( System.err );
 		}
 		catch( IllegalArgumentException ex )
 		{
@@ -90,5 +82,21 @@ public class ShipIntermediary
 			// no ship? just return the original result
 			return player.getDistanceSq( x, y, z );
 		}
+	}
+	
+	private static Field getField( Object obj, String ... names )
+	{
+		for( Field field : obj.getClass().getDeclaredFields() )
+		{
+			for( String name : names )
+			{
+				if( field.getName().equals( name ) )
+				{
+					field.setAccessible( true );
+					return field;
+				}
+			}
+		}
+		return null;
 	}
 }
