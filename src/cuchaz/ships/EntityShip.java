@@ -165,7 +165,7 @@ public class EntityShip extends Entity
 		{
 			for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
 			{
-				if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.BlockAirWall.blockID )
+				if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
 				{
 					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
 				}
@@ -1058,7 +1058,7 @@ public class EntityShip extends Entity
 					for( int y=minY; y<=maxY; y++ )
 					{
 						Material material = worldObj.getBlockMaterial( x, y, z );
-						if( material == Material.water || material == Material.air || material == Ships.MaterialAirWall )
+						if( material == Material.water || material == Material.air || material == Ships.m_materialAirWall )
 						{
 							displacedWaterBlocks.add( new ChunkCoordinates( x, y, z ) );
 						}
@@ -1072,7 +1072,7 @@ public class EntityShip extends Entity
 		{
 			if( m_previouslyDisplacedWaterBlocks == null || !m_previouslyDisplacedWaterBlocks.contains( coords ) )
 			{
-				worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Ships.BlockAirWall.blockID );
+				worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Ships.m_blockAirWall.blockID );
 			}
 		}
 		

@@ -1,4 +1,4 @@
-package cuchaz.ships;
+package cuchaz.ships.render;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +22,9 @@ import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.Matrix3;
 import cuchaz.modsShared.Vector3;
+import cuchaz.ships.EntityShip;
+import cuchaz.ships.EntityShipBlock;
+import cuchaz.ships.ShipWorld;
 
 public class RenderShip extends Render
 {

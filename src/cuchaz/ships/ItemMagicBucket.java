@@ -56,10 +56,10 @@ public class ItemMagicBucket extends Item
 		if( ( material == Material.water || material == Material.lava ) && world.getBlockMetadata( x, y, z ) == 0 )
 		{
 			// make it an air wall!
-			world.setBlock( x, y, z, Ships.BlockAirWall.blockID );
+			world.setBlock( x, y, z, Ships.m_blockAirWall.blockID );
 		}
 		// is it an air wall?
-		else if( material == Ships.MaterialAirWall )
+		else if( material == Ships.m_materialAirWall )
 		{
 			// make it back to normal air!
 			world.setBlockToAir( x, y, z );

@@ -12,7 +12,7 @@ public class BlockAirWall extends Block
 	protected BlockAirWall( int blockId )
 	{
 		// an air block that stops flowing water
-		super( blockId, Ships.MaterialAirWall );
+		super( blockId, Ships.m_materialAirWall );
 		
 		setUnlocalizedName( "blockAirWall" );
 		setCreativeTab( CreativeTabs.tabBlock );
