@@ -384,6 +384,8 @@ public class EntityShip extends Entity
 		) );
 		*/
 		
+		updateHelm( dYaw );
+		
 		// did we even move a noticeable amount?
 		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
 		{
@@ -443,6 +445,11 @@ public class EntityShip extends Entity
 		
 		// UNDONE: will have to use something smarter for submarines!
 		return motionY == 0 && isUnderwater;
+	}
+	
+	private void updateHelm( float dYaw )
+	{
+		// UNDONE: find the helm (and enforce there's only one) to update the wheel rotation based on dYaw
 	}
 
 	public void worldToShip( Vec3 v )
