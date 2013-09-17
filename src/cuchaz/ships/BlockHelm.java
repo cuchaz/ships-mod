@@ -3,8 +3,11 @@ package cuchaz.ships;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import cuchaz.modsShared.BlockSide;
 
 public class BlockHelm extends Block
 {
@@ -48,4 +51,11 @@ public class BlockHelm extends Block
 	{
 		return new TileEntityHelm();
 	}
+	
+	@Override
+	public void onBlockPlacedBy( World world, int x, int y, int z, EntityLivingBase entityUser, ItemStack itemStack )
+    {
+		// save the block rotation to the metadata
+		world.setBlockMetadataWithNotify( x, y, z, BlockSide.getByYaw( entityUser.rotationYaw ).getXZOffset(), 3 );
+    }
 }
