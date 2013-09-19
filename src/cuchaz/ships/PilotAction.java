@@ -1,62 +1,86 @@
 package cuchaz.ships;
 
+import java.util.List;
+
 import net.minecraft.client.settings.GameSettings;
-import net.minecraft.util.MathHelper;
 
 import org.lwjgl.input.Keyboard;
-
-import cuchaz.modsShared.BlockSide;
 
 public enum PilotAction
 {
 	Forward
 	{
 		@Override
-		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
+		public void applyToShip( EntityShip ship )
 		{
-			float yawRad = (float)Math.toRadians( ship.rotationYaw );
-			float cos = MathHelper.cos( yawRad );
-			float sin = MathHelper.sin( yawRad );
-			double dx = forwardShipFace.getDx()*cos + forwardShipFace.getDz()*sin;
-			double dz = -forwardShipFace.getDx()*sin + forwardShipFace.getDz()*cos;
-			ship.motionX += dx*LinearAcceleration;
-			ship.motionZ += dz*LinearAcceleration;
+			ship.linearThrottle = 1;
+		}
+		
+		@Override
+		public void resetShip( EntityShip ship )
+		{
+			ship.linearThrottle = 0;
 		}
 	},
 	Backward
 	{
 		@Override
-		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
+		public void applyToShip( EntityShip ship )
 		{
-			float yawRad = (float)Math.toRadians( ship.rotationYaw );
-			float cos = MathHelper.cos( yawRad );
-			float sin = MathHelper.sin( yawRad );
-			double dx = forwardShipFace.getDx()*cos + forwardShipFace.getDz()*sin;
-			double dz = -forwardShipFace.getDx()*sin + forwardShipFace.getDz()*cos;
-			ship.motionX -= dx*LinearAcceleration;
-			ship.motionZ -= dz*LinearAcceleration;
+			ship.linearThrottle = -1;
+		}
+		
+		@Override
+		public void resetShip( EntityShip ship )
+		{
+			ship.linearThrottle = 0;
 		}
 	},
 	Left
 	{
 		@Override
-		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
+		public void applyToShip( EntityShip ship )
 		{
-			ship.motionYaw += RotationalAcceleration;
+			ship.angularThrottle = 1;
+		}
+
+		@Override
+		public void resetShip( EntityShip ship )
+		{
+			ship.angularThrottle = 0;
 		}
 	},
 	Right
 	{
 		@Override
-		public void applyToShip( EntityShip ship, BlockSide forwardShipFace )
+		public void applyToShip( EntityShip ship )
 		{
-			ship.motionYaw -= RotationalAcceleration;
+			ship.angularThrottle = -1;
+		}
+		
+		@Override
+		public void resetShip( EntityShip ship )
+		{
+			ship.angularThrottle = 0;
+		}
+	},
+	ThrottleUp
+	{
+		@Override
+		public void applyToShip( EntityShip ship )
+		{
+			// UNDONE: make the throttle "sticky" around 0
+			ship.linearThrottle += 0.01;
+		}
+	},
+	ThrottleDown
+	{
+		@Override
+		public void applyToShip( EntityShip ship )
+		{
+			ship.linearThrottle -= 0.01;
 		}
 	};
-	
-	// TEMP: acceleration should come from thrusters (modified by mass)!
-	private static double LinearAcceleration = 0.04;
-	private static float RotationalAcceleration = 1.0f;
 	
 	private int m_keyCode;
 	
@@ -71,13 +95,15 @@ public enum PilotAction
 		Backward.m_keyCode = settings.keyBindBack.keyCode;
 		Left.m_keyCode = settings.keyBindLeft.keyCode;
 		Right.m_keyCode = settings.keyBindRight.keyCode;
+		ThrottleUp.m_keyCode = settings.keyBindForward.keyCode;
+		ThrottleDown.m_keyCode = settings.keyBindBack.keyCode;
 	}
 	
-	public static int getActiveActions( GameSettings settings )
+	public static int getActiveActions( GameSettings settings, List<PilotAction> allowedActions )
 	{
 		// roll up the actions into a bit vector
 		int actions = 0;
-		for( PilotAction action : values() )
+		for( PilotAction action : allowedActions )
 		{
 			if( Keyboard.isKeyDown( action.m_keyCode ) )
 			{
@@ -87,13 +113,24 @@ public enum PilotAction
 		return actions;
 	}
 	
-	public static void applyToShip( EntityShip ship, int actions, BlockSide sideShipForward )
+	public static void applyToShip( EntityShip ship, int actions )
 	{
 		for( PilotAction action : values() )
 		{
 			if( action.isActive( actions ) )
 			{
-				action.applyToShip( ship, sideShipForward );
+				action.applyToShip( ship );
+			}
+		}
+	}
+	
+	public static void resetShip( EntityShip ship, int actions, int oldActions )
+	{
+		for( PilotAction action : values() )
+		{
+			if( action.isActive( oldActions ) && !action.isActive( actions ) )
+			{
+				action.resetShip( ship );
 			}
 		}
 	}
@@ -103,5 +140,10 @@ public enum PilotAction
 		return ( ( actions >> ordinal() ) & 0x1 ) == 1;
 	}
 	
-	protected abstract void applyToShip( EntityShip ship, BlockSide forwardShipFace );
+	protected abstract void applyToShip( EntityShip ship );
+	
+	protected void resetShip( EntityShip ship )
+	{
+		// do nothing
+	}
 }

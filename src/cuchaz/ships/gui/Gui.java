@@ -15,12 +15,6 @@ public enum Gui
 	BuildShip
 	{
 		@Override
-		public Container getContainer( EntityPlayer player, World world, int x, int y, int z )
-		{
-			return new ContainerShip();
-		}
-		
-		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
 			return new GuiShipLaunch( new ContainerShip(), new ShipLauncher( world, x, y, z ) );
@@ -28,12 +22,6 @@ public enum Gui
 	},
 	UnbuildShip
 	{
-		@Override
-		public Container getContainer( EntityPlayer player, World world, int x, int y, int z )
-		{
-			return new ContainerShip();
-		}
-		
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
@@ -50,11 +38,18 @@ public enum Gui
 	PaddleShip
 	{
 		@Override
-		public Container getContainer( EntityPlayer player, World world, int x, int y, int z )
+		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new ContainerShip();
+			EntityShip ship = ShipLocator.getFromPlayerLocation( player );
+			if( ship == null )
+			{
+				return null;
+			}
+			return new GuiShipPilotPaddle( new ContainerShip(), ship, player );
 		}
-		
+	},
+	PilotSurfaceShip
+	{
 		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
@@ -63,7 +58,7 @@ public enum Gui
 			{
 				return null;
 			}
-			return new GuiShipPaddle( new ContainerShip(), ship, player );
+			return new GuiShipPilotSurface( new ContainerShip(), ship, player );
 		}
 	};
 	
@@ -72,6 +67,10 @@ public enum Gui
 		player.openGui( Ships.instance, ordinal(), world, x, y, z );
 	}
 	
-	public abstract Container getContainer( EntityPlayer player, World world, int x, int y, int z );
+	public Container getContainer( EntityPlayer player, World world, int x, int y, int z )
+	{
+		return new ContainerShip();
+	}
+	
 	public abstract GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z );
 }

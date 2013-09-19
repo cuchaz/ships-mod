@@ -2,17 +2,15 @@ package cuchaz.ships;
 
 public enum ShipType
 {
-	Raft( 1024, true, 3.0f );
+	Raft( 1024, true );
 	
 	private int m_maxNumBlocks;
 	private boolean m_isPaddleable;
-	private float m_maxRotationalSpeed;
 	
-	private ShipType( int maxNumBlocks, boolean isPaddleable, float maxRotationalSpeed )
+	private ShipType( int maxNumBlocks, boolean isPaddleable )
 	{
 		m_maxNumBlocks = maxNumBlocks;
 		m_isPaddleable = isPaddleable;
-		m_maxRotationalSpeed = maxRotationalSpeed;
 	}
 	
 	public int getMaxNumBlocks( )
@@ -23,10 +21,5 @@ public enum ShipType
 	public boolean isPaddleable( )
 	{
 		return m_isPaddleable;
-	}
-	
-	public float getMaxRotationalSpeed( )
-	{
-		return m_maxRotationalSpeed;
 	}
 }

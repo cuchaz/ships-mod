@@ -30,7 +30,6 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import cuchaz.modsShared.FMLHacker;
-import cuchaz.powerTools.TileEntityOilRefinery;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketChangedBlocks;

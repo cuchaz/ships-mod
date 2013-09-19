@@ -154,7 +154,7 @@ public class ShipPhysics
 		return m_equilibriumWaterHeight;
 	}
 	
-	public double getDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
+	public double getLinearDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
 	{
 		final double AirDragRate = 0.01;
 		final double WaterDragRate = 0.3;
@@ -175,6 +175,12 @@ public class ShipPhysics
 		
 		// compute the drag coefficient
 		return logisticFunction( speed, AirDragRate*airSurfaceArea + WaterDragRate*waterSurfaceArea );
+	}
+	
+	public double getAngularDragCoefficient( float motionYaw )
+	{
+		// UNDONE: find the constants for this
+		return logisticFunction( Math.abs( motionYaw ), 0.2 );
 	}
 	
 	private Double computeEquilibriumWaterHeight( )

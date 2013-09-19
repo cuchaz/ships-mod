@@ -27,9 +27,14 @@ public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 	{
 		RenderManager.instance.renderEngine.func_110577_a( Texture );
 		
+		// get the rotation angle from the block
+		int rotation = tileEntity.worldObj.getBlockMetadata( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
+		float angle = rotation*360.f/4.0f;
+		
 		GL11.glPushMatrix();
         GL11.glTranslatef( (float)x + 0.5f, (float)y + 1.5f, (float)z + 0.5f );
         GL11.glScalef( 1.0f, -1.0f, -1.0f );
+		GL11.glRotatef( angle, 0.0f, 1.0f, 0.0f );
 		m_model.renderAll();
 		GL11.glPopMatrix();
 	}

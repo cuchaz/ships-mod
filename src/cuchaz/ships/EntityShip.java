@@ -31,6 +31,8 @@ public class EntityShip extends Entity
 	private static final double RiderEpsilon = 0.2;
 	
 	public float motionYaw;
+	public double linearThrottle;
+	public float angularThrottle;
 	
 	private ShipWorld m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
@@ -40,6 +42,7 @@ public class EntityShip extends Entity
 	private double m_shipBlockY;
 	private double m_shipBlockZ;
 	private int m_pilotActions;
+	private int m_oldPilotActions;
 	private BlockSide m_sideShipForward;
 	private boolean m_hasInfoFromServer;
 	private double m_xFromServer;
@@ -57,6 +60,8 @@ public class EntityShip extends Entity
 		motionY = 0.0;
 		motionZ = 0.0;
 		motionYaw = 0.0f;
+		linearThrottle = 0.0;
+		angularThrottle = 0.0f;
 		
 		m_blocks = null;
 		m_blockEntities = null;
@@ -66,6 +71,7 @@ public class EntityShip extends Entity
 		m_shipBlockY = 0;
 		m_shipBlockZ = 0;
 		m_pilotActions = 0;
+		m_oldPilotActions = 0;
 		m_sideShipForward = null;
 		m_hasInfoFromServer = false;
 		m_xFromServer = 0;
@@ -229,6 +235,23 @@ public class EntityShip extends Entity
 	public EntityShipBlock getShipBlockEntity( )
 	{
 		return m_blockEntities.get( new ChunkCoordinates( 0, 0, 0 ) );
+	}
+	
+	public ChunkCoordinates getHelmCoords( )
+	{
+		// UNDONE: optimize this by setting the helm coords instead of searching for the helm
+		// could use the propulsion system for that
+		
+		// always return the direction the helm is facing
+		for( ChunkCoordinates coords : m_blocks.coords() )
+		{
+			if( m_blocks.getBlockId( coords ) == Ships.m_blockHelm.blockID )
+			{
+				return coords;
+			}
+		}
+		assert( false ) : "Unable to find helm! But this ship must have had a helm...";
+		return null;
 	}
 	
 	@Override
@@ -432,7 +455,7 @@ public class EntityShip extends Entity
 		// update the block entity bounds
 		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
 		{
-			
+			// UNDONE: fix bounds for doors and such
 		}
 	}
 	
@@ -604,27 +627,44 @@ public class EntityShip extends Entity
 	
 	private void adjustMotionDueToThrust( )
 	{
-		if( m_pilotActions == 0 )
+		// process pilot actions
+		PilotAction.resetShip( this, m_pilotActions, m_oldPilotActions );
+		PilotAction.applyToShip( this, m_pilotActions );
+		
+		// clamp the throttle
+		if( linearThrottle < -1 )
 		{
-			// just coast
+			linearThrottle = -1;
 		}
-		else
+		if( linearThrottle > 1 )
 		{
-			// full ahead, captain!!
-			PilotAction.applyToShip( this, m_pilotActions, m_sideShipForward );
-			
-			// apply max rotational speed too
-			if( Math.abs( motionYaw ) > getShipType().getMaxRotationalSpeed() )
-			{
-				motionYaw = Math.signum( motionYaw )*getShipType().getMaxRotationalSpeed();
-			}
+			linearThrottle = 1;
 		}
+		
+		// apply the thrust
+
+		// UNDONE: determine accelerations based on physics and propulsion
+		double linearAcceleration = 0.02 * linearThrottle;
+		double angularAcceleration = 1.0 * angularThrottle;
+		
+		// apply the linear acceleration
+		if( m_sideShipForward != null )
+		{
+			float yawRad = (float)Math.toRadians( rotationYaw );
+			float cos = MathHelper.cos( yawRad );
+			float sin = MathHelper.sin( yawRad );
+			double dx = m_sideShipForward.getDx()*cos + m_sideShipForward.getDz()*sin;
+			double dz = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
+			motionX += dx*linearAcceleration;
+			motionZ += dz*linearAcceleration;
+		}
+		
+		// apply the angular acceleration
+		motionYaw += angularAcceleration;
 	}
 	
 	private void adjustMotionDueToDrag( double waterHeight )
 	{
-		final float RotationalDrag = 0.5f;
-		
 		// which side (relative to the ship) are we headed?
 		Vec3 motion = Vec3.createVectorHelper( motionX, motionY, motionZ );
 		worldToShipDirection( motion );
@@ -642,21 +682,16 @@ public class EntityShip extends Entity
 		assert( bestSide != null );
 		
 		// apply the position drag
-		double drag = m_physics.getDragCoefficient( waterHeight, motionX, motionY, motionZ, bestSide, m_blocks.getGeometry().getEnvelopes() );
+		double drag = m_physics.getLinearDragCoefficient( waterHeight, motionX, motionY, motionZ, bestSide, m_blocks.getGeometry().getEnvelopes() );
 		double omdrag = 1.0 - drag;
 		motionX *= omdrag;
 		motionY *= omdrag;
 		motionZ *= omdrag;
 		
 		// apply rotational drag
-		if( (float)Math.abs( motionYaw ) > RotationalDrag )
-		{
-			motionYaw -= Math.signum( motionYaw )*RotationalDrag;
-		}
-		else
-		{
-			motionYaw = 0;
-		}
+		drag = m_physics.getAngularDragCoefficient( motionYaw );
+		omdrag = 1.0 - drag;
+		motionYaw *= omdrag;
 	}
 	
 	private void adjustMotionDueToBlockCollisions( )
@@ -1131,6 +1166,7 @@ public class EntityShip extends Entity
 	
 	public void setPilotActions( int actions, BlockSide sideShipForward )
 	{
+		m_oldPilotActions = m_pilotActions;
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
 	}
