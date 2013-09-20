@@ -1,5 +1,7 @@
 package cuchaz.ships.gui;
 
+import java.util.List;
+
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -17,49 +19,81 @@ import cuchaz.ships.EntityShipBlock;
 import cuchaz.ships.PilotAction;
 import cuchaz.ships.packets.PacketPilotShip;
 
-public class GuiShipPaddle extends GuiCloseable
+public abstract class GuiShipPilot extends GuiCloseable
 {
+	protected static enum ForwardSideMethod
+	{
+		ByPlayerLook
+		{
+			@Override
+			public BlockSide compute( EntityShip ship, EntityPlayer player )
+			{
+				EntityShipBlock targetBlock = ship.getShipBlockEntity();
+				
+				// which xz side is facing the player?
+				// get a vector from the block to the player
+				Vec3 direction = Vec3.createVectorHelper(
+					player.posX - targetBlock.posX,
+					0,
+					player.posZ - targetBlock.posZ
+				);
+				ship.worldToShipDirection( direction );
+				
+				// find the side whose inverted normal vector best matches the vector to the player
+				double maxDot = Double.NEGATIVE_INFINITY;
+				BlockSide sideShipForward = null;
+				for( BlockSide side : BlockSide.xzSides() )
+				{
+					double dot = -side.getDx()*direction.xCoord + -side.getDz()*direction.zCoord;
+					if( dot > maxDot )
+					{
+						maxDot = dot;
+						sideShipForward = side;
+					}
+				}
+				return sideShipForward;
+			}
+		},
+		ByHelm
+		{
+			@Override
+			public BlockSide compute( EntityShip ship, EntityPlayer player )
+			{
+				int helmRotation = ship.getBlocks().getBlockMetadata( ship.getHelmCoords() );
+				return BlockSide.getByXZOffset( helmRotation );
+			}
+		};
+		
+		public abstract BlockSide compute( EntityShip ship, EntityPlayer player );
+	}
+	
 	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/shipPaddle.png" );
 	private static final int TextureWidth = 128;
 	private static final int TextureHeight = 32;
 	
 	private EntityShip m_ship;
-	private BlockSide m_sideShipForward;
+	private List<PilotAction> m_allowedActions;
 	private int m_lastActions;
+	private BlockSide m_forwardSide;
 	
-	public GuiShipPaddle( Container container, EntityShip ship, EntityPlayer player )
+	public GuiShipPilot( Container container, EntityShip ship, EntityPlayer player, List<PilotAction> allowedActions, ForwardSideMethod forwardSideMethod )
 	{
 		super( container );
 		
 		m_ship = ship;
+		m_allowedActions = allowedActions;
 		m_lastActions = 0;
-		
-		xSize = 110;
-		ySize = 25;
-		
-		// which xz side is facing the player?
-		EntityShipBlock shipBlock = ship.getShipBlockEntity();
-		
-		// get a vector from the block to the player
-		Vec3 direction = Vec3.createVectorHelper(
-			player.posX - shipBlock.posX,
-			0,
-			player.posZ - shipBlock.posZ
-		);
-		ship.worldToShipDirection( direction );
-		
-		// find the side whose inverted normal vector best matches the vector to the player
-		double maxDot = Double.NEGATIVE_INFINITY;
-		m_sideShipForward = null;
-		for( BlockSide side : BlockSide.xzSides() )
-		{
-			double dot = -side.getDx()*direction.xCoord + -side.getDz()*direction.zCoord;
-			if( dot > maxDot )
-			{
-				maxDot = dot;
-				m_sideShipForward = side;
-			}
-		}
+		m_forwardSide = forwardSideMethod.compute( ship, player );
+	}
+	
+	protected EntityShip getShip( )
+	{
+		return m_ship;
+	}
+	
+	protected BlockSide getForwardSide( )
+	{
+		return m_forwardSide;
 	}
 	
 	@Override
@@ -124,7 +158,7 @@ public class GuiShipPaddle extends GuiCloseable
 	public void updateScreen( )
 	{
 		// get the actions, if any
-		int actions = PilotAction.getActiveActions( mc.gameSettings );
+		int actions = PilotAction.getActiveActions( mc.gameSettings, m_allowedActions );
 		
 		if( actions != m_lastActions )
 		{
@@ -154,10 +188,10 @@ public class GuiShipPaddle extends GuiCloseable
 	private void applyActions( int actions )
 	{
 		// send a packet to the server
-		PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, actions, m_sideShipForward );
+		PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, actions, m_forwardSide );
 		PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 		
 		// and apply locally
-		m_ship.setPilotActions( actions, m_sideShipForward );
+		m_ship.setPilotActions( actions, m_forwardSide );
 	}
 }

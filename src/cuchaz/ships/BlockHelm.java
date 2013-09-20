@@ -1,13 +1,18 @@
 package cuchaz.ships;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.BlockSide;
+import cuchaz.ships.gui.Gui;
 
 public class BlockHelm extends Block
 {
@@ -58,4 +63,26 @@ public class BlockHelm extends Block
     {
         this.blockIcon = iconRegister.registerIcon( "ships:helm" );
     }
+	
+	@Override
+	public void onBlockPlacedBy( World world, int x, int y, int z, EntityLivingBase entityUser, ItemStack itemStack )
+    {
+		// save the block rotation to the metadata
+		world.setBlockMetadataWithNotify( x, y, z, BlockSide.getByYaw( entityUser.rotationYaw ).getXZOffset(), 3 );
+    }
+	
+	@Override
+	public boolean onBlockActivated( World world, int x, int y, int z, EntityPlayer player, int side, float xOffset, float yOffset, float zOffset )
+	{
+		// are we in the world, or on the ship?
+		if( world instanceof ShipWorld )
+		{
+			Gui.PilotSurfaceShip.open( player, world, x, y, z );
+		}
+		else
+		{
+			//Gui.ShipPropulsion.open( player, world, x, y, z );
+		}
+		return true;
+	}
 }
