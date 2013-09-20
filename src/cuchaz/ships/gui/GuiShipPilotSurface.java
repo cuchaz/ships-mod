@@ -10,7 +10,6 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
@@ -31,9 +30,16 @@ public class GuiShipPilotSurface extends GuiShipPilot
 	private static final int CompassMarkerY = 31;
 	private static final int CompassMarkerWidth = 3;
 	private static final int CompassMarkerHeight = 4;
-	private static final int ThrottleHeight = 7; // UNDONE: check these!
-	private static final int ThrottleX = 9;
-	private static final int ThrottleY = 31;
+	private static final int CompassRangeX = 8;
+	private static final int CompassRangeY = 39;
+	private static final int CompassRangeWidth = 16;
+	private static final int ThrottleX = 8;
+	private static final int ThrottleY = 26;
+	private static final int ThrottleZero = 12;
+	private static final int ThrottleWidth = 37;
+	private static final int ThrottleHeight = 12;
+	private static final int ThrottleFrameX = 8;
+	private static final int ThrottleFrameY = 6;
 	
 	public GuiShipPilotSurface( Container container, EntityShip ship, EntityPlayer player )
 	{
@@ -67,23 +73,34 @@ public class GuiShipPilotSurface extends GuiShipPilot
 		
 		loadTexture();
 		
-		// determine the compass offset
-		double compassOffset = (double)getForwardSide().getXZOffset()/4
-			- CircleRange.mapZeroTo360( getShip().rotationYaw )/360.0f
-			+ (double)CompassNorthOffset/TextureWidth
-			- (double)CompassFrameWidth/2/TextureWidth;
+		// determine the compass offsets
+		double shipDirectionOffset = (double)getForwardSide().getXZOffset()/4;
+		double shipYawOffset = CircleRange.mapZeroTo360( getShip().rotationYaw )/360.0f;
+		double compassFrameOffset = (double)CompassFrameWidth/2/TextureWidth;
 		
 		Tessellator tessellator = Tessellator.instance;
 		tessellator.startDrawingQuads();
 		double z = zLevel;
 		
 		// draw the compass
-		double umin = compassOffset;
-		double umax = compassOffset + (double)CompassFrameWidth/TextureWidth;
+		double umin = (double)CompassNorthOffset/TextureWidth + shipDirectionOffset - shipYawOffset - compassFrameOffset;
+		double umax = umin + (double)CompassFrameWidth/TextureWidth;
 		double vmin = (double)CompassY/TextureHeight;
 		double vmax = 1;
 		double x = CompassFrameX;
 		double y = CompassFrameY;
+		tessellator.addVertexWithUV( x,                     y + CompassHeight, z, umin, vmax );
+		tessellator.addVertexWithUV( x + CompassFrameWidth, y + CompassHeight, z, umax, vmax );
+		tessellator.addVertexWithUV( x + CompassFrameWidth, y,                 z, umax, vmin );
+		tessellator.addVertexWithUV( x,                     y,                 z, umin, vmin );
+		
+		// draw the compass range
+		umin = (double)( CompassRangeX + CompassRangeWidth/2 )/TextureWidth - shipYawOffset - compassFrameOffset;
+		umax = umin + (double)CompassFrameWidth/TextureWidth;
+		vmin = (double)CompassRangeY/TextureHeight;
+		vmax = vmin + (double)CompassHeight/TextureHeight;
+		x = CompassFrameX;
+		y = CompassFrameY;
 		tessellator.addVertexWithUV( x,                     y + CompassHeight, z, umin, vmax );
 		tessellator.addVertexWithUV( x + CompassFrameWidth, y + CompassHeight, z, umax, vmax );
 		tessellator.addVertexWithUV( x + CompassFrameWidth, y,                 z, umax, vmin );
@@ -101,12 +118,36 @@ public class GuiShipPilotSurface extends GuiShipPilot
 		tessellator.addVertexWithUV( x + CompassMarkerWidth, y,                       z, umax, vmin );
 		tessellator.addVertexWithUV( x,                      y,                       z, umin, vmin );
 		
-		// UNDONE: draw the throttle
+		// draw the throttle
 		if( getShip().linearThrottle > 0 )
 		{
+			double fullWidth = ThrottleWidth - ( ThrottleZero - ThrottleX ) - 1;
+			double throttleWidth = getShip().linearThrottle/EntityShip.ThrottleMax*fullWidth;
+			umin = (double)( ThrottleZero + 1 )/TextureWidth;
+			umax = umin + (double)throttleWidth/TextureWidth;
+			vmin = (double)ThrottleY/TextureHeight;
+			vmax = vmin + (double)ThrottleHeight/TextureHeight;
+			x = ThrottleFrameX + ( ThrottleZero - ThrottleX ) + 1;
+			y = ThrottleFrameY;
+			tessellator.addVertexWithUV( x,                 y + ThrottleHeight, z, umin, vmax );
+			tessellator.addVertexWithUV( x + throttleWidth, y + ThrottleHeight, z, umax, vmax );
+			tessellator.addVertexWithUV( x + throttleWidth, y,                  z, umax, vmin );
+			tessellator.addVertexWithUV( x,                 y,                  z, umin, vmin );
 		}
 		else if( getShip().linearThrottle < 0 )
 		{
+			double fullWidth = ThrottleZero - ThrottleX;
+			double throttleWidth = getShip().linearThrottle/EntityShip.ThrottleMin*fullWidth;
+			umax = (double)( ThrottleZero - 1 )/TextureWidth;
+			umin = umax - (double)( throttleWidth - 1 )/TextureWidth;
+			vmin = (double)ThrottleY/TextureHeight;
+			vmax = vmin + (double)ThrottleHeight/TextureHeight;
+			x = ThrottleFrameX + fullWidth - throttleWidth;
+			y = ThrottleFrameY;
+			tessellator.addVertexWithUV( x,                 y + ThrottleHeight, z, umin, vmax );
+			tessellator.addVertexWithUV( x + throttleWidth, y + ThrottleHeight, z, umax, vmax );
+			tessellator.addVertexWithUV( x + throttleWidth, y,                  z, umax, vmin );
+			tessellator.addVertexWithUV( x,                 y,                  z, umin, vmin );
 		}
 		
 		tessellator.draw();

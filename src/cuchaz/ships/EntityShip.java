@@ -23,6 +23,10 @@ import cuchaz.modsShared.RotatedBB;
 
 public class EntityShip extends Entity
 {
+	public static final float ThrottleMax = 1.0f;
+	public static final float ThrottleMin = -0.25f;
+	public static final float ThrottleStep = 0.02f;
+	
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdShipType = 3;
@@ -637,16 +641,20 @@ public class EntityShip extends Entity
 		// process pilot actions
 		PilotAction.resetShip( this, m_pilotActions, m_oldPilotActions );
 		PilotAction.applyToShip( this, m_pilotActions );
+		m_oldPilotActions = m_pilotActions;
 		
 		// clamp the throttle
-		if( linearThrottle < -1 )
+		if( linearThrottle < ThrottleMin )
 		{
-			linearThrottle = -1;
+			linearThrottle = ThrottleMin;
 		}
-		if( linearThrottle > 1 )
+		if( linearThrottle > ThrottleMax )
 		{
-			linearThrottle = 1;
+			linearThrottle = ThrottleMax;
 		}
+		
+		// UNDONE: throttle desyncs between client and server
+		// client says zero, and server says non-zero, s the ship keeps inching along even though it should be stopped
 		
 		// apply the thrust
 
@@ -1173,7 +1181,6 @@ public class EntityShip extends Entity
 	
 	public void setPilotActions( int actions, BlockSide sideShipForward )
 	{
-		m_oldPilotActions = m_pilotActions;
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
 	}

@@ -16,7 +16,7 @@ public enum GuiString
 	ShipHasAirAbove( "Ship has air above" ),
 	ShipFoundWaterHeight( "Found water surface" ),
 	ShipWillItFloat( "Will it float" ),
-	ShipAlignedToDirection( "Aligned to NSEW" ),
+	ShipAlignedToDirection( "Aligned to launch direction" ),
 	ShipAwayFromBlocks( "Away from solid blocks" );
 	
 	private String m_unlocalizedText;

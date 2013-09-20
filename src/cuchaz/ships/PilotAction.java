@@ -66,19 +66,68 @@ public enum PilotAction
 	},
 	ThrottleUp
 	{
+		private boolean m_isForwardAllowed = true;
+		
 		@Override
 		public void applyToShip( EntityShip ship )
 		{
-			// UNDONE: make the throttle "sticky" around 0
-			ship.linearThrottle += 0.01;
+			if( ship.linearThrottle < 0 )
+			{
+				// add a backstop so we stop at zero throttle
+				m_isForwardAllowed = false;
+			}
+			
+			if( ( ship.linearThrottle < 0 ) || ( ship.linearThrottle == 0 && m_isForwardAllowed ) || ( ship.linearThrottle > 0 ) )
+			{
+				// increase the throttle, but make sure we stop at zero
+				if( ship.linearThrottle < 0 && ship.linearThrottle > -EntityShip.ThrottleStep )
+				{
+					ship.linearThrottle = 0;
+				}
+				else
+				{
+					ship.linearThrottle += EntityShip.ThrottleStep;
+				}
+			}
+		}
+		
+		@Override
+		public void resetShip( EntityShip ship )
+		{
+			m_isForwardAllowed = true;
 		}
 	},
 	ThrottleDown
 	{
+		private boolean m_isReverseAllowed = true;
+		
 		@Override
 		public void applyToShip( EntityShip ship )
 		{
-			ship.linearThrottle -= 0.01;
+			if( ship.linearThrottle > 0 )
+			{
+				// add a backstop so we stop at zero throttle
+				m_isReverseAllowed = false;
+			}
+			
+			if( ( ship.linearThrottle > 0 ) || ( ship.linearThrottle == 0 && m_isReverseAllowed ) || ( ship.linearThrottle < 0 ) )
+			{
+				// decrease the throttle, but make sure we stop at zero
+				if( ship.linearThrottle > 0 && ship.linearThrottle < EntityShip.ThrottleStep )
+				{
+					ship.linearThrottle = 0;
+				}
+				else
+				{
+					ship.linearThrottle -= EntityShip.ThrottleStep;
+				}
+			}
+		}
+		
+		@Override
+		public void resetShip( EntityShip ship )
+		{
+			m_isReverseAllowed = true;
 		}
 	};
 	

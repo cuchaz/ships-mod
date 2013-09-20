@@ -24,14 +24,8 @@ public class ShipUnlauncher
 			@Override
 			public boolean computeValue( ShipUnlauncher unlauncher )
 			{
-				// NOTE: math on circles is hard. Use the CircleRange class
-				// get the min distance to {0,90,180,270}
-				double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( unlauncher.m_ship.rotationYaw ) );
-				double snappedYaw = (int)( yaw/Math.PI*2 + 0.5 )*Math.PI/2.0;
-				float dist = (float)CircleRange.newByShortSegment( yaw, snappedYaw ).getLength();
-				
-				// must be within 10 degrees
-				return dist < Math.toRadians( 10 );
+				// the yaw has to be within 10 degrees of zero
+				return Math.abs( MathHelper.wrapAngleTo180_float( unlauncher.m_ship.rotationYaw ) ) < 10.0;
 			}
 		},
 		TouchingOnlySeparatorBlocks
