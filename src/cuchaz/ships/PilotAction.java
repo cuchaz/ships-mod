@@ -13,7 +13,7 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship )
 		{
-			ship.linearThrottle = 1;
+			ship.linearThrottle = EntityShip.LinearThrottleMax;
 		}
 		
 		@Override
@@ -27,7 +27,7 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship )
 		{
-			ship.linearThrottle = -1;
+			ship.linearThrottle = EntityShip.LinearThrottleMin;
 		}
 		
 		@Override
@@ -41,7 +41,7 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship )
 		{
-			ship.angularThrottle = 1;
+			ship.angularThrottle = EntityShip.AngularThrottleMax;
 		}
 
 		@Override
@@ -55,7 +55,7 @@ public enum PilotAction
 		@Override
 		public void applyToShip( EntityShip ship )
 		{
-			ship.angularThrottle = -1;
+			ship.angularThrottle = EntityShip.AngularThrottleMin;
 		}
 		
 		@Override
@@ -80,13 +80,13 @@ public enum PilotAction
 			if( ( ship.linearThrottle < 0 ) || ( ship.linearThrottle == 0 && m_isForwardAllowed ) || ( ship.linearThrottle > 0 ) )
 			{
 				// increase the throttle, but make sure we stop at zero
-				if( ship.linearThrottle < 0 && ship.linearThrottle > -EntityShip.ThrottleStep )
+				if( ship.linearThrottle < 0 && ship.linearThrottle > -EntityShip.LinearThrottleStep )
 				{
 					ship.linearThrottle = 0;
 				}
 				else
 				{
-					ship.linearThrottle += EntityShip.ThrottleStep;
+					ship.linearThrottle += EntityShip.LinearThrottleStep;
 				}
 			}
 		}
@@ -113,13 +113,13 @@ public enum PilotAction
 			if( ( ship.linearThrottle > 0 ) || ( ship.linearThrottle == 0 && m_isReverseAllowed ) || ( ship.linearThrottle < 0 ) )
 			{
 				// decrease the throttle, but make sure we stop at zero
-				if( ship.linearThrottle > 0 && ship.linearThrottle < EntityShip.ThrottleStep )
+				if( ship.linearThrottle > 0 && ship.linearThrottle < EntityShip.LinearThrottleStep )
 				{
 					ship.linearThrottle = 0;
 				}
 				else
 				{
-					ship.linearThrottle -= EntityShip.ThrottleStep;
+					ship.linearThrottle -= EntityShip.LinearThrottleStep;
 				}
 			}
 		}

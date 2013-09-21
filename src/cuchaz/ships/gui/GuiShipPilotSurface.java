@@ -122,7 +122,7 @@ public class GuiShipPilotSurface extends GuiShipPilot
 		if( getShip().linearThrottle > 0 )
 		{
 			double fullWidth = ThrottleWidth - ( ThrottleZero - ThrottleX ) - 1;
-			double throttleWidth = getShip().linearThrottle/EntityShip.ThrottleMax*fullWidth;
+			double throttleWidth = fullWidth*getShip().linearThrottle/EntityShip.LinearThrottleMax;
 			umin = (double)( ThrottleZero + 1 )/TextureWidth;
 			umax = umin + (double)throttleWidth/TextureWidth;
 			vmin = (double)ThrottleY/TextureHeight;
@@ -137,7 +137,7 @@ public class GuiShipPilotSurface extends GuiShipPilot
 		else if( getShip().linearThrottle < 0 )
 		{
 			double fullWidth = ThrottleZero - ThrottleX;
-			double throttleWidth = getShip().linearThrottle/EntityShip.ThrottleMin*fullWidth;
+			double throttleWidth = fullWidth*getShip().linearThrottle/EntityShip.LinearThrottleMin;
 			umax = (double)( ThrottleZero - 1 )/TextureWidth;
 			umin = umax - (double)( throttleWidth - 1 )/TextureWidth;
 			vmin = (double)ThrottleY/TextureHeight;

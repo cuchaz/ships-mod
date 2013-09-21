@@ -50,15 +50,18 @@ public class RenderShip extends Render
 	
 	public void doRender( EntityShip ship, double x, double y, double z, float yaw, float partialTickTime )
 	{
+		// NOTE: (x,y,z) is the vector from the eye to the entity origin
+		// ie x = ship.posX - player.posX
+		
 		m_renderBlocks.blockAccess = ship.getBlocks();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslated( x, y, z );
-		GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
+		GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 		RenderHelper.disableStandardItemLighting();
 		
-		/* UNDONE: unable frustum optimizations if they actually help
+		/* UNDONE: enable frustum optimizations if they actually help
 		// create the viewing frustum
 		EntityLivingBase viewEntity = Minecraft.getMinecraft().renderViewEntity;
 		Vec3 v = Vec3.createVectorHelper(

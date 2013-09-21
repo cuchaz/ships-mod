@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import cpw.mods.fml.common.network.PacketDispatcher;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
@@ -20,23 +22,26 @@ import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
+import cuchaz.ships.packets.PacketPilotShip;
 
 public class EntityShip extends Entity
 {
-	public static final int ThrottleMax = 100;
-	public static final int ThrottleMin = -25;
-	public static final int ThrottleStep = 2;
+	public static final int LinearThrottleMax = 100;
+	public static final int LinearThrottleMin = -25;
+	public static final int LinearThrottleStep = 2;
+	public static final int AngularThrottleMax = 1;
+	public static final int AngularThrottleMin = -1;
 	
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdShipType = 3;
 	private static final int WatcherIdWaterHeight = 4;
-	private static final int WatcherIdLinearThrottle = 5;
-	private static final int WatcherIdAngularThrottle = 6;
 	
 	private static final double RiderEpsilon = 0.2;
 	
 	public float motionYaw;
+	public int linearThrottle;
+	public int angularThrottle;
 	
 	private ShipWorld m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
@@ -48,6 +53,7 @@ public class EntityShip extends Entity
 	private int m_pilotActions;
 	private int m_oldPilotActions;
 	private BlockSide m_sideShipForward;
+	private boolean m_sendPilotChangesToServer;
 	private boolean m_hasInfoFromServer;
 	private double m_xFromServer;
 	private double m_yFromServer;
@@ -64,6 +70,8 @@ public class EntityShip extends Entity
 		motionY = 0.0;
 		motionZ = 0.0;
 		motionYaw = 0.0f;
+		linearThrottle = 0;
+		angularThrottle = 0;
 		
 		m_blocks = null;
 		m_blockEntities = null;
@@ -75,6 +83,7 @@ public class EntityShip extends Entity
 		m_pilotActions = 0;
 		m_oldPilotActions = 0;
 		m_sideShipForward = null;
+		m_sendPilotChangesToServer = false;
 		m_hasInfoFromServer = false;
 		m_xFromServer = 0;
 		m_yFromServer = 0;
@@ -94,8 +103,6 @@ public class EntityShip extends Entity
 		dataWatcher.addObject( WatcherIdBlocks, "" );
 		dataWatcher.addObject( WatcherIdShipType, 0 );
 		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
-		dataWatcher.addObject( WatcherIdLinearThrottle, 0 );
-		dataWatcher.addObject( WatcherIdAngularThrottle, 0 );
 	}
 	
 	public void setBlocks( ShipWorld blocks )
@@ -223,24 +230,6 @@ public class EntityShip extends Entity
 	public void setWaterHeight( int val )
 	{
 		dataWatcher.updateObject( WatcherIdWaterHeight, val );
-	}
-	
-	public int getThrottleLinear( )
-	{
-		return dataWatcher.getWatchableObjectByte( WatcherIdLinearThrottle );
-	}
-	public void setThrottleLinear( int val )
-	{
-		dataWatcher.updateObject( WatcherIdLinearThrottle, val );
-	}
-	
-	public int getThrottleAngular( )
-	{
-		return dataWatcher.getWatchableObjectByte( WatcherIdAngularThrottle );
-	}
-	public void setThrottleAngular( int val )
-	{
-		dataWatcher.updateObject( WatcherIdAngularThrottle, val );
 	}
 	
 	@Override
@@ -655,24 +644,28 @@ public class EntityShip extends Entity
 		m_oldPilotActions = m_pilotActions;
 		
 		// clamp the throttle
-		if( linearThrottle < ThrottleMin )
+		if( linearThrottle < LinearThrottleMin )
 		{
-			linearThrottle = ThrottleMin;
+			linearThrottle = LinearThrottleMin;
 		}
-		if( linearThrottle > ThrottleMax )
+		if( linearThrottle > LinearThrottleMax )
 		{
-			linearThrottle = ThrottleMax;
+			linearThrottle = LinearThrottleMax;
 		}
 		
-		// UNDONE: throttle desyncs between client and server
-		// client says zero, and server says non-zero, s the ship keeps inching along even though it should be stopped
-		System.out.println( String.format( "%s throttle: %.2f", worldObj.isRemote ? "CLIENT" : "SERVER", linearThrottle ) );
+		if( m_sendPilotChangesToServer )
+		{
+			// send a packet to the server
+			PacketPilotShip packet = new PacketPilotShip( entityId, m_pilotActions, m_sideShipForward, linearThrottle, angularThrottle );
+			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+			m_sendPilotChangesToServer = false;
+		}
 		
 		// apply the thrust
-
+		
 		// UNDONE: determine accelerations based on physics and propulsion
-		double linearAcceleration = 0.02 * linearThrottle;
-		double angularAcceleration = 1.0 * angularThrottle;
+		double linearAcceleration = 0.02*linearThrottle/LinearThrottleMax;
+		double angularAcceleration = 1.0*angularThrottle/AngularThrottleMax;
 		
 		// apply the linear acceleration
 		if( m_sideShipForward != null )
@@ -1191,10 +1184,11 @@ public class EntityShip extends Entity
 		}
 	}
 	
-	public void setPilotActions( int actions, BlockSide sideShipForward )
+	public void setPilotActions( int actions, BlockSide sideShipForward, boolean sendPilotChangesToServer )
 	{
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
+		m_sendPilotChangesToServer = sendPilotChangesToServer;
 		
 		// TEMP: show the actions
 		StringBuilder buf = new StringBuilder();

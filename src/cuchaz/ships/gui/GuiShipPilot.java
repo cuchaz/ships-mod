@@ -11,13 +11,11 @@ import net.minecraft.util.Vec3;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.EntityShipBlock;
 import cuchaz.ships.PilotAction;
-import cuchaz.ships.packets.PacketPilotShip;
 
 public abstract class GuiShipPilot extends GuiCloseable
 {
@@ -187,11 +185,6 @@ public abstract class GuiShipPilot extends GuiCloseable
 	
 	private void applyActions( int actions )
 	{
-		// send a packet to the server
-		PacketPilotShip packet = new PacketPilotShip( m_ship.entityId, actions, m_forwardSide );
-		PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
-		
-		// and apply locally
-		m_ship.setPilotActions( actions, m_forwardSide );
+		m_ship.setPilotActions( actions, m_forwardSide, true );
 	}
 }
