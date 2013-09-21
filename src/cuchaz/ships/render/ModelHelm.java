@@ -30,14 +30,14 @@ public class ModelHelm extends ModelBase
 	private ModelRenderer StandBackCore;
 	private ModelRenderer Box;
 	
-	private float m_wheelRotationRads;
+	private float m_wheelAngleRadians;
 	
 	public ModelHelm( )
 	{
 		textureWidth = 64;
 		textureHeight = 32;
 		
-		m_wheelRotationRads = 0.0f;
+		m_wheelAngleRadians = 0.0f;
 		
 		Shaft = new ModelRenderer( this, 13, 0 );
 		Shaft.addBox( -0.5F, -0.5F, 1F, 1, 1, 6 );
@@ -50,61 +50,51 @@ public class ModelHelm extends ModelBase
 		Core.setRotationPoint( 0F, 13F, -4F );
 		Core.setTextureSize( 64, 32 );
 		Core.mirror = true;
-		setRotation( Core, 0F, 0F, m_wheelRotationRads + 0F );
 		Spoke1 = new ModelRenderer( this, 0, 0 );
 		Spoke1.addBox( -0.5F, -8F, -0.5F, 1, 16, 1 );
 		Spoke1.setRotationPoint( 0F, 13F, -4F );
 		Spoke1.setTextureSize( 64, 32 );
 		Spoke1.mirror = true;
-		setRotation( Spoke1, 0F, 0F, m_wheelRotationRads + 0F );
 		Spoke2 = new ModelRenderer( this, 0, 0 );
 		Spoke2.addBox( -0.5F, -8F, -0.5F, 1, 16, 1 );
 		Spoke2.setRotationPoint( 0F, 13F, -4F );
 		Spoke2.setTextureSize( 64, 32 );
 		Spoke2.mirror = true;
-		setRotation( Spoke2, 0F, 0F, m_wheelRotationRads + 2.094395F );
 		Spoke3 = new ModelRenderer( this, 0, 0 );
 		Spoke3.addBox( -0.5F, -8F, -0.5F, 1, 16, 1 );
 		Spoke3.setRotationPoint( 0F, 13F, -4F );
 		Spoke3.setTextureSize( 64, 32 );
 		Spoke3.mirror = true;
-		setRotation( Spoke3, 0F, 0F, m_wheelRotationRads + -2.094395F );
 		Strut1 = new ModelRenderer( this, 5, 0 );
 		Strut1.addBox( 5F, -3.5F, -1F, 1, 7, 2 );
 		Strut1.setRotationPoint( 0F, 13F, -4F );
 		Strut1.setTextureSize( 64, 32 );
 		Strut1.mirror = true;
-		setRotation( Strut1, 0F, 0F, m_wheelRotationRads + 0F );
 		Strut2 = new ModelRenderer( this, 5, 0 );
 		Strut2.addBox( 5F, -3.5F, -1F, 1, 7, 2 );
 		Strut2.setRotationPoint( 0F, 13F, -4F );
 		Strut2.setTextureSize( 64, 32 );
 		Strut2.mirror = true;
-		setRotation( Strut2, 0F, 0F, m_wheelRotationRads + 1.047198F );
 		Strut3 = new ModelRenderer( this, 5, 0 );
 		Strut3.addBox( 5F, -3.5F, -1F, 1, 7, 2 );
 		Strut3.setRotationPoint( 0F, 13F, -4F );
 		Strut3.setTextureSize( 64, 32 );
 		Strut3.mirror = true;
-		setRotation( Strut3, 0F, 0F, m_wheelRotationRads + 2.094395F );
 		Strut4 = new ModelRenderer( this, 5, 0 );
 		Strut4.addBox( 5F, -3.5F, -1F, 1, 7, 2 );
 		Strut4.setRotationPoint( 0F, 13F, -4F );
 		Strut4.setTextureSize( 64, 32 );
 		Strut4.mirror = true;
-		setRotation( Strut4, 0F, 0F, m_wheelRotationRads + 3.141593F );
 		Strut5 = new ModelRenderer( this, 5, 0 );
 		Strut5.addBox( 5F, -3.5F, -1F, 1, 7, 2 );
 		Strut5.setRotationPoint( 0F, 13F, -4F );
 		Strut5.setTextureSize( 64, 32 );
 		Strut5.mirror = true;
-		setRotation( Strut5, 0F, 0F, m_wheelRotationRads + -2.094395F );
 		Strut6 = new ModelRenderer( this, 5, 0 );
 		Strut6.addBox( 5F, -3.5F, -1F, 1, 7, 2 );
 		Strut6.setRotationPoint( 0F, 13F, -4F );
 		Strut6.setTextureSize( 64, 32 );
 		Strut6.mirror = true;
-		setRotation( Strut6, 0F, 0F, m_wheelRotationRads + -1.047198F );
 		StandFront1 = new ModelRenderer( this, 0, 29 );
 		StandFront1.addBox( -1F, -1F, -0.5F, 12, 2, 1 );
 		StandFront1.setRotationPoint( 0F, 13F, -1F );
@@ -163,6 +153,18 @@ public class ModelHelm extends ModelBase
 	
 	public void renderAll( )
 	{
+		// update the rotations
+		setRotation( Core, 0F, 0F, m_wheelAngleRadians + 0F );
+		setRotation( Spoke1, 0F, 0F, m_wheelAngleRadians + 0F );
+		setRotation( Spoke2, 0F, 0F, m_wheelAngleRadians + 2.094395F );
+		setRotation( Spoke3, 0F, 0F, m_wheelAngleRadians + -2.094395F );
+		setRotation( Strut1, 0F, 0F, m_wheelAngleRadians + 0F );
+		setRotation( Strut2, 0F, 0F, m_wheelAngleRadians + 1.047198F );
+		setRotation( Strut3, 0F, 0F, m_wheelAngleRadians + 2.094395F );
+		setRotation( Strut4, 0F, 0F, m_wheelAngleRadians + 3.141593F );
+		setRotation( Strut5, 0F, 0F, m_wheelAngleRadians + -2.094395F );
+		setRotation( Strut6, 0F, 0F, m_wheelAngleRadians + -1.047198F );
+		
 		// scale from model space to world space
 		float scaleFactor = 1/16.0f;
 		
@@ -193,5 +195,12 @@ public class ModelHelm extends ModelBase
 		model.rotateAngleX = x;
 		model.rotateAngleY = y;
 		model.rotateAngleZ = z;
+	}
+	
+	public void setWheelAngle( float angleDegrees )
+	{
+		// convert to radians
+		// why some of minecraft uses degress and some of minecraft uses radians, I will never know...
+		m_wheelAngleRadians = (float)Math.toRadians( angleDegrees );
 	}
 }

@@ -23,20 +23,20 @@ import cuchaz.modsShared.RotatedBB;
 
 public class EntityShip extends Entity
 {
-	public static final float ThrottleMax = 1.0f;
-	public static final float ThrottleMin = -0.25f;
-	public static final float ThrottleStep = 0.02f;
+	public static final int ThrottleMax = 100;
+	public static final int ThrottleMin = -25;
+	public static final int ThrottleStep = 2;
 	
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdShipType = 3;
 	private static final int WatcherIdWaterHeight = 4;
+	private static final int WatcherIdLinearThrottle = 5;
+	private static final int WatcherIdAngularThrottle = 6;
 	
 	private static final double RiderEpsilon = 0.2;
 	
 	public float motionYaw;
-	public double linearThrottle;
-	public float angularThrottle;
 	
 	private ShipWorld m_blocks;
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
@@ -64,8 +64,6 @@ public class EntityShip extends Entity
 		motionY = 0.0;
 		motionZ = 0.0;
 		motionYaw = 0.0f;
-		linearThrottle = 0.0;
-		angularThrottle = 0.0f;
 		
 		m_blocks = null;
 		m_blockEntities = null;
@@ -96,6 +94,8 @@ public class EntityShip extends Entity
 		dataWatcher.addObject( WatcherIdBlocks, "" );
 		dataWatcher.addObject( WatcherIdShipType, 0 );
 		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
+		dataWatcher.addObject( WatcherIdLinearThrottle, 0 );
+		dataWatcher.addObject( WatcherIdAngularThrottle, 0 );
 	}
 	
 	public void setBlocks( ShipWorld blocks )
@@ -223,6 +223,24 @@ public class EntityShip extends Entity
 	public void setWaterHeight( int val )
 	{
 		dataWatcher.updateObject( WatcherIdWaterHeight, val );
+	}
+	
+	public int getThrottleLinear( )
+	{
+		return dataWatcher.getWatchableObjectByte( WatcherIdLinearThrottle );
+	}
+	public void setThrottleLinear( int val )
+	{
+		dataWatcher.updateObject( WatcherIdLinearThrottle, val );
+	}
+	
+	public int getThrottleAngular( )
+	{
+		return dataWatcher.getWatchableObjectByte( WatcherIdAngularThrottle );
+	}
+	public void setThrottleAngular( int val )
+	{
+		dataWatcher.updateObject( WatcherIdAngularThrottle, val );
 	}
 	
 	@Override
@@ -411,8 +429,6 @@ public class EntityShip extends Entity
 		) );
 		*/
 		
-		updateHelm( dYaw );
-		
 		// did we even move a noticeable amount?
 		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
 		{
@@ -474,11 +490,6 @@ public class EntityShip extends Entity
 		return motionY == 0 && isUnderwater;
 	}
 	
-	private void updateHelm( float dYaw )
-	{
-		// UNDONE: find the helm (and enforce there's only one) to update the wheel rotation based on dYaw
-	}
-
 	public void worldToShip( Vec3 v )
 	{
 		double x = worldToShipX( v.xCoord, v.zCoord );
@@ -655,6 +666,7 @@ public class EntityShip extends Entity
 		
 		// UNDONE: throttle desyncs between client and server
 		// client says zero, and server says non-zero, s the ship keeps inching along even though it should be stopped
+		System.out.println( String.format( "%s throttle: %.2f", worldObj.isRemote ? "CLIENT" : "SERVER", linearThrottle ) );
 		
 		// apply the thrust
 
@@ -1183,5 +1195,20 @@ public class EntityShip extends Entity
 	{
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
+		
+		// TEMP: show the actions
+		StringBuilder buf = new StringBuilder();
+		for( PilotAction action : PilotAction.values() )
+		{
+			if( action.isActive( actions ) )
+			{
+				if( buf.length() > 0 )
+				{
+					buf.append( ", " );
+				}
+				buf.append( action.name() );
+			}
+		}
+		System.out.println( String.format( "%s actions: %s", worldObj.isRemote ? "CLIENT" : "SERVER", buf.toString() ) );
 	}
 }
