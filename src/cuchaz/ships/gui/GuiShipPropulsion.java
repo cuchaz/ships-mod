@@ -2,32 +2,48 @@ package cuchaz.ships.gui;
 
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 
-import org.lwjgl.opengl.GL11;
+import java.io.IOException;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+
+import org.lwjgl.opengl.GL20;
+
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
 import cuchaz.modsShared.BlockUtils.Neighbors;
+import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.Ships;
 import cuchaz.ships.render.RenderShip2D;
+import cuchaz.ships.render.ShaderLoader;
 
 public class GuiShipPropulsion extends GuiShip
 {
+	private static final ResourceLocation DesaturationShader = new ResourceLocation( "ships", "/shaders/desaturate.frag" );
+	
 	private ShipLauncher m_shipLauncher;
 	private BlockArray m_shipEnvelope;
 	private BlockArray m_helmEnvelope;
 	private BlockArray m_propulsionEnvelope;
+	private int m_desaturationProgramId;
 	
 	public GuiShipPropulsion( Container container, final World world, int helmX, int helmY, int helmZ )
 	{
 		super( container );
+		
+		// defaults
+		m_shipLauncher = null;
+		m_shipEnvelope = null;
+		m_helmEnvelope = null;
+		m_propulsionEnvelope = null;
+		m_desaturationProgramId = 0;
 		
 		// this should be the helm
 		assert( world.getBlockId( helmX, helmY, helmZ ) == Ships.m_blockHelm.blockID );
@@ -60,11 +76,29 @@ public class GuiShipPropulsion extends GuiShip
 			m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
 			
 			// compute an envelope for the helm
+			helmCoords.posX -= shipBlockCoords.posX;
+			helmCoords.posY -= shipBlockCoords.posY;
+			helmCoords.posZ -= shipBlockCoords.posZ;
 			m_helmEnvelope = m_shipEnvelope.newEmptyCopy();
-			m_helmEnvelope.setBlock( helmCoords.posX - shipBlockCoords.posX, helmCoords.posZ - shipBlockCoords.posZ, helmCoords );
+			m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
 			
 			// UNDONE: compute an envelope for the propulsion systems
 			m_propulsionEnvelope = m_shipEnvelope.newEmptyCopy();
+			
+			// create our shader
+			try
+			{
+				int shaderId = ShaderLoader.load( DesaturationShader );
+				m_desaturationProgramId = GL20.glCreateProgram();
+				GL20.glAttachShader( m_desaturationProgramId, shaderId );
+				GL20.glLinkProgram( m_desaturationProgramId );
+				GL20.glValidateProgram( m_desaturationProgramId );
+			}
+			catch( IOException ex )
+			{
+				// UNDONE: log the exception
+				ex.printStackTrace();
+			}
 		}
 	}
 	
@@ -90,24 +124,26 @@ public class GuiShipPropulsion extends GuiShip
 				m_propulsionEnvelope = BlockArray.Rotation.Ccw90.rotate( m_propulsionEnvelope );
 			}
 			
-			// draw the ship slightly darker than normal
-			GL11.glColor4f( 0.5f, 0.5f, 0.5f, 1.0f );
+			// draw a desaturated ship
+			RenderShip2D.drawShipAsColor(
+				m_shipEnvelope,
+				ColorUtils.getGrey( 64 ),
+				x, y, zLevel, width, height
+			);
+			GL20.glUseProgram( m_desaturationProgramId );
 			RenderShip2D.drawShip(
 				m_shipEnvelope,
 				m_shipLauncher.getShipWorld(),
 				x, y, zLevel, width, height
 			);
+			GL20.glUseProgram( 0 );
 			
-			// draw the propulsion blocks at full brightness
-			GL11.glColor4f( 0.5f, 0.5f, 0.5f, 1.0f );
+			// draw the propulsion blocks and the helm at full saturation
 			RenderShip2D.drawShip(
 				m_propulsionEnvelope,
 				m_shipLauncher.getShipWorld(),
 				x, y, zLevel, width, height
 			);
-			
-			// draw the helm at full brightness
-			GL11.glColor4f( 0.5f, 0.5f, 0.5f, 1.0f );
 			RenderShip2D.drawShip(
 				m_helmEnvelope,
 				m_shipLauncher.getShipWorld(),

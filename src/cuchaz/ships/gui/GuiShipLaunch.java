@@ -2,6 +2,9 @@ package cuchaz.ships.gui;
 
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
+
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
 import cpw.mods.fml.common.network.PacketDispatcher;

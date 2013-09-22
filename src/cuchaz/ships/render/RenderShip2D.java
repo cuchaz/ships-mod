@@ -65,16 +65,42 @@ public class RenderShip2D
 				Block block = Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )];
 				int meta = world.getBlockMetadata( coords.posX, coords.posY, coords.posZ );
 				Icon icon = block.getBlockTexture( world, coords.posX, coords.posY, coords.posZ, meta );
-				// NullPointerException here!! ^^^  ... the block must be null...
 				
-				// draw a block right on the GUI
-				drawScaledBlock(
+				drawTexturedBlock(
 					( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
 					( maxHeight - shipHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
 					z,
 					blockSize,
 					blockSize,
 					icon
+				);
+			}
+		}
+	}
+	
+	public static void drawShipAsColor( BlockArray envelope, int color, int x, int y, double z, int maxWidth, int maxHeight )
+	{
+		double blockSize = getBlockSize( maxWidth, maxHeight, envelope );
+		double shipWidth = (double)envelope.getWidth()*blockSize;
+		double shipHeight = (double)envelope.getHeight()*blockSize;
+		
+		for( int u=envelope.getUMin(); u<=envelope.getUMax(); u++ )
+		{
+			for( int v=envelope.getVMin(); v<=envelope.getVMax(); v++ )
+			{
+				ChunkCoordinates coords = envelope.getBlock( u, v );
+				if( coords == null )
+				{
+					continue;
+				}
+				
+				drawColoredBlock(
+					( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
+					( maxHeight - shipHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
+					z,
+					blockSize,
+					blockSize,
+					color
 				);
 			}
 		}
@@ -115,9 +141,10 @@ public class RenderShip2D
 		tessellator.draw();
 		
 		GL11.glEnable( GL11.GL_TEXTURE_2D );
+		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 	}
 	
-	public static void drawScaledBlock( double x, double y, double z, double width, double height, Icon icon )
+	public static void drawTexturedBlock( double x, double y, double z, double width, double height, Icon icon )
 	{
 		// get the texture u/v for this icon
 		double minU = (double)icon.getInterpolatedU( 0.0 );
