@@ -159,11 +159,9 @@ public class RenderShip extends Render
 			GL11.glTranslated( x, y, z );
 			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
 			
-			/*
 			renderAxis( ship );
 			renderHitbox( ship );
-			renderVector( ship.posX, ship.posY + 2, ship.posZ, ship.motionX*10, ship.motionY*10, ship.motionZ*10, ColorUtils.getColor( 255, 255, 0 ) );
-			*/
+			//renderVector( ship.posX, ship.posY + 2, ship.posZ, ship.motionX*10, ship.motionY*10, ship.motionZ*10, ColorUtils.getColor( 255, 255, 0 ) );
 			
 			/* render the world coordinate axes
 			renderVector( ship.posX, ship.posY + 2, ship.posZ, 1, 0, 0, ColorUtils.getColor( 255, 0, 0 ) );

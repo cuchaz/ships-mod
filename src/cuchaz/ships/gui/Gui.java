@@ -23,42 +23,33 @@ public enum Gui
 	UnbuildShip
 	{
 		@Override
-		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
+		public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
 		{
-			// NOTE: world is always the real world, not the ship world
-			EntityShip ship = ShipLocator.getFromPlayerLook( player );
-			if( ship == null )
-			{
-				System.out.println( "Unable to locate ship!" );
-				return null;
-			}
 			return new GuiShipUnlaunch( new ContainerShip(), ship );
 		}
 	},
 	PaddleShip
 	{
 		@Override
-		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
+		public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
 		{
-			EntityShip ship = ShipLocator.getFromPlayerLocation( player );
-			if( ship == null )
-			{
-				return null;
-			}
 			return new GuiShipPilotPaddle( new ContainerShip(), ship, player );
 		}
 	},
 	PilotSurfaceShip
 	{
 		@Override
+		public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
+		{
+			return new GuiShipPilotSurface( new ContainerShip(), ship, player );
+		}
+	},
+	ShipPropulsion
+	{
+		@Override
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			EntityShip ship = ShipLocator.getFromPlayerLocation( player );
-			if( ship == null )
-			{
-				return null;
-			}
-			return new GuiShipPilotSurface( new ContainerShip(), ship, player );
+			return new GuiShipPropulsion( new ContainerShip(), world, x, y, z );
 		}
 	};
 	
@@ -72,5 +63,20 @@ public enum Gui
 		return new ContainerShip();
 	}
 	
-	public abstract GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z );
+	public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
+	{
+		// NOTE: world is always the real world, never the ship world
+		EntityShip ship = ShipLocator.getFromPlayerLook( player );
+		if( ship == null )
+		{
+			System.out.println( "Unable to locate ship!" );
+			return null;
+		}
+		return getGuiOnShip( player, ship );
+	}
+	
+	public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
+	{
+		return null;
+	}
 }

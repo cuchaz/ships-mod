@@ -1,15 +1,12 @@
 package cuchaz.ships.gui;
 
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
-import static cuchaz.ships.gui.GuiSettings.LineSpacing;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
 import cpw.mods.fml.common.network.PacketDispatcher;
-import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipUnlauncher;
-import cuchaz.ships.ShipLauncher.LaunchFlag;
 import cuchaz.ships.ShipUnlauncher.UnlaunchFlag;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 
@@ -62,8 +59,7 @@ public class GuiShipUnlaunch extends GuiShip
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
-		int textColor = ColorUtils.getGrey( 64 );
-		fontRenderer.drawString( GuiString.ShipDashboard.getLocalizedText(), LeftMargin, TopMargin, textColor );
+		drawText( GuiString.ShipDashboard.getLocalizedText(), 0 );
 		
 		// draw the unlaunch flags
 		drawYesNoText(

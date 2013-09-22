@@ -12,6 +12,10 @@ import cuchaz.modsShared.ColorUtils;
 
 public abstract class GuiShip extends GuiCloseable
 {
+	public final int TextColor = ColorUtils.getGrey( 64 );
+	public final int YesColor = ColorUtils.getColor( 0, 160, 0 );
+	public final int NoColor = ColorUtils.getColor( 160, 0, 0 );
+	
 	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/ship.png" );
 	
 	public GuiShip( Container container )
@@ -33,9 +37,19 @@ public abstract class GuiShip extends GuiCloseable
 		drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
 	}
 	
-	protected void drawText( String text, int lineNum, int textColor )
+	protected void drawText( String text, int lineNum )
 	{
-		fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), textColor );
+		fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), TextColor );
+	}
+	
+	protected void drawLabelValueText( String labelText, String valueText, int lineNum )
+	{
+		// draw the label
+		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		
+		// draw the value
+		int valueWidth = fontRenderer.getStringWidth( valueText );
+		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), TextColor );
 	}
 	
 	protected String getYesNoText( boolean flag )
@@ -45,10 +59,6 @@ public abstract class GuiShip extends GuiCloseable
 	
 	protected void drawYesNoText( String labelText, boolean isYes, int lineNum )
 	{
-		final int TextColor = ColorUtils.getGrey( 64 );
-		final int YesColor = ColorUtils.getColor( 0, 160, 0 );
-		final int NoColor = ColorUtils.getColor( 160, 0, 0 );
-		
 		// draw the label
 		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
 		

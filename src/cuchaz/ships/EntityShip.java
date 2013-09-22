@@ -1189,20 +1189,5 @@ public class EntityShip extends Entity
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
 		m_sendPilotChangesToServer = sendPilotChangesToServer;
-		
-		// TEMP: show the actions
-		StringBuilder buf = new StringBuilder();
-		for( PilotAction action : PilotAction.values() )
-		{
-			if( action.isActive( actions ) )
-			{
-				if( buf.length() > 0 )
-				{
-					buf.append( ", " );
-				}
-				buf.append( action.name() );
-			}
-		}
-		System.out.println( String.format( "%s actions: %s", worldObj.isRemote ? "CLIENT" : "SERVER", buf.toString() ) );
 	}
 }

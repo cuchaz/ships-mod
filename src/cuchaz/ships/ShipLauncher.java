@@ -133,7 +133,8 @@ public class ShipLauncher
 				{
 					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
 				}
-			}
+			},
+			ShipGeometry.ShipBlockNeighbors
 		);
 		
 		if( m_blocks != null )
@@ -216,9 +217,9 @@ public class ShipLauncher
 		// return the widest side of north,west
 		if( getShipBoundingBox().getDx() > getShipBoundingBox().getDz() )
 		{
-			return BlockSide.West;
+			return BlockSide.North;
 		}
-		return BlockSide.North;
+		return BlockSide.West;
 	}
 	
 	public BlockSide getShipFront( )

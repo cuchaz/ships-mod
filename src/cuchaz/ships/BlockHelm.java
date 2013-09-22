@@ -81,7 +81,7 @@ public class BlockHelm extends Block
 		}
 		else
 		{
-			//Gui.ShipPropulsion.open( player, world, x, y, z );
+			Gui.ShipPropulsion.open( player, world, x, y, z );
 		}
 		return true;
 	}

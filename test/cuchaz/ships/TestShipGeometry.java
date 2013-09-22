@@ -351,6 +351,52 @@ public class TestShipGeometry
 		assertEquals( 0, geometry.getTrappedAir( 3 ).size() );
 	}
 	
+	@Test
+	public void singleBlockHullEdgeNeighbors( )
+	{
+		ShipGeometry geometry = new ShipGeometry( getBlocks(
+			
+			           1, 0, 1,
+			
+			           0, 1, 1,
+			1, 1, 0,              1, 1, 2,
+			           2, 1, 1
+		) );
+		
+		// check outer boundaries
+		assertEquals( 18, geometry.getOuterBoundaries().size() );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, -1, 1 ) ) );
+		
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 0, 1 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 0, 0 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 0, 2 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 0, 1 ) ) );
+		
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( -1, 1, 1 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 1, 0 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 1, 2 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 1, -1 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 1, 1 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 1, 3 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 1, 0 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 1, 2 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 3, 1, 1 ) ) );
+		
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 2, 1 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 2, 0 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 2, 2 ) ) );
+		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 2, 1 ) ) );
+		
+		// check holes
+		assertEquals( 0, geometry.getHoles().size() );
+		
+		// check trapped air
+		assertEquals( 0, geometry.getTrappedAir( 0 ).size() );
+		assertEquals( 1, geometry.getTrappedAir( 1 ).size() );
+		assertEquals( getBlocks( 1, 1, 1 ), geometry.getTrappedAir( 1 ) );
+		assertEquals( 0, geometry.getTrappedAir( 2 ).size() );
+	}
+	
 	private TreeSet<ChunkCoordinates> getBlocks( int ... coords )
 	{
 		if( coords.length % 3 != 0 )

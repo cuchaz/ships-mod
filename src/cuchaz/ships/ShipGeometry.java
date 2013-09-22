@@ -11,14 +11,18 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BoxCorner;
-import cuchaz.modsShared.RotatedBB;
 import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
+import cuchaz.modsShared.BlockUtils.Neighbors;
 import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.modsShared.RotatedBB;
 
 public class ShipGeometry
 {
+	public static final Neighbors ShipBlockNeighbors = Neighbors.Edges;
+	public static final Neighbors VoidBlockNeighbors = Neighbors.Faces;
+	
 	private TreeSet<ChunkCoordinates> m_blocks;
 	private Envelopes m_envelopes;
 	private List<TreeSet<ChunkCoordinates>> m_outerBoundaries;
@@ -161,19 +165,14 @@ public class ShipGeometry
 	
 	private void computeBoundaryAndHoles( )
 	{
-		// first, get all boundary blocks
+		// first, get all blocks touching the ship on a face (aka the boundary)
 		final TreeSet<ChunkCoordinates> boundaryBlocks = new TreeSet<ChunkCoordinates>();
 		ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
 		for( ChunkCoordinates coords : m_blocks )
 		{
-			// for each neighbor
-			for( BlockSide side : BlockSide.values() )
+			for( int i=0; i<VoidBlockNeighbors.getNumNeighbors(); i++ )
 			{
-				neighborCoords.posX = coords.posX + side.getDx();
-				neighborCoords.posY = coords.posY + side.getDy();
-				neighborCoords.posZ = coords.posZ + side.getDz();
-				
-				// if it's not a ship block, it's a boundary block
+				VoidBlockNeighbors.getNeighbor( neighborCoords, coords, i );
 				if( !m_blocks.contains( neighborCoords ) )
 				{
 					boundaryBlocks.add( new ChunkCoordinates( neighborCoords ) );
@@ -184,7 +183,7 @@ public class ShipGeometry
 		// boundaryBlocks will have some number of connected components. Find them all and classify each as inner/outer
 		m_outerBoundaries = new ArrayList<TreeSet<ChunkCoordinates>>();
 		m_holes = new ArrayList<TreeSet<ChunkCoordinates>>();
-		for( TreeSet<ChunkCoordinates> component : BlockUtils.getConnectedComponents( boundaryBlocks ) )
+		for( TreeSet<ChunkCoordinates> component : BlockUtils.getConnectedComponents( boundaryBlocks, VoidBlockNeighbors ) )
 		{
 			// is this component the outer boundary?
 			if( isConnectedToShell( component.first() ) )
@@ -194,7 +193,7 @@ public class ShipGeometry
 			else
 			{
 				// compute the hole from the boundary
-				m_holes.add( BlockUtils.getHoleFromInnerBoundary( component, m_blocks ) );
+				m_holes.add( BlockUtils.getHoleFromInnerBoundary( component, m_blocks, VoidBlockNeighbors ) );
 			}
 		}
 	}
@@ -227,7 +226,8 @@ public class ShipGeometry
 					// is this a shell block?
 					return !box.containsPoint( coords );
 				}
-			}
+			},
+			VoidBlockNeighbors
 		);
 		
 		// just in case...
@@ -283,7 +283,7 @@ public class ShipGeometry
 				// if the component is isolated from the shell, it's trapped air
 				if( !isConnectedToShell( component.first(), waterLevel ) )
 				{
-					trappedAirAtThisWaterLevel.addAll( BlockUtils.getHoleFromInnerBoundary( component, m_blocks, waterLevel ) );
+					trappedAirAtThisWaterLevel.addAll( BlockUtils.getHoleFromInnerBoundary( component, m_blocks, VoidBlockNeighbors, waterLevel ) );
 				}
 			}
 			

@@ -13,7 +13,7 @@ public class ShipLocator
 	public static EntityShip getFromPlayerLook( EntityPlayer player )
 	{
 		// find out what entity the player is looking at
-		Vec3 eyeVec = player.worldObj.getWorldVec3Pool().getVecFromPool(
+		Vec3 eyePos = player.worldObj.getWorldVec3Pool().getVecFromPool(
 			player.posX,
 			player.posY + player.getEyeHeight(),
 			player.posZ
@@ -28,7 +28,7 @@ public class ShipLocator
 		float sinPitch = MathHelper.sin( -pitch );
 		
 		double reachDistance = new ItemInWorldManager( player.worldObj ).getBlockReachDistance();
-		Vec3 toVec = eyeVec.addVector(
+		Vec3 targetPos = eyePos.addVector(
 			sinYaw * -cosPitch * reachDistance,
 			sinPitch * reachDistance,
 			cosYaw * -cosPitch * reachDistance
@@ -48,7 +48,7 @@ public class ShipLocator
 		// are we looking at any of these ships?
 		for( EntityShip ship : nearbyShips )
 		{
-			if( ship.boundingBox.calculateIntercept( eyeVec, toVec ) != null )
+			if( ship.boundingBox.isVecInside( eyePos ) || ship.boundingBox.isVecInside( targetPos ) || ship.boundingBox.calculateIntercept( eyePos, targetPos ) != null )
 			{
 				return ship;
 			}
