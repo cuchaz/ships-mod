@@ -38,6 +38,8 @@ import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 import cuchaz.ships.packets.PacketUnlaunchShip;
+import cuchaz.ships.propulsion.PropulsionDiscovererRegistry;
+import cuchaz.ships.propulsion.SailDiscoverer;
 import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 
@@ -155,6 +157,7 @@ public class Ships extends DummyModContainer
 			loadThings();
 			loadLanguage();
 			loadRecipes();
+			loadPropulsion();
 			
 			// set renderers
 			RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
@@ -259,5 +262,10 @@ public class Ships extends DummyModContainer
 			"   ", "x x", " x ",
 			'x', goldStack
 		);
+	}
+	
+	private void loadPropulsion( )
+	{
+		PropulsionDiscovererRegistry.addDiscoverer( new SailDiscoverer() );
 	}
 }

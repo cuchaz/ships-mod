@@ -21,6 +21,7 @@ import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.Ships;
+import cuchaz.ships.propulsion.Propulsion;
 import cuchaz.ships.render.RenderShip2D;
 import cuchaz.ships.render.ShaderLoader;
 
@@ -29,6 +30,7 @@ public class GuiShipPropulsion extends GuiShip
 	private static final ResourceLocation DesaturationShader = new ResourceLocation( "ships", "/shaders/desaturate.frag" );
 	
 	private ShipLauncher m_shipLauncher;
+	private Propulsion m_propulsion;
 	private BlockArray m_shipEnvelope;
 	private BlockArray m_helmEnvelope;
 	private BlockArray m_propulsionEnvelope;
@@ -82,17 +84,17 @@ public class GuiShipPropulsion extends GuiShip
 			m_helmEnvelope = m_shipEnvelope.newEmptyCopy();
 			m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
 			
-			// UNDONE: compute an envelope for the propulsion systems
-			m_propulsionEnvelope = m_shipEnvelope.newEmptyCopy();
+			// get the front side of the ship from the helm
+			BlockSide frontDirection = BlockSide.getByXZOffset( m_shipLauncher.getShipWorld().getBlockMetadata( helmCoords ) );
+			
+			// get the propulsion
+			m_propulsion = new Propulsion( m_shipLauncher.getShipWorld(), frontDirection );
+			m_propulsionEnvelope = m_propulsion.getEnevelope();
 			
 			// create our shader
 			try
 			{
-				int shaderId = ShaderLoader.load( DesaturationShader );
-				m_desaturationProgramId = GL20.glCreateProgram();
-				GL20.glAttachShader( m_desaturationProgramId, shaderId );
-				GL20.glLinkProgram( m_desaturationProgramId );
-				GL20.glValidateProgram( m_desaturationProgramId );
+				m_desaturationProgramId = ShaderLoader.createProgram( ShaderLoader.load( DesaturationShader ) );
 			}
 			catch( IOException ex )
 			{

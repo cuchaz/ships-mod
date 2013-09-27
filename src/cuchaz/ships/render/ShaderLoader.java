@@ -35,6 +35,15 @@ public class ShaderLoader
 		return shaderId;
 	}
 	
+	public static int createProgram( int shaderId )
+	{
+		int programId = GL20.glCreateProgram();
+		GL20.glAttachShader( programId, shaderId );
+		GL20.glLinkProgram( programId );
+		GL20.glValidateProgram( programId );
+		return programId;
+	}
+	
 	private static int getShaderType( String path )
 	{
 		// get the extension
