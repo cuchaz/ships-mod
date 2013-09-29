@@ -267,14 +267,17 @@ public class ShipGeometry
 				trappedAirAtThisWaterLevel.addAll( BlockUtils.getBlocksAtYAndBelow( hole, waterLevel ) );
 			}
 			
-			// for each outer boundary component...
+			// get the outer boundary components under water (clip them when needed)
 			List<TreeSet<ChunkCoordinates>> outerBoundariesUnderwater = new ArrayList<TreeSet<ChunkCoordinates>>();
 			for( TreeSet<ChunkCoordinates> outerBoundary : m_outerBoundaries )
 			{
 				TreeSet<ChunkCoordinates> clippedOuterBoundary = BlockUtils.getBlocksAtYAndBelow( outerBoundary, waterLevel );
-				if( !clippedOuterBoundary.isEmpty() )
+				for( TreeSet<ChunkCoordinates> clippedOuterBoundaryComponent : BlockUtils.getConnectedComponents( clippedOuterBoundary, VoidBlockNeighbors ) )
 				{
-					outerBoundariesUnderwater.add( clippedOuterBoundary );
+					if( !clippedOuterBoundaryComponent.isEmpty() )
+					{
+						outerBoundariesUnderwater.add( clippedOuterBoundaryComponent );
+					}
 				}
 			}
 			
