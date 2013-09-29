@@ -10,10 +10,15 @@ import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
 {
 	private static final double AccelerationGravity = 0.006;
+	private static final double DragConstant = 0.2;
+	private static final double AirDragConstant = 0.01;
+	private static final double WaterDragConstant = 0.3;
+	private static final double AngularAccelerationDivider = 5.0;
 	
 	private static class DisplacementEntry
 	{
@@ -108,6 +113,11 @@ public class ShipPhysics
 		*/
 	}
 	
+	public double getMass( )
+	{
+		return m_shipMass;
+	}
+	
 	public Vec3 getCenterOfMass( )
 	{
 		Vec3 com = Vec3.createVectorHelper( 0, 0, 0 );
@@ -156,9 +166,6 @@ public class ShipPhysics
 	
 	public double getLinearDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
 	{
-		final double AirDragRate = 0.01;
-		final double WaterDragRate = 0.3;
-		
 		// how fast are we going?
 		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
 		
@@ -174,13 +181,70 @@ public class ShipPhysics
 		}
 		
 		// compute the drag coefficient
-		return logisticFunction( speed, AirDragRate*airSurfaceArea + WaterDragRate*waterSurfaceArea );
+		return logisticFunction( speed, AirDragConstant*airSurfaceArea + WaterDragConstant*waterSurfaceArea );
 	}
 	
 	public double getAngularDragCoefficient( float motionYaw )
 	{
-		// UNDONE: find the constants for this
-		return logisticFunction( Math.abs( motionYaw ), 0.2 );
+		return logisticFunction( Math.abs( motionYaw ), DragConstant );
+	}
+	
+	public double getLinearAcceleration( Propulsion propulsion )
+	{
+		return propulsion.getTotalThrust()/m_shipMass;
+	}
+	
+	public double getAngularAcceleration( Propulsion propulsion )
+	{
+		return getLinearAcceleration( propulsion )/AngularAccelerationDivider;
+	}
+	
+	public double getTopLinearSpeed( Propulsion propulsion, Envelopes envelopes )
+	{
+		Double waterHeight = computeEquilibriumWaterHeight();
+		if( waterHeight == null )
+		{
+			return 0;
+		}
+		
+		// determine the top speed numerically
+		// I'm too lazy to write down the equations and solve them analytically...
+		double thrustAccel = this.getLinearAcceleration( propulsion );
+		double speed = 1.0;
+		while( true )
+		{
+			double dragAccel = getLinearDragCoefficient( waterHeight, speed, 0, 0, propulsion.getFrontSide(), envelopes );
+			double netAccel = thrustAccel - dragAccel;
+			speed += netAccel;
+			
+			// did the speed stop changing?
+			if( Math.abs( netAccel ) < 1e-2 )
+			{
+				break;
+			}
+		}
+		return speed;
+	}
+	
+	public float getTopAngularSpeed( Propulsion propulsion )
+	{
+		// determine the top speed numerically
+		// again, I'm too lazy to write down the equations and solve them analytically...
+		double thrustAccel = this.getLinearAcceleration( propulsion );
+		float speed = 1.0f;
+		while( true )
+		{
+			double dragAccel = getAngularDragCoefficient( speed );
+			double netAccel = thrustAccel - dragAccel;
+			speed += netAccel;
+			
+			// did the speed stop changing?
+			if( Math.abs( netAccel ) < 1e-2 )
+			{
+				break;
+			}
+		}
+		return speed;
 	}
 	
 	private Double computeEquilibriumWaterHeight( )
@@ -221,7 +285,7 @@ public class ShipPhysics
 	
 	private double getWaterBlockMass( )
 	{
-		// UNDONE: use the surface height make the mass increase with depth
+		// UNDONE: use block y make the mass increase with depth
 		return MaterialProperties.getMass( Block.waterStill );
 	}
 	

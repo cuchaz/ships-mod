@@ -186,6 +186,11 @@ public class ShipLauncher
 		return m_shipWorld;
 	}
 	
+	public ShipPhysics getShipPhysics( )
+	{
+		return m_shipPhysics;
+	}
+	
 	public int getNumBlocks( )
 	{
 		// don't count the ship block towards the size quota

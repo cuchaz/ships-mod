@@ -5,6 +5,7 @@ import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import java.io.IOException;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
@@ -35,6 +36,10 @@ public class GuiShipPropulsion extends GuiShip
 	private BlockArray m_helmEnvelope;
 	private BlockArray m_propulsionEnvelope;
 	private int m_desaturationProgramId;
+	private double m_acceleration;
+	private double m_topLinearSpeed;
+	private float m_topAngularSpeed;
+	private String m_propulsionMethodsDescription;
 	
 	public GuiShipPropulsion( Container container, final World world, int helmX, int helmY, int helmZ )
 	{
@@ -45,6 +50,9 @@ public class GuiShipPropulsion extends GuiShip
 		m_shipEnvelope = null;
 		m_helmEnvelope = null;
 		m_propulsionEnvelope = null;
+		m_acceleration = 0;
+		m_topLinearSpeed = 0;
+		m_topAngularSpeed = 0f;
 		m_desaturationProgramId = 0;
 		
 		// this should be the helm
@@ -73,7 +81,7 @@ public class GuiShipPropulsion extends GuiShip
 		);
 		if( shipBlockCoords != null )
 		{
-			// get the ship definition and its top envelope
+			// get the ship info
 			m_shipLauncher = new ShipLauncher( world, shipBlockCoords.posX, shipBlockCoords.posY, shipBlockCoords.posZ );
 			m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
 			
@@ -84,11 +92,8 @@ public class GuiShipPropulsion extends GuiShip
 			m_helmEnvelope = m_shipEnvelope.newEmptyCopy();
 			m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
 			
-			// get the front side of the ship from the helm
-			BlockSide frontDirection = BlockSide.getByXZOffset( m_shipLauncher.getShipWorld().getBlockMetadata( helmCoords ) );
-			
 			// get the propulsion
-			m_propulsion = new Propulsion( m_shipLauncher.getShipWorld(), frontDirection );
+			m_propulsion = new Propulsion( m_shipLauncher.getShipWorld() );
 			m_propulsionEnvelope = m_propulsion.getEnevelope();
 			
 			// create our shader
@@ -101,56 +106,89 @@ public class GuiShipPropulsion extends GuiShip
 				// UNDONE: log the exception
 				ex.printStackTrace();
 			}
+			
+			// compute the propulsion properties
+			m_acceleration = m_shipLauncher.getShipPhysics().getLinearAcceleration( m_propulsion );
+			m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
+			m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion );
+			
+			// build the description string
+			StringBuilder buf = new StringBuilder();
+			buf.append( "Found " );
+			String delimiter = "";
+			for( Propulsion.MethodCount count : m_propulsion.methodCounts() )
+			{
+				buf.append( delimiter );
+				buf.append( count.toString() );
+				delimiter = ", ";
+			}
+			m_propulsionMethodsDescription = buf.toString();
 		}
 	}
 	
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
-		drawText( GuiString.ShipPropulsion.getLocalizedText(), 0 );
+		drawHeaderText( GuiString.ShipPropulsion.getLocalizedText(), 0 );
 		
 		if( m_shipLauncher != null )
 		{
-			int x = LeftMargin;
-			int y = getLineY( 6 );
-			int width = xSize - LeftMargin*2;
-			int height = 64;
+			Minecraft.getMinecraft();
 			
-			RenderShip2D.drawWater( x, y, zLevel, width, height );
+			// list the specs
+			final double TicksPerSecond = 20; // constant set in Minecraft.java, inaccessible by methods
+			drawLabelValueText( "Acceleration", String.format( "%.1f m/s\u00B2", m_acceleration*TicksPerSecond*TicksPerSecond ), 1 );
+			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*TicksPerSecond ), 2 );
+			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/sec", m_topAngularSpeed ), 3 );
 			
-			if( m_shipEnvelope.getHeight() > m_shipEnvelope.getWidth() )
-			{
-				// rotate the envelopes so the long axis is across the GUI width
-				m_shipEnvelope = BlockArray.Rotation.Ccw90.rotate( m_shipEnvelope );
-				m_helmEnvelope = BlockArray.Rotation.Ccw90.rotate( m_helmEnvelope );
-				m_propulsionEnvelope = BlockArray.Rotation.Ccw90.rotate( m_propulsionEnvelope );
-			}
+			drawPropulsion();
 			
-			// draw a desaturated ship
-			RenderShip2D.drawShipAsColor(
-				m_shipEnvelope,
-				ColorUtils.getGrey( 64 ),
-				x, y, zLevel, width, height
-			);
-			GL20.glUseProgram( m_desaturationProgramId );
-			RenderShip2D.drawShip(
-				m_shipEnvelope,
-				m_shipLauncher.getShipWorld(),
-				x, y, zLevel, width, height
-			);
-			GL20.glUseProgram( 0 );
-			
-			// draw the propulsion blocks and the helm at full saturation
-			RenderShip2D.drawShip(
-				m_propulsionEnvelope,
-				m_shipLauncher.getShipWorld(),
-				x, y, zLevel, width, height
-			);
-			RenderShip2D.drawShip(
-				m_helmEnvelope,
-				m_shipLauncher.getShipWorld(),
-				x, y, zLevel, width, height
-			);
+			// list the propulsion types
+			drawText( m_propulsionMethodsDescription, 12 );
 		}
+	}
+
+	private void drawPropulsion( )
+	{
+		int x = LeftMargin;
+		int y = getLineY( 6 );
+		int width = xSize - LeftMargin*2;
+		int height = 64;
+		
+		RenderShip2D.drawWater( x, y, zLevel, width, height );
+		
+		if( m_shipEnvelope.getHeight() > m_shipEnvelope.getWidth() )
+		{
+			// rotate the envelopes so the long axis is across the GUI width
+			m_shipEnvelope = BlockArray.Rotation.Ccw90.rotate( m_shipEnvelope );
+			m_helmEnvelope = BlockArray.Rotation.Ccw90.rotate( m_helmEnvelope );
+			m_propulsionEnvelope = BlockArray.Rotation.Ccw90.rotate( m_propulsionEnvelope );
+		}
+		
+		// draw a desaturated ship
+		RenderShip2D.drawShipAsColor(
+			m_shipEnvelope,
+			ColorUtils.getGrey( 64 ),
+			x, y, zLevel, width, height
+		);
+		GL20.glUseProgram( m_desaturationProgramId );
+		RenderShip2D.drawShip(
+			m_shipEnvelope,
+			m_shipLauncher.getShipWorld(),
+			x, y, zLevel, width, height
+		);
+		GL20.glUseProgram( 0 );
+		
+		// draw the propulsion blocks and the helm at full saturation
+		RenderShip2D.drawShip(
+			m_propulsionEnvelope,
+			m_shipLauncher.getShipWorld(),
+			x, y, zLevel, width, height
+		);
+		RenderShip2D.drawShip(
+			m_helmEnvelope,
+			m_shipLauncher.getShipWorld(),
+			x, y, zLevel, width, height
+		);
 	}
 }

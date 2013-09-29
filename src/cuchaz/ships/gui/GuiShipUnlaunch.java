@@ -59,7 +59,7 @@ public class GuiShipUnlaunch extends GuiShip
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
-		drawText( GuiString.ShipDashboard.getLocalizedText(), 0 );
+		drawHeaderText( GuiString.ShipDashboard.getLocalizedText(), 0 );
 		
 		// draw the unlaunch flags
 		drawYesNoText(

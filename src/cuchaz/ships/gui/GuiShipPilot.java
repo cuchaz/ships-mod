@@ -57,8 +57,7 @@ public abstract class GuiShipPilot extends GuiCloseable
 			@Override
 			public BlockSide compute( EntityShip ship, EntityPlayer player )
 			{
-				int helmRotation = ship.getBlocks().getBlockMetadata( ship.getHelmCoords() );
-				return BlockSide.getByXZOffset( helmRotation );
+				return ship.getPropulsion().getFrontSide();
 			}
 		};
 		

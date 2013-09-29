@@ -2,9 +2,6 @@ package cuchaz.ships.gui;
 
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import static cuchaz.ships.gui.GuiSettings.TopMargin;
-
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
 import cpw.mods.fml.common.network.PacketDispatcher;
@@ -62,7 +59,7 @@ public class GuiShipLaunch extends GuiShip
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
-		drawText( GuiString.ShipConstruction.getLocalizedText(), 0 );
+		drawHeaderText( GuiString.ShipConstruction.getLocalizedText(), 0 );
 		
 		String valueText;
 		

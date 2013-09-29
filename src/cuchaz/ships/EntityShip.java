@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
@@ -17,12 +15,14 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.propulsion.Propulsion;
 
 public class EntityShip extends Entity
 {
@@ -47,6 +47,7 @@ public class EntityShip extends Entity
 	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
 	private EntityShipBlock[] m_blockEntitiesArray;
 	private ShipPhysics m_physics;
+	private Propulsion m_propulsion;
 	private double m_shipBlockX;
 	private double m_shipBlockY;
 	private double m_shipBlockZ;
@@ -77,6 +78,7 @@ public class EntityShip extends Entity
 		m_blockEntities = null;
 		m_blockEntitiesArray = null;
 		m_physics = null;
+		m_propulsion = null;
 		m_shipBlockX = 0;
 		m_shipBlockY = 0;
 		m_shipBlockZ = 0;
@@ -124,6 +126,7 @@ public class EntityShip extends Entity
 		m_blocks = blocks;
 		blocks.setShip( this );
 		m_physics = new ShipPhysics( m_blocks );
+		m_propulsion = new Propulsion( m_blocks );
 		
 		// get the ship center of mass so we can convert between ship/block spaces
 		Vec3 centerOfMass = m_physics.getCenterOfMass();
@@ -214,6 +217,11 @@ public class EntityShip extends Entity
 		return m_blocks;
 	}
 	
+	public Propulsion getPropulsion( )
+	{
+		return m_propulsion;
+	}
+	
 	public ShipType getShipType( )
 	{
 		return ShipType.values()[dataWatcher.getWatchableObjectInt( WatcherIdShipType )];
@@ -246,23 +254,6 @@ public class EntityShip extends Entity
 	public EntityShipBlock getShipBlockEntity( )
 	{
 		return m_blockEntities.get( new ChunkCoordinates( 0, 0, 0 ) );
-	}
-	
-	public ChunkCoordinates getHelmCoords( )
-	{
-		// UNDONE: optimize this by setting the helm coords instead of searching for the helm
-		// could use the propulsion system for that
-		
-		// always return the direction the helm is facing
-		for( ChunkCoordinates coords : m_blocks.coords() )
-		{
-			if( m_blocks.getBlockId( coords ) == Ships.m_blockHelm.blockID )
-			{
-				return coords;
-			}
-		}
-		assert( false ) : "Unable to find helm! But this ship must have had a helm...";
-		return null;
 	}
 	
 	@Override
@@ -664,8 +655,8 @@ public class EntityShip extends Entity
 		// apply the thrust
 		
 		// UNDONE: determine accelerations based on physics and propulsion
-		double linearAcceleration = 0.02*linearThrottle/LinearThrottleMax;
-		double angularAcceleration = 1.0*angularThrottle/AngularThrottleMax;
+		double linearAcceleration = m_physics.getLinearAcceleration( m_propulsion )*linearThrottle/LinearThrottleMax;
+		double angularAcceleration = m_physics.getAngularAcceleration( m_propulsion )*angularThrottle/AngularThrottleMax;
 		
 		// apply the linear acceleration
 		if( m_sideShipForward != null )

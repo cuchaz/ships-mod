@@ -12,7 +12,7 @@ public class Sail extends PropulsionMethod
 	
 	protected Sail( ShipWorld world, Set<ChunkCoordinates> coords, BlockSide frontDirection )
 	{
-		super( "Sail", coords );
+		super( "Sail", "Sails", coords );
 		
 		m_numExposedBlocks = getNumExposedBlocks( world, coords, frontDirection );
 	}
@@ -41,13 +41,13 @@ public class Sail extends PropulsionMethod
 				coords.posY + frontDirection.getDy(),
 				coords.posZ + frontDirection.getDz()
 			);
-			int frontId = world.getBlockId( coords );
+			int frontId = world.getBlockId( neighborCoords );
 			neighborCoords.set(
 				coords.posX + backDirection.getDx(),
 				coords.posY + backDirection.getDy(),
 				coords.posZ + backDirection.getDz()
 			);
-			int backId = world.getBlockId( coords );
+			int backId = world.getBlockId( neighborCoords );
 			
 			if( frontId == 0 && backId == 0 )
 			{
