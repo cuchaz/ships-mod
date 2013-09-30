@@ -79,51 +79,60 @@ public class GuiShipPropulsion extends GuiShip
 			},
 			Neighbors.Edges
 		);
-		if( shipBlockCoords != null )
+		if( shipBlockCoords == null )
 		{
-			// get the ship info
-			m_shipLauncher = new ShipLauncher( world, shipBlockCoords.posX, shipBlockCoords.posY, shipBlockCoords.posZ );
-			m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
-			
-			// compute an envelope for the helm
-			helmCoords.posX -= shipBlockCoords.posX;
-			helmCoords.posY -= shipBlockCoords.posY;
-			helmCoords.posZ -= shipBlockCoords.posZ;
-			m_helmEnvelope = m_shipEnvelope.newEmptyCopy();
-			m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
-			
-			// get the propulsion
-			m_propulsion = new Propulsion( m_shipLauncher.getShipWorld() );
-			m_propulsionEnvelope = m_propulsion.getEnevelope();
-			
-			// create our shader
-			try
-			{
-				m_desaturationProgramId = ShaderLoader.createProgram( ShaderLoader.load( DesaturationShader ) );
-			}
-			catch( IOException ex )
-			{
-				// UNDONE: log the exception
-				ex.printStackTrace();
-			}
-			
-			// compute the propulsion properties
-			m_acceleration = m_shipLauncher.getShipPhysics().getLinearAcceleration( m_propulsion );
-			m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
-			m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion );
-			
-			// build the description string
-			StringBuilder buf = new StringBuilder();
-			buf.append( "Found " );
-			String delimiter = "";
-			for( Propulsion.MethodCount count : m_propulsion.methodCounts() )
-			{
-				buf.append( delimiter );
-				buf.append( count.toString() );
-				delimiter = ", ";
-			}
-			m_propulsionMethodsDescription = buf.toString();
+			// can't find a ship block
+			return;
 		}
+		
+		// get the ship info from the launcher
+		m_shipLauncher = new ShipLauncher( world, shipBlockCoords.posX, shipBlockCoords.posY, shipBlockCoords.posZ );
+		if( m_shipLauncher.getShipWorld() == null )
+		{
+			// there's no valid ship
+			return;
+		}
+		
+		m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
+			
+		// compute an envelope for the helm
+		helmCoords.posX -= shipBlockCoords.posX;
+		helmCoords.posY -= shipBlockCoords.posY;
+		helmCoords.posZ -= shipBlockCoords.posZ;
+		m_helmEnvelope = m_shipEnvelope.newEmptyCopy();
+		m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
+		
+		// get the propulsion
+		m_propulsion = new Propulsion( m_shipLauncher.getShipWorld() );
+		m_propulsionEnvelope = m_propulsion.getEnevelope();
+		
+		// create our shader
+		try
+		{
+			m_desaturationProgramId = ShaderLoader.createProgram( ShaderLoader.load( DesaturationShader ) );
+		}
+		catch( IOException ex )
+		{
+			// UNDONE: log the exception
+			ex.printStackTrace();
+		}
+		
+		// compute the propulsion properties
+		m_acceleration = m_shipLauncher.getShipPhysics().getLinearAcceleration( m_propulsion );
+		m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
+		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion );
+		
+		// build the description string
+		StringBuilder buf = new StringBuilder();
+		buf.append( "Found " );
+		String delimiter = "";
+		for( Propulsion.MethodCount count : m_propulsion.methodCounts() )
+		{
+			buf.append( delimiter );
+			buf.append( count.toString() );
+			delimiter = ", ";
+		}
+		m_propulsionMethodsDescription = buf.toString();
 	}
 	
 	@Override
@@ -131,10 +140,16 @@ public class GuiShipPropulsion extends GuiShip
 	{
 		drawHeaderText( GuiString.ShipPropulsion.getLocalizedText(), 0 );
 		
-		if( m_shipLauncher != null )
+		if( m_shipLauncher == null )
 		{
-			Minecraft.getMinecraft();
-			
+			drawText( GuiString.NoShipBlock.getLocalizedText(), 1 );
+		}
+		else if( m_propulsion == null )
+		{
+			drawText( GuiString.InvalidShip.getLocalizedText(), 1 );
+		}
+		else
+		{
 			// list the specs
 			final double TicksPerSecond = 20; // constant set in Minecraft.java, inaccessible by methods
 			drawLabelValueText( "Acceleration", String.format( "%.1f m/s\u00B2", m_acceleration*TicksPerSecond*TicksPerSecond ), 1 );

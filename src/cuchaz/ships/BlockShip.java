@@ -1,5 +1,7 @@
 package cuchaz.ships;
 
+import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
@@ -14,9 +16,6 @@ import cuchaz.ships.gui.Gui;
 
 public class BlockShip extends Block
 {
-	@SideOnly( Side.CLIENT )
-	private Icon m_iconSide;
-	
 	protected BlockShip( int blockId )
 	{
 		super( blockId, Material.iron );
@@ -38,7 +37,7 @@ public class BlockShip extends Block
 			case South:
 			case East:
 			case West:
-				return m_iconSide;
+				return ShipType.getByMeta( meta ).getIcon();
 			
 			default:
 				return blockIcon;
@@ -50,7 +49,7 @@ public class BlockShip extends Block
 	public void registerIcons( IconRegister iconRegister )
 	{
 		blockIcon = iconRegister.registerIcon( "ships:shipTop" );
-		m_iconSide = iconRegister.registerIcon( "ships:shipSide" );
+		ShipType.registerIcons( iconRegister );
 	}
 	
 	@Override
@@ -81,9 +80,23 @@ public class BlockShip extends Block
 	
 	public ShipType getShipType( World world, int x, int y, int z )
 	{
-		// UNDONE: base this off of block metadata
-		//world.getBlockMetadata( x, y, z );
-		
-		return ShipType.Raft;
+		return ShipType.getByMeta( world.getBlockMetadata( x, y, z ) );
+	}
+	
+	@Override
+	public int damageDropped( int metadata )
+	{
+		return metadata;
+	}
+	
+	@Override
+	@SideOnly( Side.CLIENT )
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
+	public void getSubBlocks( int itemId, CreativeTabs tabs, List subItems )
+	{
+		for( ShipType type : ShipType.values() )
+		{
+			subItems.add( type.newItemStack() );
+		}
 	}
 }

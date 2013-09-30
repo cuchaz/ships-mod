@@ -198,7 +198,8 @@ public class Ships extends DummyModContainer
 	private void loadThings( )
 	{
 		// blocks
-		GameRegistry.registerBlock( m_blockShip, "blockShip" );
+		GameRegistry.registerBlock( m_blockShip, ShipItemBlock.class, "blockShip" );
+		ShipType.registerBlocks();
 		GameRegistry.registerBlock( m_blockAirWall, "blockAirWall" );
 		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );
 		
@@ -218,7 +219,6 @@ public class Ships extends DummyModContainer
 	private void loadLanguage( )
 	{
 		// block names
-		LanguageRegistry.addName( m_blockShip, "Ship" );
 		LanguageRegistry.addName( m_blockAirWall, "Air Wall" );
 		LanguageRegistry.addName( m_blockHelm, "Helm" );
 		
@@ -236,18 +236,8 @@ public class Ships extends DummyModContainer
 
 	private void loadRecipes( )
 	{
-		ItemStack ironStack = new ItemStack( Item.ingotIron );
-		ItemStack redstoneStack = new ItemStack( Item.redstone );
 		ItemStack stickStack = new ItemStack( Item.stick );
 		ItemStack goldStack = new ItemStack( Item.ingotGold );
-		
-		// ship
-		GameRegistry.addRecipe(
-			new ItemStack( m_blockShip ),
-			"xxx", "xyx", "xxx",
-			'x', ironStack,
-			'y', redstoneStack
-		);
 		
 		// paddle
 		GameRegistry.addRecipe(

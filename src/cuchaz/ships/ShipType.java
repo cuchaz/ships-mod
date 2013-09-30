@@ -1,11 +1,51 @@
 package cuchaz.ships;
 
+import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Icon;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.LanguageRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
 public enum ShipType
 {
-	Raft( 1024, true );
+	Tiny( 16, true )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Tiny Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xxx", "xyx", "xxx",
+				'x', new ItemStack( Item.ingotIron ),
+				'y', new ItemStack( Item.redstone )
+			);
+		}
+	},
+	Small( 256, false )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Small Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xzx", "zyz", "xzx",
+				'x', new ItemStack( Item.ingotIron ),
+				'y', new ItemStack( Item.redstone ),
+				'z', new ItemStack( Item.ingotGold )
+			);
+		}
+	};
 	
 	private int m_maxNumBlocks;
 	private boolean m_isPaddleable;
+	
+	@SideOnly( Side.CLIENT )
+	private Icon m_icon;
 	
 	private ShipType( int maxNumBlocks, boolean isPaddleable )
 	{
@@ -22,4 +62,43 @@ public enum ShipType
 	{
 		return m_isPaddleable;
 	}
+	
+	@SideOnly( Side.CLIENT )
+	public static void registerIcons( IconRegister iconRegister )
+	{
+		for( ShipType type : values() )
+		{
+			type.m_icon = iconRegister.registerIcon( "ships:shipSide-" + type.name().toLowerCase() );
+		}
+	}
+	
+	public Icon getIcon( )
+	{
+		return m_icon;
+	}
+	
+	public static ShipType getByMeta( int meta )
+	{
+		return values()[meta];
+	}
+	
+	public int getMeta( )
+	{
+		return ordinal();
+	}
+	
+	public ItemStack newItemStack( )
+	{
+		return new ItemStack( Ships.m_blockShip, 1, getMeta() );
+	}
+	
+	public static void registerBlocks( )
+	{
+		for( ShipType type : values() )
+		{
+			type.registerBlock();
+		}
+	}
+	
+	protected abstract void registerBlock( );
 }

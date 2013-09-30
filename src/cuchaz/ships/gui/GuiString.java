@@ -18,7 +18,9 @@ public enum GuiString
 	ShipWillItFloat( "Will it float" ),
 	ShipAlignedToDirection( "Aligned to launch direction" ),
 	ShipAwayFromBlocks( "Away from solid blocks" ),
-	ShipPropulsion( "Propulsion" );
+	ShipPropulsion( "Propulsion" ),
+	NoShipBlock( "Couldn't find a ship nearby!" ),
+	InvalidShip( "Ship is invalid!" );
 	
 	private String m_unlocalizedText;
 	
