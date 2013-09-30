@@ -5,7 +5,6 @@ import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 import java.io.IOException;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
@@ -36,7 +35,6 @@ public class GuiShipPropulsion extends GuiShip
 	private BlockArray m_helmEnvelope;
 	private BlockArray m_propulsionEnvelope;
 	private int m_desaturationProgramId;
-	private double m_acceleration;
 	private double m_topLinearSpeed;
 	private float m_topAngularSpeed;
 	private String m_propulsionMethodsDescription;
@@ -50,7 +48,6 @@ public class GuiShipPropulsion extends GuiShip
 		m_shipEnvelope = null;
 		m_helmEnvelope = null;
 		m_propulsionEnvelope = null;
-		m_acceleration = 0;
 		m_topLinearSpeed = 0;
 		m_topAngularSpeed = 0f;
 		m_desaturationProgramId = 0;
@@ -94,7 +91,7 @@ public class GuiShipPropulsion extends GuiShip
 		}
 		
 		m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
-			
+		
 		// compute an envelope for the helm
 		helmCoords.posX -= shipBlockCoords.posX;
 		helmCoords.posY -= shipBlockCoords.posY;
@@ -118,9 +115,11 @@ public class GuiShipPropulsion extends GuiShip
 		}
 		
 		// compute the propulsion properties
-		m_acceleration = m_shipLauncher.getShipPhysics().getLinearAcceleration( m_propulsion );
 		m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
 		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion );
+		
+		// TEMP
+		System.out.println( String.format( "acceleration: %.2f", m_shipLauncher.getShipPhysics().getLinearAcceleration( m_propulsion ) ) );
 		
 		// build the description string
 		StringBuilder buf = new StringBuilder();
@@ -131,6 +130,10 @@ public class GuiShipPropulsion extends GuiShip
 			buf.append( delimiter );
 			buf.append( count.toString() );
 			delimiter = ", ";
+		}
+		if( delimiter == "" )
+		{
+			buf.append( "no propulsion methods!" );
 		}
 		m_propulsionMethodsDescription = buf.toString();
 	}
@@ -152,9 +155,10 @@ public class GuiShipPropulsion extends GuiShip
 		{
 			// list the specs
 			final double TicksPerSecond = 20; // constant set in Minecraft.java, inaccessible by methods
-			drawLabelValueText( "Acceleration", String.format( "%.1f m/s\u00B2", m_acceleration*TicksPerSecond*TicksPerSecond ), 1 );
-			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*TicksPerSecond ), 2 );
-			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/sec", m_topAngularSpeed ), 3 );
+			drawLabelValueText( "Ship Mass", String.format( "%.1f Kg", m_shipLauncher.getShipPhysics().getMass() ), 1 );
+			drawLabelValueText( "Thrust", String.format( "%.1f N", m_propulsion.getTotalThrust() ), 2 );
+			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*TicksPerSecond ), 3 );
+			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/sec", m_topAngularSpeed ), 4 );
 			
 			drawPropulsion();
 			

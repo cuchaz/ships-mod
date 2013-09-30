@@ -14,10 +14,11 @@ import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
 {
-	private static final double AccelerationGravity = 0.006;
+	private static final double GramsPerKg = 1000;
+	private static final double AccelerationGravity = 9.8; // m/s/s
 	private static final double DragConstant = 0.2;
-	private static final double AirDragConstant = 0.01;
-	private static final double WaterDragConstant = 0.3;
+	private static final double AirDragConstant = 0.0000001;
+	private static final double WaterDragConstant = 0.0000003;
 	private static final double AngularAccelerationDivider = 5.0;
 	
 	private static class DisplacementEntry
@@ -139,7 +140,7 @@ public class ShipPhysics
 	public double getNetUpForce( double waterHeight )
 	{
 		// the net up force is the difference of the weight and the buoyancy
-		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*AccelerationGravity;
+		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*GramsPerKg*AccelerationGravity;
 	}
 	
 	public double getDisplacedWaterMass( double waterHeight )
@@ -191,6 +192,7 @@ public class ShipPhysics
 	
 	public double getLinearAcceleration( Propulsion propulsion )
 	{
+		// thrust is in N and mass is in Kg
 		return propulsion.getTotalThrust()/m_shipMass;
 	}
 	
@@ -211,14 +213,15 @@ public class ShipPhysics
 		// I'm too lazy to write down the equations and solve them analytically...
 		double thrustAccel = this.getLinearAcceleration( propulsion );
 		double speed = 1.0;
-		while( true )
+		double oldSpeed = speed;
+		for( int i=0; i<1000; i++ )
 		{
-			double dragAccel = getLinearDragCoefficient( waterHeight, speed, 0, 0, propulsion.getFrontSide(), envelopes );
-			double netAccel = thrustAccel - dragAccel;
-			speed += netAccel;
+			speed += thrustAccel;
+			double omDrag = 1.0 - getLinearDragCoefficient( waterHeight, speed, 0, 0, propulsion.getFrontSide(), envelopes );
+			speed *= omDrag;
 			
 			// did the speed stop changing?
-			if( Math.abs( netAccel ) < 1e-2 )
+			if( Math.abs( oldSpeed - speed ) < 1e-2 )
 			{
 				break;
 			}
@@ -230,13 +233,17 @@ public class ShipPhysics
 	{
 		// determine the top speed numerically
 		// again, I'm too lazy to write down the equations and solve them analytically...
-		double thrustAccel = this.getLinearAcceleration( propulsion );
+		double thrustAccel = getLinearAcceleration( propulsion );
 		float speed = 1.0f;
-		while( true )
+		for( int i=0; i<1000; i++ )
 		{
 			double dragAccel = getAngularDragCoefficient( speed );
 			double netAccel = thrustAccel - dragAccel;
 			speed += netAccel;
+			if( speed < 0 )
+			{
+				speed = 0;
+			}
 			
 			// did the speed stop changing?
 			if( Math.abs( netAccel ) < 1e-2 )

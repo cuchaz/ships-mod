@@ -8,6 +8,8 @@ import cuchaz.ships.ShipWorld;
 
 public class Sail extends PropulsionMethod
 {
+	public static final double ThrustPerBlock = 1.0; // N
+	
 	private int m_numExposedBlocks;
 	
 	protected Sail( ShipWorld world, Set<ChunkCoordinates> coords, BlockSide frontDirection )
@@ -20,7 +22,7 @@ public class Sail extends PropulsionMethod
 	@Override
 	public double getThrust( )
 	{
-		return 1.0*m_numExposedBlocks;
+		return ThrustPerBlock*m_numExposedBlocks;
 	}
 	
 	public boolean isValid( )

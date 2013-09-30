@@ -58,13 +58,23 @@ public class Propulsion
 		
 		// compute parameters
 		m_helmCoords = findHelm( m_world );
-		m_frontSide = BlockSide.getByXZOffset( world.getBlockMetadata( m_helmCoords ) );
 		
-		// discover the propulsion types
 		m_methods = new ArrayList<PropulsionMethod>();
-		for( PropulsionDiscoverer discoverer : PropulsionDiscovererRegistry.discoverers() )
+		
+		// no helm? Then we're stuck with paddles
+		if( m_helmCoords == null )
 		{
-			m_methods.addAll( discoverer.getPropulsionMethods( m_world, m_frontSide ) );
+			m_methods.add( new Paddle() );
+		}
+		else
+		{
+			m_frontSide = BlockSide.getByXZOffset( world.getBlockMetadata( m_helmCoords ) );
+			
+			// discover the propulsion types
+			for( PropulsionDiscoverer discoverer : PropulsionDiscovererRegistry.discoverers() )
+			{
+				m_methods.addAll( discoverer.getPropulsionMethods( m_world, m_frontSide ) );
+			}
 		}
 		
 		// count the types

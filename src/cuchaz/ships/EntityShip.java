@@ -668,6 +668,9 @@ public class EntityShip extends Entity
 			double dz = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
 			motionX += dx*linearAcceleration;
 			motionZ += dz*linearAcceleration;
+			
+			// TEMP
+			System.out.println( "Ship accel: " + linearAcceleration + ", speed: " + Math.sqrt( motionX*motionX + motionZ*motionZ ) );
 		}
 		
 		// apply the angular acceleration
@@ -698,6 +701,9 @@ public class EntityShip extends Entity
 		motionX *= omdrag;
 		motionY *= omdrag;
 		motionZ *= omdrag;
+		
+		// TEMP
+		System.out.println( "Drag coefficient: " + omdrag + ", speed: " + Math.sqrt( motionX*motionX + motionZ*motionZ ) );
 		
 		// apply rotational drag
 		drag = m_physics.getAngularDragCoefficient( motionYaw );

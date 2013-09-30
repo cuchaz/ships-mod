@@ -25,7 +25,7 @@ public enum ShipType
 			);
 		}
 	},
-	Small( 256, false )
+	Small( 128, false )
 	{
 		@Override
 		protected void registerBlock( )
