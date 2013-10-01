@@ -60,13 +60,12 @@ public class Propulsion
 		m_helmCoords = findHelm( m_world );
 		
 		m_methods = new ArrayList<PropulsionMethod>();
-		
-		// no helm? Then we're stuck with paddles
-		if( m_helmCoords == null )
+		if( world.getShipType().isPaddleable() )
 		{
+			// use a paddle!
 			m_methods.add( new Paddle() );
 		}
-		else
+		else if( m_helmCoords != null )
 		{
 			m_frontSide = BlockSide.getByXZOffset( world.getBlockMetadata( m_helmCoords ) );
 			

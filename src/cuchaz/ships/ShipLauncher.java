@@ -281,7 +281,6 @@ public class ShipLauncher
 			m_z + centerOfMass.zCoord,
 			0, 0
 		);
-		ship.setShipType( m_shipType );
 		ship.setWaterHeight( waterHeight );
 		ship.setBlocks( m_shipWorld );
 		

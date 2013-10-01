@@ -25,7 +25,6 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 
@@ -91,6 +90,7 @@ public class ShipWorld extends DetatchedWorld
 		m_ship = null;
 		m_blocks = null;
 		m_airBlockStorage = new BlockStorage();
+		m_geometry = null;
 		m_tileEntities = null;
 		m_changedBlocks = new TreeSet<ChunkCoordinates>();
 	}
@@ -253,6 +253,11 @@ public class ShipWorld extends DetatchedWorld
 	public void setShip( EntityShip val )
 	{
 		m_ship = val;
+	}
+	
+	public ShipType getShipType( )
+	{
+		return ShipType.getByMeta( getBlockMetadata( 0, 0, 0 ) );
 	}
 	
 	public boolean isValid( )

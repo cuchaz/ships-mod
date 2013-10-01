@@ -77,7 +77,15 @@ public class BlockHelm extends Block
 		// are we in the world, or on the ship?
 		if( world instanceof ShipWorld )
 		{
-			Gui.PilotSurfaceShip.open( player, world, x, y, z );
+			ShipWorld shipWorld = (ShipWorld)world;
+			if( shipWorld.getShipType().isPaddleable() )
+			{
+				// disable the helm
+			}
+			else
+			{
+				Gui.PilotSurfaceShip.open( player, world, x, y, z );
+			}
 		}
 		else
 		{

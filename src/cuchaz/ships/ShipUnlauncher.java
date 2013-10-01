@@ -103,7 +103,7 @@ public class ShipUnlauncher
 		m_ship.shipToWorld( p );
 		ChunkCoordinates shipBlock = new ChunkCoordinates(
 			MathHelper.floor_double( p.xCoord + 0.5 ),
-			MathHelper.floor_double( p.yCoord + 1.0 ),
+			MathHelper.ceiling_double_int( p.yCoord ),
 			MathHelper.floor_double( p.zCoord + 0.5 )
 		);
 		

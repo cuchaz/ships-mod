@@ -18,6 +18,7 @@ import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
 import cuchaz.modsShared.BlockUtils.Neighbors;
 import cuchaz.modsShared.ColorUtils;
+import cuchaz.modsShared.Util;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.Ships;
@@ -90,6 +91,12 @@ public class GuiShipPropulsion extends GuiShip
 			return;
 		}
 		
+		if( m_shipLauncher.getShipType().isPaddleable() )
+		{
+			// paddleable ships cannot support a helm
+			return;
+		}
+		
 		m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
 		
 		// compute an envelope for the helm
@@ -154,10 +161,9 @@ public class GuiShipPropulsion extends GuiShip
 		else
 		{
 			// list the specs
-			final double TicksPerSecond = 20; // constant set in Minecraft.java, inaccessible by methods
 			drawLabelValueText( "Ship Mass", String.format( "%.1f Kg", m_shipLauncher.getShipPhysics().getMass() ), 1 );
 			drawLabelValueText( "Thrust", String.format( "%.1f N", m_propulsion.getTotalThrust() ), 2 );
-			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*TicksPerSecond ), 3 );
+			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*Util.TicksPerSecond ), 3 );
 			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/sec", m_topAngularSpeed ), 4 );
 			
 			drawPropulsion();
@@ -166,7 +172,7 @@ public class GuiShipPropulsion extends GuiShip
 			drawText( m_propulsionMethodsDescription, 12 );
 		}
 	}
-
+	
 	private void drawPropulsion( )
 	{
 		int x = LeftMargin;

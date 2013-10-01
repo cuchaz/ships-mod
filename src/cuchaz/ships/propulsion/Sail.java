@@ -8,7 +8,7 @@ import cuchaz.ships.ShipWorld;
 
 public class Sail extends PropulsionMethod
 {
-	public static final double ThrustPerBlock = 1.0; // N
+	public static final double ThrustPerBlock = 0.2; // N
 	
 	private int m_numExposedBlocks;
 	

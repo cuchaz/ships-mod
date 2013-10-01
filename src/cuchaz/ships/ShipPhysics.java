@@ -10,16 +10,16 @@ import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.modsShared.Util;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
 {
-	private static final double GramsPerKg = 1000;
-	private static final double AccelerationGravity = 9.8; // m/s/s
-	private static final double DragConstant = 0.2;
-	private static final double AirDragConstant = 0.0000001;
-	private static final double WaterDragConstant = 0.0000003;
-	private static final double AngularAccelerationDivider = 5.0;
+	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 5 );
+	private static final double AirDragConstant = 0.01;
+	private static final double WaterDragConstant = 0.1;
+	private static final double AngularDragConstant = 0.2;
+	private static final double AngularAccelerationFactor = 50.0;
 	
 	private static class DisplacementEntry
 	{
@@ -140,7 +140,7 @@ public class ShipPhysics
 	public double getNetUpForce( double waterHeight )
 	{
 		// the net up force is the difference of the weight and the buoyancy
-		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*GramsPerKg*AccelerationGravity;
+		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*AccelerationGravity;
 	}
 	
 	public double getDisplacedWaterMass( double waterHeight )
@@ -187,7 +187,7 @@ public class ShipPhysics
 	
 	public double getAngularDragCoefficient( float motionYaw )
 	{
-		return logisticFunction( Math.abs( motionYaw ), DragConstant );
+		return logisticFunction( Math.abs( motionYaw ), AngularDragConstant );
 	}
 	
 	public double getLinearAcceleration( Propulsion propulsion )
@@ -198,7 +198,7 @@ public class ShipPhysics
 	
 	public double getAngularAcceleration( Propulsion propulsion )
 	{
-		return getLinearAcceleration( propulsion )/AngularAccelerationDivider;
+		return getLinearAcceleration( propulsion )*AngularAccelerationFactor;
 	}
 	
 	public double getTopLinearSpeed( Propulsion propulsion, Envelopes envelopes )

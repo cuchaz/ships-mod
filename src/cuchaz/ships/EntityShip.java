@@ -34,8 +34,7 @@ public class EntityShip extends Entity
 	
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
 	private static final int WatcherIdBlocks = 2;
-	private static final int WatcherIdShipType = 3;
-	private static final int WatcherIdWaterHeight = 4;
+	private static final int WatcherIdWaterHeight = 3;
 	
 	private static final double RiderEpsilon = 0.2;
 	
@@ -103,7 +102,6 @@ public class EntityShip extends Entity
 		
 		// allocate a slot for the block data
 		dataWatcher.addObject( WatcherIdBlocks, "" );
-		dataWatcher.addObject( WatcherIdShipType, 0 );
 		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
 	}
 	
@@ -199,7 +197,6 @@ public class EntityShip extends Entity
 	@Override
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
-		setShipType( ShipType.values()[nbt.getInteger( "shipType" )] );
 		setWaterHeight( nbt.getInteger( "waterHeight" ) );
 		setBlocks( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
 	}
@@ -207,7 +204,6 @@ public class EntityShip extends Entity
 	@Override
 	protected void writeEntityToNBT( NBTTagCompound nbt )
 	{
-		nbt.setInteger( "shipType", getShipType().ordinal() );
 		nbt.setInteger( "waterHeight", getWaterHeight() );
 		nbt.setByteArray( "blocks", m_blocks.getData() );
 	}
@@ -220,15 +216,6 @@ public class EntityShip extends Entity
 	public Propulsion getPropulsion( )
 	{
 		return m_propulsion;
-	}
-	
-	public ShipType getShipType( )
-	{
-		return ShipType.values()[dataWatcher.getWatchableObjectInt( WatcherIdShipType )];
-	}
-	public void setShipType( ShipType val )
-	{
-		dataWatcher.updateObject( WatcherIdShipType, val.ordinal() );
 	}
 	
 	public int getWaterHeight( )
@@ -652,9 +639,7 @@ public class EntityShip extends Entity
 			m_sendPilotChangesToServer = false;
 		}
 		
-		// apply the thrust
-		
-		// UNDONE: determine accelerations based on physics and propulsion
+		// determine accelerations based on physics and propulsion
 		double linearAcceleration = m_physics.getLinearAcceleration( m_propulsion )*linearThrottle/LinearThrottleMax;
 		double angularAcceleration = m_physics.getAngularAcceleration( m_propulsion )*angularThrottle/AngularThrottleMax;
 		
@@ -668,9 +653,6 @@ public class EntityShip extends Entity
 			double dz = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
 			motionX += dx*linearAcceleration;
 			motionZ += dz*linearAcceleration;
-			
-			// TEMP
-			System.out.println( "Ship accel: " + linearAcceleration + ", speed: " + Math.sqrt( motionX*motionX + motionZ*motionZ ) );
 		}
 		
 		// apply the angular acceleration
@@ -701,9 +683,6 @@ public class EntityShip extends Entity
 		motionX *= omdrag;
 		motionY *= omdrag;
 		motionZ *= omdrag;
-		
-		// TEMP
-		System.out.println( "Drag coefficient: " + omdrag + ", speed: " + Math.sqrt( motionX*motionX + motionZ*motionZ ) );
 		
 		// apply rotational drag
 		drag = m_physics.getAngularDragCoefficient( motionYaw );
