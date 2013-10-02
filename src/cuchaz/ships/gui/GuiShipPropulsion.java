@@ -125,9 +125,6 @@ public class GuiShipPropulsion extends GuiShip
 		m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
 		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion );
 		
-		// TEMP
-		System.out.println( String.format( "acceleration: %.2f", m_shipLauncher.getShipPhysics().getLinearAcceleration( m_propulsion ) ) );
-		
 		// build the description string
 		StringBuilder buf = new StringBuilder();
 		buf.append( "Found " );

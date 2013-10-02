@@ -15,11 +15,11 @@ import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
 {
-	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 5 );
-	private static final double AirDragConstant = 0.01;
-	private static final double WaterDragConstant = 0.1;
-	private static final double AngularDragConstant = 0.2;
-	private static final double AngularAccelerationFactor = 50.0;
+	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 9.8 );
+	private static final double AirViscosity = 0.1;
+	private static final double WaterViscosity = 20.0;
+	private static final float AngularAccelerationFactor = 10;
+	private static final float AngularDragViscosity = 1;
 	
 	private static class DisplacementEntry
 	{
@@ -137,10 +137,10 @@ public class ShipPhysics
 		return com;
 	}
 	
-	public double getNetUpForce( double waterHeight )
+	public double getNetUpAcceleration( double waterHeight )
 	{
 		// the net up force is the difference of the weight and the buoyancy
-		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*AccelerationGravity;
+		return ( getDisplacedWaterMass( waterHeight ) - m_shipMass )*AccelerationGravity/m_shipMass;
 	}
 	
 	public double getDisplacedWaterMass( double waterHeight )
@@ -165,40 +165,56 @@ public class ShipPhysics
 		return m_equilibriumWaterHeight;
 	}
 	
-	public double getLinearDragCoefficient( double waterHeight, double motionX, double motionY, double motionZ, BlockSide side, Envelopes envelopes )
-	{
-		// how fast are we going?
-		double speed = Math.sqrt( motionX*motionX + motionY*motionY + motionZ*motionZ );
-		
-		// divide the leading envelope into air vs water
-		double airSurfaceArea = 0;
-		double waterSurfaceArea = 0;
-		BlockArray leadingEnvelope = envelopes.getEnvelope( side );
-		for( ChunkCoordinates coords : leadingEnvelope )
-		{
-			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
-			waterSurfaceArea += fractionSubmerged;
-			airSurfaceArea += 1 - fractionSubmerged;
-		}
-		
-		// compute the drag coefficient
-		return logisticFunction( speed, AirDragConstant*airSurfaceArea + WaterDragConstant*waterSurfaceArea );
-	}
-	
-	public double getAngularDragCoefficient( float motionYaw )
-	{
-		return logisticFunction( Math.abs( motionYaw ), AngularDragConstant );
-	}
-	
-	public double getLinearAcceleration( Propulsion propulsion )
+	public double getLinearAccelerationDueToThrust( Propulsion propulsion )
 	{
 		// thrust is in N and mass is in Kg
 		return propulsion.getTotalThrust()/m_shipMass;
 	}
 	
-	public double getAngularAcceleration( Propulsion propulsion )
+	public double getLinearAccelerationDueToDrag( Vec3 velocity, double waterHeight, Envelopes envelopes )
 	{
-		return getLinearAcceleration( propulsion )*AngularAccelerationFactor;
+		// which side is the leading side?
+		BlockSide leadingSide = null;
+		double bestDot = Double.NEGATIVE_INFINITY;
+		for( BlockSide side : BlockSide.values() )
+		{
+			double dot = side.getDx()*velocity.xCoord + side.getDy()*velocity.yCoord + side.getDz()*velocity.zCoord;
+			if( dot > bestDot )
+			{
+				bestDot = dot;
+				leadingSide = side;
+			}
+		}
+		assert( leadingSide != null );
+		BlockArray leadingEnvelope = envelopes.getEnvelope( leadingSide );
+		
+		// divide the leading envelope into air vs water
+		double airSurfaceArea = 0;
+		double waterSurfaceArea = 0;
+		for( ChunkCoordinates coords : leadingEnvelope )
+		{
+			double fractionSubmerged = leadingSide.getFractionSubmerged( coords.posY, waterHeight );
+			waterSurfaceArea += fractionSubmerged;
+			airSurfaceArea += 1 - fractionSubmerged;
+		}
+		
+		// how fast are we going?
+		double speed = velocity.lengthVector();
+		
+		// compute the drag force using a quadratic drag approximation
+		double dragForce = speed*speed*( AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea );
+		return dragForce/m_shipMass;
+	}
+	
+	public float getAngularAccelerationDueToThrust( Propulsion propulsion )
+	{
+		return (float)getLinearAccelerationDueToThrust( propulsion )*AngularAccelerationFactor;
+	}
+	
+	public float getAngularAccelerationDueToDrag( float motionYaw )
+	{
+		float dragForce = motionYaw*motionYaw*AngularDragViscosity;
+		return dragForce/(float)m_shipMass;
 	}
 	
 	public double getTopLinearSpeed( Propulsion propulsion, Envelopes envelopes )
@@ -210,18 +226,20 @@ public class ShipPhysics
 		}
 		
 		// determine the top speed numerically
-		// I'm too lazy to write down the equations and solve them analytically...
-		double thrustAccel = this.getLinearAcceleration( propulsion );
+		// this ends up being a recurrence relation... I'm WAY too lazy to solve it analytically
+		double thrustAccel = getLinearAccelerationDueToThrust( propulsion );
 		double speed = 1.0;
-		double oldSpeed = speed;
-		for( int i=0; i<1000; i++ )
+		Vec3 velocity = Vec3.createVectorHelper( 0, 0, 0 );
+		for( int i=0; i<100; i++ )
 		{
-			speed += thrustAccel;
-			double omDrag = 1.0 - getLinearDragCoefficient( waterHeight, speed, 0, 0, propulsion.getFrontSide(), envelopes );
-			speed *= omDrag;
+			velocity.xCoord = speed*propulsion.getFrontSide().getDx();
+			velocity.zCoord = speed*propulsion.getFrontSide().getDz();
+			
+			double netAcceleration = thrustAccel - getLinearAccelerationDueToDrag( velocity, waterHeight, envelopes );
+			speed += netAcceleration;
 			
 			// did the speed stop changing?
-			if( Math.abs( oldSpeed - speed ) < 1e-2 )
+			if( Math.abs( netAcceleration ) < 1e-2 )
 			{
 				break;
 			}
@@ -233,20 +251,15 @@ public class ShipPhysics
 	{
 		// determine the top speed numerically
 		// again, I'm too lazy to write down the equations and solve them analytically...
-		double thrustAccel = getLinearAcceleration( propulsion );
+		double thrustAccel = getAngularAccelerationDueToThrust( propulsion );
 		float speed = 1.0f;
-		for( int i=0; i<1000; i++ )
+		for( int i=0; i<100; i++ )
 		{
-			double dragAccel = getAngularDragCoefficient( speed );
-			double netAccel = thrustAccel - dragAccel;
-			speed += netAccel;
-			if( speed < 0 )
-			{
-				speed = 0;
-			}
+			double netAcceleration = thrustAccel - getAngularAccelerationDueToDrag( speed );
+			speed += netAcceleration;
 			
 			// did the speed stop changing?
-			if( Math.abs( netAccel ) < 1e-2 )
+			if( Math.abs( netAcceleration ) < 1e-2 )
 			{
 				break;
 			}

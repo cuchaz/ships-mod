@@ -336,18 +336,16 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		double waterHeightInBlockSpace = shipToBlocksY( worldToShipY( getWaterHeight() ) );
-		
-		// only simulate buoyancy if we're outside of the epsilon for the equilibrium y pos
-		final double EquilibriumWaterHeightEpsilon = 0.05;
-		double distToEquilibrium = waterHeightInBlockSpace - m_physics.getEquilibriumWaterHeight();
-		if( Math.abs( distToEquilibrium ) > EquilibriumWaterHeightEpsilon )
+		// TEMP: kill all ships
+		if( false )
 		{
-			motionY += m_physics.getNetUpForce( waterHeightInBlockSpace );
+			setDead();
 		}
 		
-		adjustMotionDueToThrust();
-		adjustMotionDueToDrag( waterHeightInBlockSpace );
+		double waterHeightInBlockSpace = shipToBlocksY( worldToShipY( getWaterHeight() ) );
+		
+		adjustMotionDueToGravityAndBuoyancy( waterHeightInBlockSpace );
+		adjustMotionDueToThrustAndDrag( waterHeightInBlockSpace );
 		adjustMotionDueToBlockCollisions();
 		
 		double dx = motionX;
@@ -614,7 +612,42 @@ public class EntityShip extends Entity
 		return new RotatedBB( box, -rotationYaw );
 	}
 	
-	private void adjustMotionDueToThrust( )
+	private void adjustMotionDueToGravityAndBuoyancy( double waterHeightInBlockSpace )
+	{
+		/* only simulate buoyancy if we're outside of the epsilon for the equilibrium y pos
+		final double EquilibriumWaterHeightEpsilon = 0.05;
+		double distToEquilibrium = waterHeightInBlockSpace - m_physics.getEquilibriumWaterHeight();
+		if( Math.abs( distToEquilibrium ) > EquilibriumWaterHeightEpsilon )
+		{
+		*/
+		
+		Vec3 velocity = Vec3.createVectorHelper( 0, motionY, 0 );
+		
+		double accelerationDueToBouyancy = m_physics.getNetUpAcceleration( waterHeightInBlockSpace );
+		double accelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		
+		
+		// make sure drag acceleration doesn't reverse the velocity!
+		// NOTE: drag is always positive right now. We'll fix the sign later
+		accelerationDueToDrag = Math.min( Math.abs( motionY + accelerationDueToBouyancy ), accelerationDueToDrag );
+		
+		// make sure drag opposes velocity
+		if( Math.signum( accelerationDueToDrag ) == Math.signum( motionY ) )
+		{
+			accelerationDueToDrag *= -1;
+		}
+		
+		// TEMP
+		double netAcceleration = accelerationDueToBouyancy + accelerationDueToDrag;
+		System.out.println( String.format( "%s velocity: %.4f, bouyancy: %.4f, drag: %.4f, net: %.4f",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			motionY, accelerationDueToBouyancy, accelerationDueToDrag, netAcceleration
+		) );
+		
+		motionY += accelerationDueToBouyancy + accelerationDueToDrag;
+	}
+	
+	private void adjustMotionDueToThrustAndDrag( double waterHeightInBlockSpace )
 	{
 		// process pilot actions
 		PilotAction.resetShip( this, m_pilotActions, m_oldPilotActions );
@@ -639,9 +672,15 @@ public class EntityShip extends Entity
 			m_sendPilotChangesToServer = false;
 		}
 		
+		// which side (relative to the ship) are we headed?
+		Vec3 velocity = Vec3.createVectorHelper( motionX, 0, motionZ );
+		worldToShipDirection( velocity );
+		
 		// determine accelerations based on physics and propulsion
-		double linearAcceleration = m_physics.getLinearAcceleration( m_propulsion )*linearThrottle/LinearThrottleMax;
-		double angularAcceleration = m_physics.getAngularAcceleration( m_propulsion )*angularThrottle/AngularThrottleMax;
+		double linearAcceleration = m_physics.getLinearAccelerationDueToThrust( m_propulsion )*linearThrottle/LinearThrottleMax
+			- m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		double angularAcceleration = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax
+			- m_physics.getAngularAccelerationDueToDrag( motionYaw );
 		
 		// apply the linear acceleration
 		if( m_sideShipForward != null )
@@ -657,37 +696,6 @@ public class EntityShip extends Entity
 		
 		// apply the angular acceleration
 		motionYaw += angularAcceleration;
-	}
-	
-	private void adjustMotionDueToDrag( double waterHeight )
-	{
-		// which side (relative to the ship) are we headed?
-		Vec3 motion = Vec3.createVectorHelper( motionX, motionY, motionZ );
-		worldToShipDirection( motion );
-		BlockSide bestSide = null;
-		double bestDot = Double.NEGATIVE_INFINITY;
-		for( BlockSide side : BlockSide.values() )
-		{
-			double dot = side.getDx()*motion.xCoord + side.getDy()*motion.yCoord + side.getDz()*motion.zCoord;
-			if( dot > bestDot )
-			{
-				bestDot = dot;
-				bestSide = side;
-			}
-		}
-		assert( bestSide != null );
-		
-		// apply the position drag
-		double drag = m_physics.getLinearDragCoefficient( waterHeight, motionX, motionY, motionZ, bestSide, m_blocks.getGeometry().getEnvelopes() );
-		double omdrag = 1.0 - drag;
-		motionX *= omdrag;
-		motionY *= omdrag;
-		motionZ *= omdrag;
-		
-		// apply rotational drag
-		drag = m_physics.getAngularDragCoefficient( motionYaw );
-		omdrag = 1.0 - drag;
-		motionYaw *= omdrag;
 	}
 	
 	private void adjustMotionDueToBlockCollisions( )
