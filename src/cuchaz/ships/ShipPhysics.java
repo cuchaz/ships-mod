@@ -17,7 +17,8 @@ public class ShipPhysics
 {
 	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 9.8 );
 	private static final double AirViscosity = 0.1;
-	private static final double WaterViscosity = 20.0;
+	private static final double WaterViscosity = 1.0;
+	private static final double BaseDrag = 0.001;
 	private static final float AngularAccelerationFactor = 10;
 	private static final float AngularDragViscosity = 1;
 	
@@ -202,8 +203,15 @@ public class ShipPhysics
 		double speed = velocity.lengthVector();
 		
 		// compute the drag force using a quadratic drag approximation
-		double dragForce = speed*speed*( AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea );
-		return dragForce/m_shipMass;
+		double dragAcceleration = BaseDrag + speed*speed*( AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea )/m_shipMass;
+		
+		// make sure we don't negate the velocity
+		if( dragAcceleration > speed )
+		{
+			dragAcceleration = speed;
+		}
+		
+		return dragAcceleration;
 	}
 	
 	public float getAngularAccelerationDueToThrust( Propulsion propulsion )

@@ -385,12 +385,10 @@ public class EntityShip extends Entity
 		final double Epsilon = 1e-3;
 		
 		/* TEMP
-		System.out.println( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), distE=%.4f, d=(%.4f,%.4f,%.4f), dYaw=%.1f, isNoticable=%b",
+		System.out.println( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), d=(%.4f,%.4f,%.4f), dYaw=%.1f",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			posX, posY, posZ,
-			distToEquilibrium,
-			dx, dy, dz, dYaw,
-			Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon
+			dx, dy, dz, dYaw
 		) );
 		*/
 		
@@ -626,7 +624,6 @@ public class EntityShip extends Entity
 		double accelerationDueToBouyancy = m_physics.getNetUpAcceleration( waterHeightInBlockSpace );
 		double accelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
 		
-		
 		// make sure drag acceleration doesn't reverse the velocity!
 		// NOTE: drag is always positive right now. We'll fix the sign later
 		accelerationDueToDrag = Math.min( Math.abs( motionY + accelerationDueToBouyancy ), accelerationDueToDrag );
@@ -637,12 +634,13 @@ public class EntityShip extends Entity
 			accelerationDueToDrag *= -1;
 		}
 		
-		// TEMP
+		/* TEMP
 		double netAcceleration = accelerationDueToBouyancy + accelerationDueToDrag;
 		System.out.println( String.format( "%s velocity: %.4f, bouyancy: %.4f, drag: %.4f, net: %.4f",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			motionY, accelerationDueToBouyancy, accelerationDueToDrag, netAcceleration
 		) );
+		*/
 		
 		motionY += accelerationDueToBouyancy + accelerationDueToDrag;
 	}
@@ -664,38 +662,67 @@ public class EntityShip extends Entity
 			linearThrottle = LinearThrottleMax;
 		}
 		
-		if( m_sendPilotChangesToServer )
+		// get the normalized velocity
+		double velocityDirX = motionX;
+		double velocityDirZ = motionZ;
+		double speed = Math.sqrt( velocityDirX*velocityDirX + velocityDirZ*velocityDirZ );
+		if( speed > 0 )
 		{
-			// send a packet to the server
-			PacketPilotShip packet = new PacketPilotShip( entityId, m_pilotActions, m_sideShipForward, linearThrottle, angularThrottle );
-			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
-			m_sendPilotChangesToServer = false;
+			velocityDirX /= speed;
+			velocityDirZ /= speed;
 		}
 		
-		// which side (relative to the ship) are we headed?
+		// apply the drag
 		Vec3 velocity = Vec3.createVectorHelper( motionX, 0, motionZ );
 		worldToShipDirection( velocity );
 		
-		// determine accelerations based on physics and propulsion
-		double linearAcceleration = m_physics.getLinearAccelerationDueToThrust( m_propulsion )*linearThrottle/LinearThrottleMax
-			- m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
-		double angularAcceleration = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax
-			- m_physics.getAngularAccelerationDueToDrag( motionYaw );
+		// apply the drag
+		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		motionX += -velocityDirX*linearAccelerationDueToDrag;
+		motionZ += -velocityDirZ*linearAccelerationDueToDrag;
 		
-		// apply the linear acceleration
 		if( m_sideShipForward != null )
 		{
+			if( m_sendPilotChangesToServer )
+			{
+				// send a packet to the server
+				PacketPilotShip packet = new PacketPilotShip( entityId, m_pilotActions, m_sideShipForward, linearThrottle, angularThrottle );
+				PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+				m_sendPilotChangesToServer = false;
+			}
+			
+			// compute the forward vector
 			float yawRad = (float)Math.toRadians( rotationYaw );
 			float cos = MathHelper.cos( yawRad );
 			float sin = MathHelper.sin( yawRad );
-			double dx = m_sideShipForward.getDx()*cos + m_sideShipForward.getDz()*sin;
-			double dz = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
-			motionX += dx*linearAcceleration;
-			motionZ += dz*linearAcceleration;
+			double forwardX = m_sideShipForward.getDx()*cos + m_sideShipForward.getDz()*sin;
+			double forwardZ = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
+			
+			// apply the thrust
+			double linearAccelerationDueToThrust = m_physics.getLinearAccelerationDueToThrust( m_propulsion )*linearThrottle/LinearThrottleMax;
+			motionX += forwardX*linearAccelerationDueToThrust;
+			motionZ += forwardZ*linearAccelerationDueToThrust;
+			
+			// TEMP
+			System.out.println( String.format( "%s speed: %.4f, thrust: %.4f, drag: %.4f",
+				worldObj.isRemote ? "CLIENT" : "SERVER",
+				speed, linearAccelerationDueToThrust, linearAccelerationDueToDrag
+			) );
+			//
+		}
+		
+		// get the angular acceleration
+		double angularAccelerationDueToThrust = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax;
+		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw );
+		
+		// make sure the drag is opposed to the velocity
+		if( Math.signum( angularAccelerationDueToDrag ) == Math.signum( motionYaw ) )
+		{
+			angularAccelerationDueToDrag *= -1;
 		}
 		
 		// apply the angular acceleration
-		motionYaw += angularAcceleration;
+		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;
 	}
 	
 	private void adjustMotionDueToBlockCollisions( )
