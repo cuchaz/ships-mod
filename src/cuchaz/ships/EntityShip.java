@@ -414,8 +414,7 @@ public class EntityShip extends Entity
 			);
 			
 			moveRiders( riders, dx, dy, dz, dYaw );
-			// UNDONE: get entity collision working again!
-			//moveCollidingEntities( riders );
+			moveCollidingEntities( riders );
 			moveWater( waterHeightInBlockSpace );
 		}
 		

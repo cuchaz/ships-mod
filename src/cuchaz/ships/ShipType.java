@@ -11,7 +11,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public enum ShipType
 {
-	Tiny( 16, true )
+	Tiny( 20, true )
 	{
 		@Override
 		protected void registerBlock( )
@@ -25,7 +25,7 @@ public enum ShipType
 			);
 		}
 	},
-	Small( 128, false )
+	Small( 200, false )
 	{
 		@Override
 		protected void registerBlock( )

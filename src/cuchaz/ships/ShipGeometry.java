@@ -207,11 +207,11 @@ public class ShipGeometry
 	{
 		// don't check more blocks than can fit in the shell
 		final BoundingBoxInt box = m_envelopes.getBoundingBox();
-		int volume = ( box.getDx() + 3 )*( box.getDy() + 3 )*( box.getDz() + 3 );
+		int shellVolume = ( box.getDx() + 2 )*( box.getDy() + 2 )*( box.getDz() + 2 );
 		
 		Boolean result = BlockUtils.searchForCondition(
 			coords,
-			volume,
+			shellVolume,
 			new BlockConditionValidator( )
 			{
 				@Override
