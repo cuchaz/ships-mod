@@ -662,7 +662,7 @@ public class EntityShip extends Entity
 			linearThrottle = LinearThrottleMax;
 		}
 		
-		// get the normalized velocity
+		// get the velocity direction
 		double velocityDirX = motionX;
 		double velocityDirZ = motionZ;
 		double speed = Math.sqrt( velocityDirX*velocityDirX + velocityDirZ*velocityDirZ );
@@ -672,12 +672,14 @@ public class EntityShip extends Entity
 			velocityDirZ /= speed;
 		}
 		
-		// apply the drag
-		Vec3 velocity = Vec3.createVectorHelper( motionX, 0, motionZ );
-		worldToShipDirection( velocity );
+		// get the velocity in block coords
+		Vec3 velocityInBlockCoords = Vec3.createVectorHelper( motionX, 0, motionZ );
+		worldToShipDirection( velocityInBlockCoords );
 		
 		// apply the drag
-		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocityInBlockCoords, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		// make sure drag acceleration doesn't reverse the velocity!
+		linearAccelerationDueToDrag = Math.min( speed, linearAccelerationDueToDrag );
 		motionX += -velocityDirX*linearAccelerationDueToDrag;
 		motionZ += -velocityDirZ*linearAccelerationDueToDrag;
 		
@@ -703,23 +705,33 @@ public class EntityShip extends Entity
 			motionX += forwardX*linearAccelerationDueToThrust;
 			motionZ += forwardZ*linearAccelerationDueToThrust;
 			
-			// TEMP
+			/* TEMP
 			System.out.println( String.format( "%s speed: %.4f, thrust: %.4f, drag: %.4f",
 				worldObj.isRemote ? "CLIENT" : "SERVER",
 				speed, linearAccelerationDueToThrust, linearAccelerationDueToDrag
 			) );
-			//
+			*/
 		}
 		
 		// get the angular acceleration
 		double angularAccelerationDueToThrust = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax;
 		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw );
 		
+		// make sure drag acceleration doesn't reverse the velocity!
+		angularAccelerationDueToDrag = Math.min( Math.abs( motionYaw ), angularAccelerationDueToDrag );
+		
 		// make sure the drag is opposed to the velocity
 		if( Math.signum( angularAccelerationDueToDrag ) == Math.signum( motionYaw ) )
 		{
 			angularAccelerationDueToDrag *= -1;
 		}
+		
+		/* TEMP
+		System.out.println( String.format( "%s speed: %.4f, thrust: %.4f, drag: %.4f",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			speed, angularAccelerationDueToThrust, angularAccelerationDueToDrag
+		) );
+		*/
 		
 		// apply the angular acceleration
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;

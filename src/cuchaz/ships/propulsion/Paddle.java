@@ -12,6 +12,6 @@ public class Paddle extends PropulsionMethod
 	public double getThrust( )
 	{
 		// the paddle always has constant thrust
-		return 0.1;
+		return 0.4;
 	}
 }

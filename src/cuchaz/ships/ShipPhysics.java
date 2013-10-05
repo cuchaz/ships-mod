@@ -17,10 +17,11 @@ public class ShipPhysics
 {
 	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 9.8 );
 	private static final double AirViscosity = 0.1;
-	private static final double WaterViscosity = 1.0;
-	private static final double BaseDrag = 0.001;
+	private static final double WaterViscosity = 4.0;
+	private static final double BaseLinearDrag = 0.001;
 	private static final float AngularAccelerationFactor = 10;
-	private static final float AngularDragViscosity = 1;
+	private static final float AngularDragViscosity = 0.5f;
+	private static final double BaseAngularDrag = 0.1;
 	
 	private static class DisplacementEntry
 	{
@@ -203,7 +204,7 @@ public class ShipPhysics
 		double speed = velocity.lengthVector();
 		
 		// compute the drag force using a quadratic drag approximation
-		double dragAcceleration = BaseDrag + speed*speed*( AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea )/m_shipMass;
+		double dragAcceleration = BaseLinearDrag + speed*speed*( AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea )/m_shipMass;
 		
 		// make sure we don't negate the velocity
 		if( dragAcceleration > speed )
@@ -222,7 +223,7 @@ public class ShipPhysics
 	public float getAngularAccelerationDueToDrag( float motionYaw )
 	{
 		float dragForce = motionYaw*motionYaw*AngularDragViscosity;
-		return dragForce/(float)m_shipMass;
+		return (float)BaseAngularDrag + dragForce/(float)m_shipMass;
 	}
 	
 	public double getTopLinearSpeed( Propulsion propulsion, Envelopes envelopes )
@@ -235,15 +236,17 @@ public class ShipPhysics
 		
 		// determine the top speed numerically
 		// this ends up being a recurrence relation... I'm WAY too lazy to solve it analytically
-		double thrustAccel = getLinearAccelerationDueToThrust( propulsion );
-		double speed = 1.0;
+		double accelDueToThrust = getLinearAccelerationDueToThrust( propulsion );
+		double speed = 0;
 		Vec3 velocity = Vec3.createVectorHelper( 0, 0, 0 );
 		for( int i=0; i<100; i++ )
 		{
 			velocity.xCoord = speed*propulsion.getFrontSide().getDx();
 			velocity.zCoord = speed*propulsion.getFrontSide().getDz();
 			
-			double netAcceleration = thrustAccel - getLinearAccelerationDueToDrag( velocity, waterHeight, envelopes );
+			double accelDueToDrag = getLinearAccelerationDueToDrag( velocity, waterHeight, envelopes );
+			accelDueToDrag = Math.min( speed, accelDueToDrag );
+			double netAcceleration = accelDueToThrust - accelDueToDrag;
 			speed += netAcceleration;
 			
 			// did the speed stop changing?
@@ -260,7 +263,7 @@ public class ShipPhysics
 		// determine the top speed numerically
 		// again, I'm too lazy to write down the equations and solve them analytically...
 		double thrustAccel = getAngularAccelerationDueToThrust( propulsion );
-		float speed = 1.0f;
+		float speed = 0;
 		for( int i=0; i<100; i++ )
 		{
 			double netAcceleration = thrustAccel - getAngularAccelerationDueToDrag( speed );
