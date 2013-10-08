@@ -2,6 +2,7 @@ package cuchaz.ships.asm;
 
 import java.lang.reflect.Field;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -14,6 +15,8 @@ import cuchaz.ships.ShipWorld;
 
 public class ShipIntermediary
 {
+	public static final String Path = "cuchaz/ships/asm/ShipIntermediary";
+	
 	public static World translateWorld( World world, InventoryPlayer inventory )
 	{
 		// are we looking at a ship?
@@ -61,6 +64,17 @@ public class ShipIntermediary
 		}
 		
 		return translateDistance( world, player, x, y, z );
+	}
+	
+	public static void onEntityMove( Entity entity, double dx, double dy, double dz )
+	{
+		// move the entity like normal
+		entity.moveEntity( dx, dy, dz );
+		
+		// TEMP
+		System.out.println( "onEntityMove() !!!" );
+		
+		// check for nearby ships
 	}
 	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )

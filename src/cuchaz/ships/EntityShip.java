@@ -61,6 +61,7 @@ public class EntityShip extends Entity
 	private float m_yawFromServer;
 	private float m_pitchFromServer;
 	private TreeSet<ChunkCoordinates> m_previouslyDisplacedWaterBlocks;
+	private ShipCollider m_collider;
 	
 	public EntityShip( World world )
 	{
@@ -92,6 +93,7 @@ public class EntityShip extends Entity
 		m_yawFromServer = 0;
 		m_pitchFromServer = 0;
 		m_previouslyDisplacedWaterBlocks = null;
+		m_collider = new ShipCollider( this );
 	}
 	
 	@Override
@@ -941,14 +943,19 @@ public class EntityShip extends Entity
 			dx += ( p.xCoord - dx ) - rider.posX;
 			dz += ( p.zCoord - dz ) - rider.posZ;
 			
-			// adjust the translation to snap riders to the surface of the ship
+			/* adjust the translation to snap riders to the surface of the ship
 			double riderY = shipToBlocksY( worldToShipY( rider.boundingBox.minY ) );
 			int targetY = (int)( riderY + 0.5 );
 			dy += targetY - riderY;
+			*/
 			
 			// apply the transformation
 			rider.rotationYaw -= dYaw;
-			rider.moveEntity( dx, dy, dz );
+			rider.setPosition(
+				rider.posX + dx,
+				rider.posY + dy,
+				rider.posZ + dz
+			);
 			rider.onGround = true;
 		}
 	}

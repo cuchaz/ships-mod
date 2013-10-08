@@ -1,8 +1,5 @@
 package cuchaz.ships.asm;
 
-import java.io.IOException;
-
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -15,8 +12,6 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 	private static final String PlayerClassName = "net/minecraft/entity/player/EntityPlayer";
 	private static final String InventoryPlayerClassName = "net/minecraft/entity/player/InventoryPlayer";
 	private static final String WorldClassName = "net/minecraft/world/World";
-	
-	private static final String Intermediary = "cuchaz/ships/asm/ShipIntermediary";
 	
 	private String m_name;
 	private String m_superName;
@@ -83,7 +78,7 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 						// so just push the this instance on the stack and
 						// invoke the intermediary method
 						mv.visitVarInsn( Opcodes.ALOAD, 0 );
-						mv.visitMethodInsn( Opcodes.INVOKESTATIC, Intermediary, "getEntityDistanceSq", String.format( "(L%s;DDDL%s;)D", PlayerClassName, thisType ) );
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "getEntityDistanceSq", String.format( "(L%s;DDDL%s;)D", PlayerClassName, thisType ) );
 					}
 					else
 					{
@@ -112,7 +107,7 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 						// so just push the player instance on the stack, invoke
 						// the intermediary method, then recall the setter
 						mv.visitVarInsn( Opcodes.ALOAD, 1 );
-						mv.visitMethodInsn( Opcodes.INVOKESTATIC, Intermediary, "translateWorld", String.format( "(L%s;L%s;)L%s;", WorldClassName, InventoryPlayerClassName, WorldClassName ) );
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "translateWorld", String.format( "(L%s;L%s;)L%s;", WorldClassName, InventoryPlayerClassName, WorldClassName ) );
 						mv.visitFieldInsn( Opcodes.PUTFIELD, owner, name, desc );
 					}
 					else
@@ -130,72 +125,18 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 	
 	private boolean extendsClass( String targetClassName )
 	{
-		return extendsClass( m_superName, targetClassName );
-	}
-	
-	private boolean extendsClass( String className, String targetClassName )
-	{
-		// base case
-		if( className.equalsIgnoreCase( targetClassName ) )
-		{
-			return true;
-		}
-		
-		// load the super class and test recursively
-		try
-		{
-			ClassReader classReader = new ClassReader( className.replace( '.', '/' ) );
-			String superClassName = classReader.getSuperName();
-			if( superClassName != null )
-			{
-				return extendsClass( superClassName, targetClassName );
-			}
-		}
-		catch( IOException ex )
-		{
-			ex.printStackTrace( System.err );
-		}
-		
-		return false;
+		return InheritanceUtils.extendsClass( m_superName, targetClassName );
 	}
 	
 	private boolean implementsInterface( String targetInterfaceName )
 	{
 		for( String i : m_interfaces )
 		{
-			if( implementsInterface( i, targetInterfaceName ) )
+			if( InheritanceUtils.implementsInterface( i, targetInterfaceName ) )
 			{
 				return true;
 			}
 		}
-		return false;
-	}
-	
-	private boolean implementsInterface( String interfaceName, String targetInterfaceName )
-	{
-		// base case
-		if( interfaceName.equalsIgnoreCase( targetInterfaceName ) )
-		{
-			return true;
-		}
-		
-		// recurse
-		try
-		{
-			ClassReader classReader = new ClassReader( interfaceName.replace( '.', '/' ) );
-			for( String i : classReader.getInterfaces() )
-			{
-				if( implementsInterface( i, targetInterfaceName ) )
-				{
-					return true;
-				}
-			}
-		}
-		catch( IOException ex )
-		{
-			ex.printStackTrace( System.err );
-		}
-		
 		return false;
 	}
 }
