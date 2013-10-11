@@ -68,13 +68,20 @@ public class ShipIntermediary
 	
 	public static void onEntityMove( Entity entity, double dx, double dy, double dz )
 	{
+		// save the original entity position
+		double oldX = entity.posX;
+		double oldY = entity.posY;
+		double oldZ = entity.posZ;
+		
 		// move the entity like normal
 		entity.moveEntity( dx, dy, dz );
 		
-		// TEMP
-		System.out.println( "onEntityMove() !!!" );
-		
-		// check for nearby ships
+		// is the entity near a ship?
+		EntityShip ship = ShipLocator.getFromEntityLocation( entity );
+		if( ship != null )
+		{
+			ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ, entity );
+		}
 	}
 	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )

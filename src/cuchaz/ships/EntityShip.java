@@ -220,6 +220,11 @@ public class EntityShip extends Entity
 		return m_propulsion;
 	}
 	
+	public ShipCollider getCollider( )
+	{
+		return m_collider;
+	}
+	
 	public int getWaterHeight( )
 	{
 		return dataWatcher.getWatchableObjectInt( WatcherIdWaterHeight );

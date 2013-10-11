@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -118,7 +119,7 @@ public class ShipGeometry
 				coords.set( x, y, z );
 				
 				// is there even a block here?
-				if( !m_blocks.contains( coords ) )
+				if( m_blocks.contains( coords ) )
 				{
 					continue;
 				}
@@ -126,6 +127,35 @@ public class ShipGeometry
 				if( blockIntersectsBoxXZ( x, z, box ) )
 				{
 					blocks.add( new ChunkCoordinates( coords ) );
+				}
+			}
+		}
+		return blocks;
+	}
+	
+	public List<ChunkCoordinates> rangeQuery( AxisAlignedBB box )
+	{
+		// get the block coordinate bounds
+		int minX = MathHelper.floor_double( box.minX );
+		int minY = MathHelper.floor_double( box.minY );
+		int minZ = MathHelper.floor_double( box.minZ );
+		int maxX = MathHelper.floor_double( box.maxX + 1 );
+		int maxY = MathHelper.floor_double( box.maxY + 1 );
+		int maxZ = MathHelper.floor_double( box.maxZ + 1 );
+		
+		ChunkCoordinates coords = new ChunkCoordinates();
+		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		for( int x=minX; x<=maxX; x++ )
+		{
+			for( int y=minY; y<=maxY; y++ )
+			{
+				for( int z=minZ; z<=maxZ; z++ )
+				{
+					coords.set( x, y, z );
+					if( m_blocks.contains( coords ) )
+					{
+						blocks.add( new ChunkCoordinates( coords ) );
+					}
 				}
 			}
 		}

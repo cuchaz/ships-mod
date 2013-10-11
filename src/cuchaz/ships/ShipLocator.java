@@ -2,6 +2,7 @@ package cuchaz.ships;
 
 import java.util.List;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemInWorldManager;
 import net.minecraft.util.AxisAlignedBB;
@@ -57,18 +58,18 @@ public class ShipLocator
 		return null;
 	}
 	
-	public static EntityShip getFromPlayerLocation( EntityPlayer player )
+	public static EntityShip getFromEntityLocation( Entity entity )
 	{
 		// make the query box slightly larger than the player
-		AxisAlignedBB queryBox = player.boundingBox.copy();
+		AxisAlignedBB queryBox = entity.boundingBox.copy();
 		queryBox.minY -= 0.5;
 		queryBox.maxY += 0.5;
 		
 		@SuppressWarnings( "unchecked" )
-		List<EntityShip> nearbyShips = (List<EntityShip>)player.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
+		List<EntityShip> nearbyShips = (List<EntityShip>)entity.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
 		for( EntityShip ship : nearbyShips )
 		{
-			if( ship.getRiders().contains( player ) )
+			if( ship.getRiders().contains( entity ) )
 			{
 				return ship;
 			}
