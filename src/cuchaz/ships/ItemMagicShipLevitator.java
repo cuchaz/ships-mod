@@ -33,10 +33,6 @@ public class ItemMagicShipLevitator extends Item
 		{
 			ship = (EntityShip)entity;
 		}
-		else if( entity instanceof EntityShipBlock )
-		{
-			ship = ((EntityShipBlock)entity).getShip();
-		}
 		else
 		{
 			return false;

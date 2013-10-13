@@ -14,6 +14,12 @@ public class InheritanceUtils
 			return true;
 		}
 		
+		// is this class an array? Just ignore arrays
+		if( className.startsWith( "[" ) )
+		{
+			return false;
+		}
+		
 		// load the super class and test recursively
 		try
 		{
@@ -26,6 +32,7 @@ public class InheritanceUtils
 		}
 		catch( IOException ex )
 		{
+			System.err.println( "Unable to read class: " + className );
 			ex.printStackTrace( System.err );
 		}
 		

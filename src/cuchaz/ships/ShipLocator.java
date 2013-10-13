@@ -1,5 +1,6 @@
 package cuchaz.ships;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.entity.Entity;
@@ -11,6 +12,23 @@ import net.minecraft.util.Vec3;
 
 public class ShipLocator
 {
+	private static List<EntityShip> m_ships;
+	
+	static
+	{
+		m_ships = new ArrayList<EntityShip>();
+	}
+	
+	public static void registerShip( EntityShip ship )
+	{
+		m_ships.add( ship );
+	}
+	
+	public static void unregisterShip( EntityShip ship )
+	{
+		m_ships.remove( ship );
+	}
+	
 	public static EntityShip getFromPlayerLook( EntityPlayer player )
 	{
 		// find out what entity the player is looking at
@@ -43,11 +61,9 @@ public class ShipLocator
 		queryBox.maxY += reachDistance;
 		queryBox.minZ -= reachDistance;
 		queryBox.maxZ += reachDistance;
-		@SuppressWarnings( "unchecked" )
-		List<EntityShip> nearbyShips = (List<EntityShip>)player.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
 		
 		// are we looking at any of these ships?
-		for( EntityShip ship : nearbyShips )
+		for( EntityShip ship : findShipsInBox( queryBox ) )
 		{
 			if( ship.boundingBox.isVecInside( eyePos ) || ship.boundingBox.isVecInside( targetPos ) || ship.boundingBox.calculateIntercept( eyePos, targetPos ) != null )
 			{
@@ -58,23 +74,36 @@ public class ShipLocator
 		return null;
 	}
 	
-	public static EntityShip getFromEntityLocation( Entity entity )
+	public static List<EntityShip> getFromEntityLocation( Entity entity )
 	{
 		// make the query box slightly larger than the player
 		AxisAlignedBB queryBox = entity.boundingBox.copy();
-		queryBox.minY -= 0.5;
-		queryBox.maxY += 0.5;
+		final double delta = 0.5;
+		queryBox.minX -= delta;
+		queryBox.minY -= delta;
+		queryBox.minZ -= delta;
+		queryBox.minX += delta;
+		queryBox.minY += delta;
+		queryBox.minZ += delta;
 		
-		@SuppressWarnings( "unchecked" )
-		List<EntityShip> nearbyShips = (List<EntityShip>)entity.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
-		for( EntityShip ship : nearbyShips )
+		return findShipsInBox( queryBox );
+	}
+	
+	private static List<EntityShip> findShipsInBox( AxisAlignedBB box )
+	{
+		// sadly, we can't use this because ship entities are too big.
+		// World.getEntitiesWithinAABB() will only return entities whose positions are within 2 blocks of the query box.
+		// it doesn't do a box-to-box test. =(
+		//return (List<EntityShip>)entity.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
+		
+		List<EntityShip> ships = new ArrayList<EntityShip>();
+		for( EntityShip ship : m_ships )
 		{
-			if( ship.getRiders().contains( entity ) )
+			if( ship.boundingBox.intersectsWith( box ) )
 			{
-				return ship;
+				ships.add( ship );
 			}
 		}
-		
-		return null;
+		return ships;
 	}
 }

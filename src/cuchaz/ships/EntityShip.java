@@ -9,10 +9,12 @@ import java.util.TreeSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.PacketDispatcher;
@@ -43,8 +45,6 @@ public class EntityShip extends Entity
 	public int angularThrottle;
 	
 	private ShipWorld m_blocks;
-	private TreeMap<ChunkCoordinates,EntityShipBlock> m_blockEntities;
-	private EntityShipBlock[] m_blockEntitiesArray;
 	private ShipPhysics m_physics;
 	private Propulsion m_propulsion;
 	private double m_shipBlockX;
@@ -75,8 +75,6 @@ public class EntityShip extends Entity
 		angularThrottle = 0;
 		
 		m_blocks = null;
-		m_blockEntities = null;
-		m_blockEntitiesArray = null;
 		m_physics = null;
 		m_propulsion = null;
 		m_shipBlockX = 0;
@@ -137,34 +135,7 @@ public class EntityShip extends Entity
 		// save the data into the data watcher so it gets sync'd to the client
 		dataWatcher.updateObject( WatcherIdBlocks, m_blocks.getDataString() );
 		
-		// build the sub entities
-		m_blockEntities = new TreeMap<ChunkCoordinates, EntityShipBlock>();
-		for( ChunkCoordinates coords : m_blocks.coords() )
-		{
-			// if the block doesn't have a collision box, then we don't need a block entity
-			Block block = Block.blocksList[m_blocks.getBlockId( coords )];
-			AxisAlignedBB box = block.getCollisionBoundingBoxFromPool( m_blocks, coords.posX, coords.posY, coords.posZ );
-			if( box == null )
-			{
-				continue;
-			}
-			
-			EntityShipBlock entityBlock = new EntityShipBlock( worldObj, this, coords );
-			m_blockEntities.put( coords, entityBlock );
-		}
-		
-		// flatten to an array
-		m_blockEntitiesArray = new EntityShipBlock[m_blockEntities.size()];
-		m_blockEntities.values().toArray( m_blockEntitiesArray );
-		
-		// renumber the block entities so the client and server are in sync
-		for( int i=0; i<m_blockEntitiesArray.length; i++ )
-		{
-			m_blockEntitiesArray[i].entityId = entityId + i + 1;
-		}
-		
 		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
-		updateBlockEntityPositions();
 		
 		// TEMP
 		System.out.println( String.format(
@@ -173,6 +144,8 @@ public class EntityShip extends Entity
 			posX, posY, posZ,
 			motionX, motionY, motionZ
 		) );
+		
+		ShipLocator.registerShip( this );
 	}
 	
 	@Override
@@ -194,6 +167,8 @@ public class EntityShip extends Entity
 		
 		// TEMP
 		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip died!" );
+		
+		ShipLocator.unregisterShip( this );
 	}
 	
 	@Override
@@ -235,25 +210,9 @@ public class EntityShip extends Entity
 	}
 	
 	@Override
-	public Entity[] getParts()
-    {
-        return m_blockEntitiesArray;
-    }
-	
-	public EntityShipBlock getBlockEntity( ChunkCoordinates coords )
-	{
-		return m_blockEntities.get( coords );
-	}
-	
-	public EntityShipBlock getShipBlockEntity( )
-	{
-		return m_blockEntities.get( new ChunkCoordinates( 0, 0, 0 ) );
-	}
-	
-	@Override
 	public boolean canBeCollidedWith()
     {
-        return false;
+        return true;
     }
 	
 	@Override
@@ -263,39 +222,6 @@ public class EntityShip extends Entity
         posY = y;
         posZ = z;
 		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
-		updateBlockEntityPositions();
-	}
-	
-	private void updateBlockEntityPositions( )
-	{
-		if( m_blockEntitiesArray == null )
-		{
-			return;
-		}
-		
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		
-		for( EntityShipBlock block : m_blockEntitiesArray )
-		{
-			// compute the block position
-			block.getBlockPosition( p );
-			blocksToShip( p );
-			shipToWorld( p );
-			
-			block.prevPosX = block.posX;
-			block.prevPosY = block.posY;
-			block.prevPosZ = block.posZ;
-			block.prevRotationYaw = block.rotationYaw;
-			block.prevRotationPitch = block.rotationPitch;
-			
-			block.setPositionAndRotation(
-				p.xCoord,
-				p.yCoord,
-				p.zCoord,
-				rotationYaw,
-				rotationPitch
-			);
-		}
 	}
 	
 	@Override
@@ -353,7 +279,8 @@ public class EntityShip extends Entity
 		
 		adjustMotionDueToGravityAndBuoyancy( waterHeightInBlockSpace );
 		adjustMotionDueToThrustAndDrag( waterHeightInBlockSpace );
-		adjustMotionDueToBlockCollisions();
+		// TEMP: disable all collisions
+		//adjustMotionDueToBlockCollisions();
 		
 		double dx = motionX;
 		double dy = motionY;
@@ -421,8 +348,9 @@ public class EntityShip extends Entity
 			);
 			
 			moveRiders( riders, dx, dy, dz, dYaw );
-			moveCollidingEntities( riders );
-			moveWater( waterHeightInBlockSpace );
+			// TEMP: disable all collisions
+			//moveCollidingEntities( riders );
+			//moveWater( waterHeightInBlockSpace );
 		}
 		
 		// did the ship sink?
@@ -442,12 +370,45 @@ public class EntityShip extends Entity
 		
 		// update the world
 		m_blocks.updateEntities();
-		
-		// update the block entity bounds
-		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
+	}
+	
+	@Override
+	// I think this used to be deobfuscated as interact() in an older MCP version
+	public boolean func_130002_c( EntityPlayer player )
+	{
+		// find out what block the player is targeting
+		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
+		if( intersections.isEmpty() )
 		{
-			// UNDONE: fix bounds for doors and such
+			// TEMP
+			System.out.println( String.format( "%s EntityShip.interact(): no hit",
+				worldObj.isRemote ? "CLIENT" : "SERVER"
+			) );
+			
+			return false;
 		}
+		
+		// just get the first intersected block (it's the closest one)
+		// UNDONE: could optimize this by trying to find the closest block first... but we probably don't care for now
+		MovingObjectPosition intersection = intersections.first();
+		
+		// activate the block
+		Block block = Block.blocksList[m_blocks.getBlockId( intersection.blockX, intersection.blockY, intersection.blockZ )];
+		
+		// TEMP
+		System.out.println( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			intersection.blockX, intersection.blockY, intersection.blockZ,
+			block.getUnlocalizedName()
+		) );
+		
+		return block.onBlockActivated(
+			m_blocks,
+			intersection.blockX, intersection.blockY, intersection.blockZ,
+			player,
+			intersection.sideHit,
+			(float)intersection.hitVec.xCoord, (float)intersection.hitVec.yCoord, (float)intersection.hitVec.zCoord
+		);
 	}
 	
 	private boolean isSunk( double waterHeight )
@@ -456,6 +417,7 @@ public class EntityShip extends Entity
 		boolean isUnderwater = waterHeight > m_blocks.getBoundingBox().maxY + 1.5;
 		
 		// UNDONE: will have to use something smarter for submarines!
+		// UNDONE: also un-floodable ships like rafts
 		return motionY == 0 && isUnderwater;
 	}
 	
@@ -604,7 +566,7 @@ public class EntityShip extends Entity
 		worldToShip( center );
 		shipToBlocks( center );
 		
-		// build a box of the same dimensions here in blocks space
+		// build a box of the same dimensions in blocks space
 		double dxh = ( box.maxX - box.minX )/2;
 		double dyh = ( box.maxY - box.minY )/2;
 		double dzh = ( box.maxZ - box.minZ )/2;
@@ -614,6 +576,29 @@ public class EntityShip extends Entity
 		);
 		
 		return new RotatedBB( box, -rotationYaw );
+	}
+	
+	public RotatedBB blocksToWorld( AxisAlignedBB box )
+	{
+		// transform the box center into world space
+		Vec3 center = Vec3.createVectorHelper(
+			( box.minX + box.maxX )/2,
+			( box.minY + box.maxY )/2,
+			( box.minZ + box.maxZ )/2
+		);
+		blocksToShip( center );
+		shipToWorld( center );
+		
+		// build a box of the same dimensions in world space
+		double dxh = ( box.maxX - box.minX )/2;
+		double dyh = ( box.maxY - box.minY )/2;
+		double dzh = ( box.maxZ - box.minZ )/2;
+		box = AxisAlignedBB.getBoundingBox(
+			center.xCoord - dxh, center.yCoord - dyh, center.zCoord - dzh,
+			center.xCoord + dxh, center.yCoord + dyh, center.zCoord + dzh
+		);
+		
+		return new RotatedBB( box, rotationYaw );
 	}
 	
 	private void adjustMotionDueToGravityAndBuoyancy( double waterHeightInBlockSpace )
@@ -781,7 +766,7 @@ public class EntityShip extends Entity
  		}
  		
  		// compute the scaling to avoid the collision
- 		// it's ok if the world block doesn't actually collide with every nearby world block
+ 		// it's ok if the ship block doesn't actually collide with every nearby world block
  		// in that case, the scaling will be > 1 and will be ignored
  		double s = 1.0;
  		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );

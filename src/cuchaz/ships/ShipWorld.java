@@ -275,7 +275,7 @@ public class ShipWorld extends DetatchedWorld
 		return m_blocks.keySet();
 	}
 	
-	public Set<Map.Entry<ChunkCoordinates, TileEntity>> tileEntities( )
+	public Set<Map.Entry<ChunkCoordinates,TileEntity>> tileEntities( )
 	{
 		return m_tileEntities.entrySet();
 	}

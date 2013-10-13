@@ -1,14 +1,17 @@
 package cuchaz.ships;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import net.minecraft.block.Block;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
@@ -70,7 +73,6 @@ public class ShipGeometry
 		return coords;
 	}
 	
-
 	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
 	{
 		// get the bounds in y
@@ -139,9 +141,9 @@ public class ShipGeometry
 		int minX = MathHelper.floor_double( box.minX );
 		int minY = MathHelper.floor_double( box.minY );
 		int minZ = MathHelper.floor_double( box.minZ );
-		int maxX = MathHelper.floor_double( box.maxX + 1 );
-		int maxY = MathHelper.floor_double( box.maxY + 1 );
-		int maxZ = MathHelper.floor_double( box.maxZ + 1 );
+		int maxX = MathHelper.floor_double( box.maxX );
+		int maxY = MathHelper.floor_double( box.maxY );
+		int maxZ = MathHelper.floor_double( box.maxZ );
 		
 		ChunkCoordinates coords = new ChunkCoordinates();
 		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();

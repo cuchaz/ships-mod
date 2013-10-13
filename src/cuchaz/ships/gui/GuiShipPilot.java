@@ -14,7 +14,6 @@ import org.lwjgl.opengl.GL11;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.EntityShipBlock;
 import cuchaz.ships.PilotAction;
 
 public abstract class GuiShipPilot extends GuiCloseable
@@ -26,14 +25,17 @@ public abstract class GuiShipPilot extends GuiCloseable
 			@Override
 			public BlockSide compute( EntityShip ship, EntityPlayer player )
 			{
-				EntityShipBlock targetBlock = ship.getShipBlockEntity();
+				// get the center of the ship block in world space
+				Vec3 blockCenter = Vec3.createVectorHelper( 0.5, 0.5, 0.5 );
+				ship.blocksToShip( blockCenter );
+				ship.shipToWorld( blockCenter );
 				
 				// which xz side is facing the player?
 				// get a vector from the block to the player
 				Vec3 direction = Vec3.createVectorHelper(
-					player.posX - targetBlock.posX,
+					player.posX - blockCenter.xCoord,
 					0,
-					player.posZ - targetBlock.posZ
+					player.posZ - blockCenter.zCoord
 				);
 				ship.worldToShipDirection( direction );
 				

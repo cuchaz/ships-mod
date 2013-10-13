@@ -76,11 +76,13 @@ public class ShipIntermediary
 		// move the entity like normal
 		entity.moveEntity( dx, dy, dz );
 		
-		// is the entity near a ship?
-		EntityShip ship = ShipLocator.getFromEntityLocation( entity );
-		if( ship != null )
+		if( !entity.noClip )
 		{
-			ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ, entity );
+			// is the entity near a ship?
+			for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
+			{
+				ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ, entity );
+			}
 		}
 	}
 	

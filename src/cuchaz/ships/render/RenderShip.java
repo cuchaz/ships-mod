@@ -1,6 +1,7 @@
 package cuchaz.ships.render;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -12,18 +13,23 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Vec3;
 
 import org.lwjgl.opengl.GL11;
 
+import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.Matrix3;
+import cuchaz.modsShared.RotatedBB;
 import cuchaz.modsShared.Vector3;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.EntityShipBlock;
 import cuchaz.ships.ShipWorld;
 
 public class RenderShip extends Render
@@ -153,48 +159,46 @@ public class RenderShip extends Render
 		GL11.glPopMatrix();
 		
 		// render debug information
-		if( false )
+		if( true )
 		{
 			GL11.glPushMatrix();
 			GL11.glTranslated( x, y, z );
 			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
 			
 			renderAxis( ship );
-			renderHitbox( ship );
-			//renderVector( ship.posX, ship.posY + 2, ship.posZ, ship.motionX*10, ship.motionY*10, ship.motionZ*10, ColorUtils.getColor( 255, 255, 0 ) );
+			//renderHitbox( ship );
 			
-			/* render the world coordinate axes
-			renderVector( ship.posX, ship.posY + 2, ship.posZ, 1, 0, 0, ColorUtils.getColor( 255, 0, 0 ) );
-			renderVector( ship.posX, ship.posY + 2, ship.posZ, 0, 1, 0, ColorUtils.getColor( 0, 255, 0 ) );
-			renderVector( ship.posX, ship.posY + 2, ship.posZ, 0, 0, 1, ColorUtils.getColor( 0, 0, 255 ) );
-			*/
-			
+			/*
 			for( ChunkCoordinates coords : ship.getBlocks().coords() )
 			{
-				EntityShipBlock blockEntity = ship.getBlockEntity( coords );
-				if( blockEntity != null )
+				renderHitbox(
+					ship.getCollider().getBlockBoxInWorldSpace( coords ),
+					ColorUtils.getColor( 255, 0, 0 )
+				);
+			}
+			*/
+			
+			// render the highlighted blocks
+			synchronized( ship.getCollider().m_highlightedCoords )
+			{
+				for( ChunkCoordinates coords : ship.getCollider().m_highlightedCoords )
 				{
-					renderPosition( blockEntity );
-					renderHitbox( blockEntity );
+					renderHitbox(
+						ship.getCollider().getBlockBoxInWorldSpace( coords ),
+						ColorUtils.getColor( 255, 0, 0 )
+					);
 				}
 			}
 			
 			GL11.glPopMatrix();
 			
-			/* render the ship coordinate axes
+			// show the query box
 			GL11.glPushMatrix();
 			GL11.glTranslated( x, y, z );
-			GL11.glRotatef( ship.rotationYaw, 0.0f, 1.0f, 0.0f );
+			GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
 			GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
-			renderVector( 0, 1, 0, 1, 0, 0, ColorUtils.getColor( 255, 0, 0 ) );
-			renderVector( 0, 1, 0, 0, 1, 0, ColorUtils.getColor( 0, 255, 0 ) );
-			renderVector( 0, 1, 0, 0, 0, 1, ColorUtils.getColor( 0, 0, 255 ) );
-			
-			renderVector( 0, 2, 0, BlockSide.East.getDx(), BlockSide.East.getDy(), BlockSide.East.getDz(), ColorUtils.getColor( 255, 0, 0 ) );
-			renderVector( 0, 2, 0, BlockSide.South.getDx(), BlockSide.South.getDy(), BlockSide.South.getDz(), ColorUtils.getColor( 0, 0, 255 ) );
-			
+			renderHitbox( ship.getCollider().m_queryBox, ColorUtils.getColor( 0, 255, 0 ) );
 			GL11.glPopMatrix();
-			*/
 		}
 	}
 	
@@ -204,12 +208,12 @@ public class RenderShip extends Render
 		// don't render entity shadows
 	}
 	
-	private void renderPosition( Entity entity )
+	public static void renderPosition( Entity entity )
 	{
 		renderPoint( entity.posX, entity.posY, entity.posZ, ColorUtils.getColor( 0, 255, 0 ) );
 	}
 	
-	private void renderPoint( double x, double y, double z, int color )
+	public static void renderPoint( double x, double y, double z, int color )
 	{
 		final double Halfwidth = 0.05;
 		
@@ -224,7 +228,7 @@ public class RenderShip extends Render
 		);
 	}
 	
-	private void renderAxis( Entity entity )
+	public static void renderAxis( Entity entity )
 	{
 		final double Halfwidth = 0.05;
 		final double HalfHeight = 2.0;
@@ -240,22 +244,44 @@ public class RenderShip extends Render
 		);
 	}
 	
-	private void renderHitbox( Entity entity )
+	public static void renderHitbox( RotatedBB box, int color )
+	{
+		// pad the hitbox by a small delta to avoid rendering glitches
+		final double delta = 0.01;
+		box.getAABox().minX -= delta;
+		box.getAABox().minY -= delta;
+		box.getAABox().minZ -= delta;
+		box.getAABox().maxX += delta;
+		box.getAABox().maxY += delta;
+		box.getAABox().maxZ += delta;
+		
+		renderRotatedBox( box, color );
+		
+		// undo the pad
+		box.getAABox().minX += delta;
+		box.getAABox().minY += delta;
+		box.getAABox().minZ += delta;
+		box.getAABox().maxX -= delta;
+		box.getAABox().maxY -= delta;
+		box.getAABox().maxZ -= delta;
+	}
+	
+	public static void renderHitbox( AxisAlignedBB box, int color )
 	{
 		// pad the hitbox by a small delta to avoid rendering glitches
 		final double delta = 0.01;
 		renderBox(
-			entity.boundingBox.minX - delta,
-			entity.boundingBox.maxX + delta,
-			entity.boundingBox.minY - delta,
-			entity.boundingBox.maxY + delta,
-			entity.boundingBox.minZ - delta,
-			entity.boundingBox.maxZ + delta,
-			ColorUtils.getColor( 255, 0, 0 )
+			box.minX - delta,
+			box.maxX + delta,
+			box.minY - delta,
+			box.maxY + delta,
+			box.minZ - delta,
+			box.maxZ + delta,
+			color
 		);
 	}
 	
-	private void renderBox( double xm, double xp, double ym, double yp, double zm, double zp, int color )
+	public static void renderBox( double xm, double xp, double ym, double yp, double zm, double zp, int color )
 	{
 		GL11.glDepthMask( false );
 		GL11.glDisable( GL11.GL_TEXTURE_2D );
@@ -297,7 +323,39 @@ public class RenderShip extends Render
 		GL11.glDepthMask( true );
 	}
 	
-	private void renderVector( double x, double y, double z, double dx, double dy, double dz, int color )
+	public static void renderRotatedBox( RotatedBB box, int color )
+	{
+		GL11.glDepthMask( false );
+		GL11.glDisable( GL11.GL_TEXTURE_2D );
+		GL11.glDisable( GL11.GL_LIGHTING );
+		GL11.glDisable( GL11.GL_CULL_FACE );
+		GL11.glEnable( GL11.GL_BLEND );
+		GL11.glBlendFunc( GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA );
+		
+		Tessellator tessellator = Tessellator.instance;
+		tessellator.startDrawingQuads();
+		tessellator.setColorRGBA_I( color, 128 );
+		
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		for( BlockSide side : Arrays.asList( BlockSide.North, BlockSide.South, BlockSide.East, BlockSide.West ) )
+		{
+			for( BoxCorner corner : side.getCorners() )
+			{
+				box.getCorner( p, corner );
+				tessellator.addVertex( p.xCoord, p.yCoord, p.zCoord );
+			}
+		}
+		
+		tessellator.draw();
+		
+		GL11.glEnable( GL11.GL_TEXTURE_2D );
+		GL11.glEnable( GL11.GL_LIGHTING );
+		GL11.glEnable( GL11.GL_CULL_FACE );
+		GL11.glDisable( GL11.GL_BLEND );
+		GL11.glDepthMask( true );
+	}
+	
+	public static void renderVector( double x, double y, double z, double dx, double dy, double dz, int color )
 	{
 		// get the vector in world-space
 		Vector3 v = new Vector3( dx, dy, dz );
