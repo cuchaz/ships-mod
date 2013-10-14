@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
@@ -17,12 +18,12 @@ import cuchaz.modsShared.RotatedBB;
 
 public class ShipCollider
 {
-	private static class Collision
+	private static class PossibleCollision
 	{
 		public ChunkCoordinates coords;
 		public AxisAlignedBB box;
 		
-		public Collision( ChunkCoordinates coords, AxisAlignedBB box )
+		public PossibleCollision( ChunkCoordinates coords, AxisAlignedBB box )
 		{
 			this.coords = coords;
 			this.box = box;
@@ -85,20 +86,125 @@ public class ShipCollider
 		m_ship.shipToBlocks( oldPos );
 		m_ship.worldToShip( newPos );
 		m_ship.shipToBlocks( newPos );
+		double originalDx = newPos.xCoord - oldPos.xCoord;
+		double originalDy = newPos.yCoord - oldPos.yCoord;
+		double originalDz = newPos.zCoord - oldPos.zCoord;
 		
-		List<Collision> collisions = getEntityCollisions( oldPos, newPos, entity );
+		List<PossibleCollision> possibleCollisions = getEntityPossibleCollisions( oldPos, newPos, entity );
 		
 		// TEMP: render the boxes
-		if( entity instanceof EntityPlayer )
+		if( entity instanceof EntityClientPlayerMP )
 		{
 			synchronized( m_highlightedCoords )
 			{
 				m_highlightedCoords.clear();
-				for( Collision collision : collisions )
+				for( PossibleCollision collision : possibleCollisions )
 				{
 					m_highlightedCoords.add( collision.coords );
 				}
 			}
+		}
+		
+		// TEMP
+		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
+		{
+			System.out.println( String.format( "collisions for %s: %d",
+				entity.getClass().getSimpleName(),
+				possibleCollisions.size()
+			) );
+		}
+		
+		// no collisions? No changes needed
+		if( possibleCollisions.isEmpty() )
+		{
+			return;
+		}
+		
+		// make a box for the entity in block space
+		double hw = entity.width/2;
+		AxisAlignedBB entityBox = AxisAlignedBB.getBoundingBox(
+			oldPos.xCoord - hw,
+			oldPos.yCoord + entity.ySize - entity.yOffset,
+			oldPos.zCoord - hw,
+			oldPos.xCoord + hw,
+			oldPos.yCoord + entity.ySize - entity.yOffset + entity.height,
+			oldPos.zCoord + hw
+		);
+		
+		// calculate the actual collision
+		// move along the manhattan path, stopping at the first collision
+		// y first, then x, then z
+		// different orders should give different collisions,
+		// but for a small enough d vector, the difference should be un-noticeable
+		double dy = originalDy;
+		for( PossibleCollision collision : possibleCollisions )
+		{
+			dy = collision.box.calculateYOffset( entityBox, dy );
+		}
+		entityBox.offset( 0, dy, 0 );
+		
+		double dx = originalDx;
+		for( PossibleCollision collision : possibleCollisions )
+		{
+			dx = collision.box.calculateXOffset( entityBox, dx );
+		}
+		entityBox.offset( dx, 0, 0 );
+		
+		double dz = originalDz;
+		for( PossibleCollision collision : possibleCollisions )
+		{
+			dz = collision.box.calculateZOffset( entityBox, dz );
+		}
+		entityBox.offset( 0, 0, dz );
+		
+		// NEXTTIME: roundoff error from the coordinate transformation is screwing up the collisions!
+		// we need to make a version of AxisAlignedBB.calculateYOffset() that takes an epsilon
+		// wait... that won't work by itself... the roundoff error will let up keep creeping through the epsilon
+		// we need a way to go backwards a tiny bit... maybe?
+		
+		// translate back into world coordinates
+		newPos.xCoord = ( entityBox.minX + entityBox.maxX )/2;
+		newPos.yCoord = entityBox.minY + entity.yOffset - entity.ySize;
+		newPos.zCoord = ( entityBox.minZ + entityBox.maxZ )/2;
+		
+		// TEMP
+		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
+		{
+			System.out.println( String.format( "entity %s: (%.4f,%.4f,%.12f)->(%.4f,%.4f,%.12f) od=(%.4f,%.4f,%.12f) d=(%.4f,%.4f,%.12f)",
+				entity.getClass().getSimpleName(),
+				oldPos.xCoord, oldPos.yCoord, oldPos.zCoord,
+				newPos.xCoord, newPos.yCoord, newPos.zCoord,
+				originalDx, originalDy, originalDz,
+				dx, dy, dz
+			) );
+		}
+		
+		m_ship.blocksToShip( newPos );
+		m_ship.shipToWorld( newPos );
+		
+		// update the entity properties
+		entity.setPosition( newPos.xCoord, newPos.yCoord, newPos.zCoord );
+		entity.isCollidedHorizontally = originalDx != dx || originalDz != dz;
+		entity.isCollidedVertically = originalDy != dy;
+		entity.onGround = entity.isCollidedVertically && originalDy < 0;
+		entity.isCollided = entity.isCollidedHorizontally || entity.isCollidedVertically;
+		
+		// UNDONE: find out how to apply fall damage
+		//entity.updateFallState( dy, entity.onGround );
+		
+		// TEMP
+		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
+		{
+			newPos.xCoord = entity.posX;
+			newPos.yCoord = entity.posY;
+			newPos.zCoord = entity.posZ;
+			m_ship.worldToShip( newPos );
+			m_ship.shipToBlocks( newPos );
+			
+			System.out.println( String.format( "entity %s pos: (%.4f,%.4f,%.12f)",
+				entity.getClass().getSimpleName(),
+				newPos.xCoord, newPos.yCoord, newPos.zCoord
+			) );
 		}
 	}
 	
@@ -121,7 +227,7 @@ public class ShipCollider
 		return m_ship.blocksToWorld( getBlockBoxInBlockSpace( coords ) );
 	}
 	
-	private List<Collision> getEntityCollisions( Vec3 oldPos, Vec3 newPos, Entity entity )
+	private List<PossibleCollision> getEntityPossibleCollisions( Vec3 oldPos, Vec3 newPos, Entity entity )
 	{
 		// make a box that contains the entire entity trajectory
 		// remember, the y pos is wonky
@@ -135,37 +241,29 @@ public class ShipCollider
 			Math.max( oldPos.yCoord, newPos.yCoord ),
 			Math.max( oldPos.zCoord, newPos.zCoord )
 		);
-		double hdx = ( entity.boundingBox.maxX - entity.boundingBox.minX )/2;
-		double hdz = ( entity.boundingBox.maxZ - entity.boundingBox.minZ )/2;
-		box.minX -= hdx;
-		box.maxX += hdx;
+		double hw = entity.width/2;
+		box.minX -= hw;
+		box.maxX += hw;
 		box.minY += entity.ySize - entity.yOffset;
 		box.maxY += entity.ySize - entity.yOffset + entity.height;
-		box.minZ -= hdz;
-		box.maxZ += hdz;
+		box.minZ -= hw;
+		box.maxZ += hw;
 		
 		// TEMP
 		if( entity instanceof EntityPlayer )
 		{
-			System.out.println( String.format( "%s old: (%.2f,%.2f,%.2f), new: (%.2f,%.2f,%.2f), check box: [%.2f,%.2f]x[%.2f,%.2f]x[%.2f,%.2f]",
-				m_ship.worldObj.isRemote ? "CLIENT" : "SERVER",
-				oldPos.xCoord, oldPos.yCoord, oldPos.zCoord,
-				newPos.xCoord, newPos.yCoord, newPos.zCoord,
-				box.minX, box.maxX, box.minY, box.maxY, box.minZ, box.maxZ
-			) );
-			
 			m_queryBox.setBB( box );
 		}
 		
 		// collect the boxes for the blocks in that box
 		// UNDONE: optimize out the new
-		List<Collision> collisions = new ArrayList<Collision>();
+		List<PossibleCollision> collisions = new ArrayList<PossibleCollision>();
 		for( ChunkCoordinates coords : m_ship.getBlocks().getGeometry().rangeQuery( box ) )
 		{
 			Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
 			block.setBlockBoundsBasedOnState( m_ship.getBlocks(), coords.posX, coords.posY, coords.posZ );
 			collisions.add(
-				new Collision( coords, AxisAlignedBB.getBoundingBox(
+				new PossibleCollision( coords, AxisAlignedBB.getBoundingBox(
 					block.getBlockBoundsMinX() + coords.posX,
 					block.getBlockBoundsMinY() + coords.posY,
 					block.getBlockBoundsMinZ() + coords.posZ,
@@ -175,16 +273,6 @@ public class ShipCollider
 				) )
 			);
 		}
-		
-		// TEMP
-		if( entity instanceof EntityPlayer )
-		{
-			System.out.println( String.format( "%s collisions: %d",
-				m_ship.worldObj.isRemote ? "CLIENT" : "SERVER",
-				collisions.size()
-			) );
-		}
-		
 		return collisions;
 	}
 	
