@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.TreeSet;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.player.EntityPlayer;
@@ -77,10 +76,11 @@ public class ShipCollider
 		return lineSegmentQuery( eyePos, targetPos );
 	}
 	
-	public void onNearbyEntityMoved( double oldX, double oldY, double oldZ, Entity entity )
+	public void onNearbyEntityMoved( double oldX, double oldY, double oldZ, double oldYSize, Entity entity )
 	{
-		Vec3 oldPos = Vec3.createVectorHelper( oldX, oldY, oldZ );
-		Vec3 newPos = Vec3.createVectorHelper( entity.posX, entity.posY, entity.posZ );
+		// these positions are the bottom of the bounding boxes
+		Vec3 oldPos = Vec3.createVectorHelper( oldX, oldY + oldYSize - entity.yOffset, oldZ );
+		Vec3 newPos = Vec3.createVectorHelper( entity.posX, entity.posY + entity.ySize - entity.yOffset, entity.posZ );
 		
 		// translate everything into the blocks coordinates
 		m_ship.worldToShip( oldPos );
@@ -94,7 +94,7 @@ public class ShipCollider
 		List<PossibleCollision> possibleCollisions = getEntityPossibleCollisions( oldPos, newPos, entity );
 		
 		// TEMP: render the boxes
-		if( entity instanceof EntityClientPlayerMP )
+		if( entity instanceof EntityPlayer )
 		{
 			synchronized( m_highlightedCoords )
 			{
@@ -104,15 +104,6 @@ public class ShipCollider
 					m_highlightedCoords.add( collision.coords );
 				}
 			}
-		}
-		
-		// TEMP
-		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
-		{
-			System.out.println( String.format( "collisions for %s: %d",
-				entity.getClass().getSimpleName(),
-				possibleCollisions.size()
-			) );
 		}
 		
 		// no collisions? No changes needed
@@ -125,10 +116,10 @@ public class ShipCollider
 		double hw = entity.width/2;
 		AxisAlignedBB entityBox = AxisAlignedBB.getBoundingBox(
 			oldPos.xCoord - hw,
-			oldPos.yCoord + entity.ySize - entity.yOffset,
+			oldPos.yCoord,
 			oldPos.zCoord - hw,
 			oldPos.xCoord + hw,
-			oldPos.yCoord + entity.ySize - entity.yOffset + entity.height,
+			oldPos.yCoord + entity.height,
 			oldPos.zCoord + hw
 		);
 		
@@ -163,66 +154,36 @@ public class ShipCollider
 		
 		// translate back into world coordinates
 		newPos.xCoord = ( entityBox.minX + entityBox.maxX )/2;
-		newPos.yCoord = entityBox.minY + entity.yOffset - entity.ySize;
+		newPos.yCoord = entityBox.minY;
 		newPos.zCoord = ( entityBox.minZ + entityBox.maxZ )/2;
-		
-		// TEMP
-		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
-		{
-			System.out.println( String.format( "entity %s: (%.4f,%.4f,%.4f) world=(%.4f,%.4f,%.4f) od=(%.4f,%.4f,%.4f) d=(%.4f,%.4f,%.4f)",
-				entity.getClass().getSimpleName(),
-				oldPos.xCoord, oldPos.yCoord + entity.ySize - entity.yOffset, oldPos.zCoord,
-				oldX, oldY + entity.ySize - entity.yOffset, oldZ,
-				originalDx, originalDy, originalDz,
-				dx, dy, dz
-			) );
-		}
-		
 		m_ship.blocksToShip( newPos );
 		m_ship.shipToWorld( newPos );
 		
 		// update the entity properties
-		entity.setPosition( newPos.xCoord, newPos.yCoord, newPos.zCoord );
+		entity.setPosition( newPos.xCoord, newPos.yCoord + entity.yOffset - entity.ySize, newPos.zCoord );
 		entity.isCollidedHorizontally = originalDx != dx || originalDz != dz;
 		entity.isCollidedVertically = originalDy != dy;
 		entity.onGround = entity.isCollidedVertically && originalDy < 0;
 		entity.isCollided = entity.isCollidedHorizontally || entity.isCollidedVertically;
 		
+		// if we collided, kill the velocity
+		if( originalDx != dx )
+		{
+			entity.motionX = 0;
+		}
+		if( originalDy != dy )
+		{
+			entity.motionY = 0;
+		}
+		if( originalDz != dz )
+		{
+			entity.motionZ = 0;
+		}
+        
 		// update fall state. Sadly, we can't just call this:
 		//entity.updateFallState( dy, entity.onGround );
 		// so we're going have to do it using package injection
 		EntityAccessor.updateFallState( entity, dy, entity.onGround );
-		
-		// NEXTTIME: we keep falling through the bottom of the ship when:
-		// we're flying and crouching to move down. While crouching, the ship is solid
-		// when crouching stops, the player pops down ~0.2 and falls through
-		// so far, signs point to the application of gravity without collision testing... somewhere...
-		
-		// can test by swimming up into the bottom of the ship
-		// every tick, the player is magically moved back down (due to gravity?) without a call to moveEntity()
-		// we need to find out how this position is changing...
-		// maybe put a strack dump on changes to posY somehow? (ASM?)
-		
-		// another problem... the y velicity (due to gravity?) keeps decreasing
-		// even when we're "standing" on the ship (ie onGround = true)
-		
-		// TEMP
-		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
-		{
-			newPos.xCoord = entity.posX;
-			newPos.yCoord = entity.posY;
-			newPos.zCoord = entity.posZ;
-			m_ship.worldToShip( newPos );
-			m_ship.shipToBlocks( newPos );
-			
-			System.out.println( String.format( "entity %s: (%.4f,%.4f,%.4f) world=(%.4f,%.4f,%.4f) onGround=%b fallDist=%.2f",
-				entity.getClass().getSimpleName(),
-				newPos.xCoord, newPos.yCoord + entity.ySize - entity.yOffset, newPos.zCoord,
-				entity.posX, entity.posY + entity.ySize - entity.yOffset, entity.posZ,
-				entity.onGround,
-				entity.fallDistance
-			) );
-		}
 	}
 	
 	private double applyBackoff( double d, double originalD )
@@ -294,8 +255,7 @@ public class ShipCollider
 		double hw = entity.width/2;
 		box.minX -= hw;
 		box.maxX += hw;
-		box.minY += entity.ySize - entity.yOffset;
-		box.maxY += entity.ySize - entity.yOffset + entity.height;
+		box.maxY += entity.height;
 		box.minZ -= hw;
 		box.maxZ += hw;
 		

@@ -72,6 +72,16 @@ public class ShipIntermediary
 		double oldX = entity.posX;
 		double oldY = entity.posY;
 		double oldZ = entity.posZ;
+		double oldYSize = entity.ySize;
+		
+		// TEMP
+		if( entity instanceof EntityPlayer && entity.worldObj.isRemote )
+		{
+			System.out.println( String.format( "entity %s moveEntity() like normal (%.4f,%.4f,%.4f)",
+				entity.getClass().getSimpleName(),
+				entity.posX, entity.posY + entity.ySize - entity.yOffset, entity.posZ
+			) );
+		}
 		
 		// move the entity like normal
 		entity.moveEntity( dx, dy, dz );
@@ -81,8 +91,20 @@ public class ShipIntermediary
 			// is the entity near a ship?
 			for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
 			{
-				ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ, entity );
+				// TEMP
+				if( entity instanceof EntityPlayer && entity.worldObj.isRemote )
+				{
+					System.out.println( String.format( "entity %s collide with ship", entity.getClass().getSimpleName() ) );
+				}
+				
+				ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ,oldYSize, entity );
 			}
+		}
+		
+		// TEMP
+		if( entity instanceof EntityPlayer && entity.worldObj.isRemote )
+		{
+			System.out.println( String.format( "entity %s done!", entity.getClass().getSimpleName() ) );
 		}
 	}
 	

@@ -347,8 +347,8 @@ public class EntityShip extends Entity
 				posZ + dz
 			);
 			
-			moveRiders( riders, dx, dy, dz, dYaw );
 			// TEMP: disable all collisions
+			//moveRiders( riders, dx, dy, dz, dYaw );
 			//moveCollidingEntities( riders );
 			//moveWater( waterHeightInBlockSpace );
 		}

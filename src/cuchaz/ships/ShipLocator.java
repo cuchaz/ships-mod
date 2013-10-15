@@ -12,21 +12,35 @@ import net.minecraft.util.Vec3;
 
 public class ShipLocator
 {
-	private static List<EntityShip> m_ships;
+	private static List<EntityShip> m_shipsServer;
+	private static List<EntityShip> m_shipsClient;
 	
 	static
 	{
-		m_ships = new ArrayList<EntityShip>();
+		m_shipsClient = new ArrayList<EntityShip>();
+		m_shipsServer = new ArrayList<EntityShip>();
+	}
+	
+	public static List<EntityShip> getShips( Entity entity )
+	{
+		if( entity.worldObj.isRemote )
+		{
+			return m_shipsClient;
+		}
+		else
+		{
+			return m_shipsServer;
+		}
 	}
 	
 	public static void registerShip( EntityShip ship )
 	{
-		m_ships.add( ship );
+		getShips( ship ).add( ship );
 	}
 	
 	public static void unregisterShip( EntityShip ship )
 	{
-		m_ships.remove( ship );
+		getShips( ship ).remove( ship );
 	}
 	
 	public static EntityShip getFromPlayerLook( EntityPlayer player )
@@ -63,7 +77,7 @@ public class ShipLocator
 		queryBox.maxZ += reachDistance;
 		
 		// are we looking at any of these ships?
-		for( EntityShip ship : findShipsInBox( queryBox ) )
+		for( EntityShip ship : findShipsInBox( player, queryBox ) )
 		{
 			if( ship.boundingBox.isVecInside( eyePos ) || ship.boundingBox.isVecInside( targetPos ) || ship.boundingBox.calculateIntercept( eyePos, targetPos ) != null )
 			{
@@ -86,10 +100,10 @@ public class ShipLocator
 		queryBox.minY += delta;
 		queryBox.minZ += delta;
 		
-		return findShipsInBox( queryBox );
+		return findShipsInBox( entity, queryBox );
 	}
 	
-	private static List<EntityShip> findShipsInBox( AxisAlignedBB box )
+	private static List<EntityShip> findShipsInBox( Entity entity, AxisAlignedBB box )
 	{
 		// sadly, we can't use this because ship entities are too big.
 		// World.getEntitiesWithinAABB() will only return entities whose positions are within 2 blocks of the query box.
@@ -97,7 +111,7 @@ public class ShipLocator
 		//return (List<EntityShip>)entity.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
 		
 		List<EntityShip> ships = new ArrayList<EntityShip>();
-		for( EntityShip ship : m_ships )
+		for( EntityShip ship : getShips( entity ) )
 		{
 			if( ship.boundingBox.intersectsWith( box ) )
 			{
