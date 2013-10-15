@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
@@ -141,6 +142,7 @@ public class ShipCollider
 		{
 			dy = collision.box.calculateYOffset( entityBox, dy );
 		}
+		dy = applyBackoff( dy, originalDy );
 		entityBox.offset( 0, dy, 0 );
 		
 		double dx = originalDx;
@@ -148,6 +150,7 @@ public class ShipCollider
 		{
 			dx = collision.box.calculateXOffset( entityBox, dx );
 		}
+		dx = applyBackoff( dx, originalDx );
 		entityBox.offset( dx, 0, 0 );
 		
 		double dz = originalDz;
@@ -155,12 +158,8 @@ public class ShipCollider
 		{
 			dz = collision.box.calculateZOffset( entityBox, dz );
 		}
+		dz = applyBackoff( dz, originalDz );
 		entityBox.offset( 0, 0, dz );
-		
-		// NEXTTIME: roundoff error from the coordinate transformation is screwing up the collisions!
-		// we need to make a version of AxisAlignedBB.calculateYOffset() that takes an epsilon
-		// wait... that won't work by itself... the roundoff error will let up keep creeping through the epsilon
-		// we need a way to go backwards a tiny bit... maybe?
 		
 		// translate back into world coordinates
 		newPos.xCoord = ( entityBox.minX + entityBox.maxX )/2;
@@ -170,10 +169,10 @@ public class ShipCollider
 		// TEMP
 		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
 		{
-			System.out.println( String.format( "entity %s: (%.4f,%.4f,%.12f)->(%.4f,%.4f,%.12f) od=(%.4f,%.4f,%.12f) d=(%.4f,%.4f,%.12f)",
+			System.out.println( String.format( "entity %s: (%.4f,%.4f,%.4f) world=(%.4f,%.4f,%.4f) od=(%.4f,%.4f,%.4f) d=(%.4f,%.4f,%.4f)",
 				entity.getClass().getSimpleName(),
-				oldPos.xCoord, oldPos.yCoord, oldPos.zCoord,
-				newPos.xCoord, newPos.yCoord, newPos.zCoord,
+				oldPos.xCoord, oldPos.yCoord + entity.ySize - entity.yOffset, oldPos.zCoord,
+				oldX, oldY + entity.ySize - entity.yOffset, oldZ,
 				originalDx, originalDy, originalDz,
 				dx, dy, dz
 			) );
@@ -189,8 +188,23 @@ public class ShipCollider
 		entity.onGround = entity.isCollidedVertically && originalDy < 0;
 		entity.isCollided = entity.isCollidedHorizontally || entity.isCollidedVertically;
 		
-		// UNDONE: find out how to apply fall damage
+		// update fall state. Sadly, we can't just call this:
 		//entity.updateFallState( dy, entity.onGround );
+		// so we're going have to do it using package injection
+		EntityAccessor.updateFallState( entity, dy, entity.onGround );
+		
+		// NEXTTIME: we keep falling through the bottom of the ship when:
+		// we're flying and crouching to move down. While crouching, the ship is solid
+		// when crouching stops, the player pops down ~0.2 and falls through
+		// so far, signs point to the application of gravity without collision testing... somewhere...
+		
+		// can test by swimming up into the bottom of the ship
+		// every tick, the player is magically moved back down (due to gravity?) without a call to moveEntity()
+		// we need to find out how this position is changing...
+		// maybe put a strack dump on changes to posY somehow? (ASM?)
+		
+		// another problem... the y velicity (due to gravity?) keeps decreasing
+		// even when we're "standing" on the ship (ie onGround = true)
 		
 		// TEMP
 		if( entity instanceof EntityClientPlayerMP && !m_ship.worldObj.isRemote )
@@ -201,13 +215,49 @@ public class ShipCollider
 			m_ship.worldToShip( newPos );
 			m_ship.shipToBlocks( newPos );
 			
-			System.out.println( String.format( "entity %s pos: (%.4f,%.4f,%.12f)",
+			System.out.println( String.format( "entity %s: (%.4f,%.4f,%.4f) world=(%.4f,%.4f,%.4f) onGround=%b fallDist=%.2f",
 				entity.getClass().getSimpleName(),
-				newPos.xCoord, newPos.yCoord, newPos.zCoord
+				newPos.xCoord, newPos.yCoord + entity.ySize - entity.yOffset, newPos.zCoord,
+				entity.posX, entity.posY + entity.ySize - entity.yOffset, entity.posZ,
+				entity.onGround,
+				entity.fallDistance
 			) );
 		}
 	}
 	
+	private double applyBackoff( double d, double originalD )
+	{
+		// what is backoff and why do we need it?
+		// the entity/world collision system doesn't use backoff...
+		
+		// Due to roundoff errors in world/blocks coordinate conversions,
+		// sometimes collision calculations place entity JUST INSIDE an obstacle
+		// Even though an intifintessimal translation would put the entity correctly outside of the obstacle,
+		// once inside the obstacle, the entity can continue movement unimpeded.
+		
+		// either we have to detect (and prevent) when an entity is already colliding with an obstacle
+		// (which might be preferable, but then players could get "stuck" in geometry),
+		// or we have to place the entity so it is JUST OUTSIDE the obstacle after a collision,
+		// instead of exactly on the boundary
+		
+		// distance in game coords, but small enough not to notice
+		final double Backoff = 0.001;
+		
+		if( d != originalD )
+		{
+			// apply the backoff in the opposite direction of the delta
+			if( d > 0 )
+			{
+				return d - Backoff;
+			}
+			else
+			{
+				return d + Backoff;
+			}
+		}
+		return d;
+	}
+
 	public AxisAlignedBB getBlockBoxInBlockSpace( ChunkCoordinates coords )
 	{
 		Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
