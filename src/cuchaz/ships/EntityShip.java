@@ -347,10 +347,10 @@ public class EntityShip extends Entity
 				posZ + dz
 			);
 			
-			// TEMP: disable all collisions
-			//moveRiders( riders, dx, dy, dz, dYaw );
+			moveRiders( riders, dx, dy, dz, dYaw );
+			// TEMP
 			//moveCollidingEntities( riders );
-			//moveWater( waterHeightInBlockSpace );
+			moveWater( waterHeightInBlockSpace );
 		}
 		
 		// did the ship sink?
@@ -946,7 +946,6 @@ public class EntityShip extends Entity
 				rider.posY + dy,
 				rider.posZ + dz
 			);
-			rider.onGround = true;
 		}
 	}
 	
@@ -1108,15 +1107,12 @@ public class EntityShip extends Entity
 			p.zCoord = coords.posZ + 0.5;
 			blocksToShip( p );
 			shipToWorld( p );
-			EntityShipBlock.computeBoundingBox( box, p.xCoord, p.yCoord, p.zCoord, rotationYaw );
+			
+			m_collider.getBlockWorldBoundingBox( box, coords );
 			
 			// grow the bounding box just a bit so we get more robust collisions
-			box.minX -= 0.1;
-			box.minY -= 0.1;
-			box.minZ -= 0.1;
-			box.maxX += 0.1;
-			box.maxY += 0.1;
-			box.maxZ += 0.1;
+			final double Delta = 0.1;
+			box.expand( Delta, Delta, Delta );
 			
 			// query for all the world water blocks that intersect it
 			int minX = MathHelper.floor_double( box.minX );
@@ -1160,6 +1156,7 @@ public class EntityShip extends Entity
 					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
 					
 					// UNDONE: can get the fill effect back by only turning the surface level into air?
+					// or make a special wake block that will self-convert back to water
 				}
 			}
 		}

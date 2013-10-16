@@ -238,6 +238,28 @@ public class ShipCollider
 		return m_ship.blocksToWorld( getBlockBoxInBlockSpace( coords ) );
 	}
 	
+	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, ChunkCoordinates coords )
+	{
+		// transform the block center into world space
+		Vec3 p = Vec3.createVectorHelper( coords.posX + 0.5, coords.posY + 0.5, coords.posZ + 0.5 );
+		m_ship.blocksToShip( p );
+		m_ship.shipToWorld( p );
+		
+		// compute the halfwidth of the bounding box
+		float yawRad = (float)Math.toRadians( m_ship.rotationYaw );
+		double cos = MathHelper.cos( yawRad );
+		double sin = MathHelper.sin( yawRad );
+		double halfSize =  Math.max(
+			Math.abs( cos - sin ),
+			Math.abs( sin + cos )
+		)/2;
+		
+		return box.setBounds(
+			p.xCoord - halfSize, p.yCoord - 0.5, p.zCoord - halfSize,
+			p.xCoord + halfSize, p.yCoord + 0.5, p.zCoord + halfSize
+		);
+	}
+	
 	private List<PossibleCollision> getEntityPossibleCollisions( Vec3 oldPos, Vec3 newPos, Entity entity )
 	{
 		// make a box that contains the entire entity trajectory
