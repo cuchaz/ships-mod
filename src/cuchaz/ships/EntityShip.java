@@ -135,7 +135,7 @@ public class EntityShip extends Entity
 		// save the data into the data watcher so it gets sync'd to the client
 		dataWatcher.updateObject( WatcherIdBlocks, m_blocks.getDataString() );
 		
-		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
+		m_collider.computeShipBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
 		
 		// TEMP
 		System.out.println( String.format(
@@ -221,7 +221,11 @@ public class EntityShip extends Entity
 		posX = x;
         posY = y;
         posZ = z;
-		computeBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
+        
+        if( m_collider != null )
+        {
+        	m_collider.computeShipBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
+        }
 	}
 	
 	@Override
@@ -269,18 +273,10 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		// TEMP: kill all ships
-		if( false )
-		{
-			setDead();
-		}
-		
 		double waterHeightInBlockSpace = shipToBlocksY( worldToShipY( getWaterHeight() ) );
 		
 		adjustMotionDueToGravityAndBuoyancy( waterHeightInBlockSpace );
 		adjustMotionDueToThrustAndDrag( waterHeightInBlockSpace );
-		// TEMP: disable all collisions
-		//adjustMotionDueToBlockCollisions();
 		
 		double dx = motionX;
 		double dy = motionY;
@@ -316,8 +312,6 @@ public class EntityShip extends Entity
 			m_hasInfoFromServer = false;
 		}
 		
-		final double Epsilon = 1e-3;
-		
 		/* TEMP
 		System.out.println( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), d=(%.4f,%.4f,%.4f), dYaw=%.1f",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
@@ -327,30 +321,32 @@ public class EntityShip extends Entity
 		*/
 		
 		// did we even move a noticeable amount?
+		final double Epsilon = 1e-3;
 		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
 		{
 			List<Entity> riders = getRiders();
 			
-			// apply motion
+			// save the old values
 			prevPosX = posX;
 			prevPosY = posY;
 			prevPosZ = posZ;
 			prevRotationYaw = rotationYaw;
 			prevRotationPitch = rotationPitch;
-			setRotation(
-				rotationYaw + dYaw,
-				rotationPitch
-			);
-			setPosition(
-				posX + dx,
-				posY + dy,
-				posZ + dz
-			);
+			
+			// move the ship
+			m_collider.moveShip( dx, dy, dz, dYaw );
+			
+			// recalculate the deltas
+			dx = posX - prevPosX;
+			dy = posY - prevPosY;
+			dz = posZ - prevPosZ;
+			dYaw = rotationYaw - prevRotationYaw;
 			
 			moveRiders( riders, dx, dy, dz, dYaw );
+			moveWater( waterHeightInBlockSpace );
+			
 			// TEMP
 			//moveCollidingEntities( riders );
-			moveWater( waterHeightInBlockSpace );
 		}
 		
 		// did the ship sink?
@@ -728,135 +724,8 @@ public class EntityShip extends Entity
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;
 	}
 	
-	private void adjustMotionDueToBlockCollisions( )
-	{
-		// UNDONE: we can probably optimize this quite a bit
-		
-		// where would we move to?
-		AxisAlignedBB nextBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		computeBoundingBox( nextBox, posX + motionX, posY + motionY, posZ + motionZ, rotationYaw + motionYaw );
-		
-		// do a range query to get colliding world blocks
-		List<AxisAlignedBB> nearbyWorldBlocks = new ArrayList<AxisAlignedBB>();
-        int minX = MathHelper.floor_double( nextBox.minX );
-        int maxX = MathHelper.floor_double( nextBox.maxX );
-        int minY = MathHelper.floor_double( nextBox.minY );
-        int maxY = MathHelper.floor_double( nextBox.maxY );
-        int minZ = MathHelper.floor_double( nextBox.minZ );
-        int maxZ = MathHelper.floor_double( nextBox.maxZ );
-        for( int x=minX; x<=maxX; x++ )
-        {
-            for( int z=minZ; z<=maxZ; z++ )
-            {
-                for( int y=minY; y<=maxY; y++ )
-                {
-                    Block block = Block.blocksList[worldObj.getBlockId( x, y, z )];
-                    if( block != null )
-                    {
-                        block.addCollisionBoxesToList( worldObj, x, y, z, nextBox, nearbyWorldBlocks, this );
-                    }
-                }
-            }
-        }
-        
-        // no collisions?
- 		if( nearbyWorldBlocks.isEmpty() )
- 		{
- 			return;
- 		}
- 		
- 		// compute the scaling to avoid the collision
- 		// it's ok if the ship block doesn't actually collide with every nearby world block
- 		// in that case, the scaling will be > 1 and will be ignored
- 		double s = 1.0;
- 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
- 		AxisAlignedBB updatedShipBlock = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
- 		int numCollisions = 0;
-		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
-        {
-			// get the next position of the ship block
-			blockEntity.getBlockPosition( p );
-			// HACKHACK: temporarily adjust the ship's yaw to fool shipToWorld()
-			rotationYaw += motionYaw;
-			blocksToShip( p );
-			shipToWorld( p );
-			p.xCoord += motionX;
-			p.yCoord += motionY;
-			p.zCoord += motionZ;
-			EntityShipBlock.computeBoundingBox( updatedShipBlock, p.xCoord, p.yCoord, p.zCoord, rotationYaw );
-			rotationYaw -= motionYaw;
-			
-			for( AxisAlignedBB worldBlock : nearbyWorldBlocks )
-			{
-				// would the boxes actually collide?
-				if( !worldBlock.intersectsWith( updatedShipBlock ) )
-				{
-					continue;
-				}
-				
-				numCollisions++;
-				s = Math.min( s, getScalingToAvoidCollision( motionX, motionY, motionZ, blockEntity.getBoundingBox(), worldBlock ) );
-			}
-        }
-		
-		// avoid the collision
-		motionX *= s;
-		motionY *= s;
-		motionZ *= s;
-		
-		// update rotation too
-		if( numCollisions > 0 )
-		{
-			motionYaw = 0;
-		}
-	}
-	
-	private double getScalingToAvoidCollision( double dx, double dy, double dz, AxisAlignedBB shipBox, AxisAlignedBB externalBox )
-	{
-		double sx = 0;
-		if( dx > 0 )
-		{
-			sx = ( externalBox.minX - shipBox.maxX )/dx;
-		}
-		else if( dx < 0 )
-		{
-			sx = ( externalBox.maxX - shipBox.minX )/dx;
-		}
-		
-		double sy = 0;
-		if( dy > 0 )
-		{
-			sy = ( externalBox.minY - shipBox.maxY )/dy;
-		}
-		else if( dy < 0 )
-		{
-			sy = ( externalBox.maxY - shipBox.minY )/dy;
-		}
-		
-		double sz = 0;
-		if( dz > 0 )
-		{
-			sz = ( externalBox.minZ - shipBox.maxZ )/dz;
-		}
-		else if( dz < 0 )
-		{
-			sz = ( externalBox.maxZ - shipBox.minZ )/dz;
-		}
-		
-		double s = Math.max( sx, Math.max( sy, sz ) );
-		
-		// if the scaling we get is below zero, there was no real collision to worry about
-		if( s < 0 )
-		{
-			return 1.0;
-		}
-		return s;
-	}
-	
 	public List<Entity> getRiders( )
 	{
-		// UNDONE: cache this. It only needs to be updated every tick
-		
 		final double Expand = 0.5;
 		AxisAlignedBB checkBox = AxisAlignedBB.getAABBPool().getAABB(
 			boundingBox.minX - Expand,
@@ -875,19 +744,35 @@ public class EntityShip extends Entity
 		while( iter.hasNext() )
 		{
 			Entity entity = iter.next();
+			
+			// TEMP
+			System.out.println( String.format( "%s possible rider: %s dy=%.4f",
+				worldObj.isRemote ? "CLIENT" : "SERVER",
+				entity.getClass().getSimpleName(),
+				entity.motionY
+			) );
+			
 			if( entity == this || entity.motionY >= 0 || !isEntityCloseEnoughToRide( entity ) )
 			{
 				iter.remove();
 			}
 		}
 		
+		// TEMP
+		System.out.println( String.format( "%s riders: %d", worldObj.isRemote ? "CLIENT" : "SERVER", entities.size() ) );
+		
 		return entities;
 	}
 	
 	public boolean isEntityCloseEnoughToRide( Entity entity )
 	{
+		// NEXTTIME: fix this function
+		// get rid of the rotated box.
+		// do collisions in blocks space and assume the entity is axis-aligned
+		
 		// get the closest block y the entity could be standing on
-		int y = (int)( shipToBlocksY( worldToShipY( entity.boundingBox.minY ) ) + 0.5 ) - 1;
+		double entityMinY = entity.boundingBox.minY + entity.ySize - entity.yOffset;
+		int y = (int)( shipToBlocksY( worldToShipY( entityMinY ) ) + 0.5 ) - 1;
 		
 		// convert the entity box into block coordinates
 		RotatedBB box = worldToBlocks( entity.boundingBox );
@@ -919,7 +804,6 @@ public class EntityShip extends Entity
 		{
 			// apply rotation of position relative to the ship center
 			p.xCoord = rider.posX + dx;
-			p.yCoord = rider.posY + dy;
 			p.zCoord = rider.posZ + dz;
 			worldToShip( p );
 			float yawRad = (float)Math.toRadians( dYaw );
@@ -930,21 +814,13 @@ public class EntityShip extends Entity
 			p.xCoord = x;
 			p.zCoord = z;
 			shipToWorld( p );
-			dx += ( p.xCoord - dx ) - rider.posX;
-			dz += ( p.zCoord - dz ) - rider.posZ;
-			
-			/* adjust the translation to snap riders to the surface of the ship
-			double riderY = shipToBlocksY( worldToShipY( rider.boundingBox.minY ) );
-			int targetY = (int)( riderY + 0.5 );
-			dy += targetY - riderY;
-			*/
 			
 			// apply the transformation
 			rider.rotationYaw -= dYaw;
 			rider.setPosition(
-				rider.posX + dx,
+				p.xCoord,
 				rider.posY + dy,
-				rider.posZ + dz
+				p.zCoord
 			);
 		}
 	}
@@ -1162,42 +1038,6 @@ public class EntityShip extends Entity
 		}
 		
 		m_previouslyDisplacedWaterBlocks = displacedWaterBlocks;
-	}
-	
-	private void computeBoundingBox( AxisAlignedBB box, double x, double y, double z, float yaw )
-	{
-		if( m_blocks == null )
-		{
-			return;
-		}
-		
-		// make an un-rotated box in world-space
-		box.minX = x + blocksToShipX( m_blocks.getBoundingBox().minX );
-		box.minY = y + blocksToShipY( m_blocks.getBoundingBox().minY );
-		box.minZ = z + blocksToShipZ( m_blocks.getBoundingBox().minZ );
-		box.maxX = x + blocksToShipX( m_blocks.getBoundingBox().maxX + 1 );
-		box.maxY = y + blocksToShipY( m_blocks.getBoundingBox().maxY + 1 );
-		box.maxZ = z + blocksToShipZ( m_blocks.getBoundingBox().maxZ + 1 );
-		
-		// now rotate by the yaw
-		// UNDONE: optimize out the new
-		RotatedBB rotatedBox = new RotatedBB( box.copy(), yaw, x, z );
-		
-		// compute the new xz bounds
-		box.minX = Integer.MAX_VALUE;
-		box.maxX = Integer.MIN_VALUE;
-		box.minZ = Integer.MAX_VALUE;
-		box.maxZ = Integer.MIN_VALUE;
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		for( BoxCorner corner : BlockSide.Top.getCorners() )
-		{
-			rotatedBox.getCorner( p, corner );
-			
-			box.minX = Math.min( box.minX, p.xCoord );
-			box.maxX = Math.max( box.maxX, p.xCoord );
-			box.minZ = Math.min( box.minZ, p.zCoord );
-			box.maxZ = Math.max( box.maxZ, p.zCoord );
-		}
 	}
 	
 	public void setPilotActions( int actions, BlockSide sideShipForward, boolean sendPilotChangesToServer )

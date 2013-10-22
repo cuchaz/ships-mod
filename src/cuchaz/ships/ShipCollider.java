@@ -14,6 +14,9 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.RotatedBB;
 
 public class ShipCollider
@@ -40,6 +43,43 @@ public class ShipCollider
 	public ShipCollider( EntityShip ship )
 	{
 		m_ship = ship;
+	}
+	
+	public void computeShipBoundingBox( AxisAlignedBB box, double x, double y, double z, float yaw )
+	{
+		ShipWorld blocks = m_ship.getBlocks();
+		if( blocks == null )
+		{
+			return;
+		}
+		
+		// make an un-rotated box in world-space
+		box.minX = x + m_ship.blocksToShipX( blocks.getBoundingBox().minX );
+		box.minY = y + m_ship.blocksToShipY( blocks.getBoundingBox().minY );
+		box.minZ = z + m_ship.blocksToShipZ( blocks.getBoundingBox().minZ );
+		box.maxX = x + m_ship.blocksToShipX( blocks.getBoundingBox().maxX + 1 );
+		box.maxY = y + m_ship.blocksToShipY( blocks.getBoundingBox().maxY + 1 );
+		box.maxZ = z + m_ship.blocksToShipZ( blocks.getBoundingBox().maxZ + 1 );
+		
+		// now rotate by the yaw
+		// UNDONE: optimize out the new
+		RotatedBB rotatedBox = new RotatedBB( box.copy(), yaw, x, z );
+		
+		// compute the new xz bounds
+		box.minX = Integer.MAX_VALUE;
+		box.maxX = Integer.MIN_VALUE;
+		box.minZ = Integer.MAX_VALUE;
+		box.maxZ = Integer.MIN_VALUE;
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		for( BoxCorner corner : BlockSide.Top.getCorners() )
+		{
+			rotatedBox.getCorner( p, corner );
+			
+			box.minX = Math.min( box.minX, p.xCoord );
+			box.maxX = Math.max( box.maxX, p.xCoord );
+			box.minZ = Math.min( box.minZ, p.zCoord );
+			box.maxZ = Math.max( box.maxZ, p.zCoord );
+		}
 	}
 	
 	public TreeSet<MovingObjectPosition> getBlocksPlayerIsLookingAt( EntityPlayer player )
@@ -186,39 +226,6 @@ public class ShipCollider
 		EntityAccessor.updateFallState( entity, dy, entity.onGround );
 	}
 	
-	private double applyBackoff( double d, double originalD )
-	{
-		// what is backoff and why do we need it?
-		// the entity/world collision system doesn't use backoff...
-		
-		// Due to roundoff errors in world/blocks coordinate conversions,
-		// sometimes collision calculations place entity JUST INSIDE an obstacle
-		// Even though an intifintessimal translation would put the entity correctly outside of the obstacle,
-		// once inside the obstacle, the entity can continue movement unimpeded.
-		
-		// either we have to detect (and prevent) when an entity is already colliding with an obstacle
-		// (which might be preferable, but then players could get "stuck" in geometry),
-		// or we have to place the entity so it is JUST OUTSIDE the obstacle after a collision,
-		// instead of exactly on the boundary
-		
-		// distance in game coords, but small enough not to notice
-		final double Backoff = 0.001;
-		
-		if( d != originalD )
-		{
-			// apply the backoff in the opposite direction of the delta
-			if( d > 0 )
-			{
-				return d - Backoff;
-			}
-			else
-			{
-				return d + Backoff;
-			}
-		}
-		return d;
-	}
-
 	public AxisAlignedBB getBlockBoxInBlockSpace( ChunkCoordinates coords )
 	{
 		Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
@@ -258,6 +265,186 @@ public class ShipCollider
 			p.xCoord - halfSize, p.yCoord - 0.5, p.zCoord - halfSize,
 			p.xCoord + halfSize, p.yCoord + 0.5, p.zCoord + halfSize
 		);
+	}
+	
+	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, ChunkCoordinates coords, double shipX, double shipY, double shipZ, float shipYaw )
+	{
+		// temporarily place the ship at the new position
+		double oldX = m_ship.posX;
+		double oldY = m_ship.posY;
+		double oldZ = m_ship.posZ;
+		float oldYaw = m_ship.rotationYaw;
+		
+		AxisAlignedBB blockWorldBox = getBlockWorldBoundingBox( box, coords );
+		
+		// restore the ship before anyone notices =P
+		m_ship.posX = oldX;
+		m_ship.posY = oldY;
+		m_ship.posZ = oldZ;
+		m_ship.rotationYaw = oldYaw;
+		
+		return blockWorldBox;
+	}
+	
+	public void moveShip( double dx, double dy, double dz, float dYaw )
+	{
+		// for each ship block, figure out what it collides with
+		double minS = 1.0;
+		int numCollisions = 0;
+		for( ChunkCoordinates coords : m_ship.getBlocks().coords() )
+		{
+			double s = getScalingToAvoidCollision( coords, dx, dy, dz, dYaw );
+			if( s < 1.0 )
+			{
+				numCollisions++;
+				minS = Math.min( minS, s );
+			}
+		}
+		
+		// avoid the collision
+		dx *= minS;
+		dy *= minS;
+		dz *= minS;
+		
+		// if there are any collisions, don't try to compute the dYaw that avoids the collision
+		// just kill any rotation
+		if( numCollisions > 0 )
+		{
+			dYaw = 0;
+		}
+		
+		// apply the new delta
+		m_ship.rotationYaw += dYaw;
+		m_ship.setPosition(
+			m_ship.posX + dx,
+			m_ship.posY + dy,
+			m_ship.posZ + dz
+		);
+	}
+	
+	private double getScalingToAvoidCollision( ChunkCoordinates coords, double dx, double dy, double dz, float dYaw )
+	{
+		// get the current bounding box for the ship block
+		AxisAlignedBB shipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		getBlockWorldBoundingBox( shipBlockBox, coords );
+		
+		// where would the ship block move to?
+		double nextX = m_ship.posX + dx;
+		double nextY = m_ship.posY + dy;
+		double nextZ = m_ship.posZ + dz;
+		float nextYaw = m_ship.rotationYaw + dYaw;
+		AxisAlignedBB nextShipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+ 		getBlockWorldBoundingBox( nextShipBlockBox, coords, nextX, nextY, nextZ, nextYaw );
+ 		
+ 		// func_111270_a returns the bounding box of both boxes
+ 		AxisAlignedBB combinedBlockBox = shipBlockBox.func_111270_a( nextShipBlockBox );
+ 		
+ 		// do a range query to get colliding world blocks
+		World world = m_ship.worldObj;
+		List<AxisAlignedBB> nearbyWorldBlocks = new ArrayList<AxisAlignedBB>();
+        int minX = MathHelper.floor_double( combinedBlockBox.minX );
+        int maxX = MathHelper.floor_double( combinedBlockBox.maxX );
+        int minY = MathHelper.floor_double( combinedBlockBox.minY );
+        int maxY = MathHelper.floor_double( combinedBlockBox.maxY );
+        int minZ = MathHelper.floor_double( combinedBlockBox.minZ );
+        int maxZ = MathHelper.floor_double( combinedBlockBox.maxZ );
+        for( int x=minX; x<=maxX; x++ )
+        {
+            for( int z=minZ; z<=maxZ; z++ )
+            {
+                for( int y=minY; y<=maxY; y++ )
+                {
+                    Block block = Block.blocksList[world.getBlockId( x, y, z )];
+                    if( block != null )
+                    {
+                        block.addCollisionBoxesToList( world, x, y, z, combinedBlockBox, nearbyWorldBlocks, m_ship );
+                    }
+                }
+            }
+        }
+        
+        // get the scaling that avoids the collision
+        double s = 1.0;
+        for( AxisAlignedBB worldBlockBox : nearbyWorldBlocks )
+		{
+        	s = Math.min( s, getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, worldBlockBox ) );
+		}
+        return s;
+	}
+	
+	private double getScalingToAvoidCollision( AxisAlignedBB box, double dx, double dy, double dz, AxisAlignedBB obstacleBox )
+	{
+		double sx = 0;
+		if( dx > 0 )
+		{
+			sx = ( obstacleBox.minX - box.maxX )/dx;
+		}
+		else if( dx < 0 )
+		{
+			sx = ( obstacleBox.maxX - box.minX )/dx;
+		}
+		
+		double sy = 0;
+		if( dy > 0 )
+		{
+			sy = ( obstacleBox.minY - box.maxY )/dy;
+		}
+		else if( dy < 0 )
+		{
+			sy = ( obstacleBox.maxY - box.minY )/dy;
+		}
+		
+		double sz = 0;
+		if( dz > 0 )
+		{
+			sz = ( obstacleBox.minZ - box.maxZ )/dz;
+		}
+		else if( dz < 0 )
+		{
+			sz = ( obstacleBox.maxZ - box.minZ )/dz;
+		}
+		
+		double s = Math.max( sx, Math.max( sy, sz ) );
+		
+		// if the scaling we get is below zero, there was no real collision to worry about
+		if( s < 0 )
+		{
+			return 1.0;
+		}
+		return s;
+	}
+	
+	private double applyBackoff( double d, double originalD )
+	{
+		// what is backoff and why do we need it?
+		// the entity/world collision system doesn't use backoff...
+		
+		// Due to roundoff errors in world/blocks coordinate conversions,
+		// sometimes collision calculations place entity JUST INSIDE an obstacle
+		// Even though an intifintessimal translation would put the entity correctly outside of the obstacle,
+		// once inside the obstacle, the entity can continue movement unimpeded.
+		
+		// either we have to detect (and prevent) when an entity is already colliding with an obstacle
+		// (which might be preferable, but then players could get "stuck" in geometry),
+		// or we have to place the entity so it is JUST OUTSIDE the obstacle after a collision,
+		// instead of exactly on the boundary
+		
+		// distance in game coords, but small enough not to notice
+		final double Backoff = 0.001;
+		
+		if( d != originalD )
+		{
+			// apply the backoff in the opposite direction of the delta
+			if( d > 0 )
+			{
+				return d - Backoff;
+			}
+			else
+			{
+				return d + Backoff;
+			}
+		}
+		return d;
 	}
 	
 	private List<PossibleCollision> getEntityPossibleCollisions( Vec3 oldPos, Vec3 newPos, Entity entity )
