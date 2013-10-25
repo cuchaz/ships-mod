@@ -764,37 +764,6 @@ public class EntityShip extends Entity
 		return entities;
 	}
 	
-	public boolean isEntityCloseEnoughToRide( Entity entity )
-	{
-		// NEXTTIME: fix this function
-		// get rid of the rotated box.
-		// do collisions in blocks space and assume the entity is axis-aligned
-		
-		// get the closest block y the entity could be standing on
-		double entityMinY = entity.boundingBox.minY + entity.ySize - entity.yOffset;
-		int y = (int)( shipToBlocksY( worldToShipY( entityMinY ) ) + 0.5 ) - 1;
-		
-		// convert the entity box into block coordinates
-		RotatedBB box = worldToBlocks( entity.boundingBox );
-		
-		for( ChunkCoordinates coords : m_blocks.getGeometry().xzRangeQuery( y, box ) )
-		{
-			if( isBoxCloseEnoughToRide( box, coords ) )
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	private boolean isBoxCloseEnoughToRide( RotatedBB box, ChunkCoordinates coords )
-	{
-		// is the entity close enough to the top of the block?
-		double yBlockTop = coords.posY + 1;
-		return Math.abs( yBlockTop - box.getMinY() ) <= RiderEpsilon;
-	}
-	
 	private void moveRiders( List<Entity> riders, double dx, double dy, double dz, float dYaw )
 	{
 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );

@@ -322,6 +322,39 @@ public class ShipCollider
 		);
 	}
 	
+	public boolean isEntityCloseEnoughToRide( Entity entity )
+	{
+		// NEXTTIME: fix this function
+		// get rid of the rotated box.
+		// do collisions in blocks space and assume the entity is axis-aligned
+		
+		// get the closest block y the entity could be standing on
+		double entityMinY = entity.boundingBox.minY + entity.ySize - entity.yOffset;
+		int y = (int)( shipToBlocksY( worldToShipY( entityMinY ) ) + 0.5 ) - 1;
+		
+		// convert the entity box into block coordinates
+		RotatedBB box = worldToBlocks( entity.boundingBox );
+		
+		// get the bounding box of the entity in block space
+		
+		for( ChunkCoordinates coords : m_blocks.getGeometry().xzRangeQuery( y, box ) )
+		{
+			if( isBoxCloseEnoughToRide( box, coords ) )
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private boolean isBoxCloseEnoughToRide( RotatedBB box, ChunkCoordinates coords )
+	{
+		// is the entity close enough to the top of the block?
+		double yBlockTop = coords.posY + 1;
+		return Math.abs( yBlockTop - box.getMinY() ) <= RiderEpsilon;
+	}
+	
 	private double getScalingToAvoidCollision( ChunkCoordinates coords, double dx, double dy, double dz, float dYaw )
 	{
 		// get the current bounding box for the ship block
@@ -449,35 +482,25 @@ public class ShipCollider
 	
 	private List<PossibleCollision> getEntityPossibleCollisions( Vec3 oldPos, Vec3 newPos, Entity entity )
 	{
-		// make a box that contains the entire entity trajectory
-		// remember, the y pos is wonky
-		// box.minY = posY - yOffset + ySize
-		// box.maxY = box.minY + height
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(
-			Math.min( oldPos.xCoord, newPos.xCoord ),
-			Math.min( oldPos.yCoord, newPos.yCoord ),
-			Math.min( oldPos.zCoord, newPos.zCoord ),
-			Math.max( oldPos.xCoord, newPos.xCoord ),
-			Math.max( oldPos.yCoord, newPos.yCoord ),
-			Math.max( oldPos.zCoord, newPos.zCoord )
-		);
-		double hw = entity.width/2;
-		box.minX -= hw;
-		box.maxX += hw;
-		box.maxY += entity.height;
-		box.minZ -= hw;
-		box.maxZ += hw;
+		// get a bounding box containing the entire entity trajectory
+		AxisAlignedBB oldBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		AxisAlignedBB newBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		AxisAlignedBB spreadBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		
+		getEntityBoxInBlocksSpace( oldBox, entity, oldPos );
+		getEntityBoxInBlocksSpace( newBox, entity, newPos );
+		spreadBox = oldBox.func_111270_a( newBox );
 		
 		// TEMP
 		if( entity instanceof EntityPlayer )
 		{
-			m_queryBox.setBB( box );
+			m_queryBox.setBB( spreadBox );
 		}
 		
 		// collect the boxes for the blocks in that box
 		// UNDONE: optimize out the new
 		List<PossibleCollision> collisions = new ArrayList<PossibleCollision>();
-		for( ChunkCoordinates coords : m_ship.getBlocks().getGeometry().rangeQuery( box ) )
+		for( ChunkCoordinates coords : m_ship.getBlocks().getGeometry().rangeQuery( spreadBox ) )
 		{
 			Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
 			block.setBlockBoundsBasedOnState( m_ship.getBlocks(), coords.posX, coords.posY, coords.posZ );
@@ -493,6 +516,25 @@ public class ShipCollider
 			);
 		}
 		return collisions;
+	}
+	
+	private void getEntityBoxInBlocksSpace( AxisAlignedBB box, Entity entity )
+	{
+		getEntityBoxInBlocksSpace( box, entity, Vec3.createVectorHelper( entity.posX, entity.posY, entity.posZ ) );
+	}
+	
+	private void getEntityBoxInBlocksSpace( AxisAlignedBB box, Entity entity, Vec3 pos )
+	{
+		// copy the vector since we need to modify it
+		pos = Vec3.createVectorHelper( pos.xCoord, pos.yCoord, pos.zCoord );
+		
+		// transform to block coords
+		m_ship.worldToShip( pos );
+		m_ship.shipToBlocks( pos );
+		
+		// set the box here
+		box.setBB( entity.boundingBox );
+		box.offset( pos.xCoord, pos.yCoord, pos.zCoord );
 	}
 	
 	private TreeSet<MovingObjectPosition> lineSegmentQuery( final Vec3 from, Vec3 to )
