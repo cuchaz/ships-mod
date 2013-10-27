@@ -1,9 +1,6 @@
 package cuchaz.ships;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import net.minecraft.block.Block;
@@ -19,7 +16,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
@@ -324,7 +320,7 @@ public class EntityShip extends Entity
 		final double Epsilon = 1e-3;
 		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
 		{
-			List<Entity> riders = getRiders();
+			List<Entity> riders = m_collider.getRiders();
 			
 			// save the old values
 			prevPosX = posX;
@@ -342,11 +338,8 @@ public class EntityShip extends Entity
 			dz = posZ - prevPosZ;
 			dYaw = rotationYaw - prevRotationYaw;
 			
-			moveRiders( riders, dx, dy, dz, dYaw );
 			moveWater( waterHeightInBlockSpace );
-			
-			// TEMP
-			//moveCollidingEntities( riders );
+			moveRiders( riders, dx, dy, dz, dYaw );
 		}
 		
 		// did the ship sink?
@@ -724,209 +717,6 @@ public class EntityShip extends Entity
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;
 	}
 	
-	public List<Entity> getRiders( )
-	{
-		final double Expand = 0.5;
-		AxisAlignedBB checkBox = AxisAlignedBB.getAABBPool().getAABB(
-			boundingBox.minX - Expand,
-			boundingBox.minY - Expand,
-			boundingBox.minZ - Expand,
-			boundingBox.maxX + Expand,
-			boundingBox.maxY + Expand,
-			boundingBox.maxZ + Expand
-		);
-		@SuppressWarnings( "unchecked" )
-		List<Entity> entities = worldObj.getEntitiesWithinAABB( Entity.class, checkBox );
-		
-		// remove any entities from the list not close enough to be considered riding
-		// also remove entities that are floating or moving upwards (e.g. jumping)
-		Iterator<Entity> iter = entities.iterator();
-		while( iter.hasNext() )
-		{
-			Entity entity = iter.next();
-			
-			// TEMP
-			System.out.println( String.format( "%s possible rider: %s dy=%.4f",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				entity.getClass().getSimpleName(),
-				entity.motionY
-			) );
-			
-			if( entity == this || entity.motionY >= 0 || !isEntityCloseEnoughToRide( entity ) )
-			{
-				iter.remove();
-			}
-		}
-		
-		// TEMP
-		System.out.println( String.format( "%s riders: %d", worldObj.isRemote ? "CLIENT" : "SERVER", entities.size() ) );
-		
-		return entities;
-	}
-	
-	private void moveRiders( List<Entity> riders, double dx, double dy, double dz, float dYaw )
-	{
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		
-		// move riders
-		for( Entity rider : riders )
-		{
-			// apply rotation of position relative to the ship center
-			p.xCoord = rider.posX + dx;
-			p.zCoord = rider.posZ + dz;
-			worldToShip( p );
-			float yawRad = (float)Math.toRadians( dYaw );
-			float cos = MathHelper.cos( yawRad );
-			float sin = MathHelper.sin( yawRad );
-			double x = p.xCoord*cos + p.zCoord*sin;
-			double z = -p.xCoord*sin + p.zCoord*cos;
-			p.xCoord = x;
-			p.zCoord = z;
-			shipToWorld( p );
-			
-			// apply the transformation
-			rider.rotationYaw -= dYaw;
-			rider.setPosition(
-				p.xCoord,
-				rider.posY + dy,
-				p.zCoord
-			);
-		}
-	}
-	
-	private void moveCollidingEntities( List<Entity> riders )
-	{
-		@SuppressWarnings( "unchecked" )
-		List<Entity> entities = worldObj.getEntitiesWithinAABB( Entity.class, boundingBox );
-		
-		for( Entity entity : entities )
-		{
-			// don't collide with self
-			if( entity == this )
-			{
-				continue;
-			}
-			
-			// is this entity is a rider?
-			// UNDONE: could use more efficient check
-			boolean isRider = riders.contains( entity );
-			
-			moveCollidingEntity( entity, isRider );
-		}
-	}
-	
-	private void moveCollidingEntity( Entity entity, boolean isRider )
-	{
-		// UNDONE: collisions isn't quite perfect yet.
-		// The displacements aren't quite the right size for the observed z-overlap!
-		
-		// find the displacement that moves the entity out of the way of the blocks
-		double maxDisplacement = 0.0;
-		double maxDx = 0;
-		double maxDy = 0;
-		double maxDz = 0;
-		
-		// UNDONE: optimize this range query. Do something smarter than brute force
-		for( EntityShipBlock blockEntity : m_blockEntitiesArray )
-		{
-			// is this block actually colliding with the entity?
-			if( !blockEntity.getBoundingBox().intersectsWith( entity.boundingBox ) )
-			{
-				continue;
-			}
-			
-			// get the actual motion vector of the block accounting for rotation
-			double dxBlock = blockEntity.posX - blockEntity.prevPosX;
-			double dyBlock = blockEntity.posY - blockEntity.prevPosY;
-			double dzBlock = blockEntity.posZ - blockEntity.prevPosZ;
-			
-			// is the ship block actually moving towards the entity?
-			Vec3 toEntity = Vec3.createVectorHelper(
-				entity.posX - blockEntity.posX,
-				entity.posY - blockEntity.posY,
-				entity.posZ - blockEntity.posZ
-			);
-			Vec3 motion = Vec3.createVectorHelper( dxBlock, dyBlock, dzBlock );
-			boolean isMovingTowardsEntity = toEntity.dotProduct( motion ) > 0.0;
-			if( !isMovingTowardsEntity )
-			{
-				continue;
-			}
-			
-			double scaling = getScalingToPushBox( dxBlock, dyBlock, dzBlock, blockEntity.getBoundingBox(), entity.boundingBox );
-			
-			// calculate the displacement
-			double displacement = scaling*Math.sqrt( dxBlock*dxBlock + dyBlock*dyBlock + dzBlock*dzBlock );
-			
-			if( displacement > maxDisplacement )
-			{
-				maxDisplacement = displacement;
-				maxDx = scaling*dxBlock;
-				maxDy = scaling*dyBlock;
-				maxDz = scaling*dzBlock;
-			}
-			
-			// TEMP
-			System.out.println( String.format(
-				"%s entity %s displcement for block: %.4f (%.2f,%.2f,%.2f), z overlap: %.4f",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				entity.getClass().getSimpleName(), displacement,
-				scaling*dxBlock, scaling*dyBlock, scaling*dzBlock,
-				Math.min( blockEntity.getBoundingBox().maxZ - entity.boundingBox.minZ, entity.boundingBox.maxZ - blockEntity.getBoundingBox().minZ )
-			) );
-		}
-		
-		// don't update y-positions for riders
-		if( isRider )
-		{
-			maxDy = 0;
-		}
-		
-		// move the entity out of the way of the blocks
-		entity.setPosition(
-			entity.posX + maxDx,
-			entity.posY + maxDy,
-			entity.posZ + maxDz
-		);
-		// UNDONE: change to moveEntity() and get rid of rider snap?
-	}
-	
-	private double getScalingToPushBox( double dx, double dy, double dz, AxisAlignedBB shipBox, AxisAlignedBB externalBox )
-	{
-		double sx = 0;
-		if( dx > 0 )
-		{
-			sx = ( shipBox.maxX - externalBox.minX )/dx;
-		}
-		else if( dx < 0 )
-		{
-			sx = ( shipBox.minX - externalBox.maxX )/dx;
-		}
-		
-		double sy = 0;
-		if( dy > 0 )
-		{
-			sy = ( shipBox.maxY - externalBox.minY )/dy;
-		}
-		else if( dy < 0 )
-		{
-			sy = ( shipBox.minY - externalBox.maxY )/dy;
-		}
-		
-		double sz = 0;
-		if( dz > 0 )
-		{
-			sz = ( shipBox.maxZ - externalBox.minZ )/dz;
-		}
-		else if( dz < 0 )
-		{
-			sz = ( shipBox.minZ - externalBox.maxZ )/dz;
-		}
-		
-		// clamp scalings to <= 1
-		return Math.min( 1, Math.max( sx, Math.max( sy, sz ) ) );
-	}
-	
 	private void moveWater( double waterHeightBlocks )
 	{
 		// get all the trapped air blocks
@@ -1007,6 +797,36 @@ public class EntityShip extends Entity
 		}
 		
 		m_previouslyDisplacedWaterBlocks = displacedWaterBlocks;
+	}
+	
+	private void moveRiders( List<Entity> riders, double dx, double dy, double dz, float dYaw )
+	{
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		
+		// first, move the riders
+		for( Entity rider : riders )
+		{
+			// apply rotation of position relative to the ship center
+			p.xCoord = rider.posX + dx;
+			p.zCoord = rider.posZ + dz;
+			worldToShip( p );
+			float yawRad = (float)Math.toRadians( dYaw );
+			float cos = MathHelper.cos( yawRad );
+			float sin = MathHelper.sin( yawRad );
+			double x = p.xCoord*cos + p.zCoord*sin;
+			double z = -p.xCoord*sin + p.zCoord*cos;
+			p.xCoord = x;
+			p.zCoord = z;
+			shipToWorld( p );
+			
+			// apply the transformation
+			rider.rotationYaw -= dYaw;
+			rider.setPosition(
+				p.xCoord,
+				rider.posY + dy,
+				p.zCoord
+			);
+		}
 	}
 	
 	public void setPilotActions( int actions, BlockSide sideShipForward, boolean sendPilotChangesToServer )

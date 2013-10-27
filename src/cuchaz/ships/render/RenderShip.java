@@ -158,8 +158,9 @@ public class RenderShip extends Render
 		GL11.glPopMatrix();
 		
 		// render debug information
-		if( true )
+		if( false )
 		{
+			// render in world space
 			GL11.glPushMatrix();
 			GL11.glTranslated( x, y, z );
 			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
@@ -167,15 +168,21 @@ public class RenderShip extends Render
 			renderAxis( ship );
 			//renderHitbox( ship );
 			
-			/*
+			GL11.glPopMatrix();
+			
+			// render in blocks space
+			GL11.glPushMatrix();
+			GL11.glTranslated( x, y, z );
+			GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
+			GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
+			
 			for( ChunkCoordinates coords : ship.getBlocks().coords() )
 			{
 				renderHitbox(
-					ship.getCollider().getBlockBoxInWorldSpace( coords ),
+					ship.getCollider().getBlockBoxInBlockSpace( coords ),
 					ColorUtils.getColor( 255, 0, 0 )
 				);
 			}
-			*/
 			
 			// render the highlighted blocks
 			synchronized( ship.getCollider().m_highlightedCoords )
@@ -183,20 +190,15 @@ public class RenderShip extends Render
 				for( ChunkCoordinates coords : ship.getCollider().m_highlightedCoords )
 				{
 					renderHitbox(
-						ship.getCollider().getBlockBoxInWorldSpace( coords ),
-						ColorUtils.getColor( 255, 0, 0 )
+						ship.getCollider().getBlockBoxInBlockSpace( coords ),
+						ColorUtils.getColor( 255, 255, 0 )
 					);
 				}
 			}
 			
-			GL11.glPopMatrix();
-			
 			// show the query box
-			GL11.glPushMatrix();
-			GL11.glTranslated( x, y, z );
-			GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
-			GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 			renderHitbox( ship.getCollider().m_queryBox, ColorUtils.getColor( 0, 255, 0 ) );
+			
 			GL11.glPopMatrix();
 		}
 	}

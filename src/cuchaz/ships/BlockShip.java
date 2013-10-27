@@ -62,7 +62,7 @@ public class BlockShip extends Block
 			boolean isPaddleEquipped = player.getCurrentEquippedItem() != null
 				&& player.getCurrentEquippedItem().getItem().itemID == Ships.m_itemPaddle.itemID;
 			ShipWorld shipWorld = (ShipWorld)world;
-			if( isPaddleEquipped && shipWorld.getShipType().isPaddleable() && shipWorld.getShip().isEntityCloseEnoughToRide( player ) )
+			if( isPaddleEquipped && shipWorld.getShipType().isPaddleable() && shipWorld.getShip().getCollider().isEntityAboard( player ) )
 			{
 				Gui.PaddleShip.open( player, world, x, y, z );
 			}

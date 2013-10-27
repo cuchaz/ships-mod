@@ -156,7 +156,7 @@ public class ShipUnlauncher
 	
 	public void unlaunch( )
 	{
-		List<Entity> riders = m_ship.getRiders();
+		List<Entity> riders = m_ship.getCollider().getRiders();
 		
 		// TEMP
 		System.out.println( String.format( "Unlaunching ship with %d riders...",
