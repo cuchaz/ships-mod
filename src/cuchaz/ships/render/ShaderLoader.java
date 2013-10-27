@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.Resource;
-import net.minecraft.client.resources.ResourceManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL20;
@@ -29,7 +27,7 @@ public class ShaderLoader
 	public static int load( ResourceLocation loc )
 	throws IOException
 	{
-		int shaderId = GL20.glCreateShader( getShaderType( loc.func_110623_a() ) );
+		int shaderId = GL20.glCreateShader( getShaderType( loc.getResourcePath() ) );
 		GL20.glShaderSource( shaderId, readResource( loc ) );
 		GL20.glCompileShader( shaderId );
 		return shaderId;
@@ -56,9 +54,7 @@ public class ShaderLoader
 	throws IOException
 	{
 		// open the resource
-		ResourceManager resourceManager = Minecraft.getMinecraft().func_110442_L();
-		Resource resource = resourceManager.func_110536_a( loc );
-		InputStream in = resource.func_110527_b();
+		InputStream in = Minecraft.getMinecraft().getResourceManager().getResource( loc ).getInputStream();
 		
 		// read it all into a buffer
 		ByteArrayOutputStream out = new ByteArrayOutputStream( BufferSize );

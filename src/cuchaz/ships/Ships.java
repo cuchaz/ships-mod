@@ -44,7 +44,6 @@ import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 
 // Mod annotations don't work in core mod land
-//@Mod( modid="cuchaz.ships", name="Ships", version="0.1", useMetadata=false, dependencies="required-after:cuchaz.ships.core@[0.1,)" )
 @NetworkMod(
 	// NOTE: 20-character limit for channel names
 	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel },

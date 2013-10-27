@@ -32,7 +32,7 @@ public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 	
 	public void renderTileEntityAt( TileEntityHelm tileEntity, double x, double y, double z, float partialTickTime )
 	{
-		RenderManager.instance.renderEngine.func_110577_a( Texture );
+		RenderManager.instance.renderEngine.bindTexture( Texture );
 		
 		// get the rotation angle from the block
 		int rotation = tileEntity.worldObj.getBlockMetadata( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );

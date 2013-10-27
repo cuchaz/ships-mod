@@ -17,7 +17,7 @@ import cuchaz.modsShared.ColorUtils;
 public class RenderShip2D
 {
 	private static final int WaterColor = ColorUtils.getColor( 43, 99, 225 );
-	private static final ResourceLocation ShipTexture = TextureMap.field_110575_b;
+	private static final ResourceLocation ShipTexture = TextureMap.locationBlocksTexture;
 	
 	public static void drawWater( BlockArray envelope, Double waterHeight, int x, int y, double z, int maxWidth, int maxHeight )
 	{
@@ -48,9 +48,7 @@ public class RenderShip2D
 		double shipHeight = (double)envelope.getHeight()*blockSize;
 		
 		// draw the ship blocks
-		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
-		Minecraft.getMinecraft().func_110434_K().func_110577_a( ShipTexture );
-		
+		Minecraft.getMinecraft().getTextureManager().bindTexture( ShipTexture );
 		for( int u=envelope.getUMin(); u<=envelope.getUMax(); u++ )
 		{
 			for( int v=envelope.getVMin(); v<=envelope.getVMax(); v++ )

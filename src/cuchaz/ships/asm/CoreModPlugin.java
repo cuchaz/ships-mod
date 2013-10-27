@@ -8,7 +8,7 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.Name;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 
 @Name( "cuchaz.ships.core" )
-@MCVersion( "1.6.2" )
+@MCVersion( "1.6.4" )
 @TransformerExclusions( { "cuchaz.ships.asm" } )
 public class CoreModPlugin implements IFMLLoadingPlugin
 {

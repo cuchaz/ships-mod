@@ -9,7 +9,7 @@ public class ShipItemBlock extends ItemBlock
 	{
 		super( blockId );
 		setHasSubtypes( true );
-		func_111206_d( "shipBlock" ); // setItemName
+		setUnlocalizedName( "shipBlock" );
 	}
 	
 	@Override

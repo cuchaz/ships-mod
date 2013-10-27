@@ -54,10 +54,7 @@ public class GuiShipPilotPaddle extends GuiShipPilot
 	protected void drawGuiContainerBackgroundLayer( float f, int i, int j )
 	{
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		
-		// load the texture
-		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
-		this.mc.func_110434_K().func_110577_a( BackgroundTexture );
+		mc.getTextureManager().bindTexture( BackgroundTexture );
 		
         double umax = (double)xSize/TextureWidth;
         double vmax = (double)ySize/TextureHeight;

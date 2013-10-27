@@ -32,10 +32,7 @@ public abstract class GuiShip extends GuiCloseable
 	protected void drawGuiContainerBackgroundLayer( float renderPartialTicks, int mouseX, int mouseY )
 	{
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		
-		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
-		this.mc.func_110434_K().func_110577_a( BackgroundTexture );
-		
+		mc.getTextureManager().bindTexture( BackgroundTexture );
 		drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
 	}
 	

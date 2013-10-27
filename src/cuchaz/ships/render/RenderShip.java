@@ -41,7 +41,7 @@ public class RenderShip extends Render
 	}
 	
 	@Override
-	protected ResourceLocation func_110775_a( Entity entity )
+	protected ResourceLocation getEntityTexture( Entity entity )
 	{
 		// this isn't used, but it's required by subclasses of Render
 		return null;
@@ -80,9 +80,7 @@ public class RenderShip extends Render
 		frustum.setPosition( v.xCoord, v.yCoord, v.zCoord );
         */
 		
-		// load the terrain/blocks texture
-		RenderManager.instance.renderEngine.func_110577_a( TextureMap.field_110575_b );
-		
+		RenderManager.instance.renderEngine.bindTexture( TextureMap.locationBlocksTexture );
 		Tessellator tessellator = Tessellator.instance;
 		tessellator.startDrawingQuads();
 		

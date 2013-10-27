@@ -461,7 +461,7 @@ public class ShipWorld extends DetatchedWorld
 	}
 	
 	@Override
-	public void updateTileEntityChunkAndDoNothing( int x, int y, int z, TileEntity tileEntity )
+	public void markTileEntityChunkModified( int x, int y, int z, TileEntity tileEntity )
 	{
 		// don't need to do anything
 	}

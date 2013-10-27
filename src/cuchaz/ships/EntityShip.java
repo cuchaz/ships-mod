@@ -34,8 +34,6 @@ public class EntityShip extends Entity
 	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdWaterHeight = 3;
 	
-	private static final double RiderEpsilon = 0.2;
-	
 	public float motionYaw;
 	public int linearThrottle;
 	public int angularThrottle;
@@ -362,9 +360,11 @@ public class EntityShip extends Entity
 	}
 	
 	@Override
-	// I think this used to be deobfuscated as interact() in an older MCP version
-	public boolean func_130002_c( EntityPlayer player )
+	public boolean interactFirst( EntityPlayer player )
 	{
+		// BUGBUG: can't interact with other entities inside of the ship's BB =(
+		// need to transform EntityRenderer.getMouseOver() to perform better collision against ships
+		
 		// find out what block the player is targeting
 		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
 		if( intersections.isEmpty() )

@@ -173,9 +173,6 @@ public class GuiShipPilotSurface extends GuiShipPilot
 	private void loadTexture( )
 	{
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		
-		// load the texture
-		// this call loads the texture. The deobfuscation mappings haven't picked this one up yet in 1.6.1
-		this.mc.func_110434_K().func_110577_a( BackgroundTexture );
+		mc.getTextureManager().bindTexture( BackgroundTexture );
 	}
 }
