@@ -16,6 +16,8 @@ import net.minecraft.world.World;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
+import cpw.mods.fml.client.FMLFileResourcePack;
+import cpw.mods.fml.client.FMLFolderResourcePack;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
@@ -123,6 +125,19 @@ public class Ships extends DummyModContainer
 	public File getSource( )
 	{
 		return m_source;
+	}
+	
+	@Override
+	public Class<?> getCustomResourcePackClass( )
+	{
+		if( getSource().isDirectory() )
+		{
+			return FMLFolderResourcePack.class;
+		}
+		else
+		{
+			return FMLFileResourcePack.class;
+		}
 	}
 	
 	@Subscribe

@@ -15,6 +15,12 @@ public class CoreModTransformer implements IClassTransformer
 	@Override
 	public byte[] transform( String name, String transformedName, byte[] classData )
 	{
+		// don't transform our own stuff
+		if( name.startsWith( "cuchaz.ships" ) )
+		{
+			return classData;
+		}
+		
 		// UNDONE: how does obfuscation play into all of this??
 		
 		// set up our adapter chain

@@ -40,7 +40,6 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 		// for performance, check method names first, class interitance second, and finally interfaces third
 		final boolean isTileEntityInventoryIsUseableByPlayer = methodName.equals( "isUseableByPlayer" ) && extendsClass( TileEntityClassName ) && implementsInterface( InventoryInterfaceName );
 		final boolean isContainerCanInteractWith = methodName.equals( "canInteractWith" ) && extendsClass( ContainerClassName );
-		final boolean isContainerConstructor = methodName.equals( "<init>" ) && extendsClass( ContainerClassName );
 		if( ( isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )
 		{
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
@@ -68,15 +67,12 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 						
 						// we're replacing this method call
 						// invokevirtual
-						// net.minecraft.entity.player.EntityPlayer.getDistanceSq(double,
-						// double, double) : double [187]
+						// net.minecraft.entity.player.EntityPlayer.getDistanceSq(double, double, double) : double [187]
 						// with
-						// ShipIntermediary.getEntityDistanceSq( player, x, y,
-						// z, this )
+						// ShipIntermediary.getEntityDistanceSq( player, x, y, z, this )
 						// plan:
 						// currently on the argument stack: player, x, y, z
-						// so just push the this instance on the stack and
-						// invoke the intermediary method
+						// so just push the this instance on the stack and invoke the intermediary method
 						mv.visitVarInsn( Opcodes.ALOAD, 0 );
 						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "getEntityDistanceSq", String.format( "(L%s;DDDL%s;)D", PlayerClassName, thisType ) );
 					}
@@ -87,7 +83,7 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 				}
 			};
 		}
-		else if( isContainerConstructor && methodDesc.equals( String.format( "(L%s;L%s;III)V", InventoryPlayerClassName, WorldClassName ) ) )
+		else if( methodDesc.equals( String.format( "(L%s;L%s;III)V", InventoryPlayerClassName, WorldClassName ) ) && methodName.equals( "<init>" ) && extendsClass( ContainerClassName ) )
 		{
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
 			{
@@ -100,12 +96,10 @@ public class TileEntityInventoryAdapter extends ClassVisitor
 						// we're replacing this field setter
 						// this.worldObj = worldObj
 						// with
-						// this.worldObj = ShipIntermediary.translateWorld(
-						// worldObj, player )
+						// this.worldObj = ShipIntermediary.translateWorld( worldObj, player )
 						// plan:
 						// currently on the argument stack: this, worldObj
-						// so just push the player instance on the stack, invoke
-						// the intermediary method, then recall the setter
+						// so just push the player instance on the stack, invoke the intermediary method, then recall the setter
 						mv.visitVarInsn( Opcodes.ALOAD, 1 );
 						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "translateWorld", String.format( "(L%s;L%s;)L%s;", WorldClassName, InventoryPlayerClassName, WorldClassName ) );
 						mv.visitFieldInsn( Opcodes.PUTFIELD, owner, name, desc );

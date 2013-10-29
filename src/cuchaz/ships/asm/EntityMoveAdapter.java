@@ -33,7 +33,7 @@ public class EntityMoveAdapter extends ClassVisitor
 			public void visitMethodInsn( int opcode, String calledOwner, String calledName, String calledDesc )
 			{
 				// should we transform this method call?
-				if( opcode == Opcodes.INVOKEVIRTUAL && InheritanceUtils.extendsClass( calledOwner, EntityClassName ) && calledName.equals( "moveEntity" ) && calledDesc.equals( "(DDD)V" ) )
+				if( opcode == Opcodes.INVOKEVIRTUAL && calledName.equals( "moveEntity" ) && calledDesc.equals( "(DDD)V" ) && InheritanceUtils.extendsClass( calledOwner, EntityClassName ) )
 				{
 					mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "onEntityMove", String.format( "(L%s;DDD)V", EntityClassName ) );
 				}
