@@ -456,13 +456,6 @@ public class ShipCollider
 			double dist = obstacleMin - selfMax;
 			if( dist >= 0 )
 			{
-				// TEMP
-				System.out.println( String.format(
-					"%s dist to collision: %.4f, scaling: %.4f",
-					m_ship.worldObj.isRemote ? "CLIENT" : "SERVER",
-					dist, dist/delta
-				) );
-				
 				return dist/delta;
 			}
 		}
@@ -471,13 +464,6 @@ public class ShipCollider
 			double dist = selfMin - obstacleMax;
 			if( dist >= 0 )
 			{
-				// TEMP
-				System.out.println( String.format(
-					"%s dist to collision: %.4f, scaling: %.4f",
-					m_ship.worldObj.isRemote ? "CLIENT" : "SERVER",
-					dist, dist/-delta
-				) );
-				
 				return dist/-delta;
 			}
 		}

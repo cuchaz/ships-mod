@@ -240,6 +240,12 @@ public class EntityShip extends Entity
 	@Override
 	public void onUpdate( )
 	{
+		// TEMP: kill all ships
+		if( false )
+		{
+			setDead();
+		}
+		
 		// did we die already?
 		if( isDead )
 		{

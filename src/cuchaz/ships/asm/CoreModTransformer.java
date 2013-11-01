@@ -1,6 +1,6 @@
 package cuchaz.ships.asm;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -15,45 +15,41 @@ public class CoreModTransformer implements IClassTransformer
 	@Override
 	public byte[] transform( String name, String transformedName, byte[] classData )
 	{
-		// don't transform our own stuff
-		if( name.startsWith( "cuchaz.ships" ) )
+		// NOTE: name and transformedName are always the same
+		
+		// don't transform some important stuff
+		List<String> privilegedPackages = Arrays.asList( "cuchaz.ships.", "net.minecraftforge.", "cpw." );
+		for( String privilegedPackage : privilegedPackages )
+		{
+			if( name.startsWith( privilegedPackage ) )
+			{
+				return classData;
+			}
+		}
+		
+		// do we know about the obfuscation state yet?
+		if( CoreModPlugin.isObfuscatedEnvironment == null )
 		{
 			return classData;
 		}
 		
-		// UNDONE: how does obfuscation play into all of this??
+		ClassReader reader = new ClassReader( classData );
+		ClassWriter writer = new ClassWriter( ClassWriter.COMPUTE_MAXS );
+		ClassVisitor tailAdapter = writer;
 		
-		// set up our adapter chain
-		List<Class<? extends ClassVisitor>> adapters = new ArrayList<Class<? extends ClassVisitor>>();
-		
-		// route everything through our generic adapters
-		adapters.add( TileEntityInventoryAdapter.class );
-		adapters.add( EntityMoveAdapter.class );
-		
+		// set up the adapter chain
+		tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+		tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+
 		/* now add class-specific adapters
-        if( name.equals( "net/minecraft/network/packet/Packet54PlayNoteBlock" ) )
-        {
-        	adapters.add( BlockEventPacketAdapter.class );
-        }
-        */
-        
+		if( name.equals( "net/minecraft/network/packet/Packet54PlayNoteBlock" ) )
+		{
+			adapters.add( BlockEventPacketAdapter.class );
+		}
+		*/
+		
 		// run the transformations
-        ClassReader reader = new ClassReader( classData );
-        ClassWriter writer = new ClassWriter( ClassWriter.COMPUTE_MAXS );
-        ClassVisitor tailAdapter = writer;
-        for( Class<? extends ClassVisitor> c : adapters )
-        {
-        	try
-			{
-				tailAdapter = c.getConstructor( int.class, ClassVisitor.class ).newInstance( Opcodes.ASM4, tailAdapter );
-			}
-			catch( Exception ex )
-			{
-				System.err.println( "Unable to instantiate adapter: " + c.getName() );
-				ex.printStackTrace( System.err );
-			}
-        }
 		reader.accept( tailAdapter, 0 );
-        return writer.toByteArray();
+		return writer.toByteArray();
 	}
 }

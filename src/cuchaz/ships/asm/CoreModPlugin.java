@@ -3,6 +3,7 @@ package cuchaz.ships.asm;
 import java.util.Map;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import cpw.mods.fml.relauncher.IFMLLoadingPlugin.DependsOn;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.Name;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
@@ -12,6 +13,8 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 @TransformerExclusions( { "cuchaz.ships.asm" } )
 public class CoreModPlugin implements IFMLLoadingPlugin
 {
+	public static Boolean isObfuscatedEnvironment = null;
+	
 	@Override
 	public String[] getLibraryRequestClass( )
 	{
@@ -34,14 +37,16 @@ public class CoreModPlugin implements IFMLLoadingPlugin
 	@Override
 	public String getSetupClass( )
 	{
-		// UNDONE: implement this if we want to get classloader/deobfuscation data
+		// implement this if we want to get launcher classloader directly
 		return null;
 	}
 	
 	@Override
 	public void injectData( Map<String,Object> data )
 	{
-		// do nothing for now
-		// data has mcLocation, coremodList, runtimeDeobfuscationEnabled
+		// data keys: mcLocation, coremodList, runtimeDeobfuscationEnabled, coremodLocation
+		
+		// are we running in an obfuscated environment?
+		isObfuscatedEnvironment = (Boolean)data.get( "runtimeDeobfuscationEnabled" );
 	}
 }

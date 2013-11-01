@@ -4,15 +4,18 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class EntityMoveAdapter extends ClassVisitor
+
+public class EntityMoveAdapter extends ObfuscationAwareAdapter
 {
 	private static final String EntityClassName = "net/minecraft/entity/Entity";
 	
-	private String m_name;
+	private String m_className;
 	
-	public EntityMoveAdapter( int api, ClassVisitor cv )
+	public EntityMoveAdapter( int api, ClassVisitor cv, boolean isObfuscatedEnvironment )
 	{
-		super( api, cv );
+		super( api, cv, isObfuscatedEnvironment );
+		
+		m_className = null;
 	}
 	
 	@Override
@@ -20,8 +23,7 @@ public class EntityMoveAdapter extends ClassVisitor
 	{
 		super.visit( version, access, name, signature, superName, interfaces );
 		
-		// save the class details for later visit methods
-		m_name = name;
+		m_className = name;
 	}
 	
 	@Override
@@ -33,8 +35,14 @@ public class EntityMoveAdapter extends ClassVisitor
 			public void visitMethodInsn( int opcode, String calledOwner, String calledName, String calledDesc )
 			{
 				// should we transform this method call?
-				if( opcode == Opcodes.INVOKEVIRTUAL && calledName.equals( "moveEntity" ) && calledDesc.equals( "(DDD)V" ) && InheritanceUtils.extendsClass( calledOwner, EntityClassName ) )
+				if( opcode == Opcodes.INVOKEVIRTUAL
+					&& calledDesc.equals( "(DDD)V" )
+					&& calledName.equals( getRuntimeMethodName( m_className, "moveEntity", "func_70091_d" ) )
+					&& InheritanceUtils.extendsClass( calledOwner, getRuntimeClassName( EntityClassName ) ) )
 				{
+					// TEMP
+					System.out.println( "\n\n *** hooked " + m_className + ".moveEntity()!! ***\n\n" );
+					
 					mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "onEntityMove", String.format( "(L%s;DDD)V", EntityClassName ) );
 				}
 				else
