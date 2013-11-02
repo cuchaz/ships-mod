@@ -158,11 +158,6 @@ public class ShipUnlauncher
 	{
 		List<Entity> riders = m_ship.getCollider().getRiders();
 		
-		// TEMP
-		System.out.println( String.format( "Unlaunching ship with %d riders...",
-			riders.size()
-		) );
-		
 		// remove the ship entity
 		m_ship.setDead();
 		

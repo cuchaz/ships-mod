@@ -33,23 +33,15 @@ public class CoreModTransformer implements IClassTransformer
 			return classData;
 		}
 		
-		ClassReader reader = new ClassReader( classData );
 		ClassWriter writer = new ClassWriter( ClassWriter.COMPUTE_MAXS );
-		ClassVisitor tailAdapter = writer;
 		
 		// set up the adapter chain
+		ClassVisitor tailAdapter = writer;
 		tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 		tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-
-		/* now add class-specific adapters
-		if( name.equals( "net/minecraft/network/packet/Packet54PlayNoteBlock" ) )
-		{
-			adapters.add( BlockEventPacketAdapter.class );
-		}
-		*/
 		
 		// run the transformations
-		reader.accept( tailAdapter, 0 );
+		new ClassReader( classData ).accept( tailAdapter, 0 );
 		return writer.toByteArray();
 	}
 }

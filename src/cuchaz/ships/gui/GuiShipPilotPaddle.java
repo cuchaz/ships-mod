@@ -16,7 +16,7 @@ import cuchaz.ships.PilotAction;
 
 public class GuiShipPilotPaddle extends GuiShipPilot
 {
-	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/shipPaddle.png" );
+	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "textures/gui/shipPaddle.png" );
 	private static final int TextureWidth = 128;
 	private static final int TextureHeight = 32;
 	

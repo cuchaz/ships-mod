@@ -2,6 +2,8 @@ package cuchaz.ships;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -54,6 +56,7 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 public class Ships extends DummyModContainer
 {
 	public static Ships instance = null;
+	public static Logger logger = Logger.getLogger( "cuchaz.ships" );
 	
 	// materials
 	public static final Material m_materialAirWall = new MaterialAirWall( MapColor.airColor );
@@ -80,7 +83,7 @@ public class Ships extends DummyModContainer
 		super( new ModMetadata() );
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
-		meta.name = "Ships";
+		meta.name = "Ships Mod";
 		meta.version = "0.1";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
@@ -157,8 +160,7 @@ public class Ships extends DummyModContainer
 		}
 		catch( RuntimeException ex )
 		{
-			ex.printStackTrace( System.err );
-			throw ex;
+			Ships.logger.log( Level.WARNING, "Unable to construct mod container!", ex );
 		}
 	}
 	
@@ -195,10 +197,9 @@ public class Ships extends DummyModContainer
 				}
 			} );
 		}
-		catch( RuntimeException ex )
+		catch( Throwable ex )
 		{
-			ex.printStackTrace( System.err );
-			throw ex;
+			Ships.logger.log( Level.WARNING, "Exception occurred while loading mod.", ex );
 		}
 	}
 	

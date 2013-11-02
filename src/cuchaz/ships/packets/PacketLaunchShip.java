@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.ShipLauncher;
+import cuchaz.ships.Ships;
 import cuchaz.ships.ShipLauncher.LaunchFlag;
 
 public class PacketLaunchShip extends Packet
@@ -60,13 +61,13 @@ public class PacketLaunchShip extends Packet
 		else
 		{
 			// debug info
-			System.err.println( String.format(
+			Ships.logger.warning( String.format(
 				"Server can't launch ship at: (%d,%d,%d)",
 				m_x, m_y, m_z
 			) );
 			for( LaunchFlag flag : LaunchFlag.values() )
 			{
-				System.err.println( "\t" + flag.name() + ": " + launcher.getLaunchFlag( flag ) );
+				Ships.logger.warning( "\t" + flag.name() + ": " + launcher.getLaunchFlag( flag ) );
 			}
 		}
 	}

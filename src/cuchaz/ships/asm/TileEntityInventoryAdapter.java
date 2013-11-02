@@ -7,14 +7,12 @@ import org.objectweb.asm.Opcodes;
 
 public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 {
-	// UNDONE: this adapter isn't working yet in obfuscation-land!
-	
-	private static final String InventoryInterfaceName = "net/minecraft/inventory/IInventory";
-	private static final String TileEntityClassName = "net/minecraft/tileentity/TileEntity";
-	private static final String ContainerClassName = "net/minecraft/inventory/Container";
-	private static final String PlayerClassName = "net/minecraft/entity/player/EntityPlayer";
-	private static final String InventoryPlayerClassName = "net/minecraft/entity/player/InventoryPlayer";
-	private static final String WorldClassName = "net/minecraft/world/World";
+	private final String InventoryInterfaceName;
+	private final String TileEntityClassName;
+	private final String ContainerClassName;
+	private final String PlayerClassName;
+	private final String InventoryPlayerClassName;
+	private final String WorldClassName;
 	
 	private String m_name;
 	private String m_superName;
@@ -23,6 +21,14 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 	public TileEntityInventoryAdapter( int api, ClassVisitor cv, boolean isObfuscatedEnvironment )
 	{
 		super( api, cv, isObfuscatedEnvironment );
+		
+		// cache the runtime class names
+		InventoryInterfaceName = getRuntimeClassName( "net/minecraft/inventory/IInventory" );
+		TileEntityClassName = getRuntimeClassName( "net/minecraft/tileentity/TileEntity" );
+		ContainerClassName = getRuntimeClassName( "net/minecraft/inventory/Container" );
+		PlayerClassName = getRuntimeClassName( "net/minecraft/entity/player/EntityPlayer" );
+		InventoryPlayerClassName = getRuntimeClassName( "net/minecraft/entity/player/InventoryPlayer" );
+		WorldClassName = getRuntimeClassName( "net/minecraft/world/World" );
 	}
 	
 	@Override
@@ -42,10 +48,10 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 		// should we transform this method?
 		// for performance, check method names first, class inheritance second, and finally interfaces third
 		final boolean isTileEntityInventoryIsUseableByPlayer = methodName.equals( getRuntimeMethodName( m_name, "isUseableByPlayer", "func_70300_a" ) )
-			&& extendsClass( getRuntimeClassName( TileEntityClassName ) )
+			&& extendsClass( TileEntityClassName )
 			&& implementsInterface( InventoryInterfaceName );
 		final boolean isContainerCanInteractWith = methodName.equals( getRuntimeMethodName( m_name, "canInteractWith", "func_75145_c" ) )
-			&& extendsClass( getRuntimeClassName( ContainerClassName ) );
+			&& extendsClass( ContainerClassName );
 		if( ( isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )
 		{
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
@@ -56,7 +62,7 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 					// should we transform this method call?
 					if( opcode == Opcodes.INVOKEVIRTUAL
 						&& calledDesc.equals( "(DDD)D" )
-						&& calledOwner.equals( getRuntimeClassName( PlayerClassName ) )
+						&& calledOwner.equals( PlayerClassName )
 						&& calledName.equals( getRuntimeMethodName( calledOwner, "getDistanceSq", "func_70092_e" ) ) )
 					{
 						// get the this type
@@ -83,7 +89,7 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 						// currently on the argument stack: player, x, y, z
 						// so just push the this instance on the stack and invoke the intermediary method
 						mv.visitVarInsn( Opcodes.ALOAD, 0 );
-						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "getEntityDistanceSq", String.format( "(L%s;DDDL%s;)D", getRuntimeClassName( PlayerClassName ), thisType ) );
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "getEntityDistanceSq", String.format( "(L%s;DDDL%s;)D", PlayerClassName, thisType ) );
 					}
 					else
 					{
@@ -93,17 +99,17 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 			};
 		}
 		else if( methodName.equals( "<init>" )
-			&& methodDesc.equals( String.format( "(L%s;L%s;III)V", getRuntimeClassName( InventoryPlayerClassName ), getRuntimeClassName( WorldClassName ) ) )
-			&& extendsClass( getRuntimeClassName( ContainerClassName ) ) )
+			&& methodDesc.equals( String.format( "(L%s;L%s;III)V", InventoryPlayerClassName, WorldClassName ) )
+			&& extendsClass( ContainerClassName ) )
 		{
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
 			{
 				@Override
-				public void visitFieldInsn( int opcode, String owner, String name, String desc )
+				public void visitFieldInsn( int opcode, String owner, String fieldName, String desc )
 				{
 					// should we hook this call?
 					if( opcode == Opcodes.PUTFIELD
-						&& desc.equals( String.format( "L%s;", getRuntimeClassName( WorldClassName ) ) )
+						&& desc.equals( String.format( "L%s;", WorldClassName ) )
 						&& owner.equals( m_name ) )
 					{
 						// we're replacing this field setter
@@ -114,12 +120,12 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 						// currently on the argument stack: this, worldObj
 						// so just push the player instance on the stack, invoke the intermediary method, then recall the setter
 						mv.visitVarInsn( Opcodes.ALOAD, 1 );
-						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "translateWorld", String.format( "(L%s;L%s;)L%s;", getRuntimeClassName( WorldClassName ), getRuntimeClassName( InventoryPlayerClassName ), getRuntimeClassName( WorldClassName ) ) );
-						mv.visitFieldInsn( Opcodes.PUTFIELD, owner, name, desc );
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "translateWorld", String.format( "(L%s;L%s;)L%s;", WorldClassName, InventoryPlayerClassName, WorldClassName ) );
+						mv.visitFieldInsn( Opcodes.PUTFIELD, owner, fieldName, desc );
 					}
 					else
 					{
-						super.visitFieldInsn( opcode, owner, name, desc );
+						super.visitFieldInsn( opcode, owner, fieldName, desc );
 					}
 				}
 			};

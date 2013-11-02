@@ -105,7 +105,7 @@ public class EntityShip extends Entity
 		if( !blocks.isValid() )
 		{
 			setDead();
-			System.err.println( "Ship world is invalid. Killed ship." );
+			Ships.logger.warning( "Ship world is invalid. Killed ship." );
 			return;
 		}
 		
@@ -131,8 +131,8 @@ public class EntityShip extends Entity
 		
 		m_collider.computeShipBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
 		
-		// TEMP
-		System.out.println( String.format(
+		// LOGGING
+		Ships.logger.info( String.format(
 			"%s EntityShip initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			posX, posY, posZ,
@@ -159,8 +159,8 @@ public class EntityShip extends Entity
 			}
 		}
 		
-		// TEMP
-		System.out.println( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip died!" );
+		// LOGGING
+		Ships.logger.info( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip died!" );
 		
 		ShipLocator.unregisterShip( this );
 	}
@@ -240,12 +240,6 @@ public class EntityShip extends Entity
 	@Override
 	public void onUpdate( )
 	{
-		// TEMP: kill all ships
-		if( false )
-		{
-			setDead();
-		}
-		
 		// did we die already?
 		if( isDead )
 		{
@@ -312,8 +306,8 @@ public class EntityShip extends Entity
 			m_hasInfoFromServer = false;
 		}
 		
-		/* TEMP
-		System.out.println( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), d=(%.4f,%.4f,%.4f), dYaw=%.1f",
+		/* LOGGING
+		Ships.logger.fine( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), d=(%.4f,%.4f,%.4f), dYaw=%.1f",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			posX, posY, posZ,
 			dx, dy, dz, dYaw
@@ -349,8 +343,7 @@ public class EntityShip extends Entity
 		// did the ship sink?
 		if( isSunk( waterHeightInBlockSpace ) )
 		{
-			// TEMP
-			System.out.println( String.format( "%s Ship Sunk!",
+			Ships.logger.info( String.format( "%s Ship Sunk!",
 				worldObj.isRemote ? "CLIENT" : "SERVER"
 			) );
 			
@@ -375,8 +368,8 @@ public class EntityShip extends Entity
 		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
 		if( intersections.isEmpty() )
 		{
-			// TEMP
-			System.out.println( String.format( "%s EntityShip.interact(): no hit",
+			// LOGGING
+			Ships.logger.fine( String.format( "%s EntityShip.interact(): no hit",
 				worldObj.isRemote ? "CLIENT" : "SERVER"
 			) );
 			
@@ -390,8 +383,8 @@ public class EntityShip extends Entity
 		// activate the block
 		Block block = Block.blocksList[m_blocks.getBlockId( intersection.blockX, intersection.blockY, intersection.blockZ )];
 		
-		// TEMP
-		System.out.println( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
+		// LOGGING
+		Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			intersection.blockX, intersection.blockY, intersection.blockZ,
 			block.getUnlocalizedName()
@@ -620,14 +613,6 @@ public class EntityShip extends Entity
 			accelerationDueToDrag *= -1;
 		}
 		
-		/* TEMP
-		double netAcceleration = accelerationDueToBouyancy + accelerationDueToDrag;
-		System.out.println( String.format( "%s velocity: %.4f, bouyancy: %.4f, drag: %.4f, net: %.4f",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			motionY, accelerationDueToBouyancy, accelerationDueToDrag, netAcceleration
-		) );
-		*/
-		
 		motionY += accelerationDueToBouyancy + accelerationDueToDrag;
 	}
 	
@@ -690,13 +675,6 @@ public class EntityShip extends Entity
 			double linearAccelerationDueToThrust = m_physics.getLinearAccelerationDueToThrust( m_propulsion )*linearThrottle/LinearThrottleMax;
 			motionX += forwardX*linearAccelerationDueToThrust;
 			motionZ += forwardZ*linearAccelerationDueToThrust;
-			
-			/* TEMP
-			System.out.println( String.format( "%s speed: %.4f, thrust: %.4f, drag: %.4f",
-				worldObj.isRemote ? "CLIENT" : "SERVER",
-				speed, linearAccelerationDueToThrust, linearAccelerationDueToDrag
-			) );
-			*/
 		}
 		
 		// get the angular acceleration
@@ -711,13 +689,6 @@ public class EntityShip extends Entity
 		{
 			angularAccelerationDueToDrag *= -1;
 		}
-		
-		/* TEMP
-		System.out.println( String.format( "%s speed: %.4f, thrust: %.4f, drag: %.4f",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			speed, angularAccelerationDueToThrust, angularAccelerationDueToDrag
-		) );
-		*/
 		
 		// apply the angular acceleration
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;

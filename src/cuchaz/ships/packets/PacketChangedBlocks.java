@@ -40,9 +40,6 @@ public class PacketChangedBlocks extends Packet
 	@Override
 	public void writeData( DataOutputStream out ) throws IOException
 	{
-		// TEMP
-		System.out.println( String.format( "Pushing %d block changes to client!", m_changedBlocks.size() ) );
-		
 		ShipWorld world = m_ship.getBlocks();
 		out.writeInt( m_ship.entityId );
 		out.writeInt( m_changedBlocks.size() );
@@ -53,9 +50,6 @@ public class PacketChangedBlocks extends Packet
 			out.writeShort( coords.posZ );
 			out.writeShort( world.getBlockId( coords ) );
 			out.writeByte( world.getBlockMetadata( coords ) );
-			
-			// TEMP
-			System.out.println( String.format( "\tchanged block: (%d,%d,%d)", coords.posX, coords.posY, coords.posZ ) );
 		}
 	}
 	

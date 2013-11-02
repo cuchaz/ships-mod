@@ -1,6 +1,7 @@
 package cuchaz.ships.asm;
 
 import java.lang.reflect.Field;
+import java.util.logging.Level;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,9 +10,11 @@ import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import cuchaz.modsShared.RuntimeMapping;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
+import cuchaz.ships.Ships;
 
 public class ShipIntermediary
 {
@@ -44,23 +47,37 @@ public class ShipIntermediary
 		int z = 0;
 		try
 		{
-			// UNDONE: how does obfuscation play into this?
-			Field fieldWorld = getField( container, "worldObj", "theWorld", "worldPointer" );
+			Field fieldWorld = getField( container,
+				RuntimeMapping.getRuntimeName( "worldObj", "field_75161_g" ), // ContainerWorkbench
+				RuntimeMapping.getRuntimeName( "worldPointer", "field_75172_h" ), // ContainerEnchantment
+				RuntimeMapping.getRuntimeName( "theWorld", "field_82860_h" ) // ContainerRepair
+			);
 			world = (World)fieldWorld.get( container );
-			Field fieldX = getField( container, "posX", "field_82861_i" );
+			
+			Field fieldX = getField( container,
+				RuntimeMapping.getRuntimeName( "posX", "field_75164_h" ), // ContainerWorkbench
+				RuntimeMapping.getRuntimeName( "posX", "field_75173_i" ), // ContainerEnchantment
+				RuntimeMapping.getRuntimeName( "field_82861_i", "field_82861_i" ) // ContainerRepair
+			);
 			x = fieldX.getInt( container );
-			Field fieldY = getField( container, "posY", "field_82858_j" );
+			
+			Field fieldY = getField( container,
+				RuntimeMapping.getRuntimeName( "posY", "field_75165_i" ), // ContainerWorkbench
+				RuntimeMapping.getRuntimeName( "posY", "field_75170_j" ), // ContainerEnchantment
+				RuntimeMapping.getRuntimeName( "field_82858_j", "field_82858_j" ) // ContainerRepair
+			);
 			y = fieldY.getInt( container );
-			Field fieldZ = getField( container, "posZ", "field_82859_k" );
+			
+			Field fieldZ = getField( container,
+				RuntimeMapping.getRuntimeName( "posZ", "field_75163_j" ), // ContainerWorkbench
+				RuntimeMapping.getRuntimeName( "posZ", "field_75171_k" ), // ContainerEnchantment
+				RuntimeMapping.getRuntimeName( "field_82859_k", "field_82859_k" ) // ContainerRepair
+			);
 			z = fieldZ.getInt( container );
 		}
-		catch( IllegalArgumentException ex )
+		catch( Exception ex )
 		{
-			ex.printStackTrace( System.err );
-		}
-		catch( IllegalAccessException ex )
-		{
-			ex.printStackTrace( System.err );
+			Ships.logger.log( Level.WARNING, "Unable to reflect on container class: " + container.getClass().getName(), ex );
 		}
 		
 		return translateDistance( world, player, x, y, z );

@@ -66,7 +66,7 @@ public abstract class GuiShipPilot extends GuiCloseable
 		public abstract BlockSide compute( EntityShip ship, EntityPlayer player );
 	}
 	
-	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/shipPaddle.png" );
+	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "textures/gui/shipPaddle.png" );
 	private static final int TextureWidth = 128;
 	private static final int TextureHeight = 32;
 	

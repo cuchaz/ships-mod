@@ -53,6 +53,7 @@ public class RenderShip extends Render
 		doRender( (EntityShip)entity, x, y, z, yaw, partialTickTime );
 	}
 	
+	@SuppressWarnings( "unused" )
 	public void doRender( EntityShip ship, double x, double y, double z, float yaw, float partialTickTime )
 	{
 		// NOTE: (x,y,z) is the vector from the eye to the entity origin

@@ -28,7 +28,7 @@ import cuchaz.ships.render.ShaderLoader;
 
 public class GuiShipPropulsion extends GuiShip
 {
-	private static final ResourceLocation DesaturationShader = new ResourceLocation( "ships", "/shaders/desaturate.frag" );
+	private static final ResourceLocation DesaturationShader = new ResourceLocation( "ships", "shaders/desaturate.frag" );
 	
 	private ShipLauncher m_shipLauncher;
 	private Propulsion m_propulsion;

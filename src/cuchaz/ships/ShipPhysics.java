@@ -106,14 +106,6 @@ public class ShipPhysics
 		}
 		
 		m_equilibriumWaterHeight = computeEquilibriumWaterHeight();
-		
-		/* TEMP: tell me the displacement blocks
-		for( int y=minY; y<=maxY+1; y++ )
-		{
-			DisplacementEntry entry = m_displacement.get( y );
-			System.out.println( String.format( "Blocks at %d: %d,%d", y, entry.numBlocksAtSurface, entry.numBlocksUnderwater ) );
-		}
-		*/
 	}
 	
 	public double getMass( )
@@ -318,10 +310,5 @@ public class ShipPhysics
 	{
 		// UNDONE: use block y make the mass increase with depth
 		return MaterialProperties.getMass( Block.waterStill );
-	}
-	
-	private double logisticFunction( double x, double rate )
-	{
-		return 2.0/( 1.0 + Math.exp( -rate*x - 0.1 ) ) - 1;
 	}
 }

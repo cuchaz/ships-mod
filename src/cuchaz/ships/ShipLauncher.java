@@ -286,7 +286,7 @@ public class ShipLauncher
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{
-			System.err.println( String.format( "Could not spawn ship in world at (%d,%d,%d)", ship.posX, ship.posY, ship.posZ ) );
+			Ships.logger.warning( String.format( "Could not spawn ship in world at (%d,%d,%d)", ship.posX, ship.posY, ship.posZ ) );
 			return null;
 		}
 		

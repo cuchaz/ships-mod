@@ -15,7 +15,7 @@ import cuchaz.ships.TileEntityHelm;
 @SideOnly( Side.CLIENT )
 public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 {
-	private static final ResourceLocation Texture = new ResourceLocation( "ships", "/textures/models/helm.png" );
+	private static final ResourceLocation Texture = new ResourceLocation( "ships", "textures/models/helm.png" );
 	
 	private ModelHelm m_model;
 	

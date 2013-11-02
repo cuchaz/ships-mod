@@ -1,8 +1,11 @@
 package cuchaz.ships.asm;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import org.objectweb.asm.ClassReader;
+
+import cuchaz.ships.Ships;
 
 public class InheritanceUtils
 {
@@ -32,8 +35,7 @@ public class InheritanceUtils
 		}
 		catch( IOException ex )
 		{
-			System.err.println( "Unable to read class: " + className );
-			ex.printStackTrace( System.err );
+			Ships.logger.log( Level.WARNING, "Unable to read class: " + className, ex );
 		}
 		
 		return false;
@@ -48,9 +50,10 @@ public class InheritanceUtils
 		}
 		
 		// recurse
+		String className = interfaceName.replace( '.', '/' );
 		try
 		{
-			ClassReader classReader = new ClassReader( interfaceName.replace( '.', '/' ) );
+			ClassReader classReader = new ClassReader( className );
 			for( String i : classReader.getInterfaces() )
 			{
 				if( implementsInterface( i, targetInterfaceName ) )
@@ -61,7 +64,7 @@ public class InheritanceUtils
 		}
 		catch( IOException ex )
 		{
-			ex.printStackTrace( System.err );
+			Ships.logger.log( Level.WARNING, "Unable to read class: " + className, ex );
 		}
 		
 		return false;

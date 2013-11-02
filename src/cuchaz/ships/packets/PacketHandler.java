@@ -7,6 +7,7 @@ import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import cpw.mods.fml.common.network.IPacketHandler;
 import cpw.mods.fml.common.network.Player;
+import cuchaz.ships.Ships;
 
 public class PacketHandler implements IPacketHandler
 {
@@ -36,7 +37,7 @@ public class PacketHandler implements IPacketHandler
 		}
 		else
 		{
-			System.err.println( "Received packet on unregistered channel: " + customPacket.channel );
+			Ships.logger.warning( "Received packet on unregistered channel: " + customPacket.channel );
 		}
 	}
 }

@@ -44,7 +44,13 @@ public class ObfuscationAwareAdapter extends ClassVisitor
 	
 	private String getObfuscatedClassName( String clearClassName )
 	{
-		return FMLDeobfuscatingRemapper.INSTANCE.unmap( clearClassName );
+		String obfuscatedClassName = FMLDeobfuscatingRemapper.INSTANCE.unmap( clearClassName );
+		if( obfuscatedClassName == null )
+		{
+			// assume this class is not obufscated
+			obfuscatedClassName = clearClassName;
+		}
+		return obfuscatedClassName;
 	}
 	
 	@SuppressWarnings( "unchecked" )

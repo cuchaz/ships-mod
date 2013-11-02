@@ -155,7 +155,7 @@ public class ShipWorld extends DetatchedWorld
 			int version = in.readInt();
 			if( version != 1 )
 			{
-				System.err.println( "ShipBlocks persistence version " + version + " not supported! Blocks loading skipped!" );
+				Ships.logger.warning( "ShipBlocks persistence version " + version + " not supported! Blocks loading skipped!" );
 			}
 			else
 			{

@@ -7,7 +7,7 @@ import org.objectweb.asm.Opcodes;
 
 public class EntityMoveAdapter extends ObfuscationAwareAdapter
 {
-	private static final String EntityClassName = "net/minecraft/entity/Entity";
+	private final String EntityClassName;
 	
 	private String m_className;
 	
@@ -16,6 +16,9 @@ public class EntityMoveAdapter extends ObfuscationAwareAdapter
 		super( api, cv, isObfuscatedEnvironment );
 		
 		m_className = null;
+		
+		// cache the runtime class names
+		EntityClassName = getRuntimeClassName( "net/minecraft/entity/Entity" );
 	}
 	
 	@Override
@@ -38,11 +41,8 @@ public class EntityMoveAdapter extends ObfuscationAwareAdapter
 				if( opcode == Opcodes.INVOKEVIRTUAL
 					&& calledDesc.equals( "(DDD)V" )
 					&& calledName.equals( getRuntimeMethodName( m_className, "moveEntity", "func_70091_d" ) )
-					&& InheritanceUtils.extendsClass( calledOwner, getRuntimeClassName( EntityClassName ) ) )
+					&& InheritanceUtils.extendsClass( calledOwner, EntityClassName ) )
 				{
-					// TEMP
-					System.out.println( "\n\n *** hooked " + m_className + ".moveEntity()!! ***\n\n" );
-					
 					mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "onEntityMove", String.format( "(L%s;DDD)V", EntityClassName ) );
 				}
 				else

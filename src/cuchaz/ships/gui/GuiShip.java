@@ -18,7 +18,7 @@ public abstract class GuiShip extends GuiCloseable
 	public final int YesColor = ColorUtils.getColor( 0, 160, 0 );
 	public final int NoColor = ColorUtils.getColor( 160, 0, 0 );
 	
-	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "/textures/gui/ship.png" );
+	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "textures/gui/ship.png" );
 	
 	public GuiShip( Container container )
 	{

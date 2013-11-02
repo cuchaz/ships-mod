@@ -69,7 +69,7 @@ public enum Gui
 		EntityShip ship = ShipLocator.getFromPlayerLook( player );
 		if( ship == null )
 		{
-			System.out.println( "Unable to locate ship!" );
+			Ships.logger.warning( "Unable to locate ship!" );
 			return null;
 		}
 		return getGuiOnShip( player, ship );
