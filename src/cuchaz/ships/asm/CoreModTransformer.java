@@ -10,12 +10,19 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
+import cuchaz.ships.Ships;
+
 public class CoreModTransformer implements IClassTransformer
 {
 	@Override
 	public byte[] transform( String name, String transformedName, byte[] classData )
 	{
 		// NOTE: name and transformedName are always the same
+		
+		if( classData == null )
+		{
+			throw new Error( "Received no class data for " + name + "!" );
+		}
 		
 		// don't transform some important stuff
 		List<String> privilegedPackages = Arrays.asList( "cuchaz.ships.", "net.minecraftforge.", "cpw." );

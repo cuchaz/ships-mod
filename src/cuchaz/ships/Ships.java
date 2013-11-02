@@ -33,6 +33,8 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.FMLHacker;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
@@ -175,11 +177,11 @@ public class Ships extends DummyModContainer
 			loadRecipes();
 			loadPropulsion();
 			
-			// set renderers
-			RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
-			
-			// set tile entity renderers
-			registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
+			// UNDONE: see if this actually works on the server!
+			if( event.getSide().isClient() )
+			{
+				loadClient();
+			}
 			
 			// GUI hooks
 			NetworkRegistry.instance().registerGuiHandler( this, new IGuiHandler( )
@@ -203,6 +205,17 @@ public class Ships extends DummyModContainer
 		}
 	}
 	
+	@SideOnly( Side.CLIENT )
+	private void loadClient( )
+	{
+		// set renderers
+		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
+		
+		// set tile entity renderers
+		registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
+	}
+	
+	@SideOnly( Side.CLIENT )
 	@SuppressWarnings( "unchecked" )
 	private void registerTileEntityRenderer( Class<? extends TileEntity> c, TileEntitySpecialRenderer renderer )
 	{
