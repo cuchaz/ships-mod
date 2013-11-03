@@ -43,17 +43,22 @@ import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketShipBlockEvent;
+import cuchaz.ships.packets.PacketShipBlocks;
+import cuchaz.ships.packets.PacketShipBlocksRequest;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 import cuchaz.ships.propulsion.PropulsionDiscovererRegistry;
 import cuchaz.ships.propulsion.SailDiscoverer;
 import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 
-// Mod annotations don't work in core mod land
+// NOTE: Mod annotations don't work in core mod land
 @NetworkMod(
 	// NOTE: 20-character limit for channel names
-	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel },
-	packetHandler = PacketHandler.class
+	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel,
+		PacketChangedBlocks.Channel, PacketShipBlocks.Channel, PacketShipBlocksRequest.Channel },
+	packetHandler = PacketHandler.class,
+	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
+	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server
 )
 public class Ships extends DummyModContainer
 {
@@ -177,10 +182,14 @@ public class Ships extends DummyModContainer
 			loadRecipes();
 			loadPropulsion();
 			
-			// UNDONE: see if this actually works on the server!
 			if( event.getSide().isClient() )
 			{
+				// load client things if needed
 				loadClient();
+				
+				// NOTE: the "loadClient" method gets removed from the server bytecode,
+				// but as long as this if block is never run on the server,
+				// this missing method reference won't cause an exception
 			}
 			
 			// GUI hooks
@@ -264,8 +273,11 @@ public class Ships extends DummyModContainer
 
 	private void loadRecipes( )
 	{
+		// NOTE: the recipes for ship blocks are in the ShipType enum
+		
 		ItemStack stickStack = new ItemStack( Item.stick );
 		ItemStack goldStack = new ItemStack( Item.ingotGold );
+		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		
 		// paddle
 		GameRegistry.addRecipe(
@@ -279,6 +291,14 @@ public class Ships extends DummyModContainer
 			new ItemStack( m_itemMagicBucket, 1 ),
 			"   ", "x x", " x ",
 			'x', goldStack
+		);
+		
+		// helm
+		GameRegistry.addRecipe(
+			new ItemStack( m_blockHelm, 1 ),
+			" x ", "x x", "yxy",
+			'x', stickStack,
+			'y', ironStack
 		);
 	}
 	

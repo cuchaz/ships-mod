@@ -20,6 +20,7 @@ import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketShipBlocksRequest;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class EntityShip extends Entity
@@ -31,7 +32,6 @@ public class EntityShip extends Entity
 	public static final int AngularThrottleMin = -1;
 	
 	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
-	private static final int WatcherIdBlocks = 2;
 	private static final int WatcherIdWaterHeight = 3;
 	
 	public float motionYaw;
@@ -95,8 +95,17 @@ public class EntityShip extends Entity
 		// it seems to be used to init the data watcher
 		
 		// allocate a slot for the block data
-		dataWatcher.addObject( WatcherIdBlocks, "" );
 		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
+		
+		if( worldObj.isRemote )
+		{
+			// on the client, ask for block data from the server
+			PacketDispatcher.sendPacketToServer( new PacketShipBlocksRequest( this ).getCustomPacket() );
+			
+			// TEMP
+			Ships.logger.info( String.format( "Client ship %d requesting blocks...", entityId ) );
+			// NEXTTIME: Why do the client and server (in dev) have different entity ids?!?
+		}
 	}
 	
 	public void setBlocks( ShipWorld blocks )
@@ -126,15 +135,13 @@ public class EntityShip extends Entity
 		m_shipBlockY = -centerOfMass.yCoord;
 		m_shipBlockZ = -centerOfMass.zCoord;
 		
-		// save the data into the data watcher so it gets sync'd to the client
-		dataWatcher.updateObject( WatcherIdBlocks, m_blocks.getDataString() );
-		
 		m_collider.computeShipBoundingBox( boundingBox, posX, posY, posZ, rotationYaw );
 		
 		// LOGGING
 		Ships.logger.info( String.format(
-			"%s EntityShip initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
+			"%s EntityShip %d initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
+			entityId,
 			posX, posY, posZ,
 			motionX, motionY, motionZ
 		) );
@@ -160,7 +167,10 @@ public class EntityShip extends Entity
 		}
 		
 		// LOGGING
-		Ships.logger.info( ( worldObj.isRemote ? "CLIENT" : "SERVER" ) + " EntityShip died!" );
+		Ships.logger.info( String.format( "%s EntityShip %d died!",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			entityId
+		) );
 		
 		ShipLocator.unregisterShip( this );
 	}
@@ -244,21 +254,6 @@ public class EntityShip extends Entity
 		if( isDead )
 		{
 			return;
-		}
-		
-		// on the client, see if the blocks loaded yet
-		if( worldObj.isRemote )
-		{
-			if( m_blocks == null )
-			{
-				// do we have blocks from the data watcher?
-				String blockData = dataWatcher.getWatchableObjectString( WatcherIdBlocks );
-				if( blockData != null && blockData.length() > 0 )
-				{
-					// then load the blocks
-					setBlocks( new ShipWorld( worldObj, blockData ) );
-				}
-			}
 		}
 		
 		// don't do any updating until we get blocks

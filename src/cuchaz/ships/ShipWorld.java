@@ -28,7 +28,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 
-import org.apache.commons.codec.binary.Base64;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
@@ -81,6 +82,14 @@ public class ShipWorld extends DetatchedWorld
 	private ShipGeometry m_geometry;
 	private TreeMap<ChunkCoordinates,TileEntity> m_tileEntities;
 	private TreeSet<ChunkCoordinates> m_changedBlocks;
+	
+	// TEMP
+	public ShipWorld( World world, int foo )
+	{
+		// do nothing
+		super( world, "nothing" );
+		m_airBlockStorage = null;
+	}
 	
 	private ShipWorld( World world )
 	{
@@ -201,11 +210,6 @@ public class ShipWorld extends DetatchedWorld
 	private void computeDependentFields( )
 	{
 		m_geometry = new ShipGeometry( m_blocks.keySet() );
-	}
-	
-	public ShipWorld( World world, String data )
-	{
-		this( world, Base64.decodeBase64( data ) );
 	}
 	
 	public void restoreToWorld( World world, Map<ChunkCoordinates, ChunkCoordinates> correspondence, int waterSurfaceLevelBlocks )
@@ -478,27 +482,7 @@ public class ShipWorld extends DetatchedWorld
 		// on the client, do random update ticks
 		if( isRemote && m_ship != null )
 		{
-			// get the player position on the ship
-			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-			Vec3 v = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
-			m_ship.worldToShip( v );
-			m_ship.shipToBlocks( v );
-			int playerX = MathHelper.floor_double( v.xCoord );
-			int playerY = MathHelper.floor_double( v.yCoord );
-			int playerZ = MathHelper.floor_double( v.zCoord );
-			
-			Random random = new Random();
-			for( int i=0; i<1000; i++ )
-			{
-				int x = playerX + random.nextInt( 16 ) - random.nextInt( 16 );
-				int y = playerY + random.nextInt( 16 ) - random.nextInt( 16 );
-				int z = playerZ + random.nextInt( 16 ) - random.nextInt( 16 );
-				int blockId = getBlockId( x, y, z );
-				if( blockId > 0 )
-				{
-					Block.blocksList[blockId].randomDisplayTick( this, x, y, z, random );
-				}
-			}
+			updateEntitiesClient();
 		}
 		
 		// on the server, push any accumulated changes to the client
@@ -509,6 +493,32 @@ public class ShipWorld extends DetatchedWorld
 		}
 	}
 	
+	@SideOnly( Side.CLIENT )
+	private void updateEntitiesClient( )
+	{
+		// get the player position on the ship
+		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		Vec3 v = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
+		m_ship.worldToShip( v );
+		m_ship.shipToBlocks( v );
+		int playerX = MathHelper.floor_double( v.xCoord );
+		int playerY = MathHelper.floor_double( v.yCoord );
+		int playerZ = MathHelper.floor_double( v.zCoord );
+		
+		Random random = new Random();
+		for( int i=0; i<1000; i++ )
+		{
+			int x = playerX + random.nextInt( 16 ) - random.nextInt( 16 );
+			int y = playerY + random.nextInt( 16 ) - random.nextInt( 16 );
+			int z = playerZ + random.nextInt( 16 ) - random.nextInt( 16 );
+			int blockId = getBlockId( x, y, z );
+			if( blockId > 0 )
+			{
+				Block.blocksList[blockId].randomDisplayTick( this, x, y, z, random );
+			}
+		}
+	}
+
 	private void pushBlockChangesToClients( )
 	{
 		if( m_ship == null )
@@ -644,10 +654,5 @@ public class ShipWorld extends DetatchedWorld
 		}
 		
 		return data.toByteArray();
-	}
-	
-	public String getDataString( )
-	{
-		return Base64.encodeBase64String( getData() );
 	}
 }

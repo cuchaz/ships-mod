@@ -1,5 +1,7 @@
 package cuchaz.ships.gui;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -15,6 +17,7 @@ public enum Gui
 	BuildShip
 	{
 		@Override
+		@SideOnly( Side.CLIENT )
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
 			return new GuiShipLaunch( new ContainerShip(), new ShipLauncher( world, x, y, z ) );
@@ -23,6 +26,7 @@ public enum Gui
 	UnbuildShip
 	{
 		@Override
+		@SideOnly( Side.CLIENT )
 		public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
 		{
 			return new GuiShipUnlaunch( new ContainerShip(), ship );
@@ -31,6 +35,7 @@ public enum Gui
 	PaddleShip
 	{
 		@Override
+		@SideOnly( Side.CLIENT )
 		public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
 		{
 			return new GuiShipPilotPaddle( new ContainerShip(), ship, player );
@@ -39,6 +44,7 @@ public enum Gui
 	PilotSurfaceShip
 	{
 		@Override
+		@SideOnly( Side.CLIENT )
 		public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
 		{
 			return new GuiShipPilotSurface( new ContainerShip(), ship, player );
@@ -47,6 +53,7 @@ public enum Gui
 	ShipPropulsion
 	{
 		@Override
+		@SideOnly( Side.CLIENT )
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
 			return new GuiShipPropulsion( new ContainerShip(), world, x, y, z );
@@ -63,6 +70,7 @@ public enum Gui
 		return new ContainerShip();
 	}
 	
+	@SideOnly( Side.CLIENT )
 	public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 	{
 		// NOTE: world is always the real world, never the ship world
@@ -75,6 +83,7 @@ public enum Gui
 		return getGuiOnShip( player, ship );
 	}
 	
+	@SideOnly( Side.CLIENT )
 	public GuiContainer getGuiOnShip( EntityPlayer player, EntityShip ship )
 	{
 		return null;

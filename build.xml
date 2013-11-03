@@ -45,12 +45,6 @@
 			<fileset dir="${src}" includes="assets/**/*"/>
 		</copy>
 		
-		<!-- repackage dependencies -->
-		<unzip src="${libs}/commons-codec-1.8.jar" dest="${temp}"/>
-		<move file="${temp}/META-INF/LICENSE.txt" tofile="${temp}/META-INF/LICENSE.commons-codec-1.8.txt"/>
-		<delete dir="${temp}/META-INF/maven"/>
-		<delete file="${temp}/META-INF/MANIFEST.MF"/>
-		
 		<!-- build the jar -->
 		<mkdir dir="${dist}"/>
 		<jar destfile="${dist}/${jarName}" basedir="${temp}" manifest="MANIFEST.MF"/>

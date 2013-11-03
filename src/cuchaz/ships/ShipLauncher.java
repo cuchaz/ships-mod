@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -13,6 +14,7 @@ import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.ships.packets.PacketShipBlocks;
 
 public class ShipLauncher
 {
@@ -139,6 +141,9 @@ public class ShipLauncher
 		
 		if( m_blocks != null )
 		{
+			// TEMP: this should cause the same problem
+			new ShipWorld( m_world, 5 );
+			
 			// also add the ship block
 			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
 			

@@ -1,8 +1,9 @@
 package cuchaz.ships;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -15,8 +16,6 @@ public class BlockAirWall extends Block
 		super( blockId, Ships.m_materialAirWall );
 		
 		setUnlocalizedName( "blockAirWall" );
-		setCreativeTab( CreativeTabs.tabBlock );
-		
 		setBlockBounds( 0, 0, 0, 1, 1, 1 );
 	}
 	
@@ -45,12 +44,14 @@ public class BlockAirWall extends Block
 	}
 	
 	@Override
+	@SideOnly( Side.CLIENT )
 	public boolean shouldSideBeRendered( IBlockAccess world, int x, int y, int z, int side )
 	{
 		return false;
 	}
 	
 	@Override
+	@SideOnly( Side.CLIENT )
 	public void registerIcons( IconRegister iconRegister )
 	{
 		// do nothing

@@ -120,7 +120,6 @@ public class DetatchedWorld extends World
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
 	public float getLightBrightness( int x, int y, int z )
 	{
 		// how bright is this block intrinsically? (eg fluids)
