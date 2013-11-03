@@ -41,7 +41,9 @@
 		<!-- copy all the files-to-be-packaged into a temp directory -->
 		<mkdir dir="${temp}"/>
 		<copy todir="${temp}">
-			<fileset dir="${reobf}" includes="**/*.class"/>
+			<fileset dir="${reobf}" includes="cuchaz/modsShared/**/*.class"/>
+			<fileset dir="${reobf}" includes="cuchaz/ships/**/*.class"/>
+			<fileset dir="${reobf}" includes="net/minecraft/**/*.class"/>
 			<fileset dir="${src}" includes="assets/**/*"/>
 		</copy>
 		
