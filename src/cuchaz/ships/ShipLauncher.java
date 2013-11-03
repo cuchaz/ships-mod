@@ -5,7 +5,6 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -14,7 +13,6 @@ import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
-import cuchaz.ships.packets.PacketShipBlocks;
 
 public class ShipLauncher
 {
