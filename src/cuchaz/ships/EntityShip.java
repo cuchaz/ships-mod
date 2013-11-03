@@ -20,10 +20,9 @@ import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
-import cuchaz.ships.packets.PacketShipBlocksRequest;
 import cuchaz.ships.propulsion.Propulsion;
 
-public class EntityShip extends Entity
+public class EntityShip extends Entity 
 {
 	public static final int LinearThrottleMax = 100;
 	public static final int LinearThrottleMin = -25;
@@ -96,16 +95,6 @@ public class EntityShip extends Entity
 		
 		// allocate a slot for the block data
 		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
-		
-		if( worldObj.isRemote )
-		{
-			// on the client, ask for block data from the server
-			PacketDispatcher.sendPacketToServer( new PacketShipBlocksRequest( this ).getCustomPacket() );
-			
-			// TEMP
-			Ships.logger.info( String.format( "Client ship %d requesting blocks...", entityId ) );
-			// NEXTTIME: Why do the client and server (in dev) have different entity ids?!?
-		}
 	}
 	
 	public void setBlocks( ShipWorld blocks )

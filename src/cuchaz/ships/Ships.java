@@ -222,6 +222,9 @@ public class Ships extends DummyModContainer
 		
 		// set tile entity renderers
 		registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
+		
+		// entity spawner
+		EntityRegistry.instance().lookupModSpawn( EntityShip.class, true ).setCustomSpawning( new EntityShipSpawner(), false );
 	}
 	
 	@SideOnly( Side.CLIENT )
