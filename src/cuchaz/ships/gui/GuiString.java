@@ -20,7 +20,10 @@ public enum GuiString
 	ShipAwayFromBlocks( "Away from solid blocks" ),
 	ShipPropulsion( "Propulsion" ),
 	NoShipBlock( "Couldn't find a ship nearby!" ),
-	InvalidShip( "Ship is invalid!" );
+	InvalidShip( "Ship is invalid!" ),
+	NoShipWasFoundHere( "No ship was found here!" ),
+	CopiedShip( "Copied ship to clipboard." ),
+	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." );
 	
 	private String m_unlocalizedText;
 	
@@ -41,6 +44,12 @@ public enum GuiString
 	
 	public String getLocalizedText( )
 	{
-		return LanguageRegistry.instance().getStringLocalization( getKey() );
+		String text = LanguageRegistry.instance().getStringLocalization( getKey() );
+		if( text == null || text.length() <= 0 )
+		{
+			// no translation available? Just return the unlocalized text.
+			text = getUnlocalizedText();
+		}
+		return text;
 	}
 }

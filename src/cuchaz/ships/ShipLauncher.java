@@ -139,9 +139,6 @@ public class ShipLauncher
 		
 		if( m_blocks != null )
 		{
-			// TEMP: this should cause the same problem
-			new ShipWorld( m_world, 5 );
-			
 			// also add the ship block
 			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
 			

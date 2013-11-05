@@ -74,7 +74,7 @@ public abstract class GuiShip extends GuiCloseable
 		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
 		
 		// draw the value
-		String valueText = isYes ? "Yes" : "No";
+		String valueText = isYes ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText();
 		int valueColor = isYes ? YesColor : NoColor;
 		int valueWidth = fontRenderer.getStringWidth( valueText );
 		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );

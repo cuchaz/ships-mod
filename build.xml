@@ -5,7 +5,7 @@
 	</description>
 	
 	<!-- output file -->
-	<property name="jarName" value="shipsMod-v0.1.beta.jar"/>
+	<property name="jarName" value="shipsMod-v0.2.beta.jar"/>
 	
 	<!-- input paths -->
 	<property name="mcp" location="../forge-v1.6.4/mcp"/>
@@ -46,6 +46,12 @@
 			<fileset dir="${reobf}" includes="net/minecraft/**/*.class"/>
 			<fileset dir="${src}" includes="assets/**/*"/>
 		</copy>
+		
+		<!-- repackage dependencies -->
+		<unzip src="${libs}/commons-codec-1.8.jar" dest="${temp}"/>
+		<move file="${temp}/META-INF/LICENSE.txt" tofile="${temp}/META-INF/LICENSE.commons-codec-1.8.txt"/>
+		<delete dir="${temp}/META-INF/maven"/>
+		<delete file="${temp}/META-INF/MANIFEST.MF"/>
 		
 		<!-- build the jar -->
 		<mkdir dir="${dist}"/>

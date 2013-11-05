@@ -73,6 +73,7 @@ public class Ships extends DummyModContainer
 	public static final ItemPaddle m_itemPaddle = new ItemPaddle( 7321 );
 	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket( 7322 );
 	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator( 7323 );
+	public static final ItemShipClipboard m_itemShipClipboard = new ItemShipClipboard( 7324 );
 	
 	// block registration: use ids [3170-3190]
 	public static final BlockShip m_blockShip = new BlockShip( 3170 );
@@ -91,7 +92,7 @@ public class Ships extends DummyModContainer
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
-		meta.version = "0.1 BETA";
+		meta.version = "0.2 BETA";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "";
@@ -247,6 +248,7 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemPaddle, "paddle" );
 		GameRegistry.registerItem( m_itemMagicBucket, "magicBucket" );
 		GameRegistry.registerItem( m_itemMagicShipLevitator, "magicShipLevitator" );
+		GameRegistry.registerItem( m_itemShipClipboard, "shipClipboard" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
@@ -266,6 +268,7 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_itemPaddle, "Paddle" );
 		LanguageRegistry.addName( m_itemMagicBucket, "Magic Bucket" );
 		LanguageRegistry.addName( m_itemMagicShipLevitator, "Magic Ship Levitator" );
+		LanguageRegistry.addName( m_itemShipClipboard, "Ship Clipboard" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
