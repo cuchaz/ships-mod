@@ -10,7 +10,9 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -30,6 +32,7 @@ public class MaterialProperties
 	}
 	
 	private static HashMap<Material,Entry> m_properties;
+	private static final Entry DefaultProperties;
 	
 	static
 	{
@@ -62,6 +65,7 @@ public class MaterialProperties
 	    
 	    // porous
 		m_properties.put( Material.cloth, new Entry( 0.2, false ) );
+		//m_properties.put( Material.materialCarpet, new Entry( 0.2, false ) );
 	    m_properties.put( Material.web, new Entry( 0.1, false ) );
 	    m_properties.put( Material.coral, new Entry( 2.0, false ) );
 	    m_properties.put( Material.sponge, new Entry( 0.2, false ) );
@@ -84,6 +88,30 @@ public class MaterialProperties
 	    
 	    // other
 	    m_properties.put( Material.fire, new Entry( 0.0, false ) );
+	    
+	    // if the material is unknown, assume it's the same as water
+	    DefaultProperties = new Entry( 1.0, false );
+	    
+	    // just for fun, make sure we have all the materials covered
+	    // since Material isn't an enum, we have to use reflection here
+	    for( Field field : Material.class.getDeclaredFields() )
+	    {
+	    	if( field.getType() == Material.class )
+	    	{
+	    		try
+				{
+					Material material = (Material)field.get( null );
+					if( m_properties.get( material ) == null )
+					{
+						Ships.logger.warning( "Material " + field.getName() + " is not configured!" );
+					}
+				}
+				catch( Exception ex )
+				{
+					Ships.logger.log( Level.WARNING, "Unable to read material: " + field.getName(), ex );
+				}
+	    	}
+	    }
 	}
 	
 	public static double getMass( Block block )
@@ -92,7 +120,7 @@ public class MaterialProperties
 		{
 			return 0;
 		}
-		return m_properties.get( block.blockMaterial ).mass;
+		return getEntry( block ).mass;
 	}
 	
 	public static boolean isWatertight( Block block )
@@ -101,7 +129,7 @@ public class MaterialProperties
 		{
 			return false;
 		}
-		return m_properties.get( block.blockMaterial ).isWatertight;
+		return getEntry( block ).isWatertight;
 	}
 	
 	public static boolean isSeparatorBlock( Block block )
@@ -114,5 +142,15 @@ public class MaterialProperties
 		return block.blockMaterial.isLiquid() || block.blockMaterial == Material.fire || block.blockMaterial == Ships.m_materialAirWall;
 		
 		// UNDONE: add dock blocks
+	}
+	
+	private static Entry getEntry( Block block )
+	{
+		Entry entry = m_properties.get( block.blockMaterial );
+		if( entry == null )
+		{
+			entry = DefaultProperties;
+		}
+		return entry;
 	}
 }

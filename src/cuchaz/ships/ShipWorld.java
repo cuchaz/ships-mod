@@ -25,6 +25,7 @@ import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -623,6 +624,36 @@ public class ShipWorld extends DetatchedWorld
 		
 		m_ship.worldObj.spawnParticle( name, x, y, z, motionX, motionY, motionZ );
 	}
+	
+	@Override
+	public boolean spawnEntityInWorld( Entity entity )
+    {
+		if( m_ship == null )
+		{
+			return false;
+		}
+		
+		// transform the entity position to world coordinates
+		Vec3 v = Vec3.createVectorHelper( entity.posX, entity.posY, entity.posZ );
+		m_ship.blocksToShip( v );
+		m_ship.shipToWorld( v );
+		entity.posX = v.xCoord;
+		entity.posY = v.yCoord;
+		entity.posZ = v.zCoord;
+		
+		// transform the velocity vector too
+		v.xCoord = entity.motionX;
+		v.yCoord = entity.motionY;
+		v.zCoord = entity.motionZ;
+		m_ship.shipToWorldDirection( v );
+		entity.motionX = v.xCoord;
+		entity.motionY = v.yCoord;
+		entity.motionZ = v.zCoord;
+		
+		// pass off to the outer world
+		entity.worldObj = m_ship.worldObj;
+		return m_ship.worldObj.spawnEntityInWorld( entity );
+    }
 	
 	public byte[] getData( )
 	{

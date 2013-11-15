@@ -206,6 +206,7 @@ public class GuiShipPropulsion extends GuiShip
 		GL20.glUseProgram( m_desaturationProgramId );
 		RenderShip2D.drawShip(
 			m_shipEnvelope,
+			BlockSide.Top,
 			m_shipLauncher.getShipWorld(),
 			x, y, zLevel, width, height
 		);
@@ -214,11 +215,13 @@ public class GuiShipPropulsion extends GuiShip
 		// draw the propulsion blocks and the helm at full saturation
 		RenderShip2D.drawShip(
 			m_propulsionEnvelope,
+			BlockSide.Top,
 			m_shipLauncher.getShipWorld(),
 			x, y, zLevel, width, height
 		);
 		RenderShip2D.drawShip(
 			m_helmEnvelope,
+			BlockSide.Top,
 			m_shipLauncher.getShipWorld(),
 			x, y, zLevel, width, height
 		);

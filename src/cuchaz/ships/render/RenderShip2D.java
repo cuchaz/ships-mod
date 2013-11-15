@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 import cuchaz.modsShared.BlockArray;
+import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
 
 public class RenderShip2D
@@ -51,7 +52,7 @@ public class RenderShip2D
 		drawColoredBlock( x, y, z, maxWidth, maxHeight, WaterColor );
 	}
 	
-	public static void drawShip( BlockArray envelope, World world, int x, int y, double z, int maxWidth, int maxHeight )
+	public static void drawShip( BlockArray envelope, BlockSide side, World world, int x, int y, double z, int maxWidth, int maxHeight )
 	{
 		double blockSize = getBlockSize( maxWidth, maxHeight, envelope );
 		double shipWidth = (double)envelope.getWidth()*blockSize;
@@ -71,8 +72,7 @@ public class RenderShip2D
 				
 				// get the block texture
 				Block block = Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )];
-				int meta = world.getBlockMetadata( coords.posX, coords.posY, coords.posZ );
-				Icon icon = block.getBlockTexture( world, coords.posX, coords.posY, coords.posZ, meta );
+				Icon icon = block.getBlockTexture( world, coords.posX, coords.posY, coords.posZ, side.getId() );
 				
 				drawTexturedBlock(
 					( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,

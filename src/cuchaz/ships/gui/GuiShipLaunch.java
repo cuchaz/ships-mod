@@ -125,6 +125,7 @@ public class GuiShipLaunch extends GuiShip
 			);
 			RenderShip2D.drawShip(
 				envelope,
+				shipSide,
 				m_shipLauncher.getShipWorld(),
 				x, y, zLevel, width, height
 			);
