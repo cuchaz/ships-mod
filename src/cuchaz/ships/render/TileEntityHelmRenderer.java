@@ -54,6 +54,10 @@ public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 			ShipWorld world = (ShipWorld)tileEntity.worldObj;
 			m_model.setWheelAngle( -world.getShip().motionYaw * 20 );
 		}
+		else
+		{
+			m_model.setWheelAngle( 0 );
+		}
 		
 		GL11.glPushMatrix();
         GL11.glTranslatef( (float)x + 0.5f, (float)y + 1.5f, (float)z + 0.5f );

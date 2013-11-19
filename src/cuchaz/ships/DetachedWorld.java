@@ -19,6 +19,7 @@ import net.minecraft.world.MinecraftException;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldSettings;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.storage.IPlayerFileData;
@@ -27,7 +28,7 @@ import net.minecraft.world.storage.WorldInfo;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class DetatchedWorld extends World
+public class DetachedWorld extends World
 {
 	private static class SaveHandler implements ISaveHandler
 	{
@@ -83,7 +84,7 @@ public class DetatchedWorld extends World
 		}
 	}
 	
-	public DetatchedWorld( World realWorld, String worldName )
+	public DetachedWorld( World realWorld, String worldName )
 	{
 		// none of these values have to actually work, but we just need to get past the World constructor
 		super(
@@ -137,5 +138,19 @@ public class DetatchedWorld extends World
 		
 		// fluids aren't part of the boat. ie, we don't care
 		return 0;
+	}
+	
+	@Override
+	public BiomeGenBase getBiomeGenForCoords( int x, int z )
+	{
+		// detached worlds don't have biomes
+		return null;
+	}
+	
+	@Override
+	public BiomeGenBase getBiomeGenForCoordsBody( int x, int z )
+	{
+		// detached worlds don't have biomes
+		return null;
 	}
 }

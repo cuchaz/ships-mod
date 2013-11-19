@@ -16,12 +16,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -38,16 +40,14 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
-public class ShipWorld extends DetatchedWorld
+public class ShipWorld extends DetachedWorld
 {
 	private static class BlockStorage
 	{
@@ -145,20 +145,35 @@ public class ShipWorld extends DetatchedWorld
 			
 			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
 			
-			// copy the tile entity
-			NBTTagCompound nbt = new NBTTagCompound();
-			tileEntity.writeToNBT( nbt );
-			TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
-			
-			// initialize the tile entity
-			tileEntityCopy.setWorldObj( this );
-			tileEntityCopy.xCoord = relativeCoords.posX;
-			tileEntityCopy.yCoord = relativeCoords.posY;
-			tileEntityCopy.zCoord = relativeCoords.posZ;
-			tileEntityCopy.validate();
-			
-			// save it to the ship world
-			m_tileEntities.put( relativeCoords, tileEntityCopy );
+			try
+			{
+				// copy the tile entity
+				NBTTagCompound nbt = new NBTTagCompound();
+				tileEntity.writeToNBT( nbt );
+				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+				
+				// initialize the tile entity
+				tileEntityCopy.setWorldObj( this );
+				tileEntityCopy.xCoord = relativeCoords.posX;
+				tileEntityCopy.yCoord = relativeCoords.posY;
+				tileEntityCopy.zCoord = relativeCoords.posZ;
+				tileEntityCopy.validate();
+				
+				// save it to the ship world
+				m_tileEntities.put( relativeCoords, tileEntityCopy );
+			}
+			catch( Exception ex )
+			{
+				Ships.logger.log(
+					Level.WARNING,
+					String.format(
+						"Tile entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but tile entity was not moved.",
+						tileEntity.getClass().getName(),
+						worldCoords.posX, worldCoords.posY, worldCoords.posZ
+					),
+					ex
+				);
+			}
 		}
 		
 		computeDependentFields();
@@ -235,15 +250,37 @@ public class ShipWorld extends DetatchedWorld
 			TileEntity tileEntity = getBlockTileEntity( coordsShip );
 			if( tileEntity != null )
 			{
-				// copy the tile entity
-				NBTTagCompound nbt = new NBTTagCompound();
-				tileEntity.writeToNBT( nbt );
-				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
-				tileEntityCopy.validate();
-				
-				// restore the block before the tile entity
-				storage.copyToWorld( world, coordsWorld );
-				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
+				try
+				{
+					// copy the tile entity
+					NBTTagCompound nbt = new NBTTagCompound();
+					tileEntity.writeToNBT( nbt );
+					TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+					tileEntityCopy.setWorldObj( world );
+					tileEntityCopy.xCoord = coordsWorld.posX;
+					tileEntityCopy.yCoord = coordsWorld.posY;
+					tileEntityCopy.zCoord = coordsWorld.posZ;
+					tileEntityCopy.validate();
+					
+					// restore the block before the tile entity
+					storage.copyToWorld( world, coordsWorld );
+					world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
+				}
+				catch( Exception ex )
+				{
+					// remove the tile entity
+					world.removeBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ );
+					
+					Ships.logger.log(
+						Level.WARNING,
+						String.format(
+							"Tile entity %s at (%d,%d,%d) didn't like being moved to the world. The tile entity has been removed from its block to prevent further errors.",
+							tileEntity.getClass().getName(),
+							coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ
+						),
+						ex
+					);
+				}
 			}
 			else
 			{
@@ -485,9 +522,32 @@ public class ShipWorld extends DetatchedWorld
 	public void updateEntities( )
 	{
 		// update the tile entities
-		for( TileEntity entity : m_tileEntities.values() )
+		Iterator<Map.Entry<ChunkCoordinates,TileEntity>> iter = m_tileEntities.entrySet().iterator();
+		while( iter.hasNext() )
 		{
-			entity.updateEntity();
+			Map.Entry<ChunkCoordinates,TileEntity> entry = iter.next();
+			ChunkCoordinates coords = entry.getKey();
+			TileEntity entity = entry.getValue();
+			
+			try
+			{
+				entity.updateEntity();
+			}
+			catch( Exception ex )
+			{
+				// remove the offending tile entity
+				iter.remove();
+				
+				Ships.logger.log(
+					Level.WARNING,
+					String.format(
+						"Tile entity %s at (%d,%d,%d) had a problem during an update! The tile entity has been removed from its block to prevent further errors.",
+						entity.getClass().getName(),
+						coords.posX, coords.posY, coords.posZ
+					),
+					ex
+				);
+			}
 		}
 		
 		// on the client, do random update ticks
