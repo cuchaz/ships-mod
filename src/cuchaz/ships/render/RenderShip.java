@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -167,7 +168,7 @@ public class RenderShip extends Render
 		GL11.glPopMatrix();
 		
 		// render debug information
-		if( false )
+		if( Minecraft.getMinecraft().gameSettings.showDebugInfo )
 		{
 			// render in world space
 			GL11.glPushMatrix();

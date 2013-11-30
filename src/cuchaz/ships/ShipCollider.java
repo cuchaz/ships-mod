@@ -55,6 +55,8 @@ public class ShipCollider
 	// DEBUG
 	public List<ChunkCoordinates> m_highlightedCoords = new ArrayList<ChunkCoordinates>();
 	public AxisAlignedBB m_queryBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+	public Vec3 m_lookStart = Vec3.createVectorHelper( 0, 0, 0 );
+	public Vec3 m_lookStop = Vec3.createVectorHelper( 0, 0, 0 );
 	
 	public ShipCollider( EntityShip ship )
 	{
