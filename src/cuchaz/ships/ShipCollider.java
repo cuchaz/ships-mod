@@ -19,15 +19,19 @@ import java.util.TreeSet;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAccessor;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.RotatedBB;
+import cuchaz.ships.render.ShipDebugRenderInfo;
 
 public class ShipCollider
 {
@@ -51,16 +55,23 @@ public class ShipCollider
 	
 	
 	private EntityShip m_ship;
-	
-	// DEBUG
-	public List<ChunkCoordinates> m_highlightedCoords = new ArrayList<ChunkCoordinates>();
-	public AxisAlignedBB m_queryBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-	public Vec3 m_lookStart = Vec3.createVectorHelper( 0, 0, 0 );
-	public Vec3 m_lookStop = Vec3.createVectorHelper( 0, 0, 0 );
+	@SideOnly( Side.CLIENT )
+	private ShipDebugRenderInfo m_debugRenderInfo;
 	
 	public ShipCollider( EntityShip ship )
 	{
 		m_ship = ship;
+		
+		if( m_ship.worldObj.isRemote )
+		{
+			m_debugRenderInfo = new ShipDebugRenderInfo();
+		}
+	}
+	
+	@SideOnly( Side.CLIENT )
+	public ShipDebugRenderInfo getDebugRenderInfo( )
+	{
+		return m_debugRenderInfo;
 	}
 	
 	public void computeShipBoundingBox( AxisAlignedBB box, double x, double y, double z, float yaw )
@@ -105,7 +116,7 @@ public class ShipCollider
 		// get the player look line segment
 		Vec3 eyePos = player.worldObj.getWorldVec3Pool().getVecFromPool(
 			player.posX,
-			player.posY + player.ySize - player.yOffset + player.getEyeHeight(),
+			player.posY + ( player.worldObj.isRemote ? player.getEyeHeight() - player.getDefaultEyeHeight() : player.getEyeHeight() ),
 			player.posZ
 		);
         
@@ -149,10 +160,9 @@ public class ShipCollider
 		oldEntityBox.maxY -= dYSize;
 		oldEntityBox.minY -= dYSize;
 		
-		// TEMP
-		if( entity instanceof EntityPlayer )
+		if( m_ship.worldObj.isRemote && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
-			m_queryBox.setBB( oldEntityBox );
+			m_debugRenderInfo.setQueryBox( entity, oldEntityBox );
 		}
 		
 		List<PossibleCollision> possibleCollisions = trajectoryQuery( oldEntityBox, newEntityBox );
@@ -162,16 +172,11 @@ public class ShipCollider
 		double originalDy = newEntityBox.minY - oldEntityBox.minY;
 		double originalDz = newEntityBox.minZ - oldEntityBox.minZ;
 		
-		// TEMP: render the boxes
-		if( entity instanceof EntityPlayer )
+		if( m_ship.worldObj.isRemote && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
-			synchronized( m_highlightedCoords )
+			for( PossibleCollision collision : possibleCollisions )
 			{
-				m_highlightedCoords.clear();
-				for( PossibleCollision collision : possibleCollisions )
-				{
-					m_highlightedCoords.add( collision.coords );
-				}
+				m_debugRenderInfo.addCollidedCoord( collision.coords );
 			}
 		}
 		

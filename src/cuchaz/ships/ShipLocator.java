@@ -31,6 +31,16 @@ public class ShipLocator
 		m_shipsServer = new ArrayList<EntityShip>();
 	}
 	
+	public static void registerShip( EntityShip ship )
+	{
+		getShips( ship ).add( ship );
+	}
+	
+	public static void unregisterShip( EntityShip ship )
+	{
+		getShips( ship ).remove( ship );
+	}
+	
 	public static List<EntityShip> getShips( Entity entity )
 	{
 		if( entity.worldObj.isRemote )
@@ -43,16 +53,38 @@ public class ShipLocator
 		}
 	}
 	
-	public static void registerShip( EntityShip ship )
+	public static List<EntityShip> getShipsServer( )
 	{
-		getShips( ship ).add( ship );
+		return m_shipsServer;
 	}
 	
-	public static void unregisterShip( EntityShip ship )
+	public static List<EntityShip> getShipsClient( )
 	{
-		getShips( ship ).remove( ship );
+		return m_shipsClient;
 	}
 	
+	public static EntityShip getShipServer( int entityId )
+	{
+		return getShip( m_shipsServer, entityId );
+	}
+	
+	public static EntityShip getShipClient( int entityId )
+	{
+		return getShip( m_shipsClient, entityId );
+	}
+	
+	private static EntityShip getShip( List<EntityShip> ships, int entityId )
+	{
+		for( EntityShip ship : ships )
+		{
+			if( ship.entityId == entityId )
+			{
+				return ship;
+			}
+		}
+		return null;
+	}
+
 	public static EntityShip getFromPlayerLook( EntityPlayer player )
 	{
 		// find out what entity the player is looking at

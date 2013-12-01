@@ -36,6 +36,7 @@ import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLConstructionEvent;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.FMLNetworkHandler;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
@@ -223,6 +224,13 @@ public class Ships extends DummyModContainer
 		{
 			Ships.logger.log( Level.WARNING, "Exception occurred while loading mod.", ex );
 		}
+	}
+	
+	@Subscribe
+	public void serverLoad( FMLServerStartingEvent event )
+	{
+		// register our commands
+		event.registerServerCommand( new CommandShips() );
 	}
 	
 	@SideOnly( Side.CLIENT )

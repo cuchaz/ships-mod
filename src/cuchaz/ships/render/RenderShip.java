@@ -13,6 +13,7 @@ package cuchaz.ships.render;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -27,6 +28,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.EnumMovingObjectType;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 
@@ -64,18 +67,19 @@ public class RenderShip extends Render
 		doRender( (EntityShip)entity, x, y, z, yaw, partialTickTime );
 	}
 	
-	@SuppressWarnings( "unused" )
 	public void doRender( EntityShip ship, double x, double y, double z, float yaw, float partialTickTime )
 	{
-		// NOTE: (x,y,z) is the vector from the eye to the entity origin
-		// ie x = ship.posX - player.posX
+		// NOTE: (x,y,z) is the vector from the camera to the entity origin
+		// ie x = ship.posX - camera.posX
 		
 		m_renderBlocks.blockAccess = ship.getBlocks();
 		
+		// render in blocks space
 		GL11.glPushMatrix();
 		GL11.glTranslated( x, y, z );
 		GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
+		
 		RenderHelper.disableStandardItemLighting();
 		
 		/* UNDONE: enable frustum optimizations if they actually help
@@ -168,15 +172,16 @@ public class RenderShip extends Render
 		GL11.glPopMatrix();
 		
 		// render debug information
-		if( Minecraft.getMinecraft().gameSettings.showDebugInfo )
+		if( ShipDebugRenderInfo.isDebugRenderingOn() )
 		{
+			ShipDebugRenderInfo info = ship.getCollider().getDebugRenderInfo();
+			
 			// render in world space
 			GL11.glPushMatrix();
 			GL11.glTranslated( x, y, z );
 			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
 			
 			renderAxis( ship );
-			//renderHitbox( ship );
 			
 			GL11.glPopMatrix();
 			
@@ -186,6 +191,7 @@ public class RenderShip extends Render
 			GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
 			GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 			
+			// render all ship blocks
 			for( ChunkCoordinates coords : ship.getBlocks().coords() )
 			{
 				renderHitbox(
@@ -195,21 +201,51 @@ public class RenderShip extends Render
 			}
 			
 			// render the highlighted blocks
-			synchronized( ship.getCollider().m_highlightedCoords )
+			for( ChunkCoordinates coords : info.getCollidedCoords() )
 			{
-				for( ChunkCoordinates coords : ship.getCollider().m_highlightedCoords )
-				{
-					renderHitbox(
-						ship.getCollider().getBlockBoxInBlockSpace( coords ),
-						ColorUtils.getColor( 255, 255, 0 )
-					);
-				}
+				renderHitbox(
+					ship.getCollider().getBlockBoxInBlockSpace( coords ),
+					ColorUtils.getColor( 255, 255, 0 )
+				);
 			}
 			
+			// where is the camera?
+			Vec3 camera = Vec3.createVectorHelper(
+				RenderManager.renderPosX,
+				RenderManager.renderPosY,
+				RenderManager.renderPosZ
+			);
+			ship.worldToShip( camera );
+			ship.shipToBlocks( camera );
+			boolean isFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+			
 			// show the query box
-			renderHitbox( ship.getCollider().m_queryBox, ColorUtils.getColor( 0, 255, 0 ) );
+			for( AxisAlignedBB box : info.getQueryBoxes() )
+			{
+				// skip over boxes that surround the camera
+				if( box.isVecInside( camera ) && isFirstPerson )
+				{
+					continue;
+				}
+				
+				renderHitbox( box, ColorUtils.getColor( 0, 255, 0 ) );
+			}
+			
+			// find out what block the player is looking at
+			TreeSet<MovingObjectPosition> targets = ship.getCollider().getBlocksPlayerIsLookingAt( Minecraft.getMinecraft().thePlayer );
+			if( !targets.isEmpty() )
+			{
+				MovingObjectPosition target = targets.first();
+				assert( target.typeOfHit == EnumMovingObjectType.TILE );
+				renderHitbox(
+					ship.getCollider().getBlockBoxInBlockSpace( new ChunkCoordinates( target.blockX, target.blockY, target.blockZ ) ),
+					ColorUtils.getColor( 255, 255, 255 )
+				);
+			}
 			
 			GL11.glPopMatrix();
+			
+			info.setRendered();
 		}
 	}
 	
@@ -305,25 +341,41 @@ public class RenderShip extends Render
 		tessellator.startDrawingQuads();
 		tessellator.setColorRGBA_I( color, 128 );
 		
+		// south
 		tessellator.addVertex( xm, yp, zm );
 		tessellator.addVertex( xm, ym, zm );
 		tessellator.addVertex( xp, ym, zm );
 		tessellator.addVertex( xp, yp, zm );
 		
+		// north
 		tessellator.addVertex( xp, yp, zp );
 		tessellator.addVertex( xp, ym, zp );
 		tessellator.addVertex( xm, ym, zp );
 		tessellator.addVertex( xm, yp, zp );
 		
+		// east
 		tessellator.addVertex( xp, yp, zm );
 		tessellator.addVertex( xp, ym, zm );
 		tessellator.addVertex( xp, ym, zp );
 		tessellator.addVertex( xp, yp, zp );
 		
+		// west
 		tessellator.addVertex( xm, yp, zp );
 		tessellator.addVertex( xm, ym, zp );
 		tessellator.addVertex( xm, ym, zm );
 		tessellator.addVertex( xm, yp, zm );
+		
+		// top
+		tessellator.addVertex( xm, yp, zm );
+		tessellator.addVertex( xp, yp, zm );
+		tessellator.addVertex( xp, yp, zp );
+		tessellator.addVertex( xm, yp, zp );
+		
+		// bottom
+		tessellator.addVertex( xm, ym, zm );
+		tessellator.addVertex( xp, ym, zm );
+		tessellator.addVertex( xp, ym, zp );
+		tessellator.addVertex( xm, ym, zp );
 		
 		tessellator.draw();
 		
