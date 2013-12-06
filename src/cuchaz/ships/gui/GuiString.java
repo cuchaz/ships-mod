@@ -31,9 +31,12 @@ public enum GuiString
 	ShipPropulsion( "Propulsion" ),
 	NoShipBlock( "Couldn't find a ship nearby!" ),
 	InvalidShip( "Ship is invalid!" ),
+	ClipboardUsage( "Use the clipboard on a ship block to copy a ship. Use the clipboard on water to paste a ship."  ),
 	NoShipWasFoundHere( "No ship was found here!" ),
 	CopiedShip( "Copied ship to clipboard." ),
-	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." );
+	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." ),
+	NoShipOnClipboard( "No ship was found on the clipboard!" ),
+	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." );
 	
 	private String m_unlocalizedText;
 	
