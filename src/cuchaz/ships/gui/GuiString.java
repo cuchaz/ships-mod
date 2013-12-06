@@ -36,7 +36,8 @@ public enum GuiString
 	CopiedShip( "Copied ship to clipboard." ),
 	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." ),
 	NoShipOnClipboard( "No ship was found on the clipboard!" ),
-	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." );
+	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." ),
+	PastingOnlyCreative( "Ship pasting only works in creative mode." );
 	
 	private String m_unlocalizedText;
 	

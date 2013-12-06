@@ -290,6 +290,13 @@ public class ItemShipClipboard extends Item
 	
 	private boolean pasteShip( World world, EntityPlayer player, int blockX, int blockY, int blockZ )
 	{
+		// make sure we're in creative mode
+		if( !player.capabilities.isCreativeMode )
+		{
+			message( player, GuiString.PastingOnlyCreative );
+			return false;
+		}
+		
 		try
 		{
 			// get the contents of the clipboard
