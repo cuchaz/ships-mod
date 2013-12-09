@@ -122,6 +122,44 @@ public class CommandShips extends CommandBase
 				ship.setDead();
 				replyAllAdmins( sender, String.format( "Ship %d was killed!", id ) );
 			}
+		},
+		Dock( "Docks a ship", "<id>" )
+		{
+			@Override
+			public void process( ICommandSender sender, String[] args )
+			{
+				if( args.length <= 0 )
+				{
+					showCommandDetail( sender, this );
+					return;
+				}
+				
+				// get the ship id
+				int id;
+				try
+				{
+					id = Integer.parseInt( args[0] );
+				}
+				catch( NumberFormatException ex )
+				{
+					reply( sender, "Unrecognized id!" );
+					return;
+				}
+				
+				// get the ship
+				EntityShip ship = ShipLocator.getShipServer( id );
+				if( ship == null )
+				{
+					reply( sender, String.format( "Ship %d was not found!", id ) );
+					return;
+				}
+				
+				// dock the ship
+				ShipUnlauncher unlauncher = new ShipUnlauncher( ship );
+				unlauncher.snapToLaunchDirection();
+				unlauncher.unlaunch();
+				replyAllAdmins( sender, String.format( "Ship %d was docked!", id ) );
+			}
 		};
 		
 		private String m_description;

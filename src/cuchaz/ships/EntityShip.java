@@ -343,7 +343,7 @@ public class EntityShip extends Entity
 			
 			// unlaunch the ship at the bottom of the ocean
 			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
-			unlauncher.snapToNearestDirection();
+			unlauncher.snapToLaunchDirection();
 			unlauncher.unlaunch();
 			return;
 		}
@@ -355,6 +355,9 @@ public class EntityShip extends Entity
 	@Override
 	public boolean interactFirst( EntityPlayer player )
 	{
+		// TEMP
+		Ships.logger.info( "Ship interaction!" );
+		
 		// BUGBUG: can't interact with other entities inside of the ship's BB =(
 		// need to transform EntityRenderer.getMouseOver() to perform better collision against ships
 		

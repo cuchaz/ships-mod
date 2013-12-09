@@ -52,6 +52,7 @@ public class CoreModTransformer implements IClassTransformer
 		ClassVisitor tailAdapter = writer;
 		tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 		tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+		tailAdapter = new WorldAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 		
 		// run the transformations
 		new ClassReader( classData ).accept( tailAdapter, 0 );

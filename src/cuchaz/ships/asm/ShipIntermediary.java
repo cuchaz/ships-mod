@@ -11,13 +11,16 @@
 package cuchaz.ships.asm;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.logging.Level;
 
+import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cuchaz.modsShared.RuntimeMapping;
@@ -112,6 +115,19 @@ public class ShipIntermediary
 				ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ,oldYSize, entity );
 			}
 		}
+	}
+	
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	public static List getShipsWithinAABB( List out, World world, AxisAlignedBB box, IEntitySelector selector )
+	{
+		for( EntityShip ship : ShipLocator.findShipsInBox( world, box ) )
+		{
+			if( selector == null || selector.isEntityApplicable( ship ) )
+			{
+				out.add( ship );
+			}
+		}
+		return out;
 	}
 	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )

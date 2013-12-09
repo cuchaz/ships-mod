@@ -19,6 +19,7 @@ import net.minecraft.item.ItemInWorldManager;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 
 public class ShipLocator
 {
@@ -33,17 +34,19 @@ public class ShipLocator
 	
 	public static void registerShip( EntityShip ship )
 	{
-		getShips( ship ).add( ship );
+		getShips( ship.worldObj ).add( ship );
 	}
 	
 	public static void unregisterShip( EntityShip ship )
 	{
-		getShips( ship ).remove( ship );
+		getShips( ship.worldObj ).remove( ship );
 	}
 	
-	public static List<EntityShip> getShips( Entity entity )
+	public static List<EntityShip> getShips( World world )
 	{
-		if( entity.worldObj.isRemote )
+		// client only
+		//Minecraft.getMinecraft().theWorld.isRemote
+		if( world.isRemote )
 		{
 			return m_shipsClient;
 		}
@@ -119,7 +122,7 @@ public class ShipLocator
 		queryBox.maxZ += reachDistance;
 		
 		// are we looking at any of these ships?
-		for( EntityShip ship : findShipsInBox( player, queryBox ) )
+		for( EntityShip ship : findShipsInBox( player.worldObj, queryBox ) )
 		{
 			if( ship.boundingBox.isVecInside( eyePos ) || ship.boundingBox.isVecInside( targetPos ) || ship.boundingBox.calculateIntercept( eyePos, targetPos ) != null )
 			{
@@ -142,18 +145,16 @@ public class ShipLocator
 		queryBox.minY += delta;
 		queryBox.minZ += delta;
 		
-		return findShipsInBox( entity, queryBox );
+		return findShipsInBox( entity.worldObj, queryBox );
 	}
 	
-	private static List<EntityShip> findShipsInBox( Entity entity, AxisAlignedBB box )
+	public static List<EntityShip> findShipsInBox( World world, AxisAlignedBB box )
 	{
-		// sadly, we can't use this because ship entities are too big.
-		// World.getEntitiesWithinAABB() will only return entities whose positions are within 2 blocks of the query box.
-		// it doesn't do a box-to-box test. =(
-		//return (List<EntityShip>)entity.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
-		
+		// sadly, we can't use World.getEntitiesWithinAABB() because ship entities are too big.
+		// It will only return entities whose positions are within near the chunk of the query box.
+		// it doesn't do a global box-to-box test. =(
 		List<EntityShip> ships = new ArrayList<EntityShip>();
-		for( EntityShip ship : getShips( entity ) )
+		for( EntityShip ship : getShips( world ) )
 		{
 			if( ship.boundingBox.intersectsWith( box ) )
 			{

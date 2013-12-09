@@ -182,6 +182,12 @@ public class RenderShip extends Render
 			GL11.glTranslated( -ship.posX, -ship.posY, -ship.posZ );
 			
 			renderAxis( ship );
+			/*
+			renderHitbox(
+				ship.boundingBox,
+				ColorUtils.getColor( 255, 255, 255 )
+			);
+			*/
 			
 			GL11.glPopMatrix();
 			
