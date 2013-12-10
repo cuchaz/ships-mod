@@ -60,7 +60,6 @@ public class Propulsion
 	private BlockSide m_frontSide;
 	private List<PropulsionMethod> m_methods;
 	private Map<Class<? extends PropulsionMethod>,MethodCount> m_typeCounts;
-	private double m_totalThrust;
 	
 	public Propulsion( ShipWorld world )
 	{
@@ -98,13 +97,6 @@ public class Propulsion
 			}
 			count.m_numInstances++;
 		}
-		
-		// calculate the total thrust
-		m_totalThrust = 0;
-		for( PropulsionMethod method : m_methods )
-		{
-			m_totalThrust += method.getThrust();
-		}
 	}
 	
 	public BlockSide getFrontSide( )
@@ -140,9 +132,14 @@ public class Propulsion
 		return m_typeCounts.values();
 	}
 	
-	public double getTotalThrust( )
+	public double getTotalThrust( double speed )
 	{
-		return m_totalThrust;
+		double totalThrust = 0;
+		for( PropulsionMethod method : m_methods )
+		{
+			totalThrust += method.getThrust( speed );
+		}
+		return totalThrust;
 	}
 	
 	private ChunkCoordinates findHelm( ShipWorld world )

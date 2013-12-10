@@ -17,7 +17,6 @@ import net.minecraft.block.Block;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.Envelopes;
 import cuchaz.modsShared.Util;
@@ -30,7 +29,6 @@ public class ShipPhysics
 	private static final double WaterViscosity = 4.0;
 	private static final double BaseLinearDrag = 0.001;
 	private static final float AngularAccelerationFactor = 10;
-	private static final float AngularDragViscosity = 0.5f;
 	private static final double BaseAngularDrag = 0.1;
 	
 	private static class DisplacementEntry
@@ -169,10 +167,10 @@ public class ShipPhysics
 		return m_equilibriumWaterHeight;
 	}
 	
-	public double getLinearAccelerationDueToThrust( Propulsion propulsion )
+	public double getLinearAccelerationDueToThrust( Propulsion propulsion, double speed )
 	{
 		// thrust is in N and mass is in Kg
-		return propulsion.getTotalThrust()/m_shipMass;
+		return propulsion.getTotalThrust( speed )/m_shipMass;
 	}
 	
 	public double getLinearAccelerationDueToDrag( Vec3 velocity, double waterHeight, Envelopes envelopes )
@@ -190,12 +188,11 @@ public class ShipPhysics
 			}
 		}
 		assert( leadingSide != null );
-		BlockArray leadingEnvelope = envelopes.getEnvelope( leadingSide );
 		
 		// divide the leading envelope into air vs water
 		double airSurfaceArea = 0;
 		double waterSurfaceArea = 0;
-		for( ChunkCoordinates coords : leadingEnvelope )
+		for( ChunkCoordinates coords : envelopes.getEnvelope( leadingSide ) )
 		{
 			double fractionSubmerged = leadingSide.getFractionSubmerged( coords.posY, waterHeight );
 			waterSurfaceArea += fractionSubmerged;
@@ -219,13 +216,16 @@ public class ShipPhysics
 	
 	public float getAngularAccelerationDueToThrust( Propulsion propulsion )
 	{
-		return (float)getLinearAccelerationDueToThrust( propulsion )*AngularAccelerationFactor;
+		return (float)getLinearAccelerationDueToThrust( propulsion, 0 )*AngularAccelerationFactor;
 	}
 	
-	public float getAngularAccelerationDueToDrag( float motionYaw )
+	public float getAngularAccelerationDueToDrag( float motionYaw, double waterHeight, Envelopes envelopes, double centerX, double centerZ )
 	{
-		float dragForce = motionYaw*motionYaw*AngularDragViscosity;
-		return (float)BaseAngularDrag + dragForce/(float)m_shipMass;
+		// get the drag in both horizontal directions
+		double angularViscosity = getAngularViscosity( BlockSide.North, waterHeight, envelopes, centerZ )
+			+ getAngularViscosity( BlockSide.East, waterHeight, envelopes, centerX );
+		double dragForce = motionYaw*motionYaw*angularViscosity;
+		return (float)( BaseAngularDrag + dragForce/m_shipMass );
 	}
 	
 	public double getTopLinearSpeed( Propulsion propulsion, Envelopes envelopes )
@@ -238,8 +238,8 @@ public class ShipPhysics
 		
 		// determine the top speed numerically
 		// this ends up being a recurrence relation... I'm WAY too lazy to solve it analytically
-		double accelDueToThrust = getLinearAccelerationDueToThrust( propulsion );
 		double speed = 0;
+		double accelDueToThrust = getLinearAccelerationDueToThrust( propulsion, speed );
 		Vec3 velocity = Vec3.createVectorHelper( 0, 0, 0 );
 		for( int i=0; i<100; i++ )
 		{
@@ -260,15 +260,24 @@ public class ShipPhysics
 		return speed;
 	}
 	
-	public float getTopAngularSpeed( Propulsion propulsion )
+	public float getTopAngularSpeed( Propulsion propulsion, Envelopes envelopes )
 	{
+		Double waterHeight = computeEquilibriumWaterHeight();
+		if( waterHeight == null )
+		{
+			return 0;
+		}
+		
+		// compute the center
+		Vec3 centerOfMass = getCenterOfMass();
+		
 		// determine the top speed numerically
 		// again, I'm too lazy to write down the equations and solve them analytically...
 		double thrustAccel = getAngularAccelerationDueToThrust( propulsion );
 		float speed = 0;
 		for( int i=0; i<100; i++ )
 		{
-			double netAcceleration = thrustAccel - getAngularAccelerationDueToDrag( speed );
+			double netAcceleration = thrustAccel - getAngularAccelerationDueToDrag( speed, waterHeight, envelopes, centerOfMass.xCoord, centerOfMass.zCoord );
 			speed += netAcceleration;
 			
 			// did the speed stop changing?
@@ -309,6 +318,18 @@ public class ShipPhysics
 	{
 		// can use any NSEW side
 		return BlockSide.North.getFractionSubmerged( y, waterHeight );
+	}
+	
+	private double getAngularViscosity( BlockSide side, double waterHeight, Envelopes envelopes, double center )
+	{
+		double torque = 0;
+		for( ChunkCoordinates coords : envelopes.getEnvelope( side ) )
+		{
+			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
+			double dist = side.getU( coords.posX, coords.posY, coords.posZ ) - Math.floor( center );
+			torque += ( fractionSubmerged*WaterViscosity + ( 1 - fractionSubmerged )*AirViscosity )*dist;
+		}
+		return torque;
 	}
 	
 	private Block getBlock( ChunkCoordinates coords )

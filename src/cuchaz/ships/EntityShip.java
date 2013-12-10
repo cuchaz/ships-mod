@@ -669,14 +669,14 @@ public class EntityShip extends Entity
 			double forwardZ = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
 			
 			// apply the thrust
-			double linearAccelerationDueToThrust = m_physics.getLinearAccelerationDueToThrust( m_propulsion )*linearThrottle/LinearThrottleMax;
+			double linearAccelerationDueToThrust = m_physics.getLinearAccelerationDueToThrust( m_propulsion, speed )*linearThrottle/LinearThrottleMax;
 			motionX += forwardX*linearAccelerationDueToThrust;
 			motionZ += forwardZ*linearAccelerationDueToThrust;
 		}
 		
 		// get the angular acceleration
 		double angularAccelerationDueToThrust = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax;
-		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw );
+		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes(), shipToBlocksX( 0 ), shipToBlocksY( 0 ) );
 		
 		// make sure drag acceleration doesn't reverse the velocity!
 		angularAccelerationDueToDrag = Math.min( Math.abs( motionYaw ), angularAccelerationDueToDrag );

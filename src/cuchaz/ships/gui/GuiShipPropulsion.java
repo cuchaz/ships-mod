@@ -133,7 +133,7 @@ public class GuiShipPropulsion extends GuiShip
 		
 		// compute the propulsion properties
 		m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
-		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion );
+		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
 		
 		// build the description string
 		StringBuilder buf = new StringBuilder();
@@ -169,7 +169,7 @@ public class GuiShipPropulsion extends GuiShip
 		{
 			// list the specs
 			drawLabelValueText( "Ship Mass", String.format( "%.1f Kg", m_shipLauncher.getShipPhysics().getMass() ), 1 );
-			drawLabelValueText( "Thrust", String.format( "%.1f N", m_propulsion.getTotalThrust() ), 2 );
+			drawLabelValueText( "Thrust", String.format( "%.1f N", m_propulsion.getTotalThrust( 0 ) ), 2 );
 			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*Util.TicksPerSecond ), 3 );
 			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/sec", m_topAngularSpeed ), 4 );
 			

@@ -30,9 +30,13 @@ public class Sail extends PropulsionMethod
 	}
 	
 	@Override
-	public double getThrust( )
+	public double getThrust( double speed )
 	{
-		return ThrustPerBlock*m_numExposedBlocks;
+		// sail thrust depends on ship speed
+		// sails have full strength when the ship isn't moving
+		// when the ship reaches the wind speed, the sails don't add anymore thrust
+		// although, wind speed is implicit here...
+		return ThrustPerBlock*m_numExposedBlocks/( speed + 1 );
 	}
 	
 	public boolean isValid( )

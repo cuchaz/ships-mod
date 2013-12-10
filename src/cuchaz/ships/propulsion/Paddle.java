@@ -11,6 +11,7 @@
 package cuchaz.ships.propulsion;
 
 
+
 public class Paddle extends PropulsionMethod
 {
 	public Paddle( )
@@ -19,7 +20,7 @@ public class Paddle extends PropulsionMethod
 	}
 	
 	@Override
-	public double getThrust( )
+	public double getThrust( double speed )
 	{
 		// the paddle always has constant thrust
 		return 0.4;

@@ -48,5 +48,5 @@ public abstract class PropulsionMethod
 		return m_coords;
 	}
 	
-	public abstract double getThrust( );
+	public abstract double getThrust( double speed );
 }
