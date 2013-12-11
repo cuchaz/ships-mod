@@ -26,7 +26,7 @@ public class ShipPhysics
 {
 	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 9.8 );
 	private static final double AirViscosity = 0.1;
-	private static final double WaterViscosity = 4.0;
+	private static final double WaterViscosity = 10.0;
 	private static final double BaseLinearDrag = 0.001;
 	private static final float AngularAccelerationFactor = 10;
 	private static final double BaseAngularDrag = 0.1;
@@ -239,20 +239,27 @@ public class ShipPhysics
 		// determine the top speed numerically
 		// this ends up being a recurrence relation... I'm WAY too lazy to solve it analytically
 		double speed = 0;
-		double accelDueToThrust = getLinearAccelerationDueToThrust( propulsion, speed );
+		double thrustAcceleration = getLinearAccelerationDueToThrust( propulsion, speed );
 		Vec3 velocity = Vec3.createVectorHelper( 0, 0, 0 );
 		for( int i=0; i<100; i++ )
 		{
 			velocity.xCoord = speed*propulsion.getFrontSide().getDx();
 			velocity.zCoord = speed*propulsion.getFrontSide().getDz();
 			
-			double accelDueToDrag = getLinearAccelerationDueToDrag( velocity, waterHeight, envelopes );
-			accelDueToDrag = Math.min( speed, accelDueToDrag );
-			double netAcceleration = accelDueToThrust - accelDueToDrag;
+			double dragAcceleration = getLinearAccelerationDueToDrag( velocity, waterHeight, envelopes );
+			dragAcceleration = Math.min( speed + thrustAcceleration, dragAcceleration );
+			double netAcceleration = thrustAcceleration - dragAcceleration;
+			
+			// TEMP
+			double speedBefore = speed;
+			
 			speed += netAcceleration;
 			
+			// TEMP
+			System.out.println( String.format( "linear sim: speedBefore=%.4f, thrustAccel=%.4f, dragAccel=%.4f, netAccel=%.4f, speedAfter=%.4f", speedBefore, thrustAcceleration, dragAcceleration, netAcceleration, speed ) );
+			
 			// did the speed stop changing?
-			if( Math.abs( speed ) < 1e-2 )
+			if( Math.abs( netAcceleration ) < 1e-4 )
 			{
 				break;
 			}
@@ -278,22 +285,19 @@ public class ShipPhysics
 		for( int i=0; i<100; i++ )
 		{
 			double dragAcceleration = getAngularAccelerationDueToDrag( speed, waterHeight, envelopes, centerOfMass.xCoord, centerOfMass.zCoord );
-			
-			// condition the drag acceleration
-			dragAcceleration = Math.min( Math.abs( speed ), dragAcceleration );
-			if( Math.signum( dragAcceleration ) == Math.signum( speed ) )
-			{
-				dragAcceleration *= -1;
-			}
-			
+			dragAcceleration = Math.min( speed + thrustAcceleration, dragAcceleration );
 			double netAcceleration = thrustAcceleration - dragAcceleration;
 			
 			// TEMP
-			System.out.println( String.format( "sim: speed=%.4f, thrustAccel=%.4f, netAccel=%.4f", speed, thrustAcceleration, netAcceleration ) );
+			double speedBefore = speed;
+			
 			speed += netAcceleration;
 			
+			// TEMP
+			System.out.println( String.format( "angular sim: speedBefore=%.4f, thrustAccel=%.4f, dragAccel=%.4f, netAccel=%.4f, speedAfter=%.4f", speedBefore, thrustAcceleration, dragAcceleration, netAcceleration, speed ) );
+			
 			// did the speed stop changing?
-			if( Math.abs( speed ) < 1e-2 )
+			if( Math.abs( netAcceleration ) < 1e-4 )
 			{
 				break;
 			}
@@ -338,8 +342,8 @@ public class ShipPhysics
 		for( ChunkCoordinates coords : envelopes.getEnvelope( side ) )
 		{
 			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
-			double dist = side.getU( coords.posX, coords.posY, coords.posZ ) - Math.floor( center );
-			torque += ( fractionSubmerged*WaterViscosity + ( 1 - fractionSubmerged )*AirViscosity )*dist;
+			double dist = Math.abs( side.getU( coords.posX, coords.posY, coords.posZ ) - Math.floor( center ) );
+			torque += ( fractionSubmerged*WaterViscosity + ( 1 - fractionSubmerged )*AirViscosity )*dist/100.0;
 		}
 		return torque;
 	}
