@@ -252,7 +252,7 @@ public class ShipPhysics
 			speed += netAcceleration;
 			
 			// did the speed stop changing?
-			if( Math.abs( netAcceleration ) < 1e-2 )
+			if( Math.abs( speed ) < 1e-2 )
 			{
 				break;
 			}
@@ -273,15 +273,27 @@ public class ShipPhysics
 		
 		// determine the top speed numerically
 		// again, I'm too lazy to write down the equations and solve them analytically...
-		double thrustAccel = getAngularAccelerationDueToThrust( propulsion );
+		double thrustAcceleration = getAngularAccelerationDueToThrust( propulsion );
 		float speed = 0;
 		for( int i=0; i<100; i++ )
 		{
-			double netAcceleration = thrustAccel - getAngularAccelerationDueToDrag( speed, waterHeight, envelopes, centerOfMass.xCoord, centerOfMass.zCoord );
+			double dragAcceleration = getAngularAccelerationDueToDrag( speed, waterHeight, envelopes, centerOfMass.xCoord, centerOfMass.zCoord );
+			
+			// condition the drag acceleration
+			dragAcceleration = Math.min( Math.abs( speed ), dragAcceleration );
+			if( Math.signum( dragAcceleration ) == Math.signum( speed ) )
+			{
+				dragAcceleration *= -1;
+			}
+			
+			double netAcceleration = thrustAcceleration - dragAcceleration;
+			
+			// TEMP
+			System.out.println( String.format( "sim: speed=%.4f, thrustAccel=%.4f, netAccel=%.4f", speed, thrustAcceleration, netAcceleration ) );
 			speed += netAcceleration;
 			
 			// did the speed stop changing?
-			if( Math.abs( netAcceleration ) < 1e-2 )
+			if( Math.abs( speed ) < 1e-2 )
 			{
 				break;
 			}
