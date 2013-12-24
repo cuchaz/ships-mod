@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships;
 
@@ -153,7 +153,7 @@ public class ShipLauncher
 			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
 			
 			m_shipWorld = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
-			m_shipPhysics = new ShipPhysics( m_shipWorld );
+			m_shipPhysics = new ShipPhysics( m_shipWorld.getBlocksStorage() );
 			m_equilibriumWaterHeight = m_shipPhysics.getEquilibriumWaterHeight();
 		}
 		else
@@ -281,7 +281,7 @@ public class ShipLauncher
 	{
 		int waterHeight = computeWaterHeight();
 		
-		Vec3 centerOfMass = new ShipPhysics( m_shipWorld ).getCenterOfMass();
+		Vec3 centerOfMass = new ShipPhysics( m_shipWorld.getBlocksStorage() ).getCenterOfMass();
 		
 		// spawn a ship entity
 		EntityShip ship = new EntityShip( m_world );
@@ -292,7 +292,7 @@ public class ShipLauncher
 			0, 0
 		);
 		ship.setWaterHeight( waterHeight );
-		ship.setBlocks( m_shipWorld );
+		ship.setShipWorld( m_shipWorld );
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{

@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships;
 
@@ -122,8 +122,8 @@ public class ShipUnlauncher
 		
 		// get the set of coords we care about
 		TreeSet<ChunkCoordinates> allCoords = new TreeSet<ChunkCoordinates>();
-		allCoords.addAll( m_ship.getBlocks().coords() );
-		allCoords.addAll( m_ship.getBlocks().getGeometry().getTrappedAir( m_waterSurfaceLevelBlocks ) );
+		allCoords.addAll( m_ship.getShipWorld().coords() );
+		allCoords.addAll( m_ship.getShipWorld().getGeometry().getTrappedAir( m_waterSurfaceLevelBlocks ) );
 		
 		// compute the snap rotation
 		double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( m_ship.rotationYaw ) );
@@ -172,7 +172,7 @@ public class ShipUnlauncher
 		m_ship.setDead();
 		
 		// restore all the blocks
-		m_ship.getBlocks().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
+		m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
 		
 		// compute the unlaunch delta
 		Vec3 sourceShipBlock = Vec3.createVectorHelper( 0, 0, 0 );

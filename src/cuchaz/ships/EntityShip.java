@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships;
 
@@ -47,7 +47,7 @@ public class EntityShip extends Entity
 	public int linearThrottle;
 	public int angularThrottle;
 	
-	private ShipWorld m_blocks;
+	private ShipWorld m_shipWorld;
 	private ShipPhysics m_physics;
 	private Propulsion m_propulsion;
 	private double m_shipBlockX;
@@ -77,7 +77,7 @@ public class EntityShip extends Entity
 		linearThrottle = 0;
 		angularThrottle = 0;
 		
-		m_blocks = null;
+		m_shipWorld = null;
 		m_physics = null;
 		m_propulsion = null;
 		m_shipBlockX = 0;
@@ -107,10 +107,10 @@ public class EntityShip extends Entity
 		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
 	}
 	
-	public void setBlocks( ShipWorld blocks )
+	public void setShipWorld( ShipWorld shipWorld )
 	{
 		// if the blocks are invalid, just kill the ship
-		if( !blocks.isValid() )
+		if( !shipWorld.isValid() )
 		{
 			setDead();
 			Ships.logger.warning( "Ship world is invalid. Killed ship." );
@@ -123,10 +123,10 @@ public class EntityShip extends Entity
 		motionZ = 0.0;
 		motionYaw = 0.0f;
 		
-		m_blocks = blocks;
-		blocks.setShip( this );
-		m_physics = new ShipPhysics( m_blocks );
-		m_propulsion = new Propulsion( m_blocks );
+		m_shipWorld = shipWorld;
+		shipWorld.setShip( this );
+		m_physics = new ShipPhysics( m_shipWorld.getBlocksStorage() );
+		m_propulsion = new Propulsion( m_shipWorld.getBlocksStorage() );
 		
 		// get the ship center of mass so we can convert between ship/block spaces
 		Vec3 centerOfMass = m_physics.getCenterOfMass();
@@ -178,19 +178,19 @@ public class EntityShip extends Entity
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
 		setWaterHeight( nbt.getInteger( "waterHeight" ) );
-		setBlocks( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
+		setShipWorld( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
 	}
 	
 	@Override
 	protected void writeEntityToNBT( NBTTagCompound nbt )
 	{
 		nbt.setInteger( "waterHeight", getWaterHeight() );
-		nbt.setByteArray( "blocks", m_blocks.getData() );
+		nbt.setByteArray( "blocks", m_shipWorld.getData() );
 	}
 	
-	public ShipWorld getBlocks( )
+	public ShipWorld getShipWorld( )
 	{
-		return m_blocks;
+		return m_shipWorld;
 	}
 	
 	public Propulsion getPropulsion( )
@@ -256,7 +256,7 @@ public class EntityShip extends Entity
 		}
 		
 		// don't do any updating until we get blocks
-		if( m_blocks == null )
+		if( m_shipWorld == null )
 		{
 			return;
 		}
@@ -349,7 +349,7 @@ public class EntityShip extends Entity
 		}
 		
 		// update the world
-		m_blocks.updateEntities();
+		m_shipWorld.updateEntities();
 	}
 	
 	@Override
@@ -378,7 +378,7 @@ public class EntityShip extends Entity
 		MovingObjectPosition intersection = intersections.first();
 		
 		// activate the block
-		Block block = Block.blocksList[m_blocks.getBlockId( intersection.blockX, intersection.blockY, intersection.blockZ )];
+		Block block = Block.blocksList[m_shipWorld.getBlockId( intersection.blockX, intersection.blockY, intersection.blockZ )];
 		
 		// LOGGING
 		Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
@@ -388,7 +388,7 @@ public class EntityShip extends Entity
 		) );
 		
 		return block.onBlockActivated(
-			m_blocks,
+			m_shipWorld,
 			intersection.blockX, intersection.blockY, intersection.blockZ,
 			player,
 			intersection.sideHit,
@@ -399,7 +399,7 @@ public class EntityShip extends Entity
 	private boolean isSunk( double waterHeight )
 	{
 		// is the ship completely underwater?
-		boolean isUnderwater = waterHeight > m_blocks.getBoundingBox().maxY + 1.5;
+		boolean isUnderwater = waterHeight > m_shipWorld.getBoundingBox().maxY + 1.5;
 		
 		// UNDONE: will have to use something smarter for submarines!
 		// UNDONE: also un-floodable ships like rafts
@@ -598,7 +598,7 @@ public class EntityShip extends Entity
 		Vec3 velocity = Vec3.createVectorHelper( 0, motionY, 0 );
 		
 		double accelerationDueToBouyancy = m_physics.getNetUpAcceleration( waterHeightInBlockSpace );
-		double accelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		double accelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_shipWorld.getGeometry().getEnvelopes() );
 		
 		// make sure drag acceleration doesn't reverse the velocity!
 		// NOTE: drag is always positive right now. We'll fix the sign later
@@ -645,7 +645,7 @@ public class EntityShip extends Entity
 		worldToShipDirection( velocityInBlockCoords );
 		
 		// apply the drag
-		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocityInBlockCoords, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes() );
+		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocityInBlockCoords, waterHeightInBlockSpace, m_shipWorld.getGeometry().getEnvelopes() );
 		// make sure drag acceleration doesn't reverse the velocity!
 		linearAccelerationDueToDrag = Math.min( speed, linearAccelerationDueToDrag );
 		motionX += -velocityDirX*linearAccelerationDueToDrag;
@@ -676,7 +676,7 @@ public class EntityShip extends Entity
 		
 		// get the angular acceleration
 		double angularAccelerationDueToThrust = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax;
-		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw, waterHeightInBlockSpace, m_blocks.getGeometry().getEnvelopes(), shipToBlocksX( 0 ), shipToBlocksY( 0 ) );
+		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw, waterHeightInBlockSpace, m_shipWorld.getGeometry().getEnvelopes(), shipToBlocksX( 0 ), shipToBlocksY( 0 ) );
 		
 		// make sure drag acceleration doesn't reverse the velocity!
 		angularAccelerationDueToDrag = Math.min( Math.abs( motionYaw ), angularAccelerationDueToDrag );
@@ -695,7 +695,7 @@ public class EntityShip extends Entity
 	{
 		// get all the trapped air blocks
 		int surfaceLevelBlocks = MathHelper.floor_double( waterHeightBlocks );
-		TreeSet<ChunkCoordinates> trappedAirBlocks = m_blocks.getGeometry().getTrappedAir( surfaceLevelBlocks );
+		TreeSet<ChunkCoordinates> trappedAirBlocks = m_shipWorld.getGeometry().getTrappedAir( surfaceLevelBlocks );
 		if( trappedAirBlocks.isEmpty() )
 		{
 			// the ship is out of the water

@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships;
 
@@ -65,7 +65,7 @@ public class MaterialProperties
 	    
 	    // porous
 		m_properties.put( Material.cloth, new Entry( 0.2, false ) );
-		//m_properties.put( Material.materialCarpet, new Entry( 0.2, false ) );
+		m_properties.put( Material.materialCarpet, new Entry( 0.2, false ) );
 	    m_properties.put( Material.web, new Entry( 0.1, false ) );
 	    m_properties.put( Material.coral, new Entry( 2.0, false ) );
 	    m_properties.put( Material.sponge, new Entry( 0.2, false ) );

@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships;
 
@@ -28,7 +28,7 @@ public class ShipPhysics
 	private static final double AirViscosity = 0.1;
 	private static final double WaterViscosity = 10.0;
 	private static final double BaseLinearDrag = 0.001;
-	private static final float AngularAccelerationFactor = 10;
+	private static final float AngularAccelerationFactor = 0.6f;
 	private static final double BaseAngularDrag = 0.1;
 	
 	private static class DisplacementEntry
@@ -43,12 +43,12 @@ public class ShipPhysics
 		}
 	}
 	
-	private ShipWorld m_blocks;
+	private BlocksStorage m_blocks;
 	private TreeMap<Integer,DisplacementEntry> m_displacement;
 	private double m_shipMass;
 	private Double m_equilibriumWaterHeight;
 	
-	public ShipPhysics( ShipWorld blocks )
+	public ShipPhysics( BlocksStorage blocks )
 	{
 		m_blocks = blocks;
 		
@@ -305,6 +305,17 @@ public class ShipPhysics
 		return speed;
 	}
 	
+	public String dumpBlockProperties( )
+	{
+		StringBuilder buf = new StringBuilder();
+		for( ChunkCoordinates coords : m_blocks.coords() )
+		{
+			double mass = MaterialProperties.getMass( getBlock( coords ) );
+			buf.append( String.format( "%3d,%3d,%3d %4d %4.1f\n", coords.posX, coords.posY, coords.posZ, m_blocks.getBlock( coords ).id, mass ) );
+		}
+		return buf.toString();
+	}
+	
 	private Double computeEquilibriumWaterHeight( )
 	{
 		// travel up each layer until we find the one that displaces too much water
@@ -350,7 +361,7 @@ public class ShipPhysics
 	
 	private Block getBlock( ChunkCoordinates coords )
 	{
-		return Block.blocksList[m_blocks.getBlockId( coords.posX, coords.posY, coords.posZ )];
+		return Block.blocksList[m_blocks.getBlock( coords ).id];
 	}
 	
 	private double getWaterBlockMass( )

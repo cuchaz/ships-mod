@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
@@ -14,7 +14,7 @@ import java.util.Set;
 
 import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.BlockSide;
-import cuchaz.ships.ShipWorld;
+import cuchaz.ships.BlocksStorage;
 
 public class Sail extends PropulsionMethod
 {
@@ -22,11 +22,11 @@ public class Sail extends PropulsionMethod
 	
 	private int m_numExposedBlocks;
 	
-	protected Sail( ShipWorld world, Set<ChunkCoordinates> coords, BlockSide frontDirection )
+	protected Sail( BlocksStorage shipBlocks, Set<ChunkCoordinates> sailBlocks, BlockSide frontDirection )
 	{
-		super( "Sail", "Sails", coords );
+		super( "Sail", "Sails", sailBlocks );
 		
-		m_numExposedBlocks = getNumExposedBlocks( world, coords, frontDirection );
+		m_numExposedBlocks = getNumExposedBlocks( shipBlocks, sailBlocks, frontDirection );
 	}
 	
 	@Override
@@ -45,25 +45,25 @@ public class Sail extends PropulsionMethod
 		return m_numExposedBlocks >= getCoords().size()/2;
 	}
 	
-	private int getNumExposedBlocks( ShipWorld world, Set<ChunkCoordinates> blockCoords, BlockSide frontDirection )
+	private int getNumExposedBlocks( BlocksStorage shipBlocks, Set<ChunkCoordinates> sailBlocks, BlockSide frontDirection )
 	{
 		int numExposedBlocks = 0;
 		ChunkCoordinates neighborCoords = new ChunkCoordinates();
 		BlockSide backDirection = frontDirection.getOppositeSide();
-		for( ChunkCoordinates coords : blockCoords )
+		for( ChunkCoordinates coords : sailBlocks )
 		{
 			neighborCoords.set(
 				coords.posX + frontDirection.getDx(),
 				coords.posY + frontDirection.getDy(),
 				coords.posZ + frontDirection.getDz()
 			);
-			int frontId = world.getBlockId( neighborCoords );
+			int frontId = shipBlocks.getBlock( neighborCoords ).id;
 			neighborCoords.set(
 				coords.posX + backDirection.getDx(),
 				coords.posY + backDirection.getDy(),
 				coords.posZ + backDirection.getDz()
 			);
-			int backId = world.getBlockId( neighborCoords );
+			int backId = shipBlocks.getBlock( neighborCoords ).id;
 			
 			if( frontId == 0 && backId == 0 )
 			{

@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships.packets;
 
@@ -37,7 +37,7 @@ public class PacketShipBlocks extends Packet
 		this();
 		
 		m_entityId = ship.entityId;
-		m_blocksData = ship.getBlocks().getData();
+		m_blocksData = ship.getShipWorld().getData();
 	}
 	
 	@Override
@@ -71,6 +71,6 @@ public class PacketShipBlocks extends Packet
 		EntityShip ship = (EntityShip)entity;
 		
 		// send the block data
-		ship.setBlocks( new ShipWorld( player.worldObj, m_blocksData ) );
+		ship.setShipWorld( new ShipWorld( player.worldObj, m_blocksData ) );
 	}
 }

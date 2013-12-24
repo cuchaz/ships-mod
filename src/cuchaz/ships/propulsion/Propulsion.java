@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
@@ -18,7 +18,7 @@ import java.util.Map;
 import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
-import cuchaz.ships.ShipWorld;
+import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.Ships;
 
 public class Propulsion
@@ -55,33 +55,33 @@ public class Propulsion
 		}
 	}
 	
-	private ShipWorld m_world;
+	private BlocksStorage m_blocksStorage;
 	private ChunkCoordinates m_helmCoords;
 	private BlockSide m_frontSide;
 	private List<PropulsionMethod> m_methods;
 	private Map<Class<? extends PropulsionMethod>,MethodCount> m_typeCounts;
 	
-	public Propulsion( ShipWorld world )
+	public Propulsion( BlocksStorage blocksStorage )
 	{
-		m_world = world;
+		m_blocksStorage = blocksStorage;
 		
 		// compute parameters
-		m_helmCoords = findHelm( m_world );
+		m_helmCoords = findHelm( m_blocksStorage );
 		
 		m_methods = new ArrayList<PropulsionMethod>();
-		if( world.getShipType().isPaddleable() )
+		if( m_blocksStorage.getShipType().isPaddleable() )
 		{
 			// use a paddle!
 			m_methods.add( new Paddle() );
 		}
 		else if( m_helmCoords != null )
 		{
-			m_frontSide = BlockSide.getByXZOffset( world.getBlockMetadata( m_helmCoords ) );
+			m_frontSide = BlockSide.getByXZOffset( m_blocksStorage.getBlock( m_helmCoords ).meta );
 			
 			// discover the propulsion types
 			for( PropulsionDiscoverer discoverer : PropulsionDiscovererRegistry.discoverers() )
 			{
-				m_methods.addAll( discoverer.getPropulsionMethods( m_world, m_frontSide ) );
+				m_methods.addAll( discoverer.getPropulsionMethods( m_blocksStorage, m_frontSide ) );
 			}
 		}
 		
@@ -106,7 +106,7 @@ public class Propulsion
 	
 	public BlockArray getEnevelope( )
 	{
-		BlockArray envelope = m_world.getGeometry().getEnvelopes().getEnvelope( BlockSide.Top ).newEmptyCopy();
+		BlockArray envelope = m_blocksStorage.getGeometry().getEnvelopes().getEnvelope( BlockSide.Top ).newEmptyCopy();
 		for( PropulsionMethod method : m_methods )
 		{
 			for( ChunkCoordinates coords : method.getCoords() )
@@ -142,15 +142,28 @@ public class Propulsion
 		return totalThrust;
 	}
 	
-	private ChunkCoordinates findHelm( ShipWorld world )
+	public String dumpMethods( )
+	{
+		StringBuilder buf = new StringBuilder();
+		String delimiter = "";
+		for( Propulsion.MethodCount count : methodCounts() )
+		{
+			buf.append( delimiter );
+			buf.append( count.toString() );
+			delimiter = ", ";
+		}
+		return buf.toString(); 
+	}
+	
+	private ChunkCoordinates findHelm( BlocksStorage blocksStorage )
 	{
 		// UNDONE: optimize this by setting the helm coords instead of searching for the helm
 		// could use the propulsion system for that
 		
 		// always return the direction the helm is facing
-		for( ChunkCoordinates coords : world.coords() )
+		for( ChunkCoordinates coords : blocksStorage.coords() )
 		{
-			if( world.getBlockId( coords ) == Ships.m_blockHelm.blockID )
+			if( blocksStorage.getBlock( coords ).id == Ships.m_blockHelm.blockID )
 			{
 				return coords;
 			}

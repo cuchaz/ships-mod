@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships.gui;
 
@@ -37,7 +37,9 @@ public enum GuiString
 	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." ),
 	NoShipOnClipboard( "No ship was found on the clipboard!" ),
 	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." ),
-	PastingOnlyCreative( "Ship pasting only works in creative mode." );
+	PastingOnlyCreative( "Ship pasting only works in creative mode." ),
+	NoPropulsion( "No propulsion methods found!" ),
+	FoundPropulsion( "Found %s" );
 	
 	private String m_unlocalizedText;
 	

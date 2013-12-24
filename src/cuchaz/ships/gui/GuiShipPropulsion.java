@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships.gui;
 
@@ -117,7 +117,7 @@ public class GuiShipPropulsion extends GuiShip
 		m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
 		
 		// get the propulsion
-		m_propulsion = new Propulsion( m_shipLauncher.getShipWorld() );
+		m_propulsion = new Propulsion( m_shipLauncher.getShipWorld().getBlocksStorage() );
 		m_propulsionEnvelope = m_propulsion.getEnevelope();
 		
 		// create our shader
@@ -136,20 +136,15 @@ public class GuiShipPropulsion extends GuiShip
 		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
 		
 		// build the description string
-		StringBuilder buf = new StringBuilder();
-		buf.append( "Found " );
-		String delimiter = "";
-		for( Propulsion.MethodCount count : m_propulsion.methodCounts() )
+		String methods = m_propulsion.dumpMethods();
+		if( methods.equals( "" ) )
 		{
-			buf.append( delimiter );
-			buf.append( count.toString() );
-			delimiter = ", ";
+			m_propulsionMethodsDescription = GuiString.NoPropulsion.getLocalizedText();
 		}
-		if( delimiter == "" )
+		else
 		{
-			buf.append( "no propulsion methods!" );
+			m_propulsionMethodsDescription = String.format( GuiString.FoundPropulsion.getLocalizedText(), methods );
 		}
-		m_propulsionMethodsDescription = buf.toString();
 	}
 	
 	@Override
@@ -171,7 +166,7 @@ public class GuiShipPropulsion extends GuiShip
 			drawLabelValueText( "Ship Mass", String.format( "%.1f Kg", m_shipLauncher.getShipPhysics().getMass() ), 1 );
 			drawLabelValueText( "Thrust", String.format( "%.1f N", m_propulsion.getTotalThrust( 0 ) ), 2 );
 			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*Util.TicksPerSecond ), 3 );
-			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/sec", m_topAngularSpeed ), 4 );
+			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/s", m_topAngularSpeed*Util.TicksPerSecond ), 4 );
 			
 			drawPropulsion();
 			

@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships.packets;
 
@@ -50,7 +50,7 @@ public class PacketChangedBlocks extends Packet
 	@Override
 	public void writeData( DataOutputStream out ) throws IOException
 	{
-		ShipWorld world = m_ship.getBlocks();
+		ShipWorld world = m_ship.getShipWorld();
 		out.writeInt( m_ship.entityId );
 		out.writeInt( m_changedBlocks.size() );
 		for( ChunkCoordinates coords : m_changedBlocks )
@@ -99,7 +99,7 @@ public class PacketChangedBlocks extends Packet
 		}
 		
 		// apply the block changes
-		ShipWorld world = ship.getBlocks();
+		ShipWorld world = ship.getShipWorld();
 		for( int i=0; i<m_numChangedBlocks; i++ )
 		{
 			world.applyBlockChange( m_x[i], m_y[i], m_z[i], m_blockId[i], m_meta[i] );

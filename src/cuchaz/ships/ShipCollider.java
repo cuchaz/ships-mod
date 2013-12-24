@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jeff Martin.
+ * Copyright (c) 2013 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     Jeff Martin - initial API and implementation
+ *     jeff - initial API and implementation
  ******************************************************************************/
 package cuchaz.ships;
 
@@ -76,7 +76,7 @@ public class ShipCollider
 	
 	public void computeShipBoundingBox( AxisAlignedBB box, double x, double y, double z, float yaw )
 	{
-		ShipWorld blocks = m_ship.getBlocks();
+		ShipWorld blocks = m_ship.getShipWorld();
 		if( blocks == null )
 		{
 			return;
@@ -253,8 +253,8 @@ public class ShipCollider
 	
 	public AxisAlignedBB getBlockBoxInBlockSpace( ChunkCoordinates coords )
 	{
-		Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
-		block.setBlockBoundsBasedOnState( m_ship.getBlocks(), coords.posX, coords.posY, coords.posZ );
+		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+		block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ );
 		return AxisAlignedBB.getBoundingBox(
 			block.getBlockBoundsMinX() + coords.posX,
 			block.getBlockBoundsMinY() + coords.posY,
@@ -323,7 +323,7 @@ public class ShipCollider
 		double scaling = 1.0;
 		int numCollidingBoxes = 0;
 		BlockCollisionResult collisionResult = new BlockCollisionResult();
-		for( ChunkCoordinates coords : m_ship.getBlocks().coords() )
+		for( ChunkCoordinates coords : m_ship.getShipWorld().coords() )
 		{
 			checkBlockCollision( collisionResult, coords, dx, dy, dz, dYaw );
 			if( collisionResult.scaling < 1.0 )
@@ -394,7 +394,7 @@ public class ShipCollider
 		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		getEntityBoxInBlockSpace( box, entity );
 		
-		for( ChunkCoordinates coords : m_ship.getBlocks().getGeometry().rangeQuery( box, blockY ) )
+		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( box, blockY ) )
 		{
 			boolean isOnBlock = Math.abs( coords.posY + 1 - box.minY ) <= RiderEpsilon;
 			if( isOnBlock )
@@ -529,10 +529,10 @@ public class ShipCollider
 		
 		// collect the boxes for the blocks in that box
 		List<PossibleCollision> collisions = new ArrayList<PossibleCollision>();
-		for( ChunkCoordinates coords : m_ship.getBlocks().getGeometry().rangeQuery( trajectoryBox ) )
+		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox ) )
 		{
-			Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
-			block.setBlockBoundsBasedOnState( m_ship.getBlocks(), coords.posX, coords.posY, coords.posZ );
+			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+			block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ );
 			collisions.add(
 				new PossibleCollision( coords, AxisAlignedBB.getBoundingBox(
 					block.getBlockBoundsMinX() + coords.posX,
@@ -578,7 +578,7 @@ public class ShipCollider
 			Math.max( from.yCoord, to.yCoord ),
 			Math.max( from.zCoord, to.zCoord )
 		);
-		List<ChunkCoordinates> nearbyBlocks = m_ship.getBlocks().getGeometry().rangeQuery( box );
+		List<ChunkCoordinates> nearbyBlocks = m_ship.getShipWorld().getGeometry().rangeQuery( box );
 		
 		// sort the boxes by their line/box intersection distance to the "from" point
 		// throw out boxes that don't actually intersect the line segment
@@ -594,8 +594,8 @@ public class ShipCollider
 		for( ChunkCoordinates coords : nearbyBlocks )
 		{
 			// get the intersection point with the line segment
-			Block block = Block.blocksList[m_ship.getBlocks().getBlockId( coords )];
-			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getBlocks(), coords.posX, coords.posY, coords.posZ, from, to );
+			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ, from, to );
 			if( intersection != null )
 			{
 				sortedIntersections.add( intersection );
