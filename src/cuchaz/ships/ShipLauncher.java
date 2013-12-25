@@ -300,15 +300,7 @@ public class ShipLauncher
 			return null;
 		}
 		
-		// remove all the blocks from the world
-		for( ChunkCoordinates coords : m_blocks )
-		{
-			BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ );
-			if( coords.posY < waterHeight )
-			{
-				m_world.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
-			}
-		}
+		// don't remove the world blocks yet. Let the entity do that when it's done spawning
 		
 		return ship;
 	}

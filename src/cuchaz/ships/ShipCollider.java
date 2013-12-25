@@ -29,6 +29,7 @@ import net.minecraft.util.Vec3;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.render.ShipDebugRenderInfo;
@@ -425,26 +426,7 @@ public class ShipCollider
  		
  		// do a range query to get colliding world blocks
 		List<AxisAlignedBB> nearbyWorldBlocks = new ArrayList<AxisAlignedBB>();
-        int minX = MathHelper.floor_double( combinedBlockBox.minX );
-        int maxX = MathHelper.floor_double( combinedBlockBox.maxX );
-        int minY = MathHelper.floor_double( combinedBlockBox.minY );
-        int maxY = MathHelper.floor_double( combinedBlockBox.maxY );
-        int minZ = MathHelper.floor_double( combinedBlockBox.minZ );
-        int maxZ = MathHelper.floor_double( combinedBlockBox.maxZ );
-        for( int x=minX; x<=maxX; x++ )
-        {
-            for( int z=minZ; z<=maxZ; z++ )
-            {
-                for( int y=minY; y<=maxY; y++ )
-                {
-                    Block block = Block.blocksList[m_ship.worldObj.getBlockId( x, y, z )];
-                    if( block != null )
-                    {
-                        block.addCollisionBoxesToList( m_ship.worldObj, x, y, z, combinedBlockBox, nearbyWorldBlocks, null );
-                    }
-                }
-            }
-        }
+		BlockUtils.getWorldCollisionBoxes( nearbyWorldBlocks, m_ship.worldObj, combinedBlockBox );
         
         // get the scaling that avoids the collision
         result.scaling = 1;

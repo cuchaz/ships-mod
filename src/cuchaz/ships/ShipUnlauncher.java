@@ -166,27 +166,37 @@ public class ShipUnlauncher
 	
 	public void unlaunch( )
 	{
+		// NOTE: currently, this is only called on the server
+		// the client is notified of a ship unlaunch indirectly by entity death and block update messages from the server
+		
 		List<Entity> riders = m_ship.getCollider().getRiders();
 		
 		// remove the ship entity
 		m_ship.setDead();
 		
-		// restore all the blocks
-		m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
-		
-		// compute the unlaunch delta
-		Vec3 sourceShipBlock = Vec3.createVectorHelper( 0, 0, 0 );
-		m_ship.blocksToShip( sourceShipBlock );
-		m_ship.shipToWorld( sourceShipBlock );
-		ChunkCoordinates targetShipBlock = m_correspondence.get( new ChunkCoordinates( 0, 0, 0 ) );
-		double dx = targetShipBlock.posX - sourceShipBlock.xCoord;
-		double dy = targetShipBlock.posY - sourceShipBlock.yCoord;
-		double dz = targetShipBlock.posZ - sourceShipBlock.zCoord;
-		
-		// move all riders
-		for( Entity entity : riders )
+		if( !m_ship.worldObj.isRemote )
 		{
-			entity.setPosition( entity.posX + dx, entity.posY + dy, entity.posZ + dz );
+			// restore all the blocks
+			m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
+		}
+		else
+		{
+			// UNDONE: this needs to be moved into the client! It won't work on the server!
+			
+			// compute the unlaunch delta
+			Vec3 sourceShipBlock = Vec3.createVectorHelper( 0, 0, 0 );
+			m_ship.blocksToShip( sourceShipBlock );
+			m_ship.shipToWorld( sourceShipBlock );
+			ChunkCoordinates targetShipBlock = m_correspondence.get( new ChunkCoordinates( 0, 0, 0 ) );
+			double dx = targetShipBlock.posX - sourceShipBlock.xCoord;
+			double dy = targetShipBlock.posY - sourceShipBlock.yCoord;
+			double dz = targetShipBlock.posZ - sourceShipBlock.zCoord;
+			
+			// move the riders so they sit on top of the blocks
+			for( Entity entity : riders )
+			{
+				entity.setPosition( entity.posX + dx, entity.posY + dy, entity.posZ + dz );
+			}
 		}
 	}
 	

@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -26,10 +27,10 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
-import cuchaz.modsShared.Util;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.propulsion.Propulsion;
 
@@ -147,6 +148,24 @@ public class EntityShip extends Entity
 		) );
 		
 		ShipLocator.registerShip( this );
+		
+		// compute the transformation from ship coords to world coords
+		Vec3 origin = Vec3.createVectorHelper( 0, 0, 0 );
+		blocksToShip( origin );
+		shipToWorld( origin );
+		int tx = MathHelper.floor_double( origin.xCoord + 0.5 );
+		int ty = MathHelper.floor_double( origin.yCoord + 0.5 );
+		int tz = MathHelper.floor_double( origin.zCoord + 0.5 );
+		
+		// remove all the ship blocks from the world, but don't notify anyone
+		for( ChunkCoordinates coords : m_shipWorld.coords() )
+		{
+			BlockUtils.removeBlockWithoutNotifyingIt( worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, false );
+			if( coords.posY + ty < getWaterHeight() )
+			{
+				worldObj.setBlock( coords.posX + tx, coords.posY + ty, coords.posZ + tz, Block.waterStill.blockID, 0, 1 );
+			}
+		}
 	}
 	
 	@Override
@@ -154,23 +173,48 @@ public class EntityShip extends Entity
 	{
 		super.setDead();
 		
-		// remove all the air wall blocks
-		if( m_previouslyDisplacedWaterBlocks != null )
-		{
-			for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
-			{
-				if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
-				{
-					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
-				}
-			}
-		}
-		
 		// LOGGING
 		Ships.logger.info( String.format( "%s EntityShip %d died!",
 			worldObj.isRemote ? "CLIENT" : "SERVER",
 			entityId
 		) );
+		
+		if( !worldObj.isRemote )
+		{
+			// remove all the air wall blocks
+			if( m_previouslyDisplacedWaterBlocks != null )
+			{
+				for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
+				{
+					if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
+					{
+						worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+					}
+				}
+			}
+		}
+		else
+		{
+			// if riders are in a block, move them on top of the block
+			for( Entity rider : getCollider().getRiders() )
+			{
+				// is the rider inside a block?
+				List<AxisAlignedBB> worldBoxes = new ArrayList<AxisAlignedBB>();
+				BlockUtils.getWorldCollisionBoxes( worldBoxes, rider.worldObj, rider.boundingBox );
+				boolean inBlock = !worldBoxes.isEmpty();
+				
+				if( inBlock )
+				{
+					// move the rider to the top of the boxes
+					double dy = 0;
+					for( AxisAlignedBB box : worldBoxes )
+					{
+						dy = Math.max( dy, box.maxY - rider.boundingBox.minY );
+					}
+					rider.moveEntity( 0, dy, 0 );
+				}
+			}
+		}
 		
 		ShipLocator.unregisterShip( this );
 	}
