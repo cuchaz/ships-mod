@@ -10,6 +10,8 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -18,7 +20,6 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.Envelopes;
 import cuchaz.modsShared.Util;
 import cuchaz.ships.propulsion.Propulsion;
 
@@ -26,10 +27,12 @@ public class ShipPhysics
 {
 	private static final double AccelerationGravity = Util.perSecond2ToPerTick2( 9.8 );
 	private static final double AirViscosity = 0.1;
-	private static final double WaterViscosity = 10.0;
-	private static final double BaseLinearDrag = 0.001;
-	private static final float AngularAccelerationFactor = 0.6f;
-	private static final double BaseAngularDrag = 0.1;
+	private static final double WaterViscosity = 3.0;
+	private static final double AngularViscosityScale = 0.06;
+	private static final double BaseLinearDrag = Util.perSecondToPerTick( 0.01 );
+	private static final double BaseAngularDrag = Util.perSecondToPerTick( 1 );
+	private static final float AngularAccelerationFactor = 20.0f;
+	private static final int NumSimulationTicks = 20*Util.TicksPerSecond;
 	
 	private static class DisplacementEntry
 	{
@@ -43,9 +46,36 @@ public class ShipPhysics
 		}
 	}
 	
+	public static class AccelerationEntry
+	{
+		public double speed;
+		public double accelerationDueToThrust;
+		public double accelerationDueToDrag;
+		
+		public AccelerationEntry( double speed, double accelerationDueToThrust, double accelerationDueToDrag )
+		{
+			this.speed = speed;
+			this.accelerationDueToThrust = accelerationDueToThrust;
+			this.accelerationDueToDrag = accelerationDueToDrag;
+		}
+	}
+	
+	public static class SimulationResult
+	{
+		public double topSpeed;
+		public double elapsedTicks;
+		
+		public SimulationResult( double topSpeed, double elapsedSeconds )
+		{
+			this.topSpeed = topSpeed;
+			this.elapsedTicks = elapsedSeconds;
+		}
+	}
+	
 	private BlocksStorage m_blocks;
 	private TreeMap<Integer,DisplacementEntry> m_displacement;
 	private double m_shipMass;
+	private Vec3 m_centerOfMass;
 	private Double m_equilibriumWaterHeight;
 	
 	public ShipPhysics( BlocksStorage blocks )
@@ -113,6 +143,8 @@ public class ShipPhysics
 			m_shipMass += MaterialProperties.getMass( getBlock( coords ) );
 		}
 		
+		// compute some extra stuff
+		m_centerOfMass = computeCenterOfMass();
 		m_equilibriumWaterHeight = computeEquilibriumWaterHeight();
 	}
 	
@@ -123,20 +155,7 @@ public class ShipPhysics
 	
 	public Vec3 getCenterOfMass( )
 	{
-		Vec3 com = Vec3.createVectorHelper( 0, 0, 0 );
-		double totalMass = 0.0;
-		for( ChunkCoordinates coords : m_blocks.coords() )
-		{
-			double mass = MaterialProperties.getMass( getBlock( coords ) );
-			totalMass += mass;
-			com.xCoord += mass*( coords.posX + 0.5 );
-			com.yCoord += mass*( coords.posY + 0.5 );
-			com.zCoord += mass*( coords.posZ + 0.5 );
-		}
-		com.xCoord /= totalMass;
-		com.yCoord /= totalMass;
-		com.zCoord /= totalMass;
-		return com;
+		return m_centerOfMass;
 	}
 	
 	public double getNetUpAcceleration( double waterHeight )
@@ -167,20 +186,27 @@ public class ShipPhysics
 		return m_equilibriumWaterHeight;
 	}
 	
+	public boolean willItFloat( )
+	{
+		return m_equilibriumWaterHeight != null;
+	}
+	
 	public double getLinearAccelerationDueToThrust( Propulsion propulsion, double speed )
 	{
-		// thrust is in N and mass is in Kg
+		// thrust is in N (which is Kg*m/s/s) and mass is in Kg
 		return propulsion.getTotalThrust( speed )/m_shipMass;
 	}
 	
-	public double getLinearAccelerationDueToDrag( Vec3 velocity, double waterHeight, Envelopes envelopes )
+	public double getLinearAccelerationDueToDrag( Vec3 velocity, double waterHeight )
 	{
+		// UNDONE: it may be more efficient to cache these computations
+		
 		// which side is the leading side?
 		BlockSide leadingSide = null;
 		double bestDot = Double.NEGATIVE_INFINITY;
 		for( BlockSide side : BlockSide.values() )
 		{
-			double dot = side.getDx()*velocity.xCoord + side.getDy()*velocity.yCoord + side.getDz()*velocity.zCoord;
+			double dot = side.getDx()*velocity.xCoord + side.getDz()*velocity.zCoord;
 			if( dot > bestDot )
 			{
 				bestDot = dot;
@@ -189,29 +215,22 @@ public class ShipPhysics
 		}
 		assert( leadingSide != null );
 		
-		// divide the leading envelope into air vs water
+		// compute the viscosity
 		double airSurfaceArea = 0;
 		double waterSurfaceArea = 0;
-		for( ChunkCoordinates coords : envelopes.getEnvelope( leadingSide ) )
+		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( leadingSide ) )
 		{
 			double fractionSubmerged = leadingSide.getFractionSubmerged( coords.posY, waterHeight );
 			waterSurfaceArea += fractionSubmerged;
 			airSurfaceArea += 1 - fractionSubmerged;
 		}
+		double linearViscosity = AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea;
 		
 		// how fast are we going?
 		double speed = velocity.lengthVector();
 		
 		// compute the drag force using a quadratic drag approximation
-		double dragAcceleration = BaseLinearDrag + speed*speed*( AirViscosity*airSurfaceArea + WaterViscosity*waterSurfaceArea )/m_shipMass;
-		
-		// make sure we don't negate the velocity
-		if( dragAcceleration > speed )
-		{
-			dragAcceleration = speed;
-		}
-		
-		return dragAcceleration;
+		return BaseLinearDrag + speed*speed*linearViscosity/m_shipMass;
 	}
 	
 	public float getAngularAccelerationDueToThrust( Propulsion propulsion )
@@ -219,44 +238,87 @@ public class ShipPhysics
 		return (float)getLinearAccelerationDueToThrust( propulsion, 0 )*AngularAccelerationFactor;
 	}
 	
-	public float getAngularAccelerationDueToDrag( float motionYaw, double waterHeight, Envelopes envelopes, double centerX, double centerZ )
+	public float getAngularAccelerationDueToDrag( float motionYaw, double waterHeight )
 	{
-		// get the drag in both horizontal directions
-		double angularViscosity = getAngularViscosity( BlockSide.North, waterHeight, envelopes, centerZ )
-			+ getAngularViscosity( BlockSide.East, waterHeight, envelopes, centerX );
-		double dragForce = motionYaw*motionYaw*angularViscosity;
-		return (float)( BaseAngularDrag + dragForce/m_shipMass );
+		// compute the viscosity in both directions
+		double angularViscosity = 0
+			+ getAngularViscosity( BlockSide.North, waterHeight, m_centerOfMass.xCoord )
+			+ getAngularViscosity( BlockSide.East, waterHeight, m_centerOfMass.zCoord );
+		
+		return (float)( BaseAngularDrag + motionYaw*motionYaw*angularViscosity/m_shipMass );
 	}
 	
-	public double getTopLinearSpeed( Propulsion propulsion, Envelopes envelopes )
+	public List<AccelerationEntry> getLinearAcceleration( Propulsion propulsion, double stopSpeed, int numSteps )
 	{
-		Double waterHeight = computeEquilibriumWaterHeight();
-		if( waterHeight == null )
+		if( m_equilibriumWaterHeight == null )
 		{
-			return 0;
+			throw new IllegalArgumentException( "Cannot compute acceleration for a non-buoyant ship!" );
 		}
 		
-		// determine the top speed numerically
-		// this ends up being a recurrence relation... I'm WAY too lazy to solve it analytically
-		double speed = 0;
-		double thrustAcceleration = getLinearAccelerationDueToThrust( propulsion, speed );
+		List<AccelerationEntry> entries = new ArrayList<AccelerationEntry>( numSteps );
 		Vec3 velocity = Vec3.createVectorHelper( 0, 0, 0 );
-		for( int i=0; i<100; i++ )
+		for( int i=0; i<numSteps; i++ )
+		{
+			double speed = interpolateSpeed( stopSpeed, numSteps, i );
+			velocity.xCoord = speed*propulsion.getFrontSide().getDx();
+			velocity.zCoord = speed*propulsion.getFrontSide().getDz();
+			
+			entries.add( new AccelerationEntry(
+				speed,
+				getLinearAccelerationDueToThrust( propulsion, speed ),
+				getLinearAccelerationDueToDrag( velocity, m_equilibriumWaterHeight )
+			) );
+		}
+		return entries;
+	}
+	
+	public List<AccelerationEntry> getAngularAcceleration( Propulsion propulsion, double stopSpeed, int numSteps )
+	{
+		if( m_equilibriumWaterHeight == null )
+		{
+			throw new IllegalArgumentException( "Cannot compute acceleration for a non-buoyant ship!" );
+		}
+		
+		List<AccelerationEntry> entries = new ArrayList<AccelerationEntry>( numSteps );
+		for( int i=0; i<numSteps; i++ )
+		{
+			double speed = interpolateSpeed( stopSpeed, numSteps, i );
+			
+			entries.add( new AccelerationEntry(
+				speed,
+				getAngularAccelerationDueToThrust( propulsion ),
+				getAngularAccelerationDueToDrag( (float)speed, m_equilibriumWaterHeight )
+			) );
+		}
+		return entries;
+	}
+	
+	private double interpolateSpeed( double stopSpeed, int numSteps, int i )
+	{
+		return (double)i/(double)( numSteps - 1 ) * stopSpeed;
+	}
+
+	public SimulationResult simulateLinearAcceleration( Propulsion propulsion )
+	{
+		if( m_equilibriumWaterHeight == null )
+		{
+			throw new IllegalArgumentException( "Cannot simulate acceleration for a non-buoyant ship!" );
+		}
+		
+		// discrete-time simulation of forward acceleration from rest
+		double speed = 0;
+		Vec3 velocity = Vec3.createVectorHelper( 0, 0, 0 );
+		int i = 0;
+		for( ; i<NumSimulationTicks; i++ )
 		{
 			velocity.xCoord = speed*propulsion.getFrontSide().getDx();
 			velocity.zCoord = speed*propulsion.getFrontSide().getDz();
 			
-			double dragAcceleration = getLinearAccelerationDueToDrag( velocity, waterHeight, envelopes );
+			double thrustAcceleration = getLinearAccelerationDueToThrust( propulsion, speed );
+			double dragAcceleration = getLinearAccelerationDueToDrag( velocity, m_equilibriumWaterHeight );
 			dragAcceleration = Math.min( speed + thrustAcceleration, dragAcceleration );
 			double netAcceleration = thrustAcceleration - dragAcceleration;
-			
-			// TEMP
-			double speedBefore = speed;
-			
 			speed += netAcceleration;
-			
-			// TEMP
-			System.out.println( String.format( "linear sim: speedBefore=%.4f, thrustAccel=%.4f, dragAccel=%.4f, netAccel=%.4f, speedAfter=%.4f", speedBefore, thrustAcceleration, dragAcceleration, netAcceleration, speed ) );
 			
 			// did the speed stop changing?
 			if( Math.abs( netAcceleration ) < 1e-4 )
@@ -264,37 +326,27 @@ public class ShipPhysics
 				break;
 			}
 		}
-		return speed;
+		return new SimulationResult( speed, i );
 	}
 	
-	public float getTopAngularSpeed( Propulsion propulsion, Envelopes envelopes )
+	public SimulationResult simulateAngularAcceleration( Propulsion propulsion )
 	{
-		Double waterHeight = computeEquilibriumWaterHeight();
-		if( waterHeight == null )
+		if( m_equilibriumWaterHeight == null )
 		{
-			return 0;
+			throw new IllegalArgumentException( "Cannot simulate acceleration for a non-buoyant ship!" );
 		}
-		
-		// compute the center
-		Vec3 centerOfMass = getCenterOfMass();
 		
 		// determine the top speed numerically
 		// again, I'm too lazy to write down the equations and solve them analytically...
 		double thrustAcceleration = getAngularAccelerationDueToThrust( propulsion );
 		float speed = 0;
-		for( int i=0; i<100; i++ )
+		int i = 0;
+		for( ; i<NumSimulationTicks; i++ )
 		{
-			double dragAcceleration = getAngularAccelerationDueToDrag( speed, waterHeight, envelopes, centerOfMass.xCoord, centerOfMass.zCoord );
+			double dragAcceleration = getAngularAccelerationDueToDrag( speed, m_equilibriumWaterHeight );
 			dragAcceleration = Math.min( speed + thrustAcceleration, dragAcceleration );
 			double netAcceleration = thrustAcceleration - dragAcceleration;
-			
-			// TEMP
-			double speedBefore = speed;
-			
 			speed += netAcceleration;
-			
-			// TEMP
-			System.out.println( String.format( "angular sim: speedBefore=%.4f, thrustAccel=%.4f, dragAccel=%.4f, netAccel=%.4f, speedAfter=%.4f", speedBefore, thrustAcceleration, dragAcceleration, netAcceleration, speed ) );
 			
 			// did the speed stop changing?
 			if( Math.abs( netAcceleration ) < 1e-4 )
@@ -302,7 +354,7 @@ public class ShipPhysics
 				break;
 			}
 		}
-		return speed;
+		return new SimulationResult( speed, i );
 	}
 	
 	public String dumpBlockProperties( )
@@ -341,22 +393,41 @@ public class ShipPhysics
 		return null;
 	}
 	
+	private Vec3 computeCenterOfMass( )
+	{
+		Vec3 com = Vec3.createVectorHelper( 0, 0, 0 );
+		double totalMass = 0.0;
+		for( ChunkCoordinates coords : m_blocks.coords() )
+		{
+			double mass = MaterialProperties.getMass( getBlock( coords ) );
+			totalMass += mass;
+			com.xCoord += mass*( coords.posX + 0.5 );
+			com.yCoord += mass*( coords.posY + 0.5 );
+			com.zCoord += mass*( coords.posZ + 0.5 );
+		}
+		com.xCoord /= totalMass;
+		com.yCoord /= totalMass;
+		com.zCoord /= totalMass;
+		return com;
+	}
+	
 	private double getBlockFractionSubmerged( int y, double waterHeight )
 	{
 		// can use any NSEW side
 		return BlockSide.North.getFractionSubmerged( y, waterHeight );
 	}
 	
-	private double getAngularViscosity( BlockSide side, double waterHeight, Envelopes envelopes, double center )
+	private double getAngularViscosity( BlockSide side, double waterHeight, double center )
 	{
-		double torque = 0;
-		for( ChunkCoordinates coords : envelopes.getEnvelope( side ) )
+		int centerCoord = (int)center;
+		double viscosity = 0;
+		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( side ) )
 		{
 			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
-			double dist = Math.abs( side.getU( coords.posX, coords.posY, coords.posZ ) - Math.floor( center ) );
-			torque += ( fractionSubmerged*WaterViscosity + ( 1 - fractionSubmerged )*AirViscosity )*dist/100.0;
+			double dist = Math.abs( side.getU( coords.posX, coords.posY, coords.posZ ) - centerCoord );
+			viscosity += ( fractionSubmerged*WaterViscosity + ( 1 - fractionSubmerged )*AirViscosity )*dist;
 		}
-		return torque;
+		return viscosity*AngularViscosityScale;
 	}
 	
 	private Block getBlock( ChunkCoordinates coords )

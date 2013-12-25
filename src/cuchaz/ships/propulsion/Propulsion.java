@@ -73,6 +73,10 @@ public class Propulsion
 		{
 			// use a paddle!
 			m_methods.add( new Paddle() );
+			
+			// front side is only decided after pilot interacts with the ship block
+			// for now though, just pick something arbitrary
+			m_frontSide = BlockSide.North;
 		}
 		else if( m_helmCoords != null )
 		{

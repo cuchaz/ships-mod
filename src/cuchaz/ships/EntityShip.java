@@ -29,6 +29,7 @@ import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
+import cuchaz.modsShared.Util;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.propulsion.Propulsion;
 
@@ -598,7 +599,7 @@ public class EntityShip extends Entity
 		Vec3 velocity = Vec3.createVectorHelper( 0, motionY, 0 );
 		
 		double accelerationDueToBouyancy = m_physics.getNetUpAcceleration( waterHeightInBlockSpace );
-		double accelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace, m_shipWorld.getGeometry().getEnvelopes() );
+		double accelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocity, waterHeightInBlockSpace );
 		
 		// make sure drag acceleration doesn't reverse the velocity!
 		// NOTE: drag is always positive right now. We'll fix the sign later
@@ -644,13 +645,9 @@ public class EntityShip extends Entity
 		Vec3 velocityInBlockCoords = Vec3.createVectorHelper( motionX, 0, motionZ );
 		worldToShipDirection( velocityInBlockCoords );
 		
-		// apply the drag
-		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocityInBlockCoords, waterHeightInBlockSpace, m_shipWorld.getGeometry().getEnvelopes() );
-		// make sure drag acceleration doesn't reverse the velocity!
-		linearAccelerationDueToDrag = Math.min( speed, linearAccelerationDueToDrag );
-		motionX += -velocityDirX*linearAccelerationDueToDrag;
-		motionZ += -velocityDirZ*linearAccelerationDueToDrag;
-		
+		// compute the linear acceleration due to thrust
+		double linearAccelerationDueToThrustX = 0;
+		double linearAccelerationDueToThrustZ = 0;
 		if( m_sideShipForward != null )
 		{
 			if( m_sendPilotChangesToServer )
@@ -668,24 +665,40 @@ public class EntityShip extends Entity
 			double forwardX = m_sideShipForward.getDx()*cos + m_sideShipForward.getDz()*sin;
 			double forwardZ = -m_sideShipForward.getDx()*sin + m_sideShipForward.getDz()*cos;
 			
-			// apply the thrust
+			// compute the acceleration
 			double linearAccelerationDueToThrust = m_physics.getLinearAccelerationDueToThrust( m_propulsion, speed )*linearThrottle/LinearThrottleMax;
-			motionX += forwardX*linearAccelerationDueToThrust;
-			motionZ += forwardZ*linearAccelerationDueToThrust;
+			linearAccelerationDueToThrustX = forwardX*linearAccelerationDueToThrust;
+			linearAccelerationDueToThrustZ = forwardZ*linearAccelerationDueToThrust;
 		}
+		
+		// compute the linear acceleration due to drag
+		double linearAccelerationDueToDrag = m_physics.getLinearAccelerationDueToDrag( velocityInBlockCoords, waterHeightInBlockSpace );
+		
+		// make sure drag acceleration doesn't reverse the velocity!
+		double nextSpeedX = motionX + linearAccelerationDueToThrustX;
+		double nextSpeedZ = motionZ + linearAccelerationDueToThrustZ;
+		double nextSpeed = Math.sqrt( nextSpeedX*nextSpeedX + nextSpeedZ*nextSpeedZ );
+		linearAccelerationDueToDrag = Math.min( nextSpeed, linearAccelerationDueToDrag );
+		
+		// apply the linear acceleration
+		motionX += linearAccelerationDueToThrustX - velocityDirX*linearAccelerationDueToDrag;
+		motionZ += linearAccelerationDueToThrustZ - velocityDirZ*linearAccelerationDueToDrag;
 		
 		// get the angular acceleration
 		double angularAccelerationDueToThrust = m_physics.getAngularAccelerationDueToThrust( m_propulsion )*angularThrottle/AngularThrottleMax;
-		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw, waterHeightInBlockSpace, m_shipWorld.getGeometry().getEnvelopes(), shipToBlocksX( 0 ), shipToBlocksY( 0 ) );
+		double angularAccelerationDueToDrag = m_physics.getAngularAccelerationDueToDrag( motionYaw, waterHeightInBlockSpace );
 		
 		// make sure drag acceleration doesn't reverse the velocity!
-		angularAccelerationDueToDrag = Math.min( Math.abs( motionYaw ), angularAccelerationDueToDrag );
+		angularAccelerationDueToDrag = Math.min( Math.abs( motionYaw + angularAccelerationDueToThrust ), angularAccelerationDueToDrag );
 		
 		// make sure the drag is opposed to the velocity
 		if( Math.signum( angularAccelerationDueToDrag ) == Math.signum( motionYaw ) )
 		{
 			angularAccelerationDueToDrag *= -1;
 		}
+		
+		// TEMP
+		//System.out.println( String.format( "%4.2f %4.2f", Util.perTick2ToPerSecond2( angularAccelerationDueToThrust ), Util.perTick2ToPerSecond2( angularAccelerationDueToDrag ) ) );
 		
 		// apply the angular acceleration
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;

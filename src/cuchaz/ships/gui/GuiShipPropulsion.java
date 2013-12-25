@@ -13,6 +13,7 @@ package cuchaz.ships.gui;
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.Container;
@@ -47,7 +48,7 @@ public class GuiShipPropulsion extends GuiShip
 	private BlockArray m_propulsionEnvelope;
 	private int m_desaturationProgramId;
 	private double m_topLinearSpeed;
-	private float m_topAngularSpeed;
+	private double m_topAngularSpeed;
 	private String m_propulsionMethodsDescription;
 	
 	public GuiShipPropulsion( Container container, final World world, int helmX, int helmY, int helmZ )
@@ -127,13 +128,17 @@ public class GuiShipPropulsion extends GuiShip
 		}
 		catch( IOException ex )
 		{
-			// UNDONE: log the exception
-			ex.printStackTrace();
+			Ships.logger.log( Level.WARNING, "Unable to load shader!", ex );
 		}
 		
-		// compute the propulsion properties
-		m_topLinearSpeed = m_shipLauncher.getShipPhysics().getTopLinearSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
-		m_topAngularSpeed = m_shipLauncher.getShipPhysics().getTopAngularSpeed( m_propulsion, m_shipLauncher.getShipWorld().getGeometry().getEnvelopes() );
+		// compute the top speeds
+		m_topLinearSpeed = 0;
+		m_topAngularSpeed = 0;
+		if( m_shipLauncher.getShipPhysics().willItFloat() )
+		{
+			m_topLinearSpeed = m_shipLauncher.getShipPhysics().simulateLinearAcceleration( m_propulsion ).topSpeed;
+			m_topAngularSpeed = m_shipLauncher.getShipPhysics().simulateAngularAcceleration( m_propulsion ).topSpeed;
+		}
 		
 		// build the description string
 		String methods = m_propulsion.dumpMethods();
@@ -164,9 +169,9 @@ public class GuiShipPropulsion extends GuiShip
 		{
 			// list the specs
 			drawLabelValueText( "Ship Mass", String.format( "%.1f Kg", m_shipLauncher.getShipPhysics().getMass() ), 1 );
-			drawLabelValueText( "Thrust", String.format( "%.1f N", m_propulsion.getTotalThrust( 0 ) ), 2 );
-			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", m_topLinearSpeed*Util.TicksPerSecond ), 3 );
-			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/s", m_topAngularSpeed*Util.TicksPerSecond ), 4 );
+			drawLabelValueText( "Thrust", String.format( "%.1f N", Util.perTick2ToPerSecond2( m_propulsion.getTotalThrust( 0 ) ) ), 2 );
+			drawLabelValueText( "Top Speed", String.format( "%.1f m/s", Util.perTickToPerSecond( m_topLinearSpeed ) ), 3 );
+			drawLabelValueText( "Turning Speed", String.format( "%.1f deg/s", Util.perTickToPerSecond( m_topAngularSpeed ) ), 4 );
 			
 			drawPropulsion();
 			

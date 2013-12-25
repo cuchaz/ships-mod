@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
+import cuchaz.modsShared.Util;
 
 
 public class Paddle extends PropulsionMethod
@@ -23,6 +24,6 @@ public class Paddle extends PropulsionMethod
 	public double getThrust( double speed )
 	{
 		// the paddle always has constant thrust
-		return 0.4;
+		return Util.perSecond2ToPerTick2( 80 );
 	}
 }

@@ -57,8 +57,6 @@ import cuchaz.ships.packets.PacketShipBlockEvent;
 import cuchaz.ships.packets.PacketShipBlocks;
 import cuchaz.ships.packets.PacketShipBlocksRequest;
 import cuchaz.ships.packets.PacketUnlaunchShip;
-import cuchaz.ships.propulsion.PropulsionDiscovererRegistry;
-import cuchaz.ships.propulsion.SailDiscoverer;
 import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 
@@ -93,13 +91,6 @@ public class Ships extends DummyModContainer
 	
 	// entity registration
 	public static final int EntityShipId = 174;
-	
-	
-	// TEMP
-	static
-	{
-		System.out.println( "Ships static initializer!" );
-	}
 	
 	private File m_source;
 	

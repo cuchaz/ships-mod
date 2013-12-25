@@ -14,11 +14,12 @@ import java.util.Set;
 
 import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.Util;
 import cuchaz.ships.BlocksStorage;
 
 public class Sail extends PropulsionMethod
 {
-	public static final double ThrustPerBlock = 0.2; // N
+	public static final double ThrustPerBlock = Util.perSecond2ToPerTick2( 10 ); // N
 	
 	private int m_numExposedBlocks;
 	
