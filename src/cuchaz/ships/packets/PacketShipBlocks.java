@@ -14,8 +14,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
+import cuchaz.modsShared.BlockUtils;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
@@ -72,5 +77,23 @@ public class PacketShipBlocks extends Packet
 		
 		// send the block data
 		ship.setShipWorld( new ShipWorld( player.worldObj, m_blocksData ) );
+		
+		// compute the transformation from ship coords to world coords
+		Vec3 origin = Vec3.createVectorHelper( 0, 0, 0 );
+		ship.blocksToShip( origin );
+		ship.shipToWorld( origin );
+		int tx = MathHelper.floor_double( origin.xCoord + 0.5 );
+		int ty = MathHelper.floor_double( origin.yCoord + 0.5 );
+		int tz = MathHelper.floor_double( origin.zCoord + 0.5 );
+		
+		// remove all the ship blocks from the world, but don't notify the server
+		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
+		{
+			BlockUtils.removeBlockWithoutNotifyingIt( player.worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, false );
+			if( coords.posY + ty < ship.getWaterHeight() )
+			{
+				player.worldObj.setBlock( coords.posX + tx, coords.posY + ty, coords.posZ + tz, Block.waterStill.blockID, 0, 1 );
+			}
+		}
 	}
 }

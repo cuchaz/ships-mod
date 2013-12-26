@@ -66,6 +66,8 @@ public class BlocksStorage
 			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
 			m_blocks.put( relativeCoords, storage );
 		}
+		
+		// UNDONE: find any nearby hanging entities and store them too
 	}
 	
 	public void writeToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence )

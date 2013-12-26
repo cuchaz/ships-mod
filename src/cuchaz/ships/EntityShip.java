@@ -16,16 +16,24 @@ import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.CircleRange;
@@ -148,24 +156,6 @@ public class EntityShip extends Entity
 		) );
 		
 		ShipLocator.registerShip( this );
-		
-		// compute the transformation from ship coords to world coords
-		Vec3 origin = Vec3.createVectorHelper( 0, 0, 0 );
-		blocksToShip( origin );
-		shipToWorld( origin );
-		int tx = MathHelper.floor_double( origin.xCoord + 0.5 );
-		int ty = MathHelper.floor_double( origin.yCoord + 0.5 );
-		int tz = MathHelper.floor_double( origin.zCoord + 0.5 );
-		
-		// remove all the ship blocks from the world, but don't notify anyone
-		for( ChunkCoordinates coords : m_shipWorld.coords() )
-		{
-			BlockUtils.removeBlockWithoutNotifyingIt( worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, false );
-			if( coords.posY + ty < getWaterHeight() )
-			{
-				worldObj.setBlock( coords.posX + tx, coords.posY + ty, coords.posZ + tz, Block.waterStill.blockID, 0, 1 );
-			}
-		}
 	}
 	
 	@Override
@@ -400,11 +390,11 @@ public class EntityShip extends Entity
 	@Override
 	public boolean interactFirst( EntityPlayer player )
 	{
-		// TEMP
-		Ships.logger.info( "Ship interaction!" );
-		
-		// BUGBUG: can't interact with other entities inside of the ship's BB =(
-		// need to transform EntityRenderer.getMouseOver() to perform better collision against ships
+		// only do this on the client
+		if( !worldObj.isRemote )
+		{
+			return false;
+		}
 		
 		// find out what block the player is targeting
 		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
@@ -414,6 +404,9 @@ public class EntityShip extends Entity
 			Ships.logger.fine( String.format( "%s EntityShip.interact(): no hit",
 				worldObj.isRemote ? "CLIENT" : "SERVER"
 			) );
+			
+			// was there no hit? forward the interaction to the world
+			clickWorldBlock( player, false );
 			
 			return false;
 		}
@@ -439,6 +432,45 @@ public class EntityShip extends Entity
 			intersection.sideHit,
 			(float)intersection.hitVec.xCoord, (float)intersection.hitVec.yCoord, (float)intersection.hitVec.zCoord
 		);
+	}
+	
+	@Override
+	public boolean hitByEntity( Entity attackingEntity )
+	{
+		// NOTE: return true to ignore the attack
+		
+		// only do this on the client
+		if( !worldObj.isRemote )
+		{
+			return true;
+		}
+		
+		// ignore attacks by non-players
+		if( !( attackingEntity instanceof EntityPlayer ) )
+		{
+			return true;
+		}
+		EntityPlayer player = (EntityPlayer)attackingEntity;
+		
+		// LOGGING
+		Ships.logger.info( String.format( "%s EntityShip.hitByEntity(): hit by player %s",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			player.getDisplayName()
+		) );
+		
+		// what did the player hit?
+		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
+		if( !intersections.isEmpty() )
+		{
+			// ignore hits to ship blocks
+		}
+		else
+		{
+			// forward the interaction to the world
+			clickWorldBlock( player, true );
+		}
+		
+		return true;
 	}
 	
 	private boolean isSunk( double waterHeight )
@@ -865,5 +897,47 @@ public class EntityShip extends Entity
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
 		m_sendPilotChangesToServer = sendPilotChangesToServer;
+	}
+	
+	@SideOnly( Side.CLIENT )
+	private void clickWorldBlock( EntityPlayer player, boolean isLeftButton )
+	{
+		// what block is the player aiming at?
+		PlayerControllerMP playerController = Minecraft.getMinecraft().playerController;
+		MovingObjectPosition hit = player.rayTrace( playerController.getBlockReachDistance(), 0 );
+		if( hit == null || hit.typeOfHit != EnumMovingObjectType.TILE )
+		{
+			return;
+		}
+		
+		// what item is the player using?
+		ItemStack heldItem = player.getHeldItem();
+		
+		// do the click
+		// NOTE: this part emulates part of Minecraft.click()
+		if( isLeftButton )
+		{
+			playerController.clickBlock( hit.blockX, hit.blockY, hit.blockZ, hit.sideHit );
+		}
+		else
+		{
+			boolean result = !ForgeEventFactory.onPlayerInteract( player, Action.RIGHT_CLICK_BLOCK, hit.blockX, hit.blockY, hit.blockZ, hit.sideHit ).isCanceled();
+			if( result && playerController.onPlayerRightClick( player, worldObj, heldItem, hit.blockX, hit.blockY, hit.blockZ, hit.sideHit, hit.hitVec ) )
+			{
+				player.swingItem();
+			}
+			
+			if( heldItem != null )
+            {
+				if( heldItem.stackSize == 0 )
+				{
+					player.inventory.mainInventory[player.inventory.currentItem] = null;
+				}
+				else if( playerController.isInCreativeMode() )
+				{
+					Minecraft.getMinecraft().entityRenderer.itemRenderer.resetEquippedProgress();
+				}
+            }
+		}
 	}
 }

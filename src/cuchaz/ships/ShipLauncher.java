@@ -279,6 +279,9 @@ public class ShipLauncher
 	
 	public EntityShip launch( )
 	{
+		// currently, this is only called on the server
+		assert( !m_world.isRemote );
+		
 		int waterHeight = computeWaterHeight();
 		
 		Vec3 centerOfMass = new ShipPhysics( m_shipWorld.getBlocksStorage() ).getCenterOfMass();
@@ -300,7 +303,15 @@ public class ShipLauncher
 			return null;
 		}
 		
-		// don't remove the world blocks yet. Let the entity do that when it's done spawning
+		// remove the world blocks, but don't tell the clients. They'll do it later
+		for( ChunkCoordinates coords : m_blocks )
+		{
+			BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, false );
+			if( coords.posY < waterHeight )
+			{
+				m_world.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, 1 );
+			}
+		}
 		
 		return ship;
 	}
