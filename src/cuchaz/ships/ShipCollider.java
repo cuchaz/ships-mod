@@ -148,6 +148,9 @@ public class ShipCollider
 	
 	public void onNearbyEntityMoved( double oldX, double oldY, double oldZ, double oldYSize, Entity entity )
 	{
+		// BUGBUG: sneaking doesn't work on the top level of any ship.
+		// also, sometimes, player falls through the top level of a ship.
+		
 		// get boxes for the entity's original and final positions
 		AxisAlignedBB oldEntityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		getEntityBoxInBlockSpace( oldEntityBox, entity, Vec3.createVectorHelper( oldX, oldY, oldZ ) );
@@ -166,12 +169,47 @@ public class ShipCollider
 			m_debugRenderInfo.setQueryBox( entity, oldEntityBox );
 		}
 		
-		List<PossibleCollision> possibleCollisions = trajectoryQuery( oldEntityBox, newEntityBox );
-		
 		// get the deltas in blocks coordinates
 		double originalDx = newEntityBox.minX - oldEntityBox.minX;
 		double originalDy = newEntityBox.minY - oldEntityBox.minY;
 		double originalDz = newEntityBox.minZ - oldEntityBox.minZ;
+		
+		double dx = originalDx;
+		double dy = originalDy;
+		double dz = originalDz;
+		
+		boolean isPlayerCrouching = entity.onGround && entity.isSneaking() && entity instanceof EntityPlayer;
+		if( isPlayerCrouching )
+		{
+			// for walk-over prevention, move the query box just a little bit farther out to avoid precision/roundoff problems
+			final double BufferSize = 0.05;
+			double bufferX = dx > 0 ? BufferSize : -BufferSize;
+			double bufferZ = dz > 0 ? BufferSize : -BufferSize;
+			
+			// reduce the movement delta to ensure player is always standing on a ship block
+			final double Epsilon = 0.05;
+			while( dx != 0 && m_ship.getShipWorld().getGeometry().rangeQuery( oldEntityBox.getOffsetBoundingBox( dx + bufferX, -1.0, 0.0 ) ).isEmpty() )
+            {
+				dx = stepTowardsZero( dx, Epsilon );
+            }
+			while( dz != 0 && m_ship.getShipWorld().getGeometry().rangeQuery( oldEntityBox.getOffsetBoundingBox( 0.0, -1.0, dz + bufferZ ) ).isEmpty() )
+            {
+				dz = stepTowardsZero( dz, Epsilon );
+            }
+			while( dx != 0 && dz != 0 && m_ship.getShipWorld().getGeometry().rangeQuery( oldEntityBox.getOffsetBoundingBox( dx + bufferX, -1.0, dz + bufferZ ) ).isEmpty() )
+            {
+				dx = stepTowardsZero( dx, Epsilon );
+				dz = stepTowardsZero( dz, Epsilon );
+            }
+			
+			// update the new entity box position
+			newEntityBox.minX = oldEntityBox.minX + dx;
+			newEntityBox.maxX = oldEntityBox.maxX + dx;
+			newEntityBox.minZ = oldEntityBox.minZ + dz;
+			newEntityBox.maxZ = oldEntityBox.maxZ + dz;
+		}
+		
+		List<PossibleCollision> possibleCollisions = trajectoryQuery( oldEntityBox, newEntityBox );
 		
 		if( m_ship.worldObj.isRemote && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
@@ -192,7 +230,6 @@ public class ShipCollider
 		// y first, then x, then z
 		// different orders should give different collisions,
 		// but for a small enough d vector, the difference should be un-noticeable
-		double dy = originalDy;
 		for( PossibleCollision collision : possibleCollisions )
 		{
 			dy = collision.box.calculateYOffset( oldEntityBox, dy );
@@ -200,7 +237,6 @@ public class ShipCollider
 		dy = applyBackoff( dy, originalDy );
 		oldEntityBox.offset( 0, dy, 0 );
 		
-		double dx = originalDx;
 		for( PossibleCollision collision : possibleCollisions )
 		{
 			dx = collision.box.calculateXOffset( oldEntityBox, dx );
@@ -208,7 +244,6 @@ public class ShipCollider
 		dx = applyBackoff( dx, originalDx );
 		oldEntityBox.offset( dx, 0, 0 );
 		
-		double dz = originalDz;
 		for( PossibleCollision collision : possibleCollisions )
 		{
 			dz = collision.box.calculateZOffset( oldEntityBox, dz );
@@ -489,7 +524,7 @@ public class ShipCollider
 		// distance in game coords, but small enough not to notice
 		final double Backoff = 0.001;
 		
-		if( d != originalD )
+		if( d != 0 && d != originalD )
 		{
 			// apply the backoff in the opposite direction of the delta
 			if( d > 0 )
@@ -584,5 +619,22 @@ public class ShipCollider
 			}
 		}
 		return sortedIntersections;
+	}
+	
+	private double stepTowardsZero( double val, double epsilon )
+	{
+		if( val < epsilon && val >= -epsilon )
+		{
+			val = 0;
+		}
+		else if( val > 0 )
+		{
+			val -= epsilon;
+		}
+		else
+		{
+			val += epsilon;
+		}
+		return val;
 	}
 }

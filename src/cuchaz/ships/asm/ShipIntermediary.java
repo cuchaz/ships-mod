@@ -24,6 +24,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cuchaz.modsShared.RuntimeMapping;
+import cuchaz.ships.Collider;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
@@ -98,23 +99,8 @@ public class ShipIntermediary
 	
 	public static void onEntityMove( Entity entity, double dx, double dy, double dz )
 	{
-		// save the original entity position
-		double oldX = entity.posX;
-		double oldY = entity.posY;
-		double oldZ = entity.posZ;
-		double oldYSize = entity.ySize;
-		
-		// move the entity like normal
-		entity.moveEntity( dx, dy, dz );
-		
-		if( !entity.noClip )
-		{
-			// is the entity near any ships?
-			for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
-			{
-				ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ,oldYSize, entity );
-			}
-		}
+		// just forward to the collider
+		Collider.onEntityMove( entity, dx, dy, dz );
 	}
 	
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
