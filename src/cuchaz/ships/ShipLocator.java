@@ -141,9 +141,9 @@ public class ShipLocator
 		queryBox.minX -= delta;
 		queryBox.minY -= delta;
 		queryBox.minZ -= delta;
-		queryBox.minX += delta;
-		queryBox.minY += delta;
-		queryBox.minZ += delta;
+		queryBox.maxX += delta;
+		queryBox.maxY += delta;
+		queryBox.maxZ += delta;
 		
 		return findShipsInBox( entity.worldObj, queryBox );
 	}
