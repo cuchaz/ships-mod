@@ -20,6 +20,7 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
+import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntityShip;
@@ -68,6 +69,15 @@ public class GuiShipPilotSurface extends GuiShipPilot
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
+		// do we have a valid ship to pilot?
+		// issue 78 says sometimes we don't. Can't reproduce. Better to handle it just in case though
+		BlockSide forwardSide = getForwardSide();
+		if( forwardSide == null )
+		{
+			fontRenderer.drawString( "Ship is corrupt! Can't pilot!", 48, 8, ColorUtils.getColor( 255, 0, 0 ) );
+			return;
+		}
+		
 		int keyForward = mc.gameSettings.keyBindForward.keyCode;
 		int keyBack = mc.gameSettings.keyBindBack.keyCode;
 		int keyLeft = mc.gameSettings.keyBindLeft.keyCode;
@@ -84,7 +94,7 @@ public class GuiShipPilotSurface extends GuiShipPilot
 		loadTexture();
 		
 		// determine the compass offsets
-		double shipDirectionOffset = (double)getForwardSide().getXZOffset()/4;
+		double shipDirectionOffset = (double)forwardSide.getXZOffset()/4;
 		double shipYawOffset = CircleRange.mapZeroTo360( getShip().rotationYaw )/360.0f;
 		double compassFrameOffset = (double)CompassFrameWidth/2/TextureWidth;
 		

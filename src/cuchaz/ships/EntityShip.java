@@ -333,6 +333,12 @@ public class EntityShip extends Entity
 			rotationPitch = m_pitchFromServer;
 			
 			m_hasInfoFromServer = false;
+			
+			// TEMP
+			if( worldObj.isRemote )
+			{
+				Ships.logger.info( String.format( "Ship move from server (%.4f,%.4f,%.4f)", dx, dy, dz ) );
+			}
 		}
 		
 		/* LOGGING
@@ -810,7 +816,7 @@ public class EntityShip extends Entity
 			
 			// grow the bounding box just a bit so we get more robust collisions
 			final double Delta = 0.1;
-			box.expand( Delta, Delta, Delta );
+			box = box.expand( Delta, Delta, Delta );
 			
 			// query for all the world water blocks that intersect it
 			int minX = MathHelper.floor_double( box.minX );

@@ -75,8 +75,7 @@ public class Propulsion
 			m_methods.add( new Paddle() );
 			
 			// front side is only decided after pilot interacts with the ship block
-			// for now though, just pick something arbitrary
-			m_frontSide = BlockSide.North;
+			m_frontSide = null;
 		}
 		else if( m_helmCoords != null )
 		{
@@ -87,6 +86,10 @@ public class Propulsion
 			{
 				m_methods.addAll( discoverer.getPropulsionMethods( m_blocksStorage, m_frontSide ) );
 			}
+		}
+		else
+		{
+			Ships.logger.warning( "Non-paddleable ship doesn't have a helm! This wasn't supposed to happen, and will probably cause problems later!" );
 		}
 		
 		// count the types
@@ -162,7 +165,6 @@ public class Propulsion
 	private ChunkCoordinates findHelm( BlocksStorage blocksStorage )
 	{
 		// UNDONE: optimize this by setting the helm coords instead of searching for the helm
-		// could use the propulsion system for that
 		
 		// always return the direction the helm is facing
 		for( ChunkCoordinates coords : blocksStorage.coords() )

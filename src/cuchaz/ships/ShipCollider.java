@@ -393,8 +393,7 @@ public class ShipCollider
 	public List<Entity> getRiders( )
 	{
 		// get all nearby entities
-		AxisAlignedBB checkBox = m_ship.boundingBox.copy();
-		checkBox.expand( 1, 1, 1 );
+		AxisAlignedBB checkBox = m_ship.boundingBox.expand( 1, 1, 1 );
 		@SuppressWarnings( "unchecked" )
 		List<Entity> entities = m_ship.worldObj.getEntitiesWithinAABB( Entity.class, checkBox );
 		

@@ -14,5 +14,10 @@ import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityHelm extends TileEntity
 {
-	//  nothing to do here... move along
+	// not much to do here... move along
+	@Override
+	public boolean canUpdate( )
+	{
+		return false;
+	}
 }
