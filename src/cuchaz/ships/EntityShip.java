@@ -333,12 +333,6 @@ public class EntityShip extends Entity
 			rotationPitch = m_pitchFromServer;
 			
 			m_hasInfoFromServer = false;
-			
-			// TEMP
-			if( worldObj.isRemote )
-			{
-				Ships.logger.info( String.format( "Ship move from server (%.4f,%.4f,%.4f)", dx, dy, dz ) );
-			}
 		}
 		
 		/* LOGGING
