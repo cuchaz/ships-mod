@@ -136,14 +136,8 @@ public class ShipLocator
 	public static List<EntityShip> getFromEntityLocation( Entity entity )
 	{
 		// make the query box slightly larger than the player
-		AxisAlignedBB queryBox = entity.boundingBox.copy();
 		final double delta = 0.5;
-		queryBox.minX -= delta;
-		queryBox.minY -= delta;
-		queryBox.minZ -= delta;
-		queryBox.maxX += delta;
-		queryBox.maxY += delta;
-		queryBox.maxZ += delta;
+		AxisAlignedBB queryBox = entity.boundingBox.expand( delta, delta, delta );
 		
 		return findShipsInBox( entity.worldObj, queryBox );
 	}

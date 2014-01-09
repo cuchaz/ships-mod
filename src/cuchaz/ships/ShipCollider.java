@@ -148,12 +148,18 @@ public class ShipCollider
 	
 	public void onNearbyEntityMoved( double oldX, double oldY, double oldZ, double oldYSize, Entity entity )
 	{
-		// BUGBUG: sneaking doesn't work on the top level of any ship.
-		// also, sometimes, player falls through the top level of a ship.
-		
-		// get boxes for the entity's original and final positions
+		// get a box for the entity's original positions
 		AxisAlignedBB oldEntityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		getEntityBoxInBlockSpace( oldEntityBox, entity, Vec3.createVectorHelper( oldX, oldY, oldZ ) );
+		
+		// to make collisions for standing on blocks more robust, if the old box is JUST beneath the top of a block, pop it up.
+		final double Epsilon = 1e-2;
+		double distToNextTop = MathHelper.ceiling_double_int( oldEntityBox.minY ) - oldEntityBox.minY;
+		if( distToNextTop <= Epsilon )
+		{
+			oldEntityBox.minY += distToNextTop;
+			oldEntityBox.maxY += distToNextTop;
+		}
 		
 		// get a box for the entity's current position
 		AxisAlignedBB newEntityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
@@ -187,19 +193,19 @@ public class ShipCollider
 			double bufferZ = dz > 0 ? BufferSize : -BufferSize;
 			
 			// reduce the movement delta to ensure player is always standing on a ship block
-			final double Epsilon = 0.05;
+			final double StepSize = 0.05;
 			while( dx != 0 && m_ship.getShipWorld().getGeometry().rangeQuery( oldEntityBox.getOffsetBoundingBox( dx + bufferX, -1.0, 0.0 ) ).isEmpty() )
             {
-				dx = stepTowardsZero( dx, Epsilon );
+				dx = stepTowardsZero( dx, StepSize );
             }
 			while( dz != 0 && m_ship.getShipWorld().getGeometry().rangeQuery( oldEntityBox.getOffsetBoundingBox( 0.0, -1.0, dz + bufferZ ) ).isEmpty() )
             {
-				dz = stepTowardsZero( dz, Epsilon );
+				dz = stepTowardsZero( dz, StepSize );
             }
 			while( dx != 0 && dz != 0 && m_ship.getShipWorld().getGeometry().rangeQuery( oldEntityBox.getOffsetBoundingBox( dx + bufferX, -1.0, dz + bufferZ ) ).isEmpty() )
             {
-				dx = stepTowardsZero( dx, Epsilon );
-				dz = stepTowardsZero( dz, Epsilon );
+				dx = stepTowardsZero( dx, StepSize );
+				dz = stepTowardsZero( dz, StepSize );
             }
 			
 			// update the new entity box position
