@@ -116,6 +116,18 @@ public class ShipIntermediary
 		return out;
 	}
 	
+	public static boolean checkBlockCollision( World world, AxisAlignedBB box )
+	{
+		for( EntityShip ship : ShipLocator.findShipsInBox( world, box ) )
+		{
+			if( ship.getCollider().isColliding( box ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )
 	{
 		// is the block on a ship?

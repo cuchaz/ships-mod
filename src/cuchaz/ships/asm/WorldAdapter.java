@@ -11,6 +11,7 @@
 package cuchaz.ships.asm;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -50,7 +51,7 @@ public class WorldAdapter extends ObfuscationAwareAdapter
 	{
 		if( m_className.equals( WorldClassName ) )
 		{
-			// public List getEntitiesWithinAABBExcludingEntity(Entity par1Entity, AxisAlignedBB par2AxisAlignedBB, IEntitySelector par3IEntitySelector)
+			// public List getEntitiesWithinAABBExcludingEntity( Entity, AxisAlignedBB, IEntitySelector )
 			// func_94576_a
 			if( methodDesc.equals( String.format( "(L%s;L%s;L%s;)L%s;", EntityClassName, AxisAlignedBBClassName, IEntitySelectorClassName, ListClassName ) )
 				&& methodName.equals( getRuntimeMethodName( m_className, "getEntitiesWithinAABBExcludingEntity", "func_94576_a" ) ) )
@@ -63,7 +64,7 @@ public class WorldAdapter extends ObfuscationAwareAdapter
 						if( opcode == Opcodes.ARETURN )
 						{
 							// we're hooking just before the return statement
-							// to call this: ShipIntermediary.getShipsWithinAABB( list, AxisAlignedBB, IEntitySelector )
+							// to call this: ShipIntermediary.getShipsWithinAABB( List, AxisAlignedBB, IEntitySelector )
 							// current on stack: list
 							// add the three extra arguments, then call the intermediary, which puts the list back on the stack
 							mv.visitVarInsn( Opcodes.ALOAD, 0 );
@@ -73,6 +74,43 @@ public class WorldAdapter extends ObfuscationAwareAdapter
 						}
 						
 						super.visitInsn( opcode );
+					}
+				};
+			}
+			
+			// public boolean checkBlockCollision( AxisAlignedBB )
+			// func_72829_c
+			if( methodDesc.equals( String.format( "(L%s;)Z", AxisAlignedBBClassName ) )
+				&& methodName.equals( getRuntimeMethodName( m_className, "checkBlockCollision", "func_72829_c" ) ) )
+			{
+				return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
+				{
+					@Override
+					public void visitInsn( int opcode )
+					{
+						if( opcode == Opcodes.IRETURN ) // NOTE: booleans are mapped to int types
+						{
+							// we're replacing the return statement
+							// with this: if( was returning false ) return ShipIntermediary.checkBlockCollision( World, AxisAlignedBB )
+							
+							// currently on the stack: false
+							// need to: duplicate top of stack, if == 0 goto label, return, label, pop stack,
+							//          put the world and box on the stack, call the method, then return
+							Label label = new Label();
+							mv.visitInsn( Opcodes.DUP );
+							mv.visitJumpInsn( Opcodes.IFEQ, label );
+							super.visitInsn( opcode );
+							mv.visitLabel( label );
+							mv.visitInsn( Opcodes.POP );
+							mv.visitVarInsn( Opcodes.ALOAD, 0 ); // 0 is this, 1 is arg1, etc
+							mv.visitVarInsn( Opcodes.ALOAD, 1 );
+							mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "checkBlockCollision", String.format( "(L%s;L%s;)Z", WorldClassName, AxisAlignedBBClassName ) );
+							mv.visitInsn( Opcodes.IRETURN );
+						}
+						else
+						{
+							super.visitInsn( opcode );
+						}
 					}
 				};
 			}

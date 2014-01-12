@@ -13,7 +13,6 @@ package cuchaz.ships.render;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -25,11 +24,10 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.EnumMovingObjectType;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 
@@ -43,6 +41,7 @@ import cuchaz.modsShared.Matrix3;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.modsShared.Vector3;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.HitList;
 import cuchaz.ships.ShipWorld;
 
 public class RenderShip extends Render
@@ -237,14 +236,17 @@ public class RenderShip extends Render
 				renderHitbox( box, ColorUtils.getColor( 0, 255, 0 ) );
 			}
 			
-			// find out what block the player is looking at
-			TreeSet<MovingObjectPosition> targets = ship.getCollider().getBlocksPlayerIsLookingAt( Minecraft.getMinecraft().thePlayer );
-			if( !targets.isEmpty() )
+			// find out what ship block the player is looking at, if any
+			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+			double reachDist = Minecraft.getMinecraft().playerController.getBlockReachDistance();
+			HitList hits = new HitList();
+			hits.addHits( ship, player, reachDist );
+			hits.addHits( player.worldObj, player, reachDist );
+			HitList.Entry hit = hits.getClosestHit();
+			if( hit != null && hit.type == HitList.Type.Ship )
 			{
-				MovingObjectPosition target = targets.first();
-				assert( target.typeOfHit == EnumMovingObjectType.TILE );
 				renderHitbox(
-					ship.getCollider().getBlockBoxInBlockSpace( new ChunkCoordinates( target.blockX, target.blockY, target.blockZ ) ),
+					ship.getCollider().getBlockBoxInBlockSpace( new ChunkCoordinates( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ ) ),
 					ColorUtils.getColor( 255, 255, 255 )
 				);
 			}

@@ -11,10 +11,8 @@
 package cuchaz.ships;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -110,40 +108,6 @@ public class ShipCollider
 			box.minZ = Math.min( box.minZ, p.zCoord );
 			box.maxZ = Math.max( box.maxZ, p.zCoord );
 		}
-	}
-	
-	public TreeSet<MovingObjectPosition> getBlocksPlayerIsLookingAt( EntityPlayer player )
-	{
-		// get the player look line segment
-		Vec3 eyePos = player.worldObj.getWorldVec3Pool().getVecFromPool(
-			player.posX,
-			player.posY + ( player.worldObj.isRemote ? player.getEyeHeight() - player.getDefaultEyeHeight() : player.getEyeHeight() ),
-			player.posZ
-		);
-        
-		final double toRadians = Math.PI / 180.0;
-		float pitch = (float)( player.rotationPitch * toRadians );
-		float yaw = (float)( player.rotationYaw * toRadians );
-		float cosYaw = MathHelper.cos( -yaw - (float)Math.PI );
-		float sinYaw = MathHelper.sin( -yaw - (float)Math.PI );
-		float cosPitch = MathHelper.cos( -pitch );
-		float sinPitch = MathHelper.sin( -pitch );
-		double dist = 5.0;
-		
-		Vec3 targetPos = eyePos.addVector(
-			sinYaw * -cosPitch * dist,
-			sinPitch * dist,
-			cosYaw * -cosPitch * dist
-		);
-		
-		// convert the positions into blocks space
-		m_ship.worldToShip( eyePos );
-		m_ship.worldToShip( targetPos );
-		m_ship.shipToBlocks( eyePos );
-		m_ship.shipToBlocks( targetPos );
-		
-		// find out what blocks this line segment intersects
-		return lineSegmentQuery( eyePos, targetPos );
 	}
 	
 	public void onNearbyEntityMoved( double oldX, double oldY, double oldZ, double oldYSize, Entity entity )
@@ -447,6 +411,52 @@ public class ShipCollider
 		return false;
 	}
 	
+	public boolean isColliding( AxisAlignedBB box )
+	{
+		// UNDONE: can optimize this by converting box into ship coords and doing a range query
+		
+		for( ChunkCoordinates coords : m_ship.getShipWorld().coords() )
+		{
+			AxisAlignedBB shipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+			getBlockWorldBoundingBox( shipBlockBox, coords );
+			
+			if( shipBlockBox.intersectsWith( box ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public List<MovingObjectPosition> lineSegmentQuery( final Vec3 from, Vec3 to )
+	{
+		// do a range query using the bounding box of the line segment
+		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(
+			Math.min( from.xCoord, to.xCoord ),
+			Math.min( from.yCoord, to.yCoord ),
+			Math.min( from.zCoord, to.zCoord ),
+			Math.max( from.xCoord, to.xCoord ),
+			Math.max( from.yCoord, to.yCoord ),
+			Math.max( from.zCoord, to.zCoord )
+		);
+		List<ChunkCoordinates> nearbyBlocks = m_ship.getShipWorld().getGeometry().rangeQuery( box );
+		
+		// sort the boxes by their line/box intersection distance to the "from" point
+		// throw out boxes that don't actually intersect the line segment
+		List<MovingObjectPosition> intersections = new ArrayList<MovingObjectPosition>();
+		for( ChunkCoordinates coords : nearbyBlocks )
+		{
+			// get the intersection point with the line segment
+			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ, from, to );
+			if( intersection != null )
+			{
+				intersections.add( intersection );
+			}
+		}
+		return intersections;
+	}
+	
 	private void checkBlockCollision( BlockCollisionResult result, ChunkCoordinates coords, double dx, double dy, double dz, float dYaw )
 	{
 		// get the current world bounding box for the ship block
@@ -587,43 +597,6 @@ public class ShipCollider
 		box.setBB( entity.boundingBox );
 		box.offset( -entity.posX, -entity.posY, -entity.posZ );
 		box.offset( pos.xCoord, pos.yCoord, pos.zCoord );
-	}
-	
-	private TreeSet<MovingObjectPosition> lineSegmentQuery( final Vec3 from, Vec3 to )
-	{
-		// do a range query using the bounding box of the line segment
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(
-			Math.min( from.xCoord, to.xCoord ),
-			Math.min( from.yCoord, to.yCoord ),
-			Math.min( from.zCoord, to.zCoord ),
-			Math.max( from.xCoord, to.xCoord ),
-			Math.max( from.yCoord, to.yCoord ),
-			Math.max( from.zCoord, to.zCoord )
-		);
-		List<ChunkCoordinates> nearbyBlocks = m_ship.getShipWorld().getGeometry().rangeQuery( box );
-		
-		// sort the boxes by their line/box intersection distance to the "from" point
-		// throw out boxes that don't actually intersect the line segment
-		TreeSet<MovingObjectPosition> sortedIntersections = new TreeSet<MovingObjectPosition>( new Comparator<MovingObjectPosition>( )
-		{
-			@Override
-			public int compare( MovingObjectPosition a, MovingObjectPosition b )
-			{
-				// return the point closer to the "from" point
-				return Double.compare( a.hitVec.distanceTo( from ), b.hitVec.distanceTo( from ) );
-			}
-		} );
-		for( ChunkCoordinates coords : nearbyBlocks )
-		{
-			// get the intersection point with the line segment
-			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
-			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ, from, to );
-			if( intersection != null )
-			{
-				sortedIntersections.add( intersection );
-			}
-		}
-		return sortedIntersections;
 	}
 	
 	private double stepTowardsZero( double val, double epsilon )

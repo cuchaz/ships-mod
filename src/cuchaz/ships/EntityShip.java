@@ -390,53 +390,65 @@ public class EntityShip extends Entity
 	@Override
 	public boolean interactFirst( EntityPlayer player )
 	{
+		// NOTE: return true if we handled the interaction
+		
 		// only do this on the client
 		if( !worldObj.isRemote )
 		{
 			return false;
 		}
 		
-		// find out what block the player is targeting
-		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
-		if( intersections.isEmpty() )
+		// what did the player hit?
+		double reachDist = Minecraft.getMinecraft().playerController.getBlockReachDistance();
+		HitList hits = new HitList();
+		hits.addHits( player.worldObj, player, reachDist );
+		hits.addHits( this, player, reachDist );
+		HitList.Entry hit = hits.getClosestHit();
+		
+		if( hit == null )
 		{
-			// LOGGING
-			Ships.logger.fine( String.format( "%s EntityShip.interact(): no hit",
-				worldObj.isRemote ? "CLIENT" : "SERVER"
-			) );
-			
-			// was there no hit? forward the interaction to the world
-			clickWorldBlock( player, false );
-			
 			return false;
 		}
 		
-		// just get the first intersected block (it's the closest one)
-		// UNDONE: could optimize this by trying to find the closest block first... but we probably don't care for now
-		MovingObjectPosition intersection = intersections.first();
-		
-		// activate the block
-		Block block = Block.blocksList[m_shipWorld.getBlockId( intersection.blockX, intersection.blockY, intersection.blockZ )];
-		
-		// LOGGING
-		Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			intersection.blockX, intersection.blockY, intersection.blockZ,
-			block.getUnlocalizedName()
-		) );
-		
-		return block.onBlockActivated(
-			m_shipWorld,
-			intersection.blockX, intersection.blockY, intersection.blockZ,
-			player,
-			intersection.sideHit,
-			(float)intersection.hitVec.xCoord, (float)intersection.hitVec.yCoord, (float)intersection.hitVec.zCoord
-		);
+		switch( hit.type )
+		{
+			case World:
+				// forward the interaction to the world
+				clickWorldBlock( player, hit.hit, false );
+				return true;
+			
+			case Ship:
+				// activate the block
+				Block block = Block.blocksList[m_shipWorld.getBlockId( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ )];
+				
+				// LOGGING
+				Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
+					worldObj.isRemote ? "CLIENT" : "SERVER",
+					hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
+					block.getUnlocalizedName()
+				) );
+				
+				return block.onBlockActivated(
+					m_shipWorld,
+					hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
+					player,
+					hit.hit.sideHit,
+					(float)hit.hit.hitVec.xCoord, (float)hit.hit.hitVec.yCoord, (float)hit.hit.hitVec.zCoord
+				);
+			
+			default:
+				return false;
+		}
 	}
 	
 	@Override
 	public boolean hitByEntity( Entity attackingEntity )
 	{
+		// TEMP
+		Ships.logger.info( String.format( "%s hitByEntity!",
+			worldObj.isRemote ? "CLIENT" : "SERVER"
+		) );
+		
 		// NOTE: return true to ignore the attack
 		
 		// only do this on the client
@@ -452,24 +464,26 @@ public class EntityShip extends Entity
 		}
 		EntityPlayer player = (EntityPlayer)attackingEntity;
 		
-		// LOGGING
-		Ships.logger.info( String.format( "%s EntityShip.hitByEntity(): hit by player %s",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			player.getDisplayName()
-		) );
-		
 		// what did the player hit?
-		TreeSet<MovingObjectPosition> intersections = m_collider.getBlocksPlayerIsLookingAt( player );
-		if( !intersections.isEmpty() )
-		{
-			// ignore hits to ship blocks
-		}
-		else
+		double reachDist = Minecraft.getMinecraft().playerController.getBlockReachDistance();
+		HitList hits = new HitList();
+		hits.addHits( player.worldObj, player, reachDist );
+		hits.addHits( this, player, reachDist );
+		HitList.Entry hit = hits.getClosestHit();
+		
+		// the world?
+		if( hit != null && hit.type == HitList.Type.World )
 		{
 			// forward the interaction to the world
-			clickWorldBlock( player, true );
+			clickWorldBlock( player, hit.hit, true );
+			
+			// also, tell the client we're clicking that block
+			// UNDONE: need to make this happen
+			//Minecraft.getMinecraft().objectMouseOver = hit.hit;
+			// and keep it from unhappening until the digging is done!!
 		}
 		
+		// always ignore attacks to ships
 		return true;
 	}
 	
@@ -900,11 +914,9 @@ public class EntityShip extends Entity
 	}
 	
 	@SideOnly( Side.CLIENT )
-	private void clickWorldBlock( EntityPlayer player, boolean isLeftButton )
+	private void clickWorldBlock( EntityPlayer player, MovingObjectPosition hit, boolean isLeftButton )
 	{
-		// what block is the player aiming at?
-		PlayerControllerMP playerController = Minecraft.getMinecraft().playerController;
-		MovingObjectPosition hit = player.rayTrace( playerController.getBlockReachDistance(), 0 );
+		// is this even a block?
 		if( hit == null || hit.typeOfHit != EnumMovingObjectType.TILE )
 		{
 			return;
@@ -915,6 +927,7 @@ public class EntityShip extends Entity
 		
 		// do the click
 		// NOTE: this part emulates part of Minecraft.click()
+		PlayerControllerMP playerController = Minecraft.getMinecraft().playerController;
 		if( isLeftButton )
 		{
 			playerController.clickBlock( hit.blockX, hit.blockY, hit.blockZ, hit.sideHit );
