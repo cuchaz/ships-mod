@@ -24,21 +24,8 @@ public class HitList
 {
 	public static enum Type
 	{
-		Ship
-		{
-			@Override
-			public void toWorldCoords( Vec3 pos, EntityShip ship )
-			{
-				ship.blocksToShip( pos );
-				ship.shipToWorld( pos );
-			}
-		},
+		Ship,
 		World;
-		
-		public void toWorldCoords( Vec3 pos, EntityShip ship )
-		{
-			// by default, do nothing
-		}
 	}
 	
 	public class Entry implements Comparable<Entry>
@@ -99,11 +86,16 @@ public class HitList
 	
 	public void addHits( World world, Vec3 from, Vec3 to )
 	{
-		MovingObjectPosition hit = world.clip( from, to );
+		// NOTE: World.clip() changes its input vectors! Need to protect them since we use them later
+		MovingObjectPosition hit = world.clip(
+			Vec3.createVectorHelper( from.xCoord, from.yCoord, from.zCoord ),
+			Vec3.createVectorHelper( to.xCoord, to.yCoord, to.zCoord )
+		);
 		if( hit == null )
 		{
 			return;
 		}
+		
 		m_entries.add( new Entry( Type.World, from.distanceTo( hit.hitVec ), hit ) );
 	}
 	
@@ -151,5 +143,18 @@ public class HitList
 		);
 		
 		addHits( ship, eyePos, targetPos );
+	}
+	
+	@Override
+	public String toString( )
+	{
+		StringBuilder buf = new StringBuilder();
+		for( Entry entry : m_entries )
+		{
+			buf.append( entry.type );
+			buf.append( ":" );
+			buf.append( String.format( "%.2f", entry.dist ) );
+		}
+		return buf.toString();
 	}
 }

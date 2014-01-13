@@ -401,87 +401,36 @@ public class EntityShip extends Entity
 		// what did the player hit?
 		double reachDist = Minecraft.getMinecraft().playerController.getBlockReachDistance();
 		HitList hits = new HitList();
-		hits.addHits( player.worldObj, player, reachDist );
 		hits.addHits( this, player, reachDist );
 		HitList.Entry hit = hits.getClosestHit();
-		
-		if( hit == null )
+		if( hit == null || hit.type != HitList.Type.Ship )
 		{
 			return false;
 		}
 		
-		switch( hit.type )
-		{
-			case World:
-				// forward the interaction to the world
-				clickWorldBlock( player, hit.hit, false );
-				return true;
-			
-			case Ship:
-				// activate the block
-				Block block = Block.blocksList[m_shipWorld.getBlockId( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ )];
-				
-				// LOGGING
-				Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
-					worldObj.isRemote ? "CLIENT" : "SERVER",
-					hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
-					block.getUnlocalizedName()
-				) );
-				
-				return block.onBlockActivated(
-					m_shipWorld,
-					hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
-					player,
-					hit.hit.sideHit,
-					(float)hit.hit.hitVec.xCoord, (float)hit.hit.hitVec.yCoord, (float)hit.hit.hitVec.zCoord
-				);
-			
-			default:
-				return false;
-		}
+		// activate the block
+		Block block = Block.blocksList[m_shipWorld.getBlockId( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ )];
+		
+		// LOGGING
+		Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
+			worldObj.isRemote ? "CLIENT" : "SERVER",
+			hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
+			block.getUnlocalizedName()
+		) );
+		
+		return block.onBlockActivated(
+			m_shipWorld,
+			hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
+			player,
+			hit.hit.sideHit,
+			(float)hit.hit.hitVec.xCoord, (float)hit.hit.hitVec.yCoord, (float)hit.hit.hitVec.zCoord
+		);
 	}
 	
 	@Override
 	public boolean hitByEntity( Entity attackingEntity )
 	{
-		// TEMP
-		Ships.logger.info( String.format( "%s hitByEntity!",
-			worldObj.isRemote ? "CLIENT" : "SERVER"
-		) );
-		
 		// NOTE: return true to ignore the attack
-		
-		// only do this on the client
-		if( !worldObj.isRemote )
-		{
-			return true;
-		}
-		
-		// ignore attacks by non-players
-		if( !( attackingEntity instanceof EntityPlayer ) )
-		{
-			return true;
-		}
-		EntityPlayer player = (EntityPlayer)attackingEntity;
-		
-		// what did the player hit?
-		double reachDist = Minecraft.getMinecraft().playerController.getBlockReachDistance();
-		HitList hits = new HitList();
-		hits.addHits( player.worldObj, player, reachDist );
-		hits.addHits( this, player, reachDist );
-		HitList.Entry hit = hits.getClosestHit();
-		
-		// the world?
-		if( hit != null && hit.type == HitList.Type.World )
-		{
-			// forward the interaction to the world
-			clickWorldBlock( player, hit.hit, true );
-			
-			// also, tell the client we're clicking that block
-			// UNDONE: need to make this happen
-			//Minecraft.getMinecraft().objectMouseOver = hit.hit;
-			// and keep it from unhappening until the digging is done!!
-		}
 		
 		// always ignore attacks to ships
 		return true;

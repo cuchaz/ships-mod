@@ -27,11 +27,11 @@ public class CoreModTransformer implements IClassTransformer
 	{
 		if( classData == null )
 		{
-			throw new Error( "Received no class data for " + name + "!" );
+			throw new Error( "Transformer received no class data for " + name + ":" + transformedName + "! This class probably doesn't exist on the server!" );
 		}
 		
 		// don't transform some important stuff
-		List<String> privilegedPackages = Arrays.asList( "cuchaz.ships.", "net.minecraftforge.", "cpw." );
+		List<String> privilegedPackages = Arrays.asList( "cuchaz.ships.", "cuchaz.modsShared", "net.minecraftforge.", "cpw." );
 		for( String privilegedPackage : privilegedPackages )
 		{
 			if( name.startsWith( privilegedPackage ) )
@@ -53,6 +53,7 @@ public class CoreModTransformer implements IClassTransformer
 		tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 		tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 		tailAdapter = new WorldAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+		tailAdapter = new EntityRendererAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 		
 		// run the transformations
 		new ClassReader( classData ).accept( tailAdapter, 0 );
