@@ -11,11 +11,8 @@
 package cuchaz.ships.asm;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 import org.objectweb.asm.ClassReader;
-
-import cuchaz.ships.Ships;
 
 public class InheritanceUtils
 {
@@ -45,7 +42,9 @@ public class InheritanceUtils
 		}
 		catch( IOException ex )
 		{
-			Ships.logger.log( Level.WARNING, "Unable to read class: " + className, ex );
+			// NOTE: using the logger here causes class loading circles. Need to use stdout
+			System.out.println( "Unable to read class: " + className );
+			ex.printStackTrace( System.out );
 		}
 		
 		return false;
@@ -74,7 +73,9 @@ public class InheritanceUtils
 		}
 		catch( IOException ex )
 		{
-			Ships.logger.log( Level.WARNING, "Unable to read class: " + className, ex );
+			// NOTE: using the logger here causes class loading circles. Need to use stdout
+			System.out.println( "Unable to read class: " + className );
+			ex.printStackTrace( System.out );
 		}
 		
 		return false;

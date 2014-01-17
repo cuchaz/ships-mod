@@ -30,33 +30,43 @@ public class CoreModTransformer implements IClassTransformer
 			throw new Error( "Transformer received no class data for " + name + ":" + transformedName + "! This class probably doesn't exist on the server!" );
 		}
 		
-		// don't transform some important stuff
-		List<String> privilegedPackages = Arrays.asList( "cuchaz.ships.", "cuchaz.modsShared", "net.minecraftforge.", "cpw." );
-		for( String privilegedPackage : privilegedPackages )
+		try
 		{
-			if( name.startsWith( privilegedPackage ) )
+			// don't transform some important stuff
+			List<String> privilegedPackages = Arrays.asList( "cuchaz.ships.", "cuchaz.modsShared", "net.minecraftforge.", "cpw." );
+			for( String privilegedPackage : privilegedPackages )
+			{
+				if( name.startsWith( privilegedPackage ) )
+				{
+					return classData;
+				}
+			}
+			
+			// do we know about the obfuscation state yet?
+			if( CoreModPlugin.isObfuscatedEnvironment == null )
 			{
 				return classData;
 			}
+			
+			ClassWriter writer = new ClassWriter( ClassWriter.COMPUTE_MAXS );
+			
+			// set up the adapter chain
+			ClassVisitor tailAdapter = writer;
+			tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			tailAdapter = new WorldAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			tailAdapter = new EntityRendererAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			
+			// run the transformations
+			new ClassReader( classData ).accept( tailAdapter, 0 );
+			return writer.toByteArray();
 		}
-		
-		// do we know about the obfuscation state yet?
-		if( CoreModPlugin.isObfuscatedEnvironment == null )
+		catch( Throwable t )
 		{
+			// NOTE: using the logger here causes class loading circles. Need to use stdout
+			System.out.println( "Exception occurred while transforming class " + name + ":" + transformedName + ". This class has been skipped and left un-transformed." );
+			t.printStackTrace( System.out );
 			return classData;
 		}
-		
-		ClassWriter writer = new ClassWriter( ClassWriter.COMPUTE_MAXS );
-		
-		// set up the adapter chain
-		ClassVisitor tailAdapter = writer;
-		tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-		tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-		tailAdapter = new WorldAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-		tailAdapter = new EntityRendererAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-		
-		// run the transformations
-		new ClassReader( classData ).accept( tailAdapter, 0 );
-		return writer.toByteArray();
 	}
 }
