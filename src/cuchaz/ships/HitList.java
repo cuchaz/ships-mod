@@ -121,6 +121,11 @@ public class HitList
 	
 	public void addHits( World world, EntityPlayer player, double reachDist )
 	{
+		if( player == null )
+		{
+			throw new IllegalArgumentException( "player cannot be null!" );
+		}
+		
 		Vec3 eyePos = EntityUtils.getPlayerEyePos( player );
 		Vec3 lookDir = EntityUtils.getPlayerLookDirection( player );
 		Vec3 targetPos = eyePos.addVector(
@@ -134,6 +139,11 @@ public class HitList
 	
 	public void addHits( EntityShip ship, EntityPlayer player, double reachDist )
 	{
+		if( player == null )
+		{
+			throw new IllegalArgumentException( "player cannot be null!" );
+		}
+		
 		Vec3 eyePos = EntityUtils.getPlayerEyePos( player );
 		Vec3 lookDir = EntityUtils.getPlayerLookDirection( player );
 		Vec3 targetPos = eyePos.addVector(

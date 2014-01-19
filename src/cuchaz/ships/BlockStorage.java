@@ -50,5 +50,5 @@ public class BlockStorage
 	public void writeToWorld( World world, ChunkCoordinates coords )
 	{
 		BlockUtils.changeBlockWithoutNotifyingIt( world, coords.posX, coords.posY, coords.posZ, id, meta );
-	}	
+	}
 }

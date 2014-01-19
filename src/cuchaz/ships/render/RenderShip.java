@@ -13,6 +13,9 @@ package cuchaz.ships.render;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -43,14 +46,17 @@ import cuchaz.modsShared.Vector3;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.HitList;
 import cuchaz.ships.ShipWorld;
+import cuchaz.ships.Ships;
 
 public class RenderShip extends Render
 {
 	private RenderBlocks m_renderBlocks;
+	private Set<Integer> m_blacklistedBlocks;
 	
 	public RenderShip( )
 	{
 		m_renderBlocks = new RenderBlocks();
+		m_blacklistedBlocks = new TreeSet<Integer>();
 	}
 	
 	@Override
@@ -104,9 +110,7 @@ public class RenderShip extends Render
 		List<TileEntity> deferredTileEntities = new ArrayList<TileEntity>();
 		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
 		{
-			// get the block shape
 			Block block = Block.blocksList[world.getBlockId( coords )];
-			block.setBlockBoundsBasedOnState( world, coords.posX, coords.posY, coords.posZ );
 			
 			/* UNDONE: unable frustum optimizations if they actually help
 			// is this block in the view frustum?
@@ -124,32 +128,63 @@ public class RenderShip extends Render
 			}
 			*/
 			
-			// do we have a tile entity that needs special rendering?
-			TileEntity tileEntity = world.getBlockTileEntity( coords );
-			if( tileEntity != null && TileEntityRenderer.instance.hasSpecialRenderer( tileEntity ) )
+			// is this block blacklisted?
+			if( m_blacklistedBlocks.contains( block.blockID ) )
 			{
-				deferredTileEntities.add( tileEntity );
+				// as a fallback, just try to render something
+				try
+				{
+					block.setBlockBounds( 0, 0, 0, 1, 1, 1 );
+					m_renderBlocks.setRenderBoundsFromBlock( block );
+					m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.posX, coords.posY, coords.posZ, 1, 1, 1 );
+				}
+				catch( Throwable t )
+				{
+					// this block is already a bad player. Just ignore any more problems
+				}
 				continue;
 			}
 			
-			if( block.getRenderType() == 0 )
+			// mod blocks can do weird things and crash. We need to be careful here
+			try
 			{
-				// render a standard block
-				// but use the color multiplier instead of ambient occlusion
-				// AO just looks weird and I can't make it look good yet
+				// get the block shape
+				block.setBlockBoundsBasedOnState( world, coords.posX, coords.posY, coords.posZ );
 				
-				int colorMultiplier = block.colorMultiplier( world, coords.posX, coords.posY, coords.posZ );
-		        float colorR = (float)( colorMultiplier >> 16 & 255 )/255.0F;
-		        float colorG = (float)( colorMultiplier >> 8 & 255 )/255.0F;
-		        float colorB = (float)( colorMultiplier & 255 )/255.0F;
-				m_renderBlocks.setRenderBoundsFromBlock( block );
-				m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.posX, coords.posY, coords.posZ, colorR, colorG, colorB );
+				// do we have a tile entity that needs special rendering?
+				TileEntity tileEntity = world.getBlockTileEntity( coords );
+				if( tileEntity != null && TileEntityRenderer.instance.hasSpecialRenderer( tileEntity ) )
+				{
+					deferredTileEntities.add( tileEntity );
+					continue;
+				}
+				
+				if( block.getRenderType() == 0 )
+				{
+					// render a standard block
+					// but use the color multiplier instead of ambient occlusion
+					// AO just looks weird and I can't make it look good yet
+					
+					int colorMultiplier = block.colorMultiplier( world, coords.posX, coords.posY, coords.posZ );
+			        float colorR = (float)( colorMultiplier >> 16 & 255 )/255.0F;
+			        float colorG = (float)( colorMultiplier >> 8 & 255 )/255.0F;
+			        float colorB = (float)( colorMultiplier & 255 )/255.0F;
+					m_renderBlocks.setRenderBoundsFromBlock( block );
+					m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.posX, coords.posY, coords.posZ, colorR, colorG, colorB );
+				}
+				else
+				{
+					// render using the usual functions
+					// they don't cause any issues with AO
+					m_renderBlocks.renderBlockByRenderType( block, coords.posX, coords.posY, coords.posZ );
+				}
 			}
-			else
+			catch( Throwable t )
 			{
-				// render using the usual functions
-				// they don't cause any issues with AO
-				m_renderBlocks.renderBlockByRenderType( block, coords.posX, coords.posY, coords.posZ );
+				// blacklist the block
+				m_blacklistedBlocks.add( block.blockID );
+				
+				Ships.logger.log( Level.WARNING, "Block: " + block.getUnlocalizedName() + " couldn't render properly! Blocks of this type will not be rendered again.", t );
 			}
 		}
 		

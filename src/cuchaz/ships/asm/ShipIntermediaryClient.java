@@ -34,6 +34,12 @@ public class ShipIntermediaryClient
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		double reachDist = Minecraft.getMinecraft().playerController != null ? Minecraft.getMinecraft().playerController.getBlockReachDistance() : 0;
 		
+		// if there's no player, something weird is going on. Bail.
+		if( player == null )
+		{
+			return;
+		}
+		
 		// did we hit a ship?
 		if( currentHit != null && currentHit.typeOfHit == EnumMovingObjectType.ENTITY && currentHit.entityHit != null && currentHit.entityHit instanceof EntityShip )
 		{

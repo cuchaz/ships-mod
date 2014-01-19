@@ -87,6 +87,12 @@ public class ItemShipClipboard extends Item
 	@Override
 	public boolean onItemUseFirst( ItemStack itemStack, EntityPlayer player, final World world, int blockX, int blockY, int blockZ, int side, float hitX, float hitY, float hitZ )
     {
+		// only on the client
+		if( !world.isRemote )
+		{
+			return false;
+		}
+		
 		int blockId = world.getBlockId( blockX, blockY, blockZ );
 		if( blockId == Ships.m_blockShip.blockID )
 		{
@@ -179,14 +185,14 @@ public class ItemShipClipboard extends Item
 			storage.readFromString( encodedBlocks );
 			
 			// how big is the ship?
-			BoundingBoxInt box = storage.getBoundingBox();
+			BoundingBoxInt box = new BoundingBoxInt( storage.getBoundingBox() );
 			int dx = box.getDx();
 			int dy = box.getDy();
 			int dz = box.getDz();
 			
 			// look for a place to put the ship
 			box.minY = blockY + 1;
-			box.maxY = blockY + dy - 1;
+			box.maxY = blockY + dy;
 			for( int x=0; x<dx; x++ )
 			{
 				box.minX = blockX - x;
@@ -242,9 +248,23 @@ public class ItemShipClipboard extends Item
 	{
 		// compute the translation
 		BoundingBoxInt sourceBox = storage.getBoundingBox();
+		// TEMP
+		System.out.println( String.format( "Source box: [%d,%d][%d,%d][%d,%d]",
+			sourceBox.minX, sourceBox.maxX,
+			sourceBox.minY, sourceBox.maxY,
+			sourceBox.minZ, sourceBox.maxZ
+		) );
+		
 		int tx = targetBox.minX - sourceBox.minX;
 		int ty = targetBox.minY - sourceBox.minY;
 		int tz = targetBox.minZ - sourceBox.minZ;
+		
+		// TEMP
+		Ships.logger.info( String.format( "translation: [%d,%d][%d,%d][%d,%d] -> [%d,%d][%d,%d][%d,%d] => t=(%d,%d,%d)",
+			sourceBox.minX, sourceBox.maxX, sourceBox.minY, sourceBox.maxY, sourceBox.minZ, sourceBox.maxZ,
+			targetBox.minX, targetBox.maxX, targetBox.minY, targetBox.maxY, targetBox.minZ, targetBox.maxZ,
+			tx, ty, tz
+		) );
 		
 		Map<ChunkCoordinates,ChunkCoordinates> correspondence = new TreeMap<ChunkCoordinates,ChunkCoordinates>();
 		for( ChunkCoordinates shipCoords : storage.coords() )
@@ -254,6 +274,11 @@ public class ItemShipClipboard extends Item
 				shipCoords.posY + ty,
 				shipCoords.posZ + tz
 			);
+			// TEMP
+			Ships.logger.info( String.format( "Correspondence: (%d,%d,%d) -> (%d,%d,%d)",
+				shipCoords.posX, shipCoords.posY, shipCoords.posZ,
+				worldCoords.posX, worldCoords.posY, worldCoords.posZ
+			) );
 			correspondence.put( shipCoords, worldCoords );
 		}
 		
