@@ -490,38 +490,21 @@ public class ShipCollider
         	worldBlock.addCollisionBoxesToList(
         		m_ship.worldObj,
         		worldCoords.posX, worldCoords.posY, worldCoords.posZ,
-        		shipBlockBox, worldBlockBoxes,
+        		combinedBlockBox,
+        		worldBlockBoxes,
         		null
         	);
         	
-    		// TEMP
-        	if( worldBlock.blockID != Block.waterStill.blockID && worldBlockBoxes.size() > 0 )
-        	{
-	    		Ships.logger.info( String.format( "Block (%d,%d,%d,%s) has %d boxes.",
-					worldCoords.posX, worldCoords.posY, worldCoords.posZ,
-					worldBlock.getUnlocalizedName(),
-					worldBlockBoxes.size()
-				) );
-        	}
-    		
         	// determine the scaling for this block
         	double blockScaling = 1;
         	for( AxisAlignedBB worldBlockBox : worldBlockBoxes )
         	{
-        		// TEMP
-        		Ships.logger.info( String.format( "\tscaling: %.4f",
-					getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, worldBlockBox )
-				) );
-        		
         		blockScaling = Math.min( blockScaling, getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, worldBlockBox ) );
         	}
         	
         	// did this block impede us? and should we break it?
         	if( blockScaling < 1 && worldBlock instanceof BlockFlower )
         	{
-        		// TEMP
-        		Ships.logger.info( "Ship collision destroyed a block!" );
-        		
         		m_ship.worldObj.destroyBlock( worldCoords.posX, worldCoords.posY, worldCoords.posZ, false );
         	}
         	else
