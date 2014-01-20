@@ -83,9 +83,19 @@ public class GuiShipLaunch extends GuiShip
 		}
 		else
 		{
-			valueText = GuiString.ShipTooLarge.getLocalizedText();
+			//valueText = GuiString.ShipTooLarge.getLocalizedText();
+			valueText = String.format( "%d%s / %d",
+				m_shipLauncher.getNumBlocksChecked(),
+				( m_shipLauncher.getNumBlocksChecked() == m_shipLauncher.getNumBlocksToCheck() ? "+" : "" ),
+				m_shipLauncher.getShipType().getMaxNumBlocks()
+			);
 		}
-		drawLabelValueText( GuiString.ShipNumBlocks.getLocalizedText(), valueText, 1 );
+		drawYesNoText(
+			GuiString.ShipNumBlocks.getLocalizedText(),
+			valueText,
+			m_shipLauncher.getLaunchFlag( LaunchFlag.RightNumberOfBlocks ),
+			1
+		);
 		
 		// draw the launch flags
 		drawYesNoText(

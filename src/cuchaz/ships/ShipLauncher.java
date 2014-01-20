@@ -35,7 +35,7 @@ public class ShipLauncher
 			{
 				return launcher.m_blocks != null
 					&& !launcher.m_blocks.isEmpty()
-					&& launcher.m_blocks.size() <= launcher.m_shipType.getMaxNumBlocks();
+					&& launcher.m_blocks.size() <= launcher.m_shipType.getMaxNumBlocks() + 1; // +1 since the ship block is free
 			}
 		},
 		HasWaterBelow
@@ -121,6 +121,7 @@ public class ShipLauncher
 	private ShipWorld m_shipWorld;
 	private ShipPhysics m_shipPhysics;
 	private Double m_equilibriumWaterHeight;
+	private int m_numBlocksChecked;
 	
 	public ShipLauncher( final World world, int x, int y, int z )
 	{
@@ -132,10 +133,13 @@ public class ShipLauncher
 		// get the ship type from the block
 		m_shipType = Ships.m_blockShip.getShipType( world, x, y, z );
 		
+		// determine how many blocks to check
+		int numBlocksToCheck = getNumBlocksToCheck();
+		
 		// find all the blocks connected to the ship block
 		m_blocks = BlockUtils.searchForBlocks(
 			x, y, z,
-			m_shipType.getMaxNumBlocks(),
+			numBlocksToCheck,
 			new BlockUtils.BlockValidator( )
 			{
 				@Override
@@ -149,18 +153,30 @@ public class ShipLauncher
 		
 		if( m_blocks != null )
 		{
-			// also add the ship block
-			m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
+			m_numBlocksChecked = m_blocks.size();
 			
-			m_shipWorld = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
-			m_shipPhysics = new ShipPhysics( m_shipWorld.getBlocksStorage() );
-			m_equilibriumWaterHeight = m_shipPhysics.getEquilibriumWaterHeight();
+			// did we find too many blocks?
+			if( m_blocks.size() > m_shipType.getMaxNumBlocks() )
+			{
+				m_blocks = null;
+			}
+			else
+			{
+				// also add the ship block
+				m_blocks.add( new ChunkCoordinates( m_x, m_y, m_z ) );
+				
+				m_shipWorld = new ShipWorld( m_world, new ChunkCoordinates( m_x, m_y, m_z ), m_blocks );
+				m_shipPhysics = new ShipPhysics( m_shipWorld.getBlocksStorage() );
+				m_equilibriumWaterHeight = m_shipPhysics.getEquilibriumWaterHeight();
+			}
 		}
 		else
 		{
+			// we found WAY too many blocks
 			m_shipWorld = null;
 			m_shipPhysics = null;
 			m_equilibriumWaterHeight = null;
+			m_numBlocksChecked = numBlocksToCheck;
 		}
 		
 		// compute the launch flags
@@ -205,6 +221,16 @@ public class ShipLauncher
 	{
 		// don't count the ship block towards the size quota
 		return m_blocks.size() - 1;
+	}
+	
+	public int getNumBlocksChecked( )
+	{
+		return m_numBlocksChecked;
+	}
+	
+	public int getNumBlocksToCheck( )
+	{
+		return Math.max( 100, m_shipType.getMaxNumBlocks()*2 );
 	}
 	
 	public boolean getLaunchFlag( LaunchFlag flag )

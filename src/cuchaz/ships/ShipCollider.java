@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.EntityLivingBase;
@@ -475,14 +476,58 @@ public class ShipCollider
  		AxisAlignedBB combinedBlockBox = shipBlockBox.func_111270_a( nextShipBlockBox );
  		
  		// do a range query to get colliding world blocks
-		List<AxisAlignedBB> nearbyWorldBlocks = new ArrayList<AxisAlignedBB>();
-		BlockUtils.getWorldCollisionBoxes( nearbyWorldBlocks, m_ship.worldObj, combinedBlockBox );
+		List<ChunkCoordinates> nearbyWorldBlocks = new ArrayList<ChunkCoordinates>();
+		BlockUtils.worldRangeQuery( nearbyWorldBlocks, m_ship.worldObj, combinedBlockBox );
         
         // get the scaling that avoids the collision
         result.scaling = 1;
-        for( AxisAlignedBB worldBlockBox : nearbyWorldBlocks )
+        List<AxisAlignedBB> worldBlockBoxes = new ArrayList<AxisAlignedBB>();
+        for( ChunkCoordinates worldCoords : nearbyWorldBlocks )
 		{
-        	result.scaling = Math.min( result.scaling, getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, worldBlockBox ) );
+        	// get the block collision boxes
+        	Block worldBlock = Block.blocksList[m_ship.worldObj.getBlockId( worldCoords.posX, worldCoords.posY, worldCoords.posZ )];
+        	worldBlockBoxes.clear();
+        	worldBlock.addCollisionBoxesToList(
+        		m_ship.worldObj,
+        		worldCoords.posX, worldCoords.posY, worldCoords.posZ,
+        		shipBlockBox, worldBlockBoxes,
+        		null
+        	);
+        	
+    		// TEMP
+        	if( worldBlock.blockID != Block.waterStill.blockID && worldBlockBoxes.size() > 0 )
+        	{
+	    		Ships.logger.info( String.format( "Block (%d,%d,%d,%s) has %d boxes.",
+					worldCoords.posX, worldCoords.posY, worldCoords.posZ,
+					worldBlock.getUnlocalizedName(),
+					worldBlockBoxes.size()
+				) );
+        	}
+    		
+        	// determine the scaling for this block
+        	double blockScaling = 1;
+        	for( AxisAlignedBB worldBlockBox : worldBlockBoxes )
+        	{
+        		// TEMP
+        		Ships.logger.info( String.format( "\tscaling: %.4f",
+					getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, worldBlockBox )
+				) );
+        		
+        		blockScaling = Math.min( blockScaling, getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, worldBlockBox ) );
+        	}
+        	
+        	// did this block impede us? and should we break it?
+        	if( blockScaling < 1 && worldBlock instanceof BlockFlower )
+        	{
+        		// TEMP
+        		Ships.logger.info( "Ship collision destroyed a block!" );
+        		
+        		m_ship.worldObj.destroyBlock( worldCoords.posX, worldCoords.posY, worldCoords.posZ, false );
+        	}
+        	else
+        	{
+        		result.scaling = Math.min( result.scaling, blockScaling );
+        	}
 		}
         result.numCollidingBoxes = nearbyWorldBlocks.size();
 	}
