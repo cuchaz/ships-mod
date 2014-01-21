@@ -39,6 +39,7 @@ import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.RotatedBB;
+import cuchaz.modsShared.Util;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.propulsion.Propulsion;
 
@@ -735,9 +736,6 @@ public class EntityShip extends Entity
 		{
 			angularAccelerationDueToDrag *= -1;
 		}
-		
-		// TEMP
-		//System.out.println( String.format( "%4.2f %4.2f", Util.perTick2ToPerSecond2( angularAccelerationDueToThrust ), Util.perTick2ToPerSecond2( angularAccelerationDueToDrag ) ) );
 		
 		// apply the angular acceleration
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;

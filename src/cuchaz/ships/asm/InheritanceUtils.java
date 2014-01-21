@@ -10,18 +10,22 @@
  ******************************************************************************/
 package cuchaz.ships.asm;
 
-import java.io.IOException;
-
 import org.objectweb.asm.ClassReader;
 
 public class InheritanceUtils
 {
+	private static String[] leafPackages = { "java/", "javax/" };
+	
 	public static boolean extendsClass( String className, String targetClassName )
 	{
 		// base case
 		if( className.equalsIgnoreCase( targetClassName ) )
 		{
 			return true;
+		}
+		else if( isLeafPackage( className ) )
+		{
+			return false;
 		}
 		
 		// is this class an array? Just ignore arrays
@@ -40,7 +44,7 @@ public class InheritanceUtils
 				return extendsClass( superClassName, targetClassName );
 			}
 		}
-		catch( IOException ex )
+		catch( Exception ex )
 		{
 			// NOTE: using the logger here causes class loading circles. Need to use stdout
 			System.out.println( "Unable to read class: " + className );
@@ -57,6 +61,10 @@ public class InheritanceUtils
 		{
 			return true;
 		}
+		else if( isLeafPackage( interfaceName ) )
+		{
+			return false;
+		}
 		
 		// recurse
 		String className = interfaceName.replace( '.', '/' );
@@ -71,13 +79,25 @@ public class InheritanceUtils
 				}
 			}
 		}
-		catch( IOException ex )
+		catch( Exception ex )
 		{
 			// NOTE: using the logger here causes class loading circles. Need to use stdout
 			System.out.println( "Unable to read class: " + className );
 			ex.printStackTrace( System.out );
 		}
 		
+		return false;
+	}
+	
+	private static boolean isLeafPackage( String name )
+	{
+		for( String prefix : leafPackages )
+		{
+			if( name.startsWith( prefix ) )
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 }

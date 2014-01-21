@@ -118,7 +118,7 @@ public class ShipCollider
 		getEntityBoxInBlockSpace( oldEntityBox, entity, Vec3.createVectorHelper( oldX, oldY, oldZ ) );
 		
 		// to make collisions for standing on blocks more robust, if the old box is JUST beneath the top of a block, pop it up.
-		final double Epsilon = 1e-2;
+		final double Epsilon = 1e-1;
 		double distToNextTop = MathHelper.ceiling_double_int( oldEntityBox.minY ) - oldEntityBox.minY;
 		if( distToNextTop <= Epsilon )
 		{
@@ -336,8 +336,8 @@ public class ShipCollider
 			if( collisionResult.scaling < 1.0 )
 			{
 				scaling = Math.min( scaling, collisionResult.scaling );
+				numCollidingBoxes += collisionResult.numCollidingBoxes;
 			}
-			numCollidingBoxes += collisionResult.numCollidingBoxes;
 		}
 		
 		// avoid the collision

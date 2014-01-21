@@ -59,6 +59,12 @@ public class ItemShipClipboard extends Item
 	@Override
 	public ItemStack onItemRightClick( ItemStack itemStack, World world, EntityPlayer player )
     {
+		// client only
+		if( !world.isRemote )
+		{
+			return itemStack;
+		}
+		
 		// find out where we're aiming
 		final boolean IntersectWater = true;
 		MovingObjectPosition movingobjectposition = getMovingObjectPositionFromPlayer( world, player, IntersectWater );

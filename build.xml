@@ -5,7 +5,7 @@
 	</description>
 	
 	<!-- output file -->
-	<property name="jarName" value="shipsMod-v0.3.beta.jar"/>
+	<property name="jarName" value="shipsMod-v0.4.beta.jar"/>
 	
 	<!-- input paths -->
 	<property name="mcp" location="../forge-v1.6.4/mcp"/>
