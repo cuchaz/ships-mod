@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
 
@@ -332,10 +333,13 @@ public class ShipLauncher
 		// remove the world blocks, but don't tell the clients. They'll do it later
 		for( ChunkCoordinates coords : m_blocks )
 		{
-			BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, false );
 			if( coords.posY < waterHeight )
 			{
-				m_world.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, 1 );
+				BlockUtils.changeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+			}
+			else
+			{
+				BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, UpdateRules.UpdateNoOne );
 			}
 		}
 		

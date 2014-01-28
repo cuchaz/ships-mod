@@ -21,6 +21,7 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
@@ -89,11 +90,14 @@ public class PacketShipBlocks extends Packet
 		// remove all the ship blocks from the world, but don't notify the server
 		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
 		{
-			BlockUtils.removeBlockWithoutNotifyingIt( player.worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, false );
 			if( coords.posY + ty < ship.getWaterHeight() )
 			{
-				player.worldObj.setBlock( coords.posX + tx, coords.posY + ty, coords.posZ + tz, Block.waterStill.blockID, 0, 1 );
+				BlockUtils.changeBlockWithoutNotifyingIt( player.worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 			}
+			else
+			{
+				BlockUtils.removeBlockWithoutNotifyingIt( player.worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, UpdateRules.UpdateNoOne );
+			}			
 		}
 	}
 }

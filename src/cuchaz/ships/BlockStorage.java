@@ -17,6 +17,7 @@ import java.io.IOException;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.UpdateRules;
 
 public class BlockStorage
 {
@@ -49,6 +50,6 @@ public class BlockStorage
 	
 	public void writeToWorld( World world, ChunkCoordinates coords )
 	{
-		BlockUtils.changeBlockWithoutNotifyingIt( world, coords.posX, coords.posY, coords.posZ, id, meta );
+		BlockUtils.changeBlockWithoutNotifyingIt( world, coords.posX, coords.posY, coords.posZ, id, meta, UpdateRules.UpdateNetwork );
 	}
 }

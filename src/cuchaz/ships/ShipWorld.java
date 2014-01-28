@@ -42,6 +42,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
@@ -170,7 +172,7 @@ public class ShipWorld extends DetachedWorld
 		for( ChunkCoordinates coordsShip : getGeometry().getTrappedAir( waterSurfaceLevelBlockSpace ) )
 		{
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
-			world.setBlockToAir( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ );
+			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, UpdateRules.UpdateNetwork );
 		}
 		
 		// restore the tile entities

@@ -154,8 +154,6 @@ public class EntityShip extends Entity
 			posX, posY, posZ,
 			motionX, motionY, motionZ
 		) );
-		
-		ShipLocator.registerShip( this );
 	}
 	
 	@Override
@@ -205,8 +203,6 @@ public class EntityShip extends Entity
 				}
 			}
 		}
-		
-		ShipLocator.unregisterShip( this );
 	}
 	
 	@Override

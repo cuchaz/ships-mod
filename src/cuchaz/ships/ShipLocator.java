@@ -16,6 +16,7 @@ import java.util.List;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemInWorldManager;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -23,57 +24,32 @@ import net.minecraft.world.World;
 
 public class ShipLocator
 {
-	private static List<EntityShip> m_shipsServer;
-	private static List<EntityShip> m_shipsClient;
-	
-	static
-	{
-		m_shipsClient = new ArrayList<EntityShip>();
-		m_shipsServer = new ArrayList<EntityShip>();
-	}
-	
-	public static void registerShip( EntityShip ship )
-	{
-		getShips( ship.worldObj ).add( ship );
-	}
-	
-	public static void unregisterShip( EntityShip ship )
-	{
-		getShips( ship.worldObj ).remove( ship );
-	}
-	
 	public static List<EntityShip> getShips( World world )
 	{
-		// client only
-		//Minecraft.getMinecraft().theWorld.isRemote
-		if( world.isRemote )
+		List<EntityShip> ships = new ArrayList<EntityShip>();
+		for( Object entity : world.getLoadedEntityList() )
 		{
-			return m_shipsClient;
+			if( entity instanceof EntityShip )
+			{
+				ships.add( (EntityShip)entity );
+			}
 		}
-		else
-		{
-			return m_shipsServer;
-		}
+		return ships;
 	}
 	
 	public static List<EntityShip> getShipsServer( )
 	{
-		return m_shipsServer;
+		return getShips( MinecraftServer.getServer().getEntityWorld() );
 	}
 	
-	public static List<EntityShip> getShipsClient( )
+	public static EntityShip getShip( World world, int entityId )
 	{
-		return m_shipsClient;
+		return getShip( getShips( world ), entityId );
 	}
 	
 	public static EntityShip getShipServer( int entityId )
 	{
-		return getShip( m_shipsServer, entityId );
-	}
-	
-	public static EntityShip getShipClient( int entityId )
-	{
-		return getShip( m_shipsClient, entityId );
+		return getShip( getShipsServer(), entityId );
 	}
 	
 	private static EntityShip getShip( List<EntityShip> ships, int entityId )
