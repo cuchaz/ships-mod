@@ -232,21 +232,24 @@ public class RenderShip extends Render
 			GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 			
 			// render all ship blocks
+			List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
 			for( ChunkCoordinates coords : ship.getShipWorld().coords() )
 			{
-				renderHitbox(
-					ship.getCollider().getBlockBoxInBlockSpace( coords ),
-					ColorUtils.getColor( 255, 0, 0 )
-				);
-			}
-			
-			// render the highlighted blocks
-			for( ChunkCoordinates coords : info.getCollidedCoords() )
-			{
-				renderHitbox(
-					ship.getCollider().getBlockBoxInBlockSpace( coords ),
-					ColorUtils.getColor( 255, 255, 0 )
-				);
+				boxes.clear();
+				ship.getCollider().getCollisionBoxesInBlockSpace( boxes, coords, ship.getCollider().getBlockBoxInBlockSpace( coords ) );
+				int color;
+				if( info.getCollidedCoords().contains( coords ) )
+				{
+					color = ColorUtils.getColor( 255, 255, 0 );
+				}
+				else
+				{
+					color = ColorUtils.getColor( 255, 0, 0 );
+				}
+				for( AxisAlignedBB box : boxes )
+				{
+					renderHitbox( box, color );
+				}
 			}
 			
 			// where is the camera?
@@ -280,10 +283,13 @@ public class RenderShip extends Render
 			HitList.Entry hit = hits.getClosestHit();
 			if( hit != null && hit.type == HitList.Type.Ship )
 			{
-				renderHitbox(
-					ship.getCollider().getBlockBoxInBlockSpace( new ChunkCoordinates( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ ) ),
-					ColorUtils.getColor( 255, 255, 255 )
-				);
+				boxes.clear();
+				ChunkCoordinates coords = new ChunkCoordinates( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ );
+				ship.getCollider().getCollisionBoxesInBlockSpace( boxes, coords, ship.getCollider().getBlockBoxInBlockSpace( coords ) );
+				for( AxisAlignedBB box : boxes )
+				{
+					renderHitbox( box, ColorUtils.getColor( 255, 255, 255 ) );
+				}
 			}
 			
 			GL11.glPopMatrix();

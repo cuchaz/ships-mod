@@ -18,8 +18,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.logging.Level;
 
 import net.minecraft.block.Block;
@@ -32,11 +30,13 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
+import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.ships.gui.GuiString;
+import cuchaz.ships.packets.PacketPasteShip;
 
 public class ItemShipClipboard extends Item
 {
@@ -258,18 +258,8 @@ public class ItemShipClipboard extends Item
 		int ty = targetBox.minY - sourceBox.minY;
 		int tz = targetBox.minZ - sourceBox.minZ;
 		
-		Map<ChunkCoordinates,ChunkCoordinates> correspondence = new TreeMap<ChunkCoordinates,ChunkCoordinates>();
-		for( ChunkCoordinates shipCoords : storage.coords() )
-		{
-			ChunkCoordinates worldCoords = new ChunkCoordinates(
-				shipCoords.posX + tx,
-				shipCoords.posY + ty,
-				shipCoords.posZ + tz
-			);
-			correspondence.put( shipCoords, worldCoords );
-		}
-		
-		storage.writeToWorld( world, correspondence );
+		// send the ship to the server for reconstruction
+		PacketDispatcher.sendPacketToServer( new PacketPasteShip( storage, tx, ty, tz ).getCustomPacket() );
 	}
 	
 	private void message( EntityPlayer player, GuiString text, Object ... args )

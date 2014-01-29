@@ -172,7 +172,7 @@ public class ShipWorld extends DetachedWorld
 		for( ChunkCoordinates coordsShip : getGeometry().getTrappedAir( waterSurfaceLevelBlockSpace ) )
 		{
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
-			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, UpdateRules.UpdateNetwork );
+			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, UpdateRules.UpdateClients );
 		}
 		
 		// restore the tile entities

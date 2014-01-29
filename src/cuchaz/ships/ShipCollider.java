@@ -272,6 +272,12 @@ public class ShipCollider
 		);
 	}
 	
+	public void getCollisionBoxesInBlockSpace( List<AxisAlignedBB> out, ChunkCoordinates coords, AxisAlignedBB box )
+	{
+		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+		block.addCollisionBoxesToList( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ, box, out, null );
+	}
+	
 	public RotatedBB getBlockBoxInWorldSpace( ChunkCoordinates coords )
 	{
 		return m_ship.blocksToWorld( getBlockBoxInBlockSpace( coords ) );
@@ -588,21 +594,17 @@ public class ShipCollider
 		AxisAlignedBB trajectoryBox = oldBox.func_111270_a( newBox );
 		
 		// collect the boxes for the blocks in that box
+		List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
 		List<PossibleCollision> collisions = new ArrayList<PossibleCollision>();
-		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox ) )
+		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox.expand( 1, 1, 1 ) ) )
+		// NOTE: expand trajectoryBox by 1 so we pick up boxes whose collision boxes are outside their bounding boxes
 		{
-			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
-			block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ );
-			collisions.add(
-				new PossibleCollision( coords, AxisAlignedBB.getBoundingBox(
-					block.getBlockBoundsMinX() + coords.posX,
-					block.getBlockBoundsMinY() + coords.posY,
-					block.getBlockBoundsMinZ() + coords.posZ,
-					block.getBlockBoundsMaxX() + coords.posX,
-					block.getBlockBoundsMaxY() + coords.posY,
-					block.getBlockBoundsMaxZ() + coords.posZ
-				) )
-			);
+			boxes.clear();
+			getCollisionBoxesInBlockSpace( boxes, coords, trajectoryBox );
+			for( AxisAlignedBB box : boxes )
+			{
+				collisions.add( new PossibleCollision( coords, box ) );
+			}
 		}
 		return collisions;
 	}

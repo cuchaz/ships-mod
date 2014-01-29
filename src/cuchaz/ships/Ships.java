@@ -52,6 +52,7 @@ import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
+import cuchaz.ships.packets.PacketPasteShip;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 import cuchaz.ships.packets.PacketShipBlocks;
@@ -64,7 +65,7 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 @NetworkMod(
 	// NOTE: 20-character limit for channel names
 	channels = { PacketLaunchShip.Channel, PacketUnlaunchShip.Channel, PacketPilotShip.Channel, PacketShipBlockEvent.Channel,
-		PacketChangedBlocks.Channel, PacketShipBlocks.Channel, PacketShipBlocksRequest.Channel },
+		PacketChangedBlocks.Channel, PacketShipBlocks.Channel, PacketShipBlocksRequest.Channel, PacketPasteShip.Channel },
 	packetHandler = PacketHandler.class,
 	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
 	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server

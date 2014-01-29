@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.render;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +44,7 @@ public class ShipDebugRenderInfo
 		// RenderManager.field_85095_o;
 	}
 	
-	public Iterable<ChunkCoordinates> getCollidedCoords( )
+	public Collection<ChunkCoordinates> getCollidedCoords( )
 	{
 		return m_collidedCoords;
 	}

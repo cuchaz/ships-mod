@@ -34,6 +34,7 @@ public class PacketHandler implements IPacketHandler
 		m_packetTypes.put( PacketChangedBlocks.Channel, new PacketChangedBlocks() );
 		m_packetTypes.put( PacketShipBlocks.Channel, new PacketShipBlocks() );
 		m_packetTypes.put( PacketShipBlocksRequest.Channel, new PacketShipBlocksRequest() );
+		m_packetTypes.put( PacketPasteShip.Channel, new PacketPasteShip() );
 	}
 	
 	@Override
