@@ -39,62 +39,6 @@ public class ShipLauncher
 					&& launcher.m_blocks.size() <= launcher.m_shipType.getMaxNumBlocks() + 1; // +1 since the ship block is free
 			}
 		},
-		HasWaterBelow
-		{
-			@Override
-			public boolean computeValue( ShipLauncher launcher )
-			{
-				if( launcher.m_blocks == null )
-				{
-					return false;
-				}
-				
-				for( ChunkCoordinates coords : launcher.getShipEnvelope( BlockSide.Bottom ) )
-				{
-					if( !launcher.hasWaterBelow( coords ) )
-					{
-						return false;
-					}
-				}
-				return true;
-			}
-		},
-		HasAirAbove
-		{
-			@Override
-			public boolean computeValue( ShipLauncher launcher )
-			{
-				if( launcher.m_blocks == null )
-				{
-					return false;
-				}
-				
-				for( ChunkCoordinates coords : launcher.getShipEnvelope( BlockSide.Top ) )
-				{
-					int worldX = coords.posX + launcher.m_x;
-					int worldY = coords.posY + launcher.m_y;
-					int worldZ = coords.posZ + launcher.m_z;
-					if( launcher.m_world.getBlockMaterial( worldX, worldY + 1, worldZ ) == Material.air )
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-		},
-		FoundWaterHeight
-		{
-			@Override
-			public boolean computeValue( ShipLauncher launcher )
-			{
-				if( launcher.m_blocks == null )
-				{
-					return false;
-				}
-				
-				return launcher.computeWaterHeight() != -1;
-			}
-		},
 		WillItFloat
 		{
 			@Override
@@ -321,7 +265,6 @@ public class ShipLauncher
 			m_z + centerOfMass.zCoord,
 			0, 0
 		);
-		ship.setWaterHeight( waterHeight );
 		ship.setShipWorld( m_shipWorld );
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
@@ -399,30 +342,5 @@ public class ShipLauncher
 		}
 		
 		return -1;
-	}
-	
-	private boolean hasWaterBelow( ChunkCoordinates coords )
-	{
-		// convert the block coords to world coords
-		int worldX = coords.posX + m_x;
-		int worldY = coords.posY + m_y;
-		int worldZ = coords.posZ + m_z;
-		
-		// drop down until we hit something other than air
-		for( int y=worldY-1; y>=0; y-- )
-		{
-			Material material = m_world.getBlockMaterial( worldX, y, worldZ );
-			
-			if( material == Material.air )
-			{
-				continue;
-			}
-			
-			// if it's water, we win!! =D
-			return material.isLiquid();
-		}
-		
-		// ran out of blocks to check. =(
-		return false;
 	}
 }

@@ -179,25 +179,9 @@ public class ShipUnlauncher
 			// restore all the blocks
 			m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
 		}
-		else
-		{
-			// UNDONE: this needs to be moved into the client! It won't work on the server!
-			
-			// compute the unlaunch delta
-			Vec3 sourceShipBlock = Vec3.createVectorHelper( 0, 0, 0 );
-			m_ship.blocksToShip( sourceShipBlock );
-			m_ship.shipToWorld( sourceShipBlock );
-			ChunkCoordinates targetShipBlock = m_correspondence.get( new ChunkCoordinates( 0, 0, 0 ) );
-			double dx = targetShipBlock.posX - sourceShipBlock.xCoord;
-			double dy = targetShipBlock.posY - sourceShipBlock.yCoord;
-			double dz = targetShipBlock.posZ - sourceShipBlock.zCoord;
-			
-			// move the riders so they sit on top of the blocks
-			for( Entity entity : riders )
-			{
-				entity.setPosition( entity.posX + dx, entity.posY + dy, entity.posZ + dz );
-			}
-		}
+		
+		// UNDONE: send a message to each client to move riders so they sit on top of the new world blocks
+		do this
 	}
 	
 	public void snapToLaunchDirection( )

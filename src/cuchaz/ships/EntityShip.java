@@ -10,12 +10,12 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
@@ -34,12 +34,15 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
+import cuchaz.modsShared.Envelopes;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.persistence.ShipPersistence;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class EntityShip extends Entity 
@@ -49,9 +52,6 @@ public class EntityShip extends Entity
 	public static final int LinearThrottleStep = 2;
 	public static final int AngularThrottleMax = 1;
 	public static final int AngularThrottleMin = -1;
-	
-	// data watcher IDs. Entity uses [0,1]. We can use [2,31]
-	private static final int WatcherIdWaterHeight = 3;
 	
 	public float motionYaw;
 	public int linearThrottle;
@@ -73,8 +73,8 @@ public class EntityShip extends Entity
 	private double m_zFromServer;
 	private float m_yawFromServer;
 	private float m_pitchFromServer;
-	private TreeSet<ChunkCoordinates> m_previouslyDisplacedWaterBlocks;
 	private ShipCollider m_collider;
+	private WaterDisplacer m_waterDisplacer;
 	
 	public EntityShip( World world )
 	{
@@ -103,18 +103,14 @@ public class EntityShip extends Entity
 		m_zFromServer = 0;
 		m_yawFromServer = 0;
 		m_pitchFromServer = 0;
-		m_previouslyDisplacedWaterBlocks = null;
 		m_collider = new ShipCollider( this );
+		m_waterDisplacer = new WaterDisplacer( this );
 	}
 	
 	@Override
 	protected void entityInit( )
 	{
-		// this gets called inside super.Entity( World )
-		// it seems to be used to init the data watcher
-		
-		// allocate a slot for the block data
-		dataWatcher.addObject( WatcherIdWaterHeight, -1 );
+		// nothing to do
 	}
 	
 	public void setShipWorld( ShipWorld shipWorld )
@@ -169,54 +165,35 @@ public class EntityShip extends Entity
 		
 		if( !worldObj.isRemote )
 		{
-			// remove all the air wall blocks
-			if( m_previouslyDisplacedWaterBlocks != null )
-			{
-				for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
-				{
-					if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
-					{
-						worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
-					}
-				}
-			}
+			m_waterDisplacer.restoreWater();
 		}
 		else
 		{
-			// if riders are in a block, move them on top of the block
-			for( Entity rider : getCollider().getRiders() )
-			{
-				// is the rider inside a block?
-				List<AxisAlignedBB> worldBoxes = new ArrayList<AxisAlignedBB>();
-				BlockUtils.getWorldCollisionBoxes( worldBoxes, rider.worldObj, rider.boundingBox );
-				boolean inBlock = !worldBoxes.isEmpty();
-				
-				if( inBlock )
-				{
-					// move the rider to the top of the boxes
-					double dy = 0;
-					for( AxisAlignedBB box : worldBoxes )
-					{
-						dy = Math.max( dy, box.maxY - rider.boundingBox.minY );
-					}
-					rider.moveEntity( 0, dy, 0 );
-				}
-			}
+			// UNDONE: use the ship unlauncher to compute the correspondence
+			// then move the client on top of the world block
 		}
 	}
 	
 	@Override
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
-		setWaterHeight( nbt.getInteger( "waterHeight" ) );
-		setShipWorld( new ShipWorld( worldObj, nbt.getByteArray( "blocks" ) ) );
+		int version = nbt.getByte( "version" );
+		ShipPersistence persistence = ShipPersistence.get( version );
+		if( persistence != null )
+		{
+			persistence.read( this, nbt );
+		}
+		else
+		{
+			Ships.logger.warning( String.format( "Tried to load ship with unknown persistence version %d. Ship will not be loaded.", version ) );
+			setDead();
+		}
 	}
 	
 	@Override
 	protected void writeEntityToNBT( NBTTagCompound nbt )
 	{
-		nbt.setInteger( "waterHeight", getWaterHeight() );
-		nbt.setByteArray( "blocks", m_shipWorld.getData() );
+		ShipPersistence.getNewestVersion().write( this, nbt );
 	}
 	
 	public ShipWorld getShipWorld( )
@@ -232,15 +209,6 @@ public class EntityShip extends Entity
 	public ShipCollider getCollider( )
 	{
 		return m_collider;
-	}
-	
-	public int getWaterHeight( )
-	{
-		return dataWatcher.getWatchableObjectInt( WatcherIdWaterHeight );
-	}
-	public void setWaterHeight( int val )
-	{
-		dataWatcher.updateObject( WatcherIdWaterHeight, val );
 	}
 	
 	@Override
@@ -293,7 +261,6 @@ public class EntityShip extends Entity
 		}
 		
 		double waterHeightInBlockSpace = shipToBlocksY( worldToShipY( getWaterHeight() ) );
-		
 		adjustMotionDueToGravityAndBuoyancy( waterHeightInBlockSpace );
 		adjustMotionDueToThrustAndDrag( waterHeightInBlockSpace );
 		
@@ -361,7 +328,7 @@ public class EntityShip extends Entity
 			dz = posZ - prevPosZ;
 			dYaw = rotationYaw - prevRotationYaw;
 			
-			moveWater( waterHeightInBlockSpace );
+			m_waterDisplacer.updateWater();
 			moveRiders( riders, dx, dy, dz, dYaw );
 		}
 		
@@ -383,6 +350,36 @@ public class EntityShip extends Entity
 		m_shipWorld.updateEntities();
 	}
 	
+	private double getWaterHeight( )
+	{
+		// search in the ship box for water blocks
+		Set<ChunkCoordinates> waterCoords = new TreeSet<ChunkCoordinates>();
+		BlockUtils.worldRangeQuery( waterCoords, worldObj, boundingBox );
+		Iterator<ChunkCoordinates> iter = waterCoords.iterator();
+		while( iter.hasNext() )
+		{
+			ChunkCoordinates coords = iter.next();
+			if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) != Block.waterStill.blockID )
+			{
+				iter.remove();
+			}
+		}
+		
+		if( waterCoords.isEmpty() )
+		{
+			return 0;
+		}
+		
+		// compute the average y from the top envelope of these blocks
+		double sum = 0;
+		BlockArray topEnvelope = new Envelopes( waterCoords ).getEnvelope( BlockSide.Top );
+		for( ChunkCoordinates coords : topEnvelope )
+		{
+			sum += coords.posY;
+		}
+		return sum/topEnvelope.getWidth()/topEnvelope.getHeight();
+	}
+
 	@Override
 	public boolean interactFirst( EntityPlayer player )
 	{
@@ -734,88 +731,6 @@ public class EntityShip extends Entity
 		
 		// apply the angular acceleration
 		motionYaw += angularAccelerationDueToThrust + angularAccelerationDueToDrag;
-	}
-	
-	private void moveWater( double waterHeightBlocks )
-	{
-		// get all the trapped air blocks
-		int surfaceLevelBlocks = MathHelper.floor_double( waterHeightBlocks );
-		TreeSet<ChunkCoordinates> trappedAirBlocks = m_shipWorld.getGeometry().getTrappedAir( surfaceLevelBlocks );
-		if( trappedAirBlocks.isEmpty() )
-		{
-			// the ship is out of the water
-			return;
-		}
-		
-		int surfaceLevelWorld = getWaterHeight();
-		
-		// find the world water blocks that intersect the trapped air blocks
-		TreeSet<ChunkCoordinates> displacedWaterBlocks = new TreeSet<ChunkCoordinates>();
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		for( ChunkCoordinates coords : trappedAirBlocks )
-		{
-			// compute the bounding box for the air block
-			p.xCoord = coords.posX + 0.5;
-			p.yCoord = coords.posY + 0.5;
-			p.zCoord = coords.posZ + 0.5;
-			blocksToShip( p );
-			shipToWorld( p );
-			
-			m_collider.getBlockWorldBoundingBox( box, coords );
-			
-			// grow the bounding box just a bit so we get more robust collisions
-			final double Delta = 0.1;
-			box = box.expand( Delta, Delta, Delta );
-			
-			// query for all the world water blocks that intersect it
-			int minX = MathHelper.floor_double( box.minX );
-			int maxX = MathHelper.floor_double( box.maxX );
-			int minY = MathHelper.floor_double( box.minY );
-			int maxY = Math.min( MathHelper.floor_double( box.maxY ), surfaceLevelWorld - 1 );
-			int minZ = MathHelper.floor_double( box.minZ );
-			int maxZ = MathHelper.floor_double( box.maxZ );
-			for( int x=minX; x<=maxX; x++ )
-			{
-				for( int z=minZ; z<=maxZ; z++ )
-				{
-					for( int y=minY; y<=maxY; y++ )
-					{
-						Material material = worldObj.getBlockMaterial( x, y, z );
-						if( material == Material.water || material == Material.air || material == Ships.m_materialAirWall )
-						{
-							displacedWaterBlocks.add( new ChunkCoordinates( x, y, z ) );
-						}
-					}
-				}
-			}
-		}
-		
-		// which are new blocks to displace?
-		for( ChunkCoordinates coords : displacedWaterBlocks )
-		{
-			if( m_previouslyDisplacedWaterBlocks == null || !m_previouslyDisplacedWaterBlocks.contains( coords ) )
-			{
-				worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Ships.m_blockAirWall.blockID );
-			}
-		}
-		
-		// which blocks are no longer displaced?
-		if( m_previouslyDisplacedWaterBlocks != null )
-		{
-			for( ChunkCoordinates coords : m_previouslyDisplacedWaterBlocks )
-			{
-				if( !displacedWaterBlocks.contains( coords ) )
-				{
-					worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
-					
-					// UNDONE: can get the fill effect back by only turning the surface level into air?
-					// or make a special wake block that will self-convert back to water
-				}
-			}
-		}
-		
-		m_previouslyDisplacedWaterBlocks = displacedWaterBlocks;
 	}
 	
 	private void moveRiders( List<Entity> riders, double dx, double dy, double dz, float dYaw )
