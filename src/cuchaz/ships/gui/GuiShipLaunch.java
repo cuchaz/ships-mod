@@ -99,24 +99,9 @@ public class GuiShipLaunch extends GuiShip
 		
 		// draw the launch flags
 		drawYesNoText(
-			GuiString.ShipInOrAboveWater.getLocalizedText(),
-			m_shipLauncher.getLaunchFlag( LaunchFlag.HasWaterBelow ),
-			2
-		);
-		drawYesNoText(
-			GuiString.ShipHasAirAbove.getLocalizedText(),
-			m_shipLauncher.getLaunchFlag( LaunchFlag.HasAirAbove ),
-			3
-		);
-		drawYesNoText(
-			GuiString.ShipFoundWaterHeight.getLocalizedText(),
-			m_shipLauncher.getLaunchFlag( LaunchFlag.FoundWaterHeight ),
-			4
-		);
-		drawYesNoText(
 			GuiString.ShipWillItFloat.getLocalizedText(),
 			m_shipLauncher.getLaunchFlag( LaunchFlag.WillItFloat ),
-			5
+			2
 		);
 		
 		// draw the ship and show the water height

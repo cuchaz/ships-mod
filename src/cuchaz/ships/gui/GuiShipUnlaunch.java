@@ -25,6 +25,7 @@ public class GuiShipUnlaunch extends GuiShip
 	private EntityShip m_ship;
 	private ShipUnlauncher m_unlauncher;
 	private GuiButton m_buttonUnlaunchShip;
+	private GuiButton m_buttonOverride;
 	
 	public GuiShipUnlaunch( Container container, EntityShip ship )
 	{
@@ -44,17 +45,43 @@ public class GuiShipUnlaunch extends GuiShip
 		
 		// add the buttons
 		m_buttonUnlaunchShip = new GuiButton( 
-			0, guiLeft + LeftMargin,
+			0,
+			guiLeft + LeftMargin,
 			guiTop + ySize - TopMargin - 20,
 			80,
 			20,
 			GuiString.ShipUnlaunch.getLocalizedText()
 		);
-		m_buttonUnlaunchShip.enabled = m_unlauncher.isUnlaunchable();
-		buttonList.add( m_buttonUnlaunchShip );
+		m_buttonUnlaunchShip.enabled = false;
+		
+		m_buttonOverride = new GuiButton(
+			1,
+			guiLeft + LeftMargin,
+			guiTop + ySize - TopMargin - 20,
+			120,
+			20,
+			GuiString.ShipUnlaunchOverride.getLocalizedText()
+		);
+		m_buttonOverride.enabled = false;
+		
+		if( m_unlauncher.isUnlaunchable() )
+		{
+			m_buttonUnlaunchShip.enabled = true;
+			buttonList.add( m_buttonUnlaunchShip );
+		}
+		else if( m_unlauncher.isUnlaunchable( true ) )
+		{
+			m_buttonOverride.enabled = true;
+			buttonList.add( m_buttonOverride );
+		}
+		else
+		{
+			buttonList.add( m_buttonUnlaunchShip );
+		}
 	}
 	
 	@Override
+	@SuppressWarnings( "unchecked" )
 	protected void actionPerformed( GuiButton button )
 	{
 		if( button.id == m_buttonUnlaunchShip.id )
@@ -63,6 +90,14 @@ public class GuiShipUnlaunch extends GuiShip
 			PacketUnlaunchShip packet = new PacketUnlaunchShip( m_ship.entityId );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
+		}
+		else if( button.id == m_buttonOverride.id )
+		{
+			// show the unlaunch button
+			m_buttonUnlaunchShip.enabled = true;
+			m_buttonOverride.enabled = false;
+			buttonList.clear();
+			buttonList.add( m_buttonUnlaunchShip );
 		}
 	}
 	
@@ -82,5 +117,10 @@ public class GuiShipUnlaunch extends GuiShip
 			m_unlauncher.getUnlaunchFlag( UnlaunchFlag.TouchingOnlySeparatorBlocks ),
 			3
 		);
+		
+		if( m_buttonOverride.enabled )
+		{
+			drawWrappedText( GuiString.ShipUnlaunchOverrideWarning.getLocalizedText(), 10, 160 );
+		}
 	}
 }

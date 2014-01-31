@@ -253,8 +253,6 @@ public class ShipLauncher
 		// currently, this is only called on the server
 		assert( !m_world.isRemote );
 		
-		int waterHeight = computeWaterHeight();
-		
 		Vec3 centerOfMass = new ShipPhysics( m_shipWorld.getBlocksStorage() ).getCenterOfMass();
 		
 		// spawn a ship entity
@@ -274,6 +272,7 @@ public class ShipLauncher
 		}
 		
 		// remove the world blocks, but don't tell the clients. They'll do it later
+		int waterHeight = computeWaterHeight();
 		for( ChunkCoordinates coords : m_blocks )
 		{
 			if( coords.posY < waterHeight )
@@ -291,6 +290,8 @@ public class ShipLauncher
 	
 	private int computeWaterHeight( )
 	{
+		int maxWaterHeight = 0;
+		
 		// for each column in the ship or outside it
 		Envelopes envelopes = m_shipWorld.getGeometry().getEnvelopes();
 		for( int x=envelopes.getBoundingBox().minX-1; x<=envelopes.getBoundingBox().maxX+1; x++ )
@@ -298,15 +299,16 @@ public class ShipLauncher
 			for( int z=envelopes.getBoundingBox().minZ-1; z<=envelopes.getBoundingBox().maxZ+1; z++ )
 			{
 				int waterHeight = computeWaterHeight( x, z );
-				if( waterHeight != -1 )
+				if( waterHeight > maxWaterHeight )
 				{
-					return waterHeight;
+					maxWaterHeight = waterHeight;
 				}
+				
 			}
 		}
-		return -1;
+		return maxWaterHeight;
 	}
-
+	
 	private int computeWaterHeight( int blockX, int blockZ )
 	{
 		// start at the top of the box

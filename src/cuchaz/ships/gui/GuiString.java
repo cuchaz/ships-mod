@@ -39,7 +39,9 @@ public enum GuiString
 	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." ),
 	PastingOnlyCreative( "Ship pasting only works in creative mode." ),
 	NoPropulsion( "No propulsion methods found!" ),
-	FoundPropulsion( "Found %s" );
+	FoundPropulsion( "Found %s" ),
+	ShipUnlaunchOverride( "Override docking check" ),
+	ShipUnlaunchOverrideWarning( "Warning: You may not be able to launch your ship after docking here." );
 	
 	private String m_unlocalizedText;
 	

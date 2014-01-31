@@ -63,6 +63,11 @@ public abstract class GuiShip extends GuiCloseable
 		fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), TextColor );
 	}
 	
+	protected void drawWrappedText( String text, int lineNum, int width )
+	{
+		fontRenderer.drawSplitString( text, LeftMargin, getLineY( lineNum ), width, TextColor );
+	}
+	
 	protected void drawLabelValueText( String labelText, String valueText, int lineNum )
 	{
 		// draw the label

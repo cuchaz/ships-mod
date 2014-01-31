@@ -165,12 +165,20 @@ public class EntityShip extends Entity
 		
 		if( !worldObj.isRemote )
 		{
-			m_waterDisplacer.restoreWater();
+			m_waterDisplacer.restore();
 		}
 		else
 		{
-			// UNDONE: use the ship unlauncher to compute the correspondence
-			// then move the client on top of the world block
+			// use the ship unlauncher to move ship riders to the new ship unlaunch position
+			List<Entity> riders = getCollider().getRiders();
+			if( !riders.isEmpty() )
+			{
+				ShipUnlauncher unlauncher = new ShipUnlauncher( this );
+				for( Entity rider : riders )
+				{
+					unlauncher.applyUnlaunch( rider );
+				}
+			}
 		}
 	}
 	
@@ -328,38 +336,25 @@ public class EntityShip extends Entity
 			dz = posZ - prevPosZ;
 			dYaw = rotationYaw - prevRotationYaw;
 			
-			m_waterDisplacer.updateWater();
+			m_waterDisplacer.update( waterHeightInBlockSpace );
 			moveRiders( riders, dx, dy, dz, dYaw );
-		}
-		
-		// did the ship sink?
-		if( isSunk( waterHeightInBlockSpace ) )
-		{
-			Ships.logger.info( String.format( "%s Ship Sunk!",
-				worldObj.isRemote ? "CLIENT" : "SERVER"
-			) );
-			
-			// unlaunch the ship at the bottom of the ocean
-			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
-			unlauncher.snapToLaunchDirection();
-			unlauncher.unlaunch();
-			return;
 		}
 		
 		// update the world
 		m_shipWorld.updateEntities();
 	}
 	
-	private double getWaterHeight( )
+	public double getWaterHeight( )
 	{
-		// search in the ship box for water blocks
+		// search in the ship box for water blocks (and air wall blocks)
 		Set<ChunkCoordinates> waterCoords = new TreeSet<ChunkCoordinates>();
 		BlockUtils.worldRangeQuery( waterCoords, worldObj, boundingBox );
 		Iterator<ChunkCoordinates> iter = waterCoords.iterator();
 		while( iter.hasNext() )
 		{
 			ChunkCoordinates coords = iter.next();
-			if( worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) != Block.waterStill.blockID )
+			int blockId = worldObj.getBlockId( coords.posX, coords.posY, coords.posZ );
+			if( blockId != Block.waterStill.blockID && blockId != Ships.m_blockAirWall.blockID )
 			{
 				iter.remove();
 			}
@@ -375,7 +370,7 @@ public class EntityShip extends Entity
 		BlockArray topEnvelope = new Envelopes( waterCoords ).getEnvelope( BlockSide.Top );
 		for( ChunkCoordinates coords : topEnvelope )
 		{
-			sum += coords.posY;
+			sum += coords.posY + 1; // +1 for the top of the block
 		}
 		return sum/topEnvelope.getWidth()/topEnvelope.getHeight();
 	}
@@ -427,16 +422,6 @@ public class EntityShip extends Entity
 		
 		// always ignore attacks to ships
 		return true;
-	}
-	
-	private boolean isSunk( double waterHeight )
-	{
-		// is the ship completely underwater?
-		boolean isUnderwater = waterHeight > m_shipWorld.getBoundingBox().maxY + 1.5;
-		
-		// UNDONE: will have to use something smarter for submarines!
-		// UNDONE: also un-floodable ships like rafts
-		return motionY == 0 && isUnderwater;
 	}
 	
 	public void worldToShip( Vec3 v )

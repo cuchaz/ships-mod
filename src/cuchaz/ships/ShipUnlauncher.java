@@ -29,7 +29,7 @@ public class ShipUnlauncher
 {
 	public static enum UnlaunchFlag
 	{
-		AlignedToDirection
+		AlignedToDirection( false )
 		{
 			@Override
 			public boolean computeValue( ShipUnlauncher unlauncher )
@@ -38,7 +38,7 @@ public class ShipUnlauncher
 				return Math.abs( MathHelper.wrapAngleTo180_float( unlauncher.m_ship.rotationYaw ) ) < 10.0;
 			}
 		},
-		TouchingOnlySeparatorBlocks
+		TouchingOnlySeparatorBlocks( true )
 		{
 			@Override
 			public boolean computeValue( ShipUnlauncher unlauncher )
@@ -77,6 +77,18 @@ public class ShipUnlauncher
 			}
 		};
 		
+		private boolean m_allowOverride;
+		
+		private UnlaunchFlag( boolean allowOverride )
+		{
+			m_allowOverride = allowOverride;
+		}
+		
+		public boolean isOverrideAllowed( )
+		{
+			return m_allowOverride;
+		}
+		
 		public abstract boolean computeValue( ShipUnlauncher unlauncher );
 
 		protected Block getBlock( IBlockAccess world, ChunkCoordinates coords )
@@ -89,6 +101,8 @@ public class ShipUnlauncher
 	private List<Boolean> m_unlaunchFlags;
 	private TreeMap<ChunkCoordinates,ChunkCoordinates> m_correspondence;
 	private int m_waterSurfaceLevelBlocks;
+	private double m_deltaRotationRadians;
+	private Vec3 m_deltaTranslation;
 	
 	public ShipUnlauncher( EntityShip ship )
 	{
@@ -111,14 +125,21 @@ public class ShipUnlauncher
 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
 		m_ship.blocksToShip( p );
 		m_ship.shipToWorld( p );
-		ChunkCoordinates shipBlock = new ChunkCoordinates(
+		ChunkCoordinates shipBlockWorldCoords = new ChunkCoordinates(
 			MathHelper.floor_double( p.xCoord + 0.5 ),
 			MathHelper.ceiling_double_int( p.yCoord ),
 			MathHelper.floor_double( p.zCoord + 0.5 )
 		);
 		
+		// compute the unlaunch delta
+		m_deltaTranslation = Vec3.createVectorHelper(
+			shipBlockWorldCoords.posX - p.xCoord,
+			shipBlockWorldCoords.posY - p.yCoord,
+			shipBlockWorldCoords.posZ - p.zCoord
+		);
+		
 		// determine the water surface level
-		m_waterSurfaceLevelBlocks = m_ship.getWaterHeight() - shipBlock.posY - 1;
+		m_waterSurfaceLevelBlocks = MathHelper.ceiling_double_int( m_ship.shipToBlocksY( m_ship.worldToShipY( m_ship.getWaterHeight() ) ) );
 		
 		// get the set of coords we care about
 		TreeSet<ChunkCoordinates> allCoords = new TreeSet<ChunkCoordinates>();
@@ -128,6 +149,7 @@ public class ShipUnlauncher
 		// compute the snap rotation
 		double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( m_ship.rotationYaw ) );
 		int rotation = Util.realModulus( (int)( yaw/Math.PI*2 + 0.5 ), 4 );
+		m_deltaRotationRadians = Math.PI/2*rotation - yaw;
 		int cos = new int[] { 1, 0, -1, 0 }[rotation];
 		int sin = new int[] { 0, 1, 0, -1 }[rotation];
 		
@@ -141,9 +163,9 @@ public class ShipUnlauncher
 			ChunkCoordinates worldCoords = new ChunkCoordinates( x, coords.posY, z );
 			
 			// translate to the world
-			worldCoords.posX += shipBlock.posX;
-			worldCoords.posY += shipBlock.posY;
-			worldCoords.posZ += shipBlock.posZ;
+			worldCoords.posX += shipBlockWorldCoords.posX;
+			worldCoords.posY += shipBlockWorldCoords.posY;
+			worldCoords.posZ += shipBlockWorldCoords.posZ;
 			
 			m_correspondence.put( coords, worldCoords );
 		}
@@ -156,32 +178,32 @@ public class ShipUnlauncher
 	
 	public boolean isUnlaunchable( )
 	{
+		return isUnlaunchable( false );
+	}
+	
+	public boolean isUnlaunchable( boolean override )
+	{
 		boolean isValid = true;
 		for( UnlaunchFlag flag : UnlaunchFlag.values() )
 		{
-			isValid = isValid && getUnlaunchFlag( flag );
+			isValid = isValid && ( getUnlaunchFlag( flag ) || ( override && flag.isOverrideAllowed() ) );
 		}
 		return isValid;
 	}
 	
 	public void unlaunch( )
 	{
-		// NOTE: currently, this is only called on the server
-		// the client is notified of a ship unlaunch indirectly by entity death and block update messages from the server
-		
-		List<Entity> riders = m_ship.getCollider().getRiders();
+		// server only
+		if( m_ship.worldObj.isRemote )
+		{
+			return;
+		}
 		
 		// remove the ship entity
 		m_ship.setDead();
 		
-		if( !m_ship.worldObj.isRemote )
-		{
-			// restore all the blocks
-			m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
-		}
-		
-		// UNDONE: send a message to each client to move riders so they sit on top of the new world blocks
-		do this
+		// restore all the blocks
+		m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
 	}
 	
 	public void snapToLaunchDirection( )
@@ -190,6 +212,30 @@ public class ShipUnlauncher
 			m_ship.posX, m_ship.posY, m_ship.posZ,
 			0,
 			m_ship.rotationPitch
+		);
+	}
+	
+	public void applyUnlaunch( Entity entity )
+	{
+		// apply rotation of position relative to the ship center
+		Vec3 p = Vec3.createVectorHelper( entity.posX, entity.posY, entity.posZ );
+		p.xCoord = entity.posX + m_deltaTranslation.xCoord;
+		p.zCoord = entity.posZ + m_deltaTranslation.zCoord;
+		m_ship.worldToShip( p );
+		double cos = Math.cos( m_deltaRotationRadians );
+		double sin = Math.sin( m_deltaRotationRadians );
+		double x = p.xCoord*cos + p.zCoord*sin;
+		double z = -p.xCoord*sin + p.zCoord*cos;
+		p.xCoord = x;
+		p.zCoord = z;
+		m_ship.shipToWorld( p );
+		
+		// apply the transformation
+		entity.rotationYaw -= Math.toDegrees( m_deltaRotationRadians );
+		entity.setPosition(
+			p.xCoord,
+			entity.posY + m_deltaTranslation.yCoord,
+			p.zCoord
 		);
 	}
 }

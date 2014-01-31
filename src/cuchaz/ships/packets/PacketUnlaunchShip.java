@@ -64,7 +64,7 @@ public class PacketUnlaunchShip extends Packet
 		
 		// unlaunch the ship
 		ShipUnlauncher unlauncher = new ShipUnlauncher( ship );
-		if( unlauncher.isUnlaunchable() )
+		if( unlauncher.isUnlaunchable( true ) )
 		{
 			unlauncher.unlaunch();
 		}
