@@ -28,6 +28,12 @@ public class WaterDisplacer
 		// which blocks should be displaced?
 		TreeSet<ChunkCoordinates> shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
 		
+		// TEMP
+		// NEXTTIME: this is buggy!
+		// it's probably the water level we're getting
+		int numNewBlocks = 0;
+		int numOldBlocks = 0;
+		
 		for( ChunkCoordinates coords : shouldBeDisplaced )
 		{
 			// is the block displaced?
@@ -37,6 +43,9 @@ public class WaterDisplacer
 				// it's not. We should displace it
 				m_ship.worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Ships.m_blockAirWall.blockID );
 				m_displacedBlocks.add( coords );
+				
+				// TEMP
+				numNewBlocks++;
 			}
 			else if( blockId == Ships.m_blockAirWall.blockID )
 			{
@@ -55,8 +64,18 @@ public class WaterDisplacer
 				// restore it
 				m_ship.worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
 				iter.remove();
+				
+				// TEMP
+				numOldBlocks++;
 			}
 		}
+		
+		// TEMP
+		Ships.logger.info( String.format( "%s Water displacement: new=%d, old=%d, total=%d, should=%d, waterLevel=%.1f",
+			m_ship.worldObj.isRemote ? "CLIENT" : "SERVER",
+			numNewBlocks, numOldBlocks, m_displacedBlocks.size(), shouldBeDisplaced.size(),
+			waterHeightInBlockSpace
+		) );
 	}
 	
 	public void restore( )
@@ -99,7 +118,7 @@ public class WaterDisplacer
 			final double Delta = 0.1;
 			box = box.expand( Delta, Delta, Delta );
 			
-			// query for all the world water blocks that intersect it
+			// query for all the world blocks that intersect it
 			BlockUtils.worldRangeQuery( out, m_ship.worldObj, box );
 		}
 		
