@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
@@ -85,10 +86,10 @@ public class ShipLauncher
 		m_blocks = BlockUtils.searchForBlocks(
 			x, y, z,
 			numBlocksToCheck,
-			new BlockUtils.BlockValidator( )
+			new BlockExplorer( )
 			{
 				@Override
-				public boolean isValid( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( ChunkCoordinates coords )
 				{
 					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
 				}

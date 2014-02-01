@@ -26,7 +26,8 @@ import org.lwjgl.opengl.GL20;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
+import cuchaz.modsShared.BlockUtils.BlockConditionChecker;
+import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BlockUtils.Neighbors;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.Util;
@@ -72,18 +73,20 @@ public class GuiShipPropulsion extends GuiShip
 		ChunkCoordinates shipBlockCoords = BlockUtils.searchForBlock(
 			helmX, helmY, helmZ,
 			10000,
-			new BlockConditionValidator( )
+			new BlockConditionChecker( )
 			{
-				@Override
-				public boolean isValid( ChunkCoordinates coords )
-				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
-				}
-				
 				@Override
 				public boolean isConditionMet( ChunkCoordinates coords )
 				{
 					return world.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockShip.blockID;
+				}
+			},
+			new BlockExplorer( )
+			{
+				@Override
+				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				{
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
 				}
 			},
 			Neighbors.Edges

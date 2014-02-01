@@ -8,7 +8,7 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships;
+package cuchaz.ships.blocks;
 
 import java.util.List;
 
@@ -22,11 +22,14 @@ import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.ships.ShipType;
+import cuchaz.ships.ShipWorld;
+import cuchaz.ships.Ships;
 import cuchaz.ships.gui.Gui;
 
 public class BlockShip extends Block
 {
-	protected BlockShip( int blockId )
+	public BlockShip( int blockId )
 	{
 		super( blockId, Material.iron );
 		

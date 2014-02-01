@@ -8,10 +8,11 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships;
+package cuchaz.ships.blocks;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.ships.Ships;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.util.AxisAlignedBB;
@@ -20,7 +21,7 @@ import net.minecraft.world.World;
 
 public class BlockAirWall extends Block
 {
-	protected BlockAirWall( int blockId )
+	public BlockAirWall( int blockId )
 	{
 		// an air block that stops flowing water
 		super( blockId, Ships.m_materialAirWall );

@@ -10,14 +10,23 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatMessageComponent;
+import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
+import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.BlockCallback;
+import cuchaz.modsShared.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.BlockUtils.Neighbors;
+import cuchaz.modsShared.BlockUtils.SearchAction;
 
 public class CommandShips extends CommandBase
 {
@@ -159,6 +168,59 @@ public class CommandShips extends CommandBase
 				unlauncher.snapToLaunchDirection();
 				unlauncher.unlaunch();
 				replyAllAdmins( sender, String.format( "Ship %d was docked!", id ) );
+			}
+		},
+		RemoveAirWalls( "Remove air walls", "" )
+		{
+			@Override
+			public void process( final ICommandSender sender, String[] args )
+			{
+				// make a list of positions we will use to seed our search
+				List<ChunkCoordinates> seedBlocks = new ArrayList<ChunkCoordinates>();
+				for( EntityShip ship : ShipLocator.getShipsServer() )
+				{
+					seedBlocks.add( new ChunkCoordinates(
+						MathHelper.floor_double( ship.posX ),
+						MathHelper.floor_double( ship.posY ),
+						MathHelper.floor_double( ship.posZ )
+					) );
+				}
+				seedBlocks.add( sender.getPlayerCoordinates() );
+				
+				// for each seed block, search around it looking for air walls
+				final int NumBlocks = 1000;
+				List<ChunkCoordinates> airWallBlocks = new ArrayList<ChunkCoordinates>();
+				for( ChunkCoordinates coords : seedBlocks )
+				{
+					BlockUtils.exploreBlocks(
+						coords,
+						NumBlocks,
+						new BlockCallback( )
+						{
+							@Override
+							public SearchAction foundBlock( ChunkCoordinates coords )
+							{
+								// TODO Auto-generated method stub
+								return null;
+							}
+						},
+						new BlockExplorer( )
+						{
+							@Override
+							public boolean shouldExploreBlock( ChunkCoordinates coords )
+							{
+								return sender.getEntityWorld().getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID;
+							}
+						},
+						Neighbors.Faces
+					);
+				}
+				
+				// replace all the air wall blocks with water
+				for( ChunkCoordinates coords : airWallBlocks )
+				{
+					sender.getEntityWorld().setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+				}
 			}
 		};
 		

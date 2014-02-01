@@ -22,7 +22,8 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.BlockConditionValidator;
+import cuchaz.modsShared.BlockUtils.BlockConditionChecker;
+import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BlockUtils.Neighbors;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.BoxCorner;
@@ -260,19 +261,21 @@ public class ShipGeometry
 		Boolean result = BlockUtils.searchForCondition(
 			coords,
 			shellVolume,
-			new BlockConditionValidator( )
+			new BlockConditionChecker( )
 			{
-				@Override
-				public boolean isValid( ChunkCoordinates coords )
-				{
-					return !m_blocks.contains( coords ) && ( maxY == null || coords.posY <= maxY );
-				}
-
 				@Override
 				public boolean isConditionMet( ChunkCoordinates coords )
 				{
 					// is this a shell block?
 					return !box.containsPoint( coords );
+				}
+			},
+			new BlockExplorer( )
+			{
+				@Override
+				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				{
+					return !m_blocks.contains( coords ) && ( maxY == null || coords.posY <= maxY );
 				}
 			},
 			VoidBlockNeighbors

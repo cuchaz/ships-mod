@@ -8,7 +8,7 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships;
+package cuchaz.ships.blocks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -22,11 +22,13 @@ import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.ships.ShipWorld;
+import cuchaz.ships.TileEntityHelm;
 import cuchaz.ships.gui.Gui;
 
 public class BlockHelm extends Block
 {
-	protected BlockHelm( int blockId )
+	public BlockHelm( int blockId )
 	{
 		super( blockId, Material.wood );
 		

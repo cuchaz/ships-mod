@@ -8,7 +8,7 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships;
+package cuchaz.ships.items;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -34,7 +34,13 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.ships.BlocksStorage;
+import cuchaz.ships.MaterialProperties;
+import cuchaz.ships.ShipGeometry;
+import cuchaz.ships.ShipType;
+import cuchaz.ships.Ships;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPasteShip;
 
@@ -116,10 +122,10 @@ public class ItemShipClipboard extends Item
 		List<ChunkCoordinates> blocks = BlockUtils.searchForBlocks(
 			blockX, blockY, blockZ,
 			shipType.getMaxNumBlocks(),
-			new BlockUtils.BlockValidator( )
+			new BlockExplorer( )
 			{
 				@Override
-				public boolean isValid( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( ChunkCoordinates coords )
 				{
 					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
 				}
