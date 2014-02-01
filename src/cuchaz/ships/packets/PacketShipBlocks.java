@@ -32,6 +32,7 @@ public class PacketShipBlocks extends Packet
 	
 	private int m_entityId;
 	private byte[] m_blocksData;
+	private int m_waterHeight;
 	
 	public PacketShipBlocks( )
 	{
@@ -44,6 +45,7 @@ public class PacketShipBlocks extends Packet
 		
 		m_entityId = ship.entityId;
 		m_blocksData = ship.getShipWorld().getData();
+		m_waterHeight = MathHelper.ceiling_double_int( ship.getWaterHeight() );
 	}
 	
 	@Override
@@ -53,6 +55,7 @@ public class PacketShipBlocks extends Packet
 		out.writeInt( m_entityId );
 		out.writeInt( m_blocksData.length );
 		out.write( m_blocksData );
+		out.writeInt( m_waterHeight );
 	}
 	
 	@Override
@@ -62,6 +65,7 @@ public class PacketShipBlocks extends Packet
 		m_entityId = in.readInt();
 		m_blocksData = new byte[in.readInt()]; // this is potentially risky?
 		in.read( m_blocksData );
+		m_waterHeight = in.readInt();
 	}
 	
 	@Override
@@ -88,16 +92,33 @@ public class PacketShipBlocks extends Packet
 		int tz = MathHelper.floor_double( origin.zCoord + 0.5 );
 		
 		// remove all the ship blocks from the world, but don't notify the server
-		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
+		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
+		for( ChunkCoordinates blockCoords : ship.getShipWorld().coords() )
 		{
-			if( coords.posY + ty < ship.getWaterHeight() )
+			// translate to world coords
+			worldCoords.posX = blockCoords.posX + tx;
+			worldCoords.posY = blockCoords.posY + ty;
+			worldCoords.posZ = blockCoords.posZ + tz;
+			
+			if( worldCoords.posY < m_waterHeight )
 			{
-				BlockUtils.changeBlockWithoutNotifyingIt( player.worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+				BlockUtils.changeBlockWithoutNotifyingIt( player.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 			}
 			else
 			{
-				BlockUtils.removeBlockWithoutNotifyingIt( player.worldObj, coords.posX + tx, coords.posY + ty, coords.posZ + tz, UpdateRules.UpdateNoOne );
+				BlockUtils.removeBlockWithoutNotifyingIt( player.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, UpdateRules.UpdateNoOne );
 			}			
+		}
+		
+		// restore the trapped air to water
+		for( ChunkCoordinates blockCoords : ship.getShipWorld().getGeometry().getTrappedAir( m_waterHeight - ty - 1 ) )
+		{
+			// translate to world coords
+			worldCoords.posX = blockCoords.posX + tx;
+			worldCoords.posY = blockCoords.posY + ty;
+			worldCoords.posZ = blockCoords.posZ + tz;
+			
+			BlockUtils.changeBlockWithoutNotifyingIt( player.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 		}
 	}
 }

@@ -272,7 +272,7 @@ public class ShipLauncher
 			return null;
 		}
 		
-		// remove the world blocks, but don't tell the clients. They'll do it later
+		// remove the world blocks, but don't tell the clients. They'll do it later when the ship blocks are sent over
 		int waterHeight = computeWaterHeight();
 		for( ChunkCoordinates coords : m_blocks )
 		{
@@ -284,6 +284,17 @@ public class ShipLauncher
 			{
 				BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, UpdateRules.UpdateNoOne );
 			}
+		}
+		
+		// restore the trapped air to water
+		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
+		for( ChunkCoordinates blockCoords : m_shipWorld.getGeometry().getTrappedAir( waterHeight - m_y - 1 ) )
+		{
+			worldCoords.posX = blockCoords.posX + m_x;
+			worldCoords.posY = blockCoords.posY + m_y;
+			worldCoords.posZ = blockCoords.posZ + m_z;
+			
+			BlockUtils.changeBlockWithoutNotifyingIt( m_world, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 		}
 		
 		return ship;

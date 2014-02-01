@@ -163,11 +163,9 @@ public class EntityShip extends Entity
 			entityId
 		) );
 		
-		if( !worldObj.isRemote )
-		{
-			m_waterDisplacer.restore();
-		}
-		else
+		m_waterDisplacer.restore();
+		
+		if( worldObj.isRemote )
 		{
 			// use the ship unlauncher to move ship riders to the new ship unlaunch position
 			List<Entity> riders = getCollider().getRiders();
@@ -350,10 +348,6 @@ public class EntityShip extends Entity
 		Set<ChunkCoordinates> waterCoords = new TreeSet<ChunkCoordinates>();
 		BlockUtils.worldRangeQuery( waterCoords, worldObj, boundingBox );
 		
-		// TEMP
-		int numBlocks = waterCoords.size();
-		StringBuilder buf = new StringBuilder();
-		
 		Iterator<ChunkCoordinates> iter = waterCoords.iterator();
 		while( iter.hasNext() )
 		{
@@ -362,23 +356,8 @@ public class EntityShip extends Entity
 			if( blockId != Block.waterStill.blockID && blockId != Ships.m_blockAirWall.blockID )
 			{
 				iter.remove();
-				
-				// TEMP
-				if( buf.length() > 0 )
-				{
-					buf.append( ", " );
-				}
-				buf.append( Block.blocksList[blockId].getUnlocalizedName() );
-				buf.append( String.format( "(%d)", blockId ) );
 			}
 		}
-		
-		// TEMP
-		System.out.println( String.format( "%s num blocks nearby: %d -> %d, removed: %s",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			numBlocks, waterCoords.size(), buf.toString()
-		) );
-		
 		
 		if( waterCoords.isEmpty() )
 		{

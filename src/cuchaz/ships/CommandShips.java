@@ -189,7 +189,7 @@ public class CommandShips extends CommandBase
 				
 				// for each seed block, search around it looking for air walls
 				final int NumBlocks = 1000;
-				List<ChunkCoordinates> airWallBlocks = new ArrayList<ChunkCoordinates>();
+				final List<ChunkCoordinates> airWallBlocks = new ArrayList<ChunkCoordinates>();
 				for( ChunkCoordinates coords : seedBlocks )
 				{
 					BlockUtils.exploreBlocks(
@@ -200,8 +200,11 @@ public class CommandShips extends CommandBase
 							@Override
 							public SearchAction foundBlock( ChunkCoordinates coords )
 							{
-								// TODO Auto-generated method stub
-								return null;
+								if( sender.getEntityWorld().getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
+								{
+									airWallBlocks.add( coords );
+								}
+								return SearchAction.ContinueSearching;
 							}
 						},
 						new BlockExplorer( )
@@ -209,7 +212,7 @@ public class CommandShips extends CommandBase
 							@Override
 							public boolean shouldExploreBlock( ChunkCoordinates coords )
 							{
-								return sender.getEntityWorld().getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID;
+								return true;
 							}
 						},
 						Neighbors.Faces
@@ -221,6 +224,7 @@ public class CommandShips extends CommandBase
 				{
 					sender.getEntityWorld().setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
 				}
+				replyAllAdmins( sender, String.format( "Converted %d air wall blocks back to water.", airWallBlocks.size() ) );
 			}
 		};
 		

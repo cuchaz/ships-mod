@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2014 jeff.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     jeff - initial API and implementation
+ ******************************************************************************/
 package cuchaz.ships;
 
 import java.util.Iterator;
@@ -9,13 +19,12 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.BlockUtils.UpdateRules;
 
 public class WaterDisplacer
 {
 	private EntityShip m_ship;
 	private TreeSet<ChunkCoordinates> m_displacedBlocks;
-	
-	// NEXTTIME: debug this bad boy!
 	
 	public WaterDisplacer( EntityShip ship )
 	{
@@ -28,12 +37,6 @@ public class WaterDisplacer
 		// which blocks should be displaced?
 		TreeSet<ChunkCoordinates> shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
 		
-		// TEMP
-		// NEXTTIME: this is buggy!
-		// it's probably the water level we're getting
-		int numNewBlocks = 0;
-		int numOldBlocks = 0;
-		
 		for( ChunkCoordinates coords : shouldBeDisplaced )
 		{
 			// is the block displaced?
@@ -41,11 +44,8 @@ public class WaterDisplacer
 			if( blockId == Block.waterStill.blockID )
 			{
 				// it's not. We should displace it
-				m_ship.worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Ships.m_blockAirWall.blockID );
+				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Ships.m_blockAirWall.blockID, 0, UpdateRules.UpdateClients );
 				m_displacedBlocks.add( coords );
-				
-				// TEMP
-				numNewBlocks++;
 			}
 			else if( blockId == Ships.m_blockAirWall.blockID )
 			{
@@ -62,27 +62,17 @@ public class WaterDisplacer
 			if( !shouldBeDisplaced.contains( coords ) )
 			{
 				// restore it
-				m_ship.worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
 				iter.remove();
-				
-				// TEMP
-				numOldBlocks++;
 			}
 		}
-		
-		// TEMP
-		Ships.logger.info( String.format( "%s Water displacement: new=%d, old=%d, total=%d, should=%d, waterLevel=%.1f",
-			m_ship.worldObj.isRemote ? "CLIENT" : "SERVER",
-			numNewBlocks, numOldBlocks, m_displacedBlocks.size(), shouldBeDisplaced.size(),
-			waterHeightInBlockSpace
-		) );
 	}
 	
 	public void restore( )
 	{
 		for( ChunkCoordinates coords : m_displacedBlocks )
 		{
-			m_ship.worldObj.setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+			BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
 		}
 		m_displacedBlocks.clear();
 	}
