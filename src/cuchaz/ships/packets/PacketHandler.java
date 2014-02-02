@@ -50,7 +50,7 @@ public class PacketHandler implements IPacketHandler
 		}
 		else
 		{
-			Ships.logger.warning( "Received packet on unregistered channel: " + customPacket.channel );
+			Ships.logger.warning( "Received packet on unregistered channel: %s", customPacket.channel );
 		}
 	}
 }

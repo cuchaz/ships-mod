@@ -12,7 +12,6 @@ package cuchaz.ships;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -103,12 +102,12 @@ public class MaterialProperties
 					Material material = (Material)field.get( null );
 					if( m_properties.get( material ) == null )
 					{
-						Ships.logger.warning( "Material " + field.getName() + " is not configured!" );
+						Ships.logger.warning( "Material %s is not configured!", field.getName() );
 					}
 				}
 				catch( Exception ex )
 				{
-					Ships.logger.log( Level.WARNING, "Unable to read material: " + field.getName(), ex );
+					Ships.logger.warning( ex, "Unable to read material: %s", field.getName() );
 				}
 	    	}
 	    }

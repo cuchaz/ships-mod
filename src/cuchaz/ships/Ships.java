@@ -12,7 +12,6 @@ package cuchaz.ships;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.minecraft.block.material.MapColor;
@@ -80,7 +79,7 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 public class Ships extends DummyModContainer
 {
 	public static Ships instance = null;
-	public static Logger logger = Logger.getLogger( "cuchaz.ships" );
+	public static EnhancedLogger logger = new EnhancedLogger( Logger.getLogger( "cuchaz.ships" ) );
 	
 	// materials
 	public static final Material m_materialAirWall = new MaterialAirWall( MapColor.airColor );
@@ -184,7 +183,7 @@ public class Ships extends DummyModContainer
 		}
 		catch( RuntimeException ex )
 		{
-			Ships.logger.log( Level.WARNING, "Unable to construct mod container!", ex );
+			Ships.logger.warning( ex, "Unable to construct mod container!" );
 		}
 	}
 	
@@ -226,7 +225,7 @@ public class Ships extends DummyModContainer
 		}
 		catch( Throwable ex )
 		{
-			Ships.logger.log( Level.WARNING, "Exception occurred while loading mod.", ex );
+			Ships.logger.warning( ex, "Exception occurred while loading mod." );
 		}
 	}
 	

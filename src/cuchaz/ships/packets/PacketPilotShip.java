@@ -19,6 +19,7 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.Environment;
 import cuchaz.ships.EntityShip;
 
 public class PacketPilotShip extends Packet
@@ -85,9 +86,9 @@ public class PacketPilotShip extends Packet
 		ship.linearThrottle = m_linearThrottle;
 		ship.angularThrottle = m_angularThrottle;
 		
-		// if this is the server, broadcast the actions to the rest of the clients
-		if( !player.worldObj.isRemote )
+		if( Environment.isServer() )
 		{
+			// broadcast the actions to the rest of the clients
 			final double BroadcastRange = 100;
 			PacketDispatcher.sendPacketToAllAround( ship.posX, ship.posY, ship.posZ, BroadcastRange, player.worldObj.provider.dimensionId, getCustomPacket() );
 		}

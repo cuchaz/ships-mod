@@ -12,7 +12,6 @@ package cuchaz.ships.asm;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.logging.Level;
 
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
@@ -23,7 +22,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import cuchaz.modsShared.RuntimeMapping;
+import cuchaz.modsShared.Environment;
 import cuchaz.ships.Collider;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
@@ -62,36 +61,36 @@ public class ShipIntermediary
 		try
 		{
 			Field fieldWorld = getField( container,
-				RuntimeMapping.getRuntimeName( "worldObj", "field_75161_g" ), // ContainerWorkbench
-				RuntimeMapping.getRuntimeName( "worldPointer", "field_75172_h" ), // ContainerEnchantment
-				RuntimeMapping.getRuntimeName( "theWorld", "field_82860_h" ) // ContainerRepair
+				Environment.getRuntimeName( "worldObj", "field_75161_g" ), // ContainerWorkbench
+				Environment.getRuntimeName( "worldPointer", "field_75172_h" ), // ContainerEnchantment
+				Environment.getRuntimeName( "theWorld", "field_82860_h" ) // ContainerRepair
 			);
 			world = (World)fieldWorld.get( container );
 			
 			Field fieldX = getField( container,
-				RuntimeMapping.getRuntimeName( "posX", "field_75164_h" ), // ContainerWorkbench
-				RuntimeMapping.getRuntimeName( "posX", "field_75173_i" ), // ContainerEnchantment
-				RuntimeMapping.getRuntimeName( "field_82861_i", "field_82861_i" ) // ContainerRepair
+				Environment.getRuntimeName( "posX", "field_75164_h" ), // ContainerWorkbench
+				Environment.getRuntimeName( "posX", "field_75173_i" ), // ContainerEnchantment
+				Environment.getRuntimeName( "field_82861_i", "field_82861_i" ) // ContainerRepair
 			);
 			x = fieldX.getInt( container );
 			
 			Field fieldY = getField( container,
-				RuntimeMapping.getRuntimeName( "posY", "field_75165_i" ), // ContainerWorkbench
-				RuntimeMapping.getRuntimeName( "posY", "field_75170_j" ), // ContainerEnchantment
-				RuntimeMapping.getRuntimeName( "field_82858_j", "field_82858_j" ) // ContainerRepair
+				Environment.getRuntimeName( "posY", "field_75165_i" ), // ContainerWorkbench
+				Environment.getRuntimeName( "posY", "field_75170_j" ), // ContainerEnchantment
+				Environment.getRuntimeName( "field_82858_j", "field_82858_j" ) // ContainerRepair
 			);
 			y = fieldY.getInt( container );
 			
 			Field fieldZ = getField( container,
-				RuntimeMapping.getRuntimeName( "posZ", "field_75163_j" ), // ContainerWorkbench
-				RuntimeMapping.getRuntimeName( "posZ", "field_75171_k" ), // ContainerEnchantment
-				RuntimeMapping.getRuntimeName( "field_82859_k", "field_82859_k" ) // ContainerRepair
+				Environment.getRuntimeName( "posZ", "field_75163_j" ), // ContainerWorkbench
+				Environment.getRuntimeName( "posZ", "field_75171_k" ), // ContainerEnchantment
+				Environment.getRuntimeName( "field_82859_k", "field_82859_k" ) // ContainerRepair
 			);
 			z = fieldZ.getInt( container );
 		}
 		catch( Exception ex )
 		{
-			Ships.logger.log( Level.WARNING, "Unable to reflect on container class: " + container.getClass().getName(), ex );
+			Ships.logger.warning( ex, "Unable to reflect on container class: %s", container.getClass().getName() );
 		}
 		
 		return translateDistance( world, player, x, y, z );

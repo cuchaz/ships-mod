@@ -40,6 +40,7 @@ import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.CompareReal;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.persistence.ShipPersistence;
@@ -144,8 +145,7 @@ public class EntityShip extends Entity
 		
 		// LOGGING
 		Ships.logger.info( String.format(
-			"%s EntityShip %d initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
+			"EntityShip %d initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
 			entityId,
 			posX, posY, posZ,
 			motionX, motionY, motionZ
@@ -158,14 +158,11 @@ public class EntityShip extends Entity
 		super.setDead();
 		
 		// LOGGING
-		Ships.logger.info( String.format( "%s EntityShip %d died!",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			entityId
-		) );
+		Ships.logger.info( "EntityShip %d died!", entityId );
 		
 		m_waterDisplacer.restore();
 		
-		if( worldObj.isRemote )
+		if( Environment.isClient() )
 		{
 			// use the ship unlauncher to move ship riders to the new ship unlaunch position
 			List<Entity> riders = getCollider().getRiders();
@@ -191,7 +188,7 @@ public class EntityShip extends Entity
 		}
 		else
 		{
-			Ships.logger.warning( String.format( "Tried to load ship with unknown persistence version %d. Ship will not be loaded.", version ) );
+			Ships.logger.warning( "Tried to load ship with unknown persistence version %d. Ship will not be loaded.", version );
 			setDead();
 		}
 	}
@@ -304,14 +301,6 @@ public class EntityShip extends Entity
 			m_hasInfoFromServer = false;
 		}
 		
-		/* LOGGING
-		Ships.logger.fine( String.format( "%s Ship movement: p=(%.4f,%.4f,%.4f), d=(%.4f,%.4f,%.4f), dYaw=%.1f",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
-			posX, posY, posZ,
-			dx, dy, dz, dYaw
-		) );
-		*/
-		
 		// did we even move a noticeable amount?
 		final double Epsilon = 1e-3;
 		if( Math.abs( dx ) >= Epsilon || Math.abs( dy ) >= Epsilon || Math.abs( dz ) >= Epsilon || Math.abs( dYaw ) >= Epsilon )
@@ -380,7 +369,7 @@ public class EntityShip extends Entity
 		// NOTE: return true if we handled the interaction
 		
 		// only do this on the client
-		if( !worldObj.isRemote )
+		if( Environment.isServer() )
 		{
 			return false;
 		}
@@ -399,11 +388,10 @@ public class EntityShip extends Entity
 		Block block = Block.blocksList[m_shipWorld.getBlockId( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ )];
 		
 		// LOGGING
-		Ships.logger.fine( String.format( "%s EntityShip.interact(): (%d,%d,%d) %s",
-			worldObj.isRemote ? "CLIENT" : "SERVER",
+		Ships.logger.fine( "EntityShip.interact(): (%d,%d,%d) %s",
 			hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
 			block.getUnlocalizedName()
-		) );
+		);
 		
 		return block.onBlockActivated(
 			m_shipWorld,

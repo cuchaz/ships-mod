@@ -30,6 +30,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.BoxCorner;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.render.ShipDebugRenderInfo;
 
@@ -62,7 +63,7 @@ public class ShipCollider
 	{
 		m_ship = ship;
 		
-		if( m_ship.worldObj.isRemote )
+		if( Environment.isClient() )
 		{
 			m_debugRenderInfo = new ShipDebugRenderInfo();
 		}
@@ -135,7 +136,7 @@ public class ShipCollider
 		oldEntityBox.maxY -= dYSize;
 		oldEntityBox.minY -= dYSize;
 		
-		if( m_ship.worldObj.isRemote && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
+		if( Environment.isClient() && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
 			m_debugRenderInfo.setQueryBox( entity, oldEntityBox );
 		}
@@ -182,7 +183,7 @@ public class ShipCollider
 		
 		List<PossibleCollision> possibleCollisions = trajectoryQuery( oldEntityBox, newEntityBox );
 		
-		if( m_ship.worldObj.isRemote && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
+		if( Environment.isClient() && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
 			for( PossibleCollision collision : possibleCollisions )
 			{

@@ -19,6 +19,7 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.BlockUtils.UpdateRules;
 
 public class WaterDisplacer
@@ -62,7 +63,10 @@ public class WaterDisplacer
 			if( !shouldBeDisplaced.contains( coords ) )
 			{
 				// restore it
-				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+				if( m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Block.waterStill.blockID )
+				{
+					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+				}
 				iter.remove();
 			}
 		}
@@ -70,9 +74,16 @@ public class WaterDisplacer
 	
 	public void restore( )
 	{
-		for( ChunkCoordinates coords : m_displacedBlocks )
+		// only actually remove blocks on the server
+		if( Environment.isServer() )
 		{
-			BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+			for( ChunkCoordinates coords : m_displacedBlocks )
+			{
+				if( m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
+				{
+					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+				}
+			}
 		}
 		m_displacedBlocks.clear();
 	}
@@ -83,7 +94,7 @@ public class WaterDisplacer
 		
 		// get all the trapped air blocks
 		int surfaceLevelInBlockSpace = MathHelper.floor_double( waterHeightInBlockSpace );
-		TreeSet<ChunkCoordinates> trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAir( surfaceLevelInBlockSpace );
+		TreeSet<ChunkCoordinates> trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( surfaceLevelInBlockSpace );
 		if( trappedAirBlocks.isEmpty() )
 		{
 			// the ship is out of the water

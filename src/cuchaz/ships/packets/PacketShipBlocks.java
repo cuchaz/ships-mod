@@ -75,7 +75,7 @@ public class PacketShipBlocks extends Packet
 		Entity entity = player.worldObj.getEntityByID( m_entityId );
 		if( entity == null || !( entity instanceof EntityShip ) )
 		{
-			Ships.logger.warning( String.format( "Client dropping PacketShipBlocks for client ship %d! Can't find the ship!", m_entityId ) );
+			Ships.logger.warning( "Client dropping PacketShipBlocks for client ship %d! Can't find the ship!", m_entityId );
 			return;
 		}
 		EntityShip ship = (EntityShip)entity;
@@ -111,7 +111,7 @@ public class PacketShipBlocks extends Packet
 		}
 		
 		// restore the trapped air to water
-		for( ChunkCoordinates blockCoords : ship.getShipWorld().getGeometry().getTrappedAir( m_waterHeight - ty - 1 ) )
+		for( ChunkCoordinates blockCoords : ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( m_waterHeight - ty ) )
 		{
 			// translate to world coords
 			worldCoords.posX = blockCoords.posX + tx;

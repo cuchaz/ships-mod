@@ -23,7 +23,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -43,6 +42,7 @@ import net.minecraftforge.common.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.ships.packets.PacketChangedBlocks;
@@ -108,14 +108,11 @@ public class ShipWorld extends DetachedWorld
 			}
 			catch( Exception ex )
 			{
-				Ships.logger.log(
-					Level.WARNING,
-					String.format(
-						"Tile entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but tile entity was not moved.",
-						tileEntity.getClass().getName(),
-						worldCoords.posX, worldCoords.posY, worldCoords.posZ
-					),
-					ex
+				Ships.logger.warning(
+					ex,
+					"Tile entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but tile entity was not moved.",
+					tileEntity.getClass().getName(),
+					worldCoords.posX, worldCoords.posY, worldCoords.posZ
 				);
 			}
 		}
@@ -132,7 +129,7 @@ public class ShipWorld extends DetachedWorld
 			int version = in.readInt();
 			if( version != 1 )
 			{
-				Ships.logger.warning( "ShipBlocks persistence version " + version + " not supported! Blocks loading skipped!" );
+				Ships.logger.warning( "ShipBlocks persistence version %s not supported! Blocks loading skipped!", version );
 			}
 			else
 			{
@@ -163,13 +160,13 @@ public class ShipWorld extends DetachedWorld
 		}
 	}
 	
-	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence, int waterSurfaceLevelBlockSpace )
+	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence, int waterHeightInBlockSpace )
 	{
 		// restore the blocks
 		m_storage.writeToWorld( world, correspondence );
 		
 		// bail out the boat if needed (it might have water in the trapped air blocks)
-		for( ChunkCoordinates coordsShip : getGeometry().getTrappedAir( waterSurfaceLevelBlockSpace ) )
+		for( ChunkCoordinates coordsShip : getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
 		{
 			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
 			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, UpdateRules.UpdateClients );
@@ -200,14 +197,11 @@ public class ShipWorld extends DetachedWorld
 				// remove the tile entity
 				world.removeBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ );
 				
-				Ships.logger.log(
-					Level.WARNING,
-					String.format(
-						"Tile entity %s at (%d,%d,%d) didn't like being moved to the world. The tile entity has been removed from its block to prevent further errors.",
-						tileEntity.getClass().getName(),
-						coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ
-					),
-					ex
+				Ships.logger.warning(
+					ex,
+					"Tile entity %s at (%d,%d,%d) didn't like being moved to the world. The tile entity has been removed from its block to prevent further errors.",
+					tileEntity.getClass().getName(),
+					coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ
 				);
 			}
 		}
@@ -317,7 +311,7 @@ public class ShipWorld extends DetachedWorld
 		{
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
-			if( !isRemote )
+			if( Environment.isServer() )
 			{
 				m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
 			}
@@ -339,7 +333,7 @@ public class ShipWorld extends DetachedWorld
 		{
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
-			if( !isRemote )
+			if( Environment.isServer() )
 			{
 				m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
 			}
@@ -454,26 +448,23 @@ public class ShipWorld extends DetachedWorld
 				// remove the offending tile entity
 				iter.remove();
 				
-				Ships.logger.log(
-					Level.WARNING,
-					String.format(
-						"Tile entity %s at (%d,%d,%d) had a problem during an update! The tile entity has been removed from its block to prevent further errors.",
-						entity.getClass().getName(),
-						coords.posX, coords.posY, coords.posZ
-					),
-					ex
+				Ships.logger.warning(
+					ex,
+					"Tile entity %s at (%d,%d,%d) had a problem during an update! The tile entity has been removed from its block to prevent further errors.",
+					entity.getClass().getName(),
+					coords.posX, coords.posY, coords.posZ
 				);
 			}
 		}
 		
 		// on the client, do random update ticks
-		if( isRemote && m_ship != null )
+		if( Environment.isClient() && m_ship != null )
 		{
 			updateEntitiesClient();
 		}
 		
 		// on the server, push any accumulated changes to the client
-		if( !isRemote && !m_changedBlocks.isEmpty() )
+		if( Environment.isServer() && !m_changedBlocks.isEmpty() )
 		{
 			pushBlockChangesToClients();
 			m_changedBlocks.clear();
@@ -532,7 +523,7 @@ public class ShipWorld extends DetachedWorld
 		boolean eventWasAccepted = Block.blocksList[blockId].onBlockEventReceived( this, x, y, z, eventId, eventParam );
 		
 		// on the server, also send a packet to the client
-		if( !isRemote && eventWasAccepted )
+		if( Environment.isServer() && eventWasAccepted )
 		{
 			// get the pos in world space
 			Vec3 v = Vec3.createVectorHelper( x, y, z );
@@ -556,7 +547,7 @@ public class ShipWorld extends DetachedWorld
 		}
 		
 		// on the server, send a packet to the clients
-		if( !isRemote )
+		if( Environment.isServer() )
 		{
 			// get the pos in world space
 			Vec3 v = Vec3.createVectorHelper( x, y, z );

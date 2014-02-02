@@ -60,7 +60,7 @@ public class PacketShipBlocksRequest extends Packet
 		Entity entity = player.worldObj.getEntityByID( m_entityId );
 		if( entity == null || !( entity instanceof EntityShip ) )
 		{
-			Ships.logger.warning( String.format( "Server dropping PacketShipBlocksRequest from client ship %d! Can't find the ship!", m_entityId ) );
+			Ships.logger.warning( "Server dropping PacketShipBlocksRequest from client ship %d! Can't find the ship!", m_entityId );
 			return;
 		}
 		EntityShip ship = (EntityShip)entity;

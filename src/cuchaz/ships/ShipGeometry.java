@@ -81,6 +81,14 @@ public class ShipGeometry
 		return coords;
 	}
 	
+	public TreeSet<ChunkCoordinates> getTrappedAirFromWaterHeight( int waterHeightInBlockSpace )
+	{
+		// remember, the water height is the y-value of the surface of the water
+		// it's always at the top of the water block
+		// therefore, if we want the y coord of the top water block, we need to subtract 1
+		return getTrappedAir( waterHeightInBlockSpace - 1 );
+	}
+	
 	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
 	{
 		// get the bounds in y

@@ -23,6 +23,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.CircleRange;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.Util;
 
 public class ShipUnlauncher
@@ -100,7 +101,7 @@ public class ShipUnlauncher
 	private EntityShip m_ship;
 	private List<Boolean> m_unlaunchFlags;
 	private TreeMap<ChunkCoordinates,ChunkCoordinates> m_correspondence;
-	private int m_waterSurfaceLevelBlocks;
+	private int m_waterHeightInBlockSpace;
 	private double m_deltaRotationRadians;
 	private Vec3 m_deltaTranslation;
 	
@@ -121,30 +122,28 @@ public class ShipUnlauncher
 	
 	private void computeCorrespondence( )
 	{
-		// get the ship block position
+		// compute the block space translation
 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
 		m_ship.blocksToShip( p );
 		m_ship.shipToWorld( p );
-		ChunkCoordinates shipBlockWorldCoords = new ChunkCoordinates(
-			MathHelper.floor_double( p.xCoord + 0.5 ),
-			MathHelper.ceiling_double_int( p.yCoord ),
-			MathHelper.floor_double( p.zCoord + 0.5 )
-		);
+		int tx = MathHelper.floor_double( p.xCoord + 0.5 );
+		int ty = MathHelper.ceiling_double_int( p.yCoord );
+		int tz = MathHelper.floor_double( p.zCoord + 0.5 );
 		
 		// compute the unlaunch delta
 		m_deltaTranslation = Vec3.createVectorHelper(
-			shipBlockWorldCoords.posX - p.xCoord,
-			shipBlockWorldCoords.posY - p.yCoord,
-			shipBlockWorldCoords.posZ - p.zCoord
+			tx - p.xCoord,
+			ty - p.yCoord,
+			tz - p.zCoord
 		);
 		
 		// determine the water surface level
-		m_waterSurfaceLevelBlocks = MathHelper.ceiling_double_int( m_ship.shipToBlocksY( m_ship.worldToShipY( m_ship.getWaterHeight() ) ) );
+		m_waterHeightInBlockSpace = MathHelper.floor_double( m_ship.getWaterHeight() + 0.5 ) - ty;
 		
 		// get the set of coords we care about
 		TreeSet<ChunkCoordinates> allCoords = new TreeSet<ChunkCoordinates>();
 		allCoords.addAll( m_ship.getShipWorld().coords() );
-		allCoords.addAll( m_ship.getShipWorld().getGeometry().getTrappedAir( m_waterSurfaceLevelBlocks ) );
+		allCoords.addAll( m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( m_waterHeightInBlockSpace ) );
 		
 		// compute the snap rotation
 		double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( m_ship.rotationYaw ) );
@@ -163,9 +162,9 @@ public class ShipUnlauncher
 			ChunkCoordinates worldCoords = new ChunkCoordinates( x, coords.posY, z );
 			
 			// translate to the world
-			worldCoords.posX += shipBlockWorldCoords.posX;
-			worldCoords.posY += shipBlockWorldCoords.posY;
-			worldCoords.posZ += shipBlockWorldCoords.posZ;
+			worldCoords.posX += tx;
+			worldCoords.posY += ty;
+			worldCoords.posZ += tz;
 			
 			m_correspondence.put( coords, worldCoords );
 		}
@@ -194,7 +193,7 @@ public class ShipUnlauncher
 	public void unlaunch( )
 	{
 		// server only
-		if( m_ship.worldObj.isRemote )
+		if( Environment.isClient() )
 		{
 			return;
 		}
@@ -203,7 +202,7 @@ public class ShipUnlauncher
 		m_ship.setDead();
 		
 		// restore all the blocks
-		m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterSurfaceLevelBlocks );
+		m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterHeightInBlockSpace );
 	}
 	
 	public void snapToLaunchDirection( )

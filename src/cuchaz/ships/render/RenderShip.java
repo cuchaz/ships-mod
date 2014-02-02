@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -184,7 +183,7 @@ public class RenderShip extends Render
 				// blacklist the block
 				m_blacklistedBlocks.add( block.blockID );
 				
-				Ships.logger.log( Level.WARNING, "Block: " + block.getUnlocalizedName() + " couldn't render properly! Blocks of this type will not be rendered again.", t );
+				Ships.logger.warning( t, "Block: %s couldn't render properly! Blocks of this type will not be rendered again.", block.getUnlocalizedName() );
 			}
 		}
 		

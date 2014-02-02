@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.BoundingBoxInt;
@@ -252,7 +253,7 @@ public class ShipLauncher
 	public EntityShip launch( )
 	{
 		// currently, this is only called on the server
-		assert( !m_world.isRemote );
+		assert( Environment.isServer() );
 		
 		Vec3 centerOfMass = new ShipPhysics( m_shipWorld.getBlocksStorage() ).getCenterOfMass();
 		
@@ -268,7 +269,7 @@ public class ShipLauncher
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{
-			Ships.logger.warning( String.format( "Could not spawn ship in world at (%d,%d,%d)", ship.posX, ship.posY, ship.posZ ) );
+			Ships.logger.warning( "Could not spawn ship in world at (%d,%d,%d)", ship.posX, ship.posY, ship.posZ );
 			return null;
 		}
 		
@@ -288,7 +289,7 @@ public class ShipLauncher
 		
 		// restore the trapped air to water
 		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
-		for( ChunkCoordinates blockCoords : m_shipWorld.getGeometry().getTrappedAir( waterHeight - m_y - 1 ) )
+		for( ChunkCoordinates blockCoords : m_shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - m_y ) )
 		{
 			worldCoords.posX = blockCoords.posX + m_x;
 			worldCoords.posY = blockCoords.posY + m_y;

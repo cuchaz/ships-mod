@@ -13,7 +13,6 @@ package cuchaz.ships.gui;
 import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.Container;
@@ -131,7 +130,7 @@ public class GuiShipPropulsion extends GuiShip
 		}
 		catch( IOException ex )
 		{
-			Ships.logger.log( Level.WARNING, "Unable to load shader!", ex );
+			Ships.logger.warning( ex, "Unable to load shader!" );
 		}
 		
 		// compute the top speeds

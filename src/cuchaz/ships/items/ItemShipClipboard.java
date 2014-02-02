@@ -18,7 +18,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
@@ -34,6 +33,7 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.BlockUtils;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.ships.BlocksStorage;
@@ -66,7 +66,7 @@ public class ItemShipClipboard extends Item
 	public ItemStack onItemRightClick( ItemStack itemStack, World world, EntityPlayer player )
     {
 		// client only
-		if( !world.isRemote )
+		if( Environment.isServer() )
 		{
 			return itemStack;
 		}
@@ -100,7 +100,7 @@ public class ItemShipClipboard extends Item
 	public boolean onItemUseFirst( ItemStack itemStack, EntityPlayer player, final World world, int blockX, int blockY, int blockZ, int side, float hitX, float hitY, float hitZ )
     {
 		// only on the client
-		if( !world.isRemote )
+		if( Environment.isServer() )
 		{
 			return false;
 		}
@@ -161,7 +161,7 @@ public class ItemShipClipboard extends Item
 		}
 		catch( IOException ex )
 		{
-			Ships.logger.log( Level.WARNING, "Unable to copy ship!", ex );
+			Ships.logger.warning( ex, "Unable to copy ship!" );
 			message( player, GuiString.ErrorCheckLogForDetails );
 			return false;
 		}
@@ -270,8 +270,7 @@ public class ItemShipClipboard extends Item
 	
 	private void message( EntityPlayer player, GuiString text, Object ... args )
 	{
-		// only send messages on the client
-		if( player.worldObj.isRemote )
+		if( Environment.isClient() )
 		{
 			player.addChatMessage( String.format( text.getLocalizedText(), args ) );
 		}
