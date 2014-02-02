@@ -13,6 +13,8 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.List;
 
+import cpw.mods.fml.common.network.PacketDispatcher;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
@@ -21,11 +23,12 @@ import net.minecraft.world.World;
 import cuchaz.modsShared.BlockArray;
 import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.modsShared.Environment;
+import cuchaz.ships.packets.PacketShipLaunched;
 
 public class ShipLauncher
 {
@@ -255,50 +258,63 @@ public class ShipLauncher
 		// currently, this is only called on the server
 		assert( Environment.isServer() );
 		
-		Vec3 centerOfMass = new ShipPhysics( m_shipWorld.getBlocksStorage() ).getCenterOfMass();
-		
-		// spawn a ship entity
+		// spawn the ship
+		int waterHeight = computeWaterHeight();
 		EntityShip ship = new EntityShip( m_world );
-		ship.setPositionAndRotation(
-			m_x + centerOfMass.xCoord,
-			m_y + centerOfMass.yCoord,
-			m_z + centerOfMass.zCoord,
-			0, 0
-		);
-		ship.setShipWorld( m_shipWorld );
+		initShip( ship, m_shipWorld, waterHeight, m_x, m_y, m_z );
 		
 		if( !m_world.spawnEntityInWorld( ship ) )
 		{
-			Ships.logger.warning( "Could not spawn ship in world at (%d,%d,%d)", ship.posX, ship.posY, ship.posZ );
+			Ships.logger.warning( "Could not spawn ship in world at (%.2f,%.2f,%.2f)", ship.posX, ship.posY, ship.posZ );
 			return null;
 		}
 		
+		// tell clients the ship launched
+		PacketDispatcher.sendPacketToAllPlayers( new PacketShipLaunched( ship, waterHeight, m_x, m_y, m_z ).getCustomPacket() );
+		
+		return ship;
+	}
+	
+	public static void initShip( EntityShip ship, ShipWorld shipWorld, int waterHeight, int launchX, int launchY, int launchZ )
+	{
+		Vec3 centerOfMass = new ShipPhysics( shipWorld.getBlocksStorage() ).getCenterOfMass();
+		
+		// set ship properties
+		ship.setPositionAndRotation(
+			launchX + centerOfMass.xCoord,
+			launchY + centerOfMass.yCoord,
+			launchZ + centerOfMass.zCoord,
+			0, 0
+		);
+		ship.setShipWorld( shipWorld );
+		
+		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
+		
 		// remove the world blocks, but don't tell the clients. They'll do it later when the ship blocks are sent over
-		int waterHeight = computeWaterHeight();
-		for( ChunkCoordinates coords : m_blocks )
+		for( ChunkCoordinates blockCoords : shipWorld.coords() )
 		{
-			if( coords.posY < waterHeight )
+			worldCoords.posX = blockCoords.posX + launchX;
+			worldCoords.posY = blockCoords.posY + launchY;
+			worldCoords.posZ = blockCoords.posZ + launchZ;
+			
+			if( worldCoords.posY < waterHeight )
 			{
-				BlockUtils.changeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+				BlockUtils.changeBlockWithoutNotifyingIt( ship.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 			}
 			else
 			{
-				BlockUtils.removeBlockWithoutNotifyingIt( m_world, coords.posX, coords.posY, coords.posZ, UpdateRules.UpdateNoOne );
+				BlockUtils.removeBlockWithoutNotifyingIt( ship.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, UpdateRules.UpdateNoOne );
 			}
 		}
 		
 		// restore the trapped air to water
-		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
-		for( ChunkCoordinates blockCoords : m_shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - m_y ) )
+		for( ChunkCoordinates blockCoords : shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - launchY ) )
 		{
-			worldCoords.posX = blockCoords.posX + m_x;
-			worldCoords.posY = blockCoords.posY + m_y;
-			worldCoords.posZ = blockCoords.posZ + m_z;
-			
-			BlockUtils.changeBlockWithoutNotifyingIt( m_world, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+			worldCoords.posX = blockCoords.posX + launchX;
+			worldCoords.posY = blockCoords.posY + launchY;
+			worldCoords.posZ = blockCoords.posZ + launchZ;
+			BlockUtils.changeBlockWithoutNotifyingIt( ship.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 		}
-		
-		return ship;
 	}
 	
 	private int computeWaterHeight( )

@@ -28,12 +28,11 @@ public class PacketHandler implements IPacketHandler
 		// register packet types
 		m_packetTypes = new HashMap<String,Packet>();
 		m_packetTypes.put( PacketLaunchShip.Channel, new PacketLaunchShip() );
+		m_packetTypes.put( PacketShipLaunched.Channel, new PacketShipLaunched() );
 		m_packetTypes.put( PacketUnlaunchShip.Channel, new PacketUnlaunchShip() );
 		m_packetTypes.put( PacketPilotShip.Channel, new PacketPilotShip() );
 		m_packetTypes.put( PacketShipBlockEvent.Channel, new PacketShipBlockEvent() );
 		m_packetTypes.put( PacketChangedBlocks.Channel, new PacketChangedBlocks() );
-		m_packetTypes.put( PacketShipBlocks.Channel, new PacketShipBlocks() );
-		m_packetTypes.put( PacketShipBlocksRequest.Channel, new PacketShipBlocksRequest() );
 		m_packetTypes.put( PacketPasteShip.Channel, new PacketPasteShip() );
 	}
 	

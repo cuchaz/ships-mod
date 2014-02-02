@@ -88,6 +88,13 @@ public class ShipGeometry
 		// therefore, if we want the y coord of the top water block, we need to subtract 1
 		return getTrappedAir( waterHeightInBlockSpace - 1 );
 	}
+
+	public TreeSet<ChunkCoordinates> getTrappedAirFromWaterHeight( double waterHeightInBlockSpace )
+	{
+		// for double water height values, round up to the top of the block, then subtract 1
+		// or, just round down
+		return getTrappedAir( MathHelper.floor_double( waterHeightInBlockSpace ) );
+	}
 	
 	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
 	{

@@ -188,7 +188,7 @@ public class CommandShips extends CommandBase
 				seedBlocks.add( sender.getPlayerCoordinates() );
 				
 				// for each seed block, search around it looking for air walls
-				final int NumBlocks = 1000;
+				final int NumBlocks = 4000;
 				final List<ChunkCoordinates> airWallBlocks = new ArrayList<ChunkCoordinates>();
 				for( ChunkCoordinates coords : seedBlocks )
 				{

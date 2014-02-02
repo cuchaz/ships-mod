@@ -16,11 +16,9 @@ import java.util.TreeSet;
 import net.minecraft.block.Block;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.BlockUtils.UpdateRules;
+import cuchaz.modsShared.Environment;
 
 public class WaterDisplacer
 {
@@ -35,6 +33,9 @@ public class WaterDisplacer
 	
 	public void update( double waterHeightInBlockSpace )
 	{
+		// TEMP
+		Ships.logger.info( "WaterDisplacer.update() %.2f", waterHeightInBlockSpace );
+		
 		// which blocks should be displaced?
 		TreeSet<ChunkCoordinates> shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
 		
@@ -54,6 +55,9 @@ public class WaterDisplacer
 				// nothing else to do
 			}
 		}
+		
+		// TEMP
+		Ships.logger.info( "\t should be displaced=%d, are displaced=%d", shouldBeDisplaced.size(), m_displacedBlocks.size() );
 		
 		// are there any blocks that are displaced, but shouldn't be?
 		Iterator<ChunkCoordinates> iter = m_displacedBlocks.iterator();
@@ -93,26 +97,17 @@ public class WaterDisplacer
 		TreeSet<ChunkCoordinates> out = new TreeSet<ChunkCoordinates>();
 		
 		// get all the trapped air blocks
-		int surfaceLevelInBlockSpace = MathHelper.floor_double( waterHeightInBlockSpace );
-		TreeSet<ChunkCoordinates> trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( surfaceLevelInBlockSpace );
+		TreeSet<ChunkCoordinates> trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
 		if( trappedAirBlocks.isEmpty() )
 		{
-			// the ship is out of the water
+			// the ship is out of the water or flooded
 			return out;
 		}
 		
 		// find the world blocks that intersect the trapped air blocks
 		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
 		for( ChunkCoordinates coords : trappedAirBlocks )
 		{
-			// compute the bounding box for the air block
-			p.xCoord = coords.posX + 0.5;
-			p.yCoord = coords.posY + 0.5;
-			p.zCoord = coords.posZ + 0.5;
-			m_ship.blocksToShip( p );
-			m_ship.shipToWorld( p );
-			
 			m_ship.getCollider().getBlockWorldBoundingBox( box, coords );
 			
 			// grow the bounding box just a bit so we get more robust collisions
