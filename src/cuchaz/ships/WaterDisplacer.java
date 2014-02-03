@@ -33,9 +33,6 @@ public class WaterDisplacer
 	
 	public void update( double waterHeightInBlockSpace )
 	{
-		// TEMP
-		Ships.logger.info( "WaterDisplacer.update() %.2f", waterHeightInBlockSpace );
-		
 		// which blocks should be displaced?
 		TreeSet<ChunkCoordinates> shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
 		
@@ -56,9 +53,6 @@ public class WaterDisplacer
 			}
 		}
 		
-		// TEMP
-		Ships.logger.info( "\t should be displaced=%d, are displaced=%d", shouldBeDisplaced.size(), m_displacedBlocks.size() );
-		
 		// are there any blocks that are displaced, but shouldn't be?
 		Iterator<ChunkCoordinates> iter = m_displacedBlocks.iterator();
 		while( iter.hasNext() )
@@ -67,7 +61,7 @@ public class WaterDisplacer
 			if( !shouldBeDisplaced.contains( coords ) )
 			{
 				// restore it
-				if( m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Block.waterStill.blockID )
+				if( m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
 				{
 					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
 				}

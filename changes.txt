@@ -7,5 +7,7 @@ fixed "phantom" ship problem after unloading a chunk with a ship on it
 fixed trap doors and doors falling off after launching ships
 ships now react to changes in water level
 removed water-based launch checks in launch GUI
-added override to some docking checks in docking GUI
-fixed falling through bottoms of ships on docking again
+added override option to some docking checks in docking GUI
+fixed falling through bottoms of ships on docking (again)
+added better synchronization between client and server for ship launches
+fixed so players travel with moving ships when standing below the ship block

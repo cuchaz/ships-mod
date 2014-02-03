@@ -30,6 +30,8 @@ public class PacketHandler implements IPacketHandler
 		m_packetTypes.put( PacketLaunchShip.Channel, new PacketLaunchShip() );
 		m_packetTypes.put( PacketShipLaunched.Channel, new PacketShipLaunched() );
 		m_packetTypes.put( PacketUnlaunchShip.Channel, new PacketUnlaunchShip() );
+		m_packetTypes.put( PacketRequestShipBlocks.Channel, new PacketRequestShipBlocks() );
+		m_packetTypes.put( PacketShipBlocks.Channel, new PacketShipBlocks() );
 		m_packetTypes.put( PacketPilotShip.Channel, new PacketPilotShip() );
 		m_packetTypes.put( PacketShipBlockEvent.Channel, new PacketShipBlockEvent() );
 		m_packetTypes.put( PacketChangedBlocks.Channel, new PacketChangedBlocks() );

@@ -399,14 +399,12 @@ public class ShipCollider
 		
 		final double RiderEpsilon = 1e-1;
 		
-		// get the closest block y the entity could be standing on
-		double entityMinY = m_ship.shipToBlocksY( m_ship.worldToShipY( entity.boundingBox.minY ) );
-		int blockY = (int)( entityMinY + 0.5 ) - 1;
-		
 		// get the bounding box of the entity in block space
 		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		getEntityBoxInBlockSpace( box, entity );
 		
+		// get the closest block y the entity could be standing on
+		int blockY = MathHelper.floor_double( box.minY + 0.5 ) - 1;
 		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( box, blockY ) )
 		{
 			boolean isOnBlock = Math.abs( coords.posY + 1 - box.minY ) <= RiderEpsilon;

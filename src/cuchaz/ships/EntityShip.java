@@ -43,6 +43,7 @@ import cuchaz.modsShared.Envelopes;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
 import cuchaz.ships.persistence.ShipPersistence;
 import cuchaz.ships.propulsion.Propulsion;
@@ -258,15 +259,25 @@ public class EntityShip extends Entity
 			return;
 		}
 		
-		// don't do any updating until we get blocks
+		// do we have any packets waiting?
 		if( m_shipWorld == null )
 		{
 			PacketShipLaunched packet = PacketShipLaunched.getPacket( this );
-			if( packet == null )
+			if( packet != null )
 			{
-				return;
+				packet.process( this );
 			}
-			packet.process( this );
+			else
+			{
+				// ask for blocks
+				PacketDispatcher.sendPacketToServer( new PacketRequestShipBlocks( entityId ).getCustomPacket() );
+			}
+		}
+		
+		// don't do any updating until we get blocks
+		if( m_shipWorld == null )
+		{
+			return;
 		}
 		
 		double waterHeightInBlockSpace = shipToBlocksY( worldToShipY( getWaterHeight() ) );
