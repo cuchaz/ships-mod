@@ -49,6 +49,20 @@ public enum ShipType
 				'z', new ItemStack( Item.ingotGold )
 			);
 		}
+	},
+	Medium( 400, false )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Medium Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xxx", "xyx", "xxx",
+				'x', new ItemStack( Item.ingotGold ),
+				'y', new ItemStack( Item.redstone )
+			);
+		}
 	};
 	
 	private int m_maxNumBlocks;

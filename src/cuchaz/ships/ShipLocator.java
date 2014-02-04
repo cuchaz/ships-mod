@@ -27,7 +27,7 @@ public class ShipLocator
 	public static List<EntityShip> getShips( World world )
 	{
 		List<EntityShip> ships = new ArrayList<EntityShip>();
-		for( Object entity : world.getLoadedEntityList() )
+		for( Object entity : world.loadedEntityList )
 		{
 			if( entity instanceof EntityShip )
 			{
