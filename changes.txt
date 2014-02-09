@@ -11,3 +11,4 @@ added override option to some docking checks in docking GUI
 fixed falling through bottoms of ships on docking (again)
 added better synchronization between client and server for ship launches
 fixed so players travel with moving ships when standing below the ship block
+added medium ship block with cap of 400 blocks
