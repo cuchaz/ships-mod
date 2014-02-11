@@ -41,7 +41,8 @@ public enum GuiString
 	NoPropulsion( "No propulsion methods found!" ),
 	FoundPropulsion( "Found %s" ),
 	ShipUnlaunchOverride( "Override docking check" ),
-	ShipUnlaunchOverrideWarning( "Warning: You may not be able to launch your ship after docking here." );
+	ShipUnlaunchOverrideWarning( "Warning: You may not be able to launch your ship after docking here." ),
+	ListOfSupporters( "Cuchaz Interactive: List of Supporters" );
 	
 	private String m_unlocalizedText;
 	
