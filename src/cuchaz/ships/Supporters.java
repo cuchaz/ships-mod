@@ -28,6 +28,8 @@ import com.google.common.collect.Maps;
 
 public class Supporters
 {
+	public static final int InvalidSupporterId = -1;
+	
 	private static TreeMap<Integer,List<String>> m_supporters;
 	
 	static
@@ -94,12 +96,57 @@ public class Supporters
 	
 	public static List<String> getSortedNames( )
 	{
+		return getSortedNames( 1 );
+	}
+	
+	public static List<String> getSortedNames( int minRank )
+	{
 		List<String> names = new ArrayList<String>();
 		for( int rank : m_supporters.descendingKeySet() )
 		{
 			names.addAll( m_supporters.get( rank ) );
+			
+			if( rank <= minRank )
+			{
+				break;
+			}
 		}
 		return names;
+	}
+	
+	public static int getId( String name )
+	{
+		name = normalizeName( name );
+		for( int rank : m_supporters.descendingKeySet() )
+		{
+			List<String> names = m_supporters.get( rank );
+			for( int i=0; i<names.size(); i++ )
+			{
+				if( normalizeName( names.get( i ) ).equals( name ) )
+				{
+					// build the id: 1 byte for the rank, 3 bytes for the index
+					return rank | ( i << 8 );
+				}
+			}
+		}
+		return InvalidSupporterId;
+	}
+	
+	public static String getName( int id )
+	{
+		int rank = id & 0xff;
+		int index = ( id >> 8 ) & 0xffffff;
+		List<String> names = m_supporters.get( rank );
+		if( names != null && index < names.size() )
+		{
+			return names.get( index );
+		}
+		return null;
+	}
+	
+	private static String normalizeName( String name )
+	{
+		return name.toLowerCase().replace( " ", "" );
 	}
 	
 	private static byte[] readResource( String resourceName )
