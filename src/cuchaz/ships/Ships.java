@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
@@ -51,10 +52,12 @@ import cuchaz.ships.blocks.BlockHelm;
 import cuchaz.ships.blocks.BlockShip;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
+import cuchaz.ships.items.ItemListOfSupporters;
 import cuchaz.ships.items.ItemMagicBucket;
 import cuchaz.ships.items.ItemMagicShipLevitator;
 import cuchaz.ships.items.ItemPaddle;
 import cuchaz.ships.items.ItemShipClipboard;
+import cuchaz.ships.items.ItemSupporterPlaque;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
@@ -91,6 +94,8 @@ public class Ships extends DummyModContainer
 	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket( 7322 );
 	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator( 7323 );
 	public static final ItemShipClipboard m_itemShipClipboard = new ItemShipClipboard( 7324 );
+	public static final ItemListOfSupporters m_itemListOfSupporters = new ItemListOfSupporters( 7325 );
+	public static final ItemSupporterPlaque m_itemSupporterPlaque = new ItemSupporterPlaque( 7326 );
 	
 	// block registration: use ids [3170-3190]
 	public static final BlockShip m_blockShip = new BlockShip( 3170 );
@@ -108,7 +113,7 @@ public class Ships extends DummyModContainer
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
-		meta.version = "0.5 BETA";
+		meta.version = "0.6 BETA";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "";
@@ -268,6 +273,8 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemMagicBucket, "magicBucket" );
 		GameRegistry.registerItem( m_itemMagicShipLevitator, "magicShipLevitator" );
 		GameRegistry.registerItem( m_itemShipClipboard, "shipClipboard" );
+		GameRegistry.registerItem( m_itemListOfSupporters, "listOfSupporters" );
+		GameRegistry.registerItem( m_itemSupporterPlaque, "supporterPlaque" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
@@ -288,6 +295,8 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_itemMagicBucket, "Magic Bucket" );
 		LanguageRegistry.addName( m_itemMagicShipLevitator, "Magic Ship Levitator" );
 		LanguageRegistry.addName( m_itemShipClipboard, "Ship Clipboard" );
+		LanguageRegistry.addName( m_itemListOfSupporters, "Cuchaz Interactive List of Supporters" );
+		LanguageRegistry.addName( m_itemSupporterPlaque, "Cuchaz Interactive Supporter Plaque" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
@@ -303,6 +312,8 @@ public class Ships extends DummyModContainer
 		ItemStack stickStack = new ItemStack( Item.stick );
 		ItemStack goldStack = new ItemStack( Item.ingotGold );
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
+		ItemStack paperStack = new ItemStack( Item.paper );
+		ItemStack woodStack = new ItemStack( Block.wood );
 		
 		// paddle
 		GameRegistry.addRecipe(
@@ -324,6 +335,23 @@ public class Ships extends DummyModContainer
 			" x ", "x x", "yxy",
 			'x', stickStack,
 			'y', ironStack
+		);
+		
+		// list of supporters
+		GameRegistry.addRecipe(
+			new ItemStack( m_itemListOfSupporters, 1 ),
+			"yyy", "yxy", "yyy",
+			'x', ShipType.Tiny.newItemStack(),
+			'y', paperStack
+		);
+		
+		// supporter plaque
+		GameRegistry.addRecipe(
+			new ItemStack( m_itemSupporterPlaque, 1 ),
+			" y ", " x ", "zzz",
+			'x', ShipType.Tiny.newItemStack(),
+			'y', ironStack,
+			'z', woodStack
 		);
 	}
 }

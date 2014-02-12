@@ -3,3 +3,5 @@ syntax: regexp
 ^dist$
 syntax: regexp
 ^media$
+syntax: regexp
+^keys$

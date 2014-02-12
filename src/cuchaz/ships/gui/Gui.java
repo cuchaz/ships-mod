@@ -10,12 +10,12 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.ContainerShip;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
@@ -67,6 +67,15 @@ public enum Gui
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
 			return new GuiShipPropulsion( new ContainerShip(), world, x, y, z );
+		}
+	},
+	ListOfSupporters
+	{
+		@Override
+		@SideOnly( Side.CLIENT )
+		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
+		{
+			return new GuiListOfSupporters( new ContainerShip() );
 		}
 	};
 	
