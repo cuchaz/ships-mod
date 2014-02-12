@@ -23,6 +23,7 @@ import org.lwjgl.opengl.GL12;
 
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntitySupporterPlaque;
+import cuchaz.ships.Ships;
 
 public class RenderSupporterPlaque extends Render
 {
@@ -36,11 +37,16 @@ public class RenderSupporterPlaque extends Render
 	{
 		// TEMP
 		GL11.glPushMatrix();
-		GL11.glTranslatef( (float)x, (float)y, (float)z );
+		GL11.glTranslated( x, y, z );
 		GL11.glTranslated( -entity.posX, -entity.posY, -entity.posZ );
-		System.out.println( "Rendering, bee-yotch!" );
 		RenderUtils.renderHitbox( entity.boundingBox, ColorUtils.getColor( 0, 255, 0 ) );
 		GL11.glPopMatrix();
+		
+		Ships.logger.info( "Render box: [%.2f,%.2f][%.2f,%.2f][%.2f,%.2f]",
+			entity.boundingBox.minX, entity.boundingBox.maxX,
+			entity.boundingBox.minY, entity.boundingBox.maxY,
+			entity.boundingBox.minZ, entity.boundingBox.maxZ
+        );
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef( (float)x, (float)y, (float)z );

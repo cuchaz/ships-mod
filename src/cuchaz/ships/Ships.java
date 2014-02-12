@@ -283,8 +283,7 @@ public class Ships extends DummyModContainer
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
 		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, this, 256, 10, true );
 		EntityRegistry.registerGlobalEntityID( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId );
-		// EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 0, 1000, false );
-		EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, true );
+		EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, false );
 		
 		// tile entities
 		GameRegistry.registerTileEntity( TileEntityHelm.class, "helm" );
