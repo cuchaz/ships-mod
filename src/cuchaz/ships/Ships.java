@@ -69,6 +69,7 @@ import cuchaz.ships.packets.PacketShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 import cuchaz.ships.render.RenderShip;
+import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 
 @NetworkMod(
@@ -104,6 +105,7 @@ public class Ships extends DummyModContainer
 	
 	// entity registration
 	public static final int EntityShipId = 174;
+	public static final int EntitySupporterPlaqueId = 175;
 	
 	private File m_source;
 	
@@ -247,6 +249,7 @@ public class Ships extends DummyModContainer
 	{
 		// set renderers
 		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
+		RenderingRegistry.registerEntityRenderingHandler( EntitySupporterPlaque.class, new RenderSupporterPlaque() );
 		
 		// set tile entity renderers
 		registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
@@ -279,6 +282,9 @@ public class Ships extends DummyModContainer
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
 		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, this, 256, 10, true );
+		EntityRegistry.registerGlobalEntityID( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId );
+		// EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 0, 1000, false );
+		EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, true );
 		
 		// tile entities
 		GameRegistry.registerTileEntity( TileEntityHelm.class, "helm" );
