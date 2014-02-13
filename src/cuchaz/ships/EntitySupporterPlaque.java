@@ -59,6 +59,9 @@ public class EntitySupporterPlaque extends EntityHanging implements IEntityAddit
 	@Override
 	public void writeSpawnData( ByteArrayDataOutput data )
 	{
+		data.writeInt( xPosition );
+		data.writeInt( yPosition );
+		data.writeInt( zPosition );
 		data.writeInt( hangingDirection );
 		data.writeInt( m_supporterId );
 	}
@@ -66,9 +69,13 @@ public class EntitySupporterPlaque extends EntityHanging implements IEntityAddit
 	@Override
 	public void readSpawnData( ByteArrayDataInput data )
 	{
-		// UNDONE: not getting world position somehow...
-		// look at FMLClientHandler.spawnEntityIntoClientWorld() for info about what info gets copied to the client
+		// need to read HangingEntity data too
+		// since we're not using the usual HangingEntity spawn packet
+		xPosition = data.readInt();
+		yPosition = data.readInt();
+		zPosition = data.readInt();
 		setDirection( data.readInt() );
+		
 		m_supporterId = data.readInt();
 		initPlaque();
 	}
@@ -84,28 +91,18 @@ public class EntitySupporterPlaque extends EntityHanging implements IEntityAddit
 			setDead();
 			return;
 		}
-		
-		// TEMP
-		Ships.logger.info( "Init plaque: %s at (%.1f,%.1f,%.1f)", Supporters.getName( m_supporterId ), posX, posY, posZ );
-        Ships.logger.info( "Plaque direction: %d", hangingDirection );
-        Ships.logger.info( "Plaque box: [%.2f,%.2f][%.2f,%.2f][%.2f,%.2f]",
-        	boundingBox.minX, boundingBox.maxX,
-        	boundingBox.minY, boundingBox.maxY,
-        	boundingBox.minZ, boundingBox.maxZ
-        );
-        Thread.dumpStack();
 	}
 	
 	@Override
 	public int getWidthPixels( )
 	{
-		return 16;
+		return 32;
 	}
 
 	@Override
 	public int getHeightPixels( )
 	{
-		return 16;
+		return 32;
 	}
 	
 	@Override
@@ -119,16 +116,5 @@ public class EntitySupporterPlaque extends EntityHanging implements IEntityAddit
 	public void setPositionAndRotation2( double x, double y, double z, float yaw, float pitch, int alwaysThree )
 	{
 		// ignore position updates from the server
-	}
-	
-	// TEMP
-	@Override
-	public void onUpdate( )
-	{
-		Ships.logger.info( "onUpdate plaque box: [%.2f,%.2f][%.2f,%.2f][%.2f,%.2f]",
-			boundingBox.minX, boundingBox.maxX,
-			boundingBox.minY, boundingBox.maxY,
-			boundingBox.minZ, boundingBox.maxZ
-        );
 	}
 }
