@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.render;
 
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderPainting;
@@ -23,9 +24,12 @@ import org.lwjgl.opengl.GL12;
 
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.ships.EntitySupporterPlaque;
+import cuchaz.ships.Supporters;
 
 public class RenderSupporterPlaque extends RenderPainting
 {
+	private static final ResourceLocation TextureResource = new ResourceLocation( "ships", "textures/blocks/supporterPlaque.png" );
+	
 	@Override
 	public void doRender( Entity entity, double x, double y, double z, float yaw, float partialTickTime )
 	{
@@ -49,7 +53,12 @@ public class RenderSupporterPlaque extends RenderPainting
 		// and translate to the lower-left corner of the plaque
 		GL11.glTranslatef( -entity.getWidthPixels()/32, -entity.getHeightPixels()/32, 0 );
 		
-		bindEntityTexture( entity );
+		// set the texture
+		bindTexture( TextureResource );
+		
+		//ResourceLocation rl = renderManager.renderEngine.getDynamicTextureLocation("modlogo", new DynamicTexture(logo));
+		//renderManager.renderEngine.bindTexture(rl);
+		
 		renderPlaque( entity );
 		GL11.glDisable( GL12.GL_RESCALE_NORMAL );
 		GL11.glPopMatrix();
@@ -68,6 +77,7 @@ public class RenderSupporterPlaque extends RenderPainting
 		float duPixel = 1f/entity.getWidthPixels();
 		float dvPixel = 1f/entity.getHeightPixels();
 		
+		// render the plaque
 		Tessellator tessellator = Tessellator.instance;
 		for( int x=0; x<numXBlocks; x++ )
 		{
@@ -126,12 +136,53 @@ public class RenderSupporterPlaque extends RenderPainting
 				tessellator.draw();
 			}
 		}
+		
+		// render the text
+		GL11.glPushMatrix();
+		// for some reason, I can't turn off depth buffering
+		// so just draw the text a little farther off the wall than the plaque
+		GL11.glTranslatef( 0f, 0f, (float)WallOffset+0.001f );
+		GL11.glNormal3f( 0f, 0f, 1f );
+		float smallHeight = 2f/16;
+		float mediumHeight = 3f/16;
+		float bigHeight = 4f/16;
+		drawCenteredLine( "Let it be known that", 15f/16, numXBlocks, smallHeight, ColorUtils.getGrey( 64 ) );
+		drawCenteredLine( Supporters.getName( entity.getSupporterId() ), 18f/16, numXBlocks, bigHeight, ColorUtils.getGrey( 0 ) );
+		drawCenteredLine( "is a supporter of", 23f/16, numXBlocks, smallHeight, ColorUtils.getGrey( 64 ) );
+		drawCenteredLine( "Cuchaz Interactive", 26f/16, numXBlocks, mediumHeight, ColorUtils.getGrey( 0 ) );
+		GL11.glPopMatrix();
 	}
 	
+	private void drawCenteredLine( String text, float yPos, float plaqueSize, float height, int color )
+	{
+		// NOTE: all inputs are in world coords
+		
+		FontRenderer fontRenderer = getFontRendererFromRenderManager();
+		
+		GL11.glPushMatrix();
+		
+		// compute the scale so that the rendered font height matches the input height in block space
+		int lineHeight = fontRenderer.FONT_HEIGHT + 1;
+		float scaleFontToWorld = height/lineHeight;
+		GL11.glScalef( scaleFontToWorld, scaleFontToWorld, 1f );
+		
+		// apply the scale to the arguments
+		yPos /= scaleFontToWorld;
+		plaqueSize /= scaleFontToWorld;
+		
+		int textWidth = fontRenderer.getStringWidth( text );
+		int x = (int)( plaqueSize - textWidth )/2;
+		int y = (int)yPos;
+		fontRenderer.drawString( text, x, y, color );
+		
+		GL11.glPopMatrix();
+	}
+
 	@Override
 	protected ResourceLocation getEntityTexture( Entity entity )
 	{
-		return new ResourceLocation( "ships", "textures/blocks/supporterPlaque.png" ); 
+		// not needed
+		return null;
 	}
 	
 	private void setColorAndLightness( EntityHanging entity, int x, int y )

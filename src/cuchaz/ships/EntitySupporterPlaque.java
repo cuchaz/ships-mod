@@ -41,6 +41,11 @@ public class EntitySupporterPlaque extends EntityHanging implements IEntityAddit
 		initPlaque();
 	}
 	
+	public int getSupporterId( )
+	{
+		return m_supporterId;
+	}
+	
 	@Override
 	public void writeEntityToNBT( NBTTagCompound nbt )
 	{
