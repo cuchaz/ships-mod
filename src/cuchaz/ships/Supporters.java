@@ -134,14 +134,24 @@ public class Supporters
 	
 	public static String getName( int id )
 	{
-		int rank = id & 0xff;
-		int index = ( id >> 8 ) & 0xffffff;
+		int rank = getRank( id );
+		int index = getIndex( id );
 		List<String> names = m_supporters.get( rank );
 		if( names != null && index < names.size() )
 		{
 			return names.get( index );
 		}
 		return null;
+	}
+	
+	public static int getRank( int id )
+	{
+		return id & 0xff;
+	}
+	
+	private static int getIndex( int id )
+	{
+		return ( id >> 8 ) & 0xffffff;
 	}
 	
 	private static String normalizeName( String name )

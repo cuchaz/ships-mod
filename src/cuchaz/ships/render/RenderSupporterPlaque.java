@@ -28,8 +28,6 @@ import cuchaz.ships.Supporters;
 
 public class RenderSupporterPlaque extends RenderPainting
 {
-	private static final ResourceLocation TextureResource = new ResourceLocation( "ships", "textures/blocks/supporterPlaque.png" );
-	
 	@Override
 	public void doRender( Entity entity, double x, double y, double z, float yaw, float partialTickTime )
 	{
@@ -44,20 +42,17 @@ public class RenderSupporterPlaque extends RenderPainting
 		GL11.glEnable( GL12.GL_RESCALE_NORMAL );
 		
 		// shrink everything by a small amount
-		final float Scale = 15f/16f;
+		final float Scale = 15f/16;
 		GL11.glScalef( Scale, Scale, 1 );
 		
 		// flip the axes so the coordinates make sense
 		GL11.glScalef( -1, -1, -1 );
 		
 		// and translate to the lower-left corner of the plaque
-		GL11.glTranslatef( -entity.getWidthPixels()/32, -entity.getHeightPixels()/32, 0 );
+		GL11.glTranslatef( -(float)entity.getWidthPixels()/32, -(float)entity.getHeightPixels()/32, 0 );
 		
 		// set the texture
-		bindTexture( TextureResource );
-		
-		//ResourceLocation rl = renderManager.renderEngine.getDynamicTextureLocation("modlogo", new DynamicTexture(logo));
-		//renderManager.renderEngine.bindTexture(rl);
+		bindTexture( entity.getType().getTexture() );
 		
 		renderPlaque( entity );
 		GL11.glDisable( GL12.GL_RESCALE_NORMAL );
@@ -95,6 +90,13 @@ public class RenderSupporterPlaque extends RenderPainting
 				tessellator.addVertexWithUV( x+1, y+1, WallOffset, ( x+1 )*duBlock, ( y+1 )*dvBlock );
 				tessellator.addVertexWithUV( x+1, y+0, WallOffset, ( x+1 )*duBlock, ( y+0 )*dvBlock );
 				
+				// back
+				tessellator.setNormal( 0, 0, -1 );
+				tessellator.addVertexWithUV( x+0, y+0, 0, 0*duPixel, 0*dvPixel );
+				tessellator.addVertexWithUV( x+1, y+0, 0, 1*duPixel, 0*dvPixel );
+				tessellator.addVertexWithUV( x+1, y+1, 0, 1*duPixel, 1*dvPixel );
+				tessellator.addVertexWithUV( x+0, y+1, 0, 0*duPixel, 1*dvPixel );
+				
 				if( x == 0 )
 				{
 					// left
@@ -104,7 +106,7 @@ public class RenderSupporterPlaque extends RenderPainting
 					tessellator.addVertexWithUV( 0, y+1, 1*WallOffset, 1*duPixel, ( y+1 )*dvBlock );
 					tessellator.addVertexWithUV( 0, y+0, 1*WallOffset, 1*duPixel, ( y+0 )*dvBlock );
 				}
-				else if( x == numXBlocks - 1 )
+				if( x == numXBlocks - 1 )
 				{
 					// right
 					tessellator.setNormal( 1, 0, 0 );
@@ -113,7 +115,6 @@ public class RenderSupporterPlaque extends RenderPainting
 					tessellator.addVertexWithUV( numXBlocks, y+1, 0*WallOffset, 1-0*duPixel, ( y+1 )*dvBlock );
 					tessellator.addVertexWithUV( numXBlocks, y+0, 0*WallOffset, 1-0*duPixel, ( y+0 )*dvBlock );
 				}
-				
 				if( y == 0 )
 				{
 					// bottom
@@ -123,7 +124,7 @@ public class RenderSupporterPlaque extends RenderPainting
 					tessellator.addVertexWithUV( x+1, 0, 1*WallOffset, ( x+1 )*duBlock, 1*dvPixel );
 					tessellator.addVertexWithUV( x+1, 0, 0*WallOffset, ( x+1 )*duBlock, 0*dvPixel );
 				}
-				else if( y == numYBlocks - 1 )
+				if( y == numYBlocks - 1 )
 				{
 					// top
 					tessellator.setNormal( 0, 1, 0 );
@@ -143,13 +144,34 @@ public class RenderSupporterPlaque extends RenderPainting
 		// so just draw the text a little farther off the wall than the plaque
 		GL11.glTranslatef( 0f, 0f, (float)WallOffset+0.001f );
 		GL11.glNormal3f( 0f, 0f, 1f );
-		float smallHeight = 2f/16;
-		float mediumHeight = 3f/16;
-		float bigHeight = 4f/16;
-		drawCenteredLine( "Let it be known that", 15f/16, numXBlocks, smallHeight, ColorUtils.getGrey( 64 ) );
-		drawCenteredLine( Supporters.getName( entity.getSupporterId() ), 18f/16, numXBlocks, bigHeight, ColorUtils.getGrey( 0 ) );
-		drawCenteredLine( "is a supporter of", 23f/16, numXBlocks, smallHeight, ColorUtils.getGrey( 64 ) );
-		drawCenteredLine( "Cuchaz Interactive", 26f/16, numXBlocks, mediumHeight, ColorUtils.getGrey( 0 ) );
+		
+		switch( entity.getType() )
+		{
+			case Small:
+			{
+				float smallHeight = 1f/16;
+				float mediumHeight = 1.5f/16;
+				float bigHeight = 2f/16;
+				
+				drawCenteredLine( Supporters.getName( entity.getSupporterId() ), 7f/16, numXBlocks, bigHeight, ColorUtils.getGrey( 0 ) );
+				drawCenteredLine( "is a supporter of", 10f/16, numXBlocks, smallHeight, ColorUtils.getGrey( 64 ) );
+				drawCenteredLine( "Cuchaz Interactive", 12f/16, numXBlocks, mediumHeight, ColorUtils.getGrey( 0 ) );
+			}
+			break;
+			
+			case Large:
+			{
+				float smallHeight = 2f/16;
+				float mediumHeight = 3f/16;
+				float bigHeight = 4f/16;
+				
+				drawCenteredLine( Supporters.getName( entity.getSupporterId() ), 16f/16, numXBlocks, bigHeight, ColorUtils.getGrey( 0 ) );
+				drawCenteredLine( "is a supporter of", 23f/16, numXBlocks, smallHeight, ColorUtils.getGrey( 64 ) );
+				drawCenteredLine( "Cuchaz Interactive", 26f/16, numXBlocks, mediumHeight, ColorUtils.getGrey( 0 ) );
+			}
+			break;
+		}
+		
 		GL11.glPopMatrix();
 	}
 	

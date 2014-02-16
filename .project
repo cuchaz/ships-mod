@@ -18,7 +18,7 @@
 		<link>
 			<name>binForge</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/forge-v1.6.4/mcp/bin</locationURI>
+			<locationURI>WORKSPACE_LOC/forge-v1.6.4/mcp/bin/minecraft</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

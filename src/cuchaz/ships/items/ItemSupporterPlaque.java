@@ -10,6 +10,8 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
+import java.util.List;
+
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityHanging;
@@ -19,8 +21,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
 import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.Environment;
 import cuchaz.ships.EntitySupporterPlaque;
 import cuchaz.ships.Supporters;
+import cuchaz.ships.gui.GuiString;
 
 public class ItemSupporterPlaque extends ItemHangingEntity
 {
@@ -31,9 +35,8 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabDecorations );
 		setUnlocalizedName( "supporterPlaque" );
-		
-		// UNDONE: make sure textures work
-		setTextureName( "painting" );
+		setHasSubtypes( true );
+		setMaxDamage( 0 );
 	}
 	
 	@Override
@@ -43,13 +46,43 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 	}
 	
 	@Override
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	public void getSubItems( int itemId, CreativeTabs tabs, List items )
+	{
+		for( SupporterPlaqueType type : SupporterPlaqueType.values() )
+		{
+			items.add( type.newItemStack() );
+		}
+	}
+	
+	@Override
+	public String getItemStackDisplayName( ItemStack itemStack )
+	{
+		return getItemDisplayName( itemStack );
+	}
+	
+	@Override
+	public String getItemDisplayName( ItemStack itemStack )
+	{
+		return SupporterPlaqueType.getByMeta( itemStack.getItemDamage() ).getItemName();
+	}
+	
+	@Override
 	public boolean onItemUse( ItemStack itemStack, EntityPlayer player, World world, int x, int y, int z, int sideId, float xHit, float yHit, float zHit )
 	{
-		// is this player not a supporter?
-		if( Supporters.getId( player.username ) == Supporters.InvalidSupporterId /* TEMP */ && false )
+		// get the type
+		SupporterPlaqueType type = SupporterPlaqueType.getByMeta( itemStack.getItemDamage() );
+		
+		// is the player a supporter?
+		if( !type.canUse( player ) )
 		{
+			if( Environment.isClient() )
+			{
+				player.addChatMessage( String.format( GuiString.NotASupporter.getLocalizedText() ) );
+			}
 			return false;
 		}
+		int supporterId = Supporters.getId( player.username );
 		
 		// was the plaque placed on the top or bottom of a block?
 		BlockSide side = BlockSide.getById( sideId );
@@ -59,7 +92,7 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 		}
 		
 		// create the entity
-		EntityHanging entity = new EntitySupporterPlaque( world, player, x, y, z, Direction.facingToDirection[sideId] );
+		EntityHanging entity = new EntitySupporterPlaque( world, type, supporterId, x, y, z, Direction.facingToDirection[sideId] );
 		if( entity.onValidSurface() )
 		{
 			if( !world.isRemote )
