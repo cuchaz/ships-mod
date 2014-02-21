@@ -42,7 +42,8 @@ public enum GuiString
 	FoundPropulsion( "Found %s" ),
 	ShipUnlaunchOverride( "Override docking check" ),
 	ShipUnlaunchOverrideWarning( "Warning: You may not be able to launch your ship after docking here." ),
-	ListOfSupporters( "Cuchaz Interactive: List of Supporters" );
+	ListOfSupporters( "Cuchaz Interactive: List of Supporters" ),
+	NotASupporter( "Become a supporter of Cuchaz Interactive to use this feature. http://www.patreon.com/cuchaz" );
 	
 	private String m_unlocalizedText;
 	

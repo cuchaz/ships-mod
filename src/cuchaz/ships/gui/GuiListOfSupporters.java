@@ -25,6 +25,12 @@ public class GuiListOfSupporters extends GuiShip
 		
 		// get the supporters
 		m_supporters = Supporters.getSortedNames();
+		
+		// remove my name from the list
+		if( m_supporters.get( 0 ).equalsIgnoreCase( "cuchaz" ) )
+		{
+			m_supporters.remove( 0 );
+		}
 	}
 	
 	@Override

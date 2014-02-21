@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -61,6 +62,21 @@ public enum ShipType
 				"xxx", "xyx", "xxx",
 				'x', new ItemStack( Item.ingotGold ),
 				'y', new ItemStack( Item.redstone )
+			);
+		}
+	},
+	Large( 1000, false )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Large Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xzx", "zyz", "xzx",
+				'x', new ItemStack( Item.ingotGold ),
+				'y', new ItemStack( Item.redstone ),
+				'z', new ItemStack( Item.dyePowder, 1, 4 ) // lapis lazuli
 			);
 		}
 	};

@@ -5,12 +5,11 @@
 	</description>
 	
 	<!-- output file -->
-	<property name="jarName" value="shipsMod-v0.5.beta.jar"/>
+	<property name="jarName" value="shipsMod-v0.6.beta.jar"/>
 	
 	<!-- input paths -->
 	<property name="mcp" location="../forge-v1.6.4/mcp"/>
-	<property name="binForge" location="${mcp}/eclipse/Minecraft/bin"/>
-	<property name="binMcp" location="${mcp}/bin/minecraft"/>
+	<property name="bin" location="${mcp}/bin/minecraft"/>
 	<property name="reobf" location="${mcp}/reobf/minecraft"/>
 	<property name="temp" location="temp"/>
 	<property name="libs" location="libs"/>
@@ -19,19 +18,10 @@
 	
 	<target name="checkDirs">
 		<echo message="${mcp}"/>
-		<echo message="${binForge}"/>
-		<echo message="${binMcp}"/>
+		<echo message="${bin}"/>
 	</target>
 	
 	<target name="dist">
-		
-		<!-- copy the bytecode into mcp -->
-		<copy todir="${binMcp}" overwrite="true">
-			<fileset dir="${binForge}">
-				<include name="cuchaz/modsShared/**/*.class"/>
-				<include name="cuchaz/ships/**/*.class"/>
-			</fileset>
-		</copy>
 		
 		<!-- reobfuscate bytecode -->
 		<exec dir="${mcp}" executable="python">
@@ -43,7 +33,7 @@
 		<copy todir="${temp}">
 			<fileset dir="${reobf}" includes="cuchaz/modsShared/**/*.class"/>
 			<fileset dir="${reobf}" includes="cuchaz/ships/**/*.class"/>
-			<fileset dir="${reobf}" includes="net/minecraft/**/*.class"/>
+			<fileset dir="${reobf}" includes="net/minecraft/entity/EntityAccessor.class"/>
 			<fileset dir="${src}" includes="assets/**/*"/>
 		</copy>
 		
