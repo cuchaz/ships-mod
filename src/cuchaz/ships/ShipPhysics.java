@@ -101,7 +101,7 @@ public class ShipPhysics
 		{
 			m_displacement.put( y, new DisplacementEntry() );
 		}
-		
+
 		// compute displacement for the ship blocks
 		for( ChunkCoordinates coords : watertightBlocks )
 		{

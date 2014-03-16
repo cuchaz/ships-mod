@@ -47,7 +47,7 @@ public class InheritanceUtils
 		catch( Exception ex )
 		{
 			// NOTE: using the logger here causes class loading circles. Need to use stdout
-			System.out.println( "Unable to read class: " + className );
+			System.out.println( "Unable to read class: " + className + ". Assuming it's not a " + targetClassName );
 			ex.printStackTrace( System.out );
 		}
 		
@@ -82,7 +82,7 @@ public class InheritanceUtils
 		catch( Exception ex )
 		{
 			// NOTE: using the logger here causes class loading circles. Need to use stdout
-			System.out.println( "Unable to read class: " + className );
+			System.out.println( "Unable to read class: " + className + ". Assuming it's not a " + targetInterfaceName );
 			ex.printStackTrace( System.out );
 		}
 		

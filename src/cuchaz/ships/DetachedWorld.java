@@ -153,4 +153,10 @@ public class DetachedWorld extends World
 		// detached worlds don't have biomes
 		return null;
 	}
+	
+	@Override
+	public boolean doChunksNearChunkExist( int blockX, int blockY, int blockZ, int dist )
+	{
+		return true;
+	}
 }

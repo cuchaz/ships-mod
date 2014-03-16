@@ -50,8 +50,11 @@ public class ShipGeometry
 		m_holes = null;
 		m_trappedAir = null;
 		
+		/* TEMP */ Ships.logger.info( "A" );
 		computeBoundaryAndHoles();
+		/* TEMP */ Ships.logger.info( "B" );
 		computeTrappedAir();
+		/* TEMP */ Ships.logger.info( "C" );
 	}
 	
 	public Envelopes getEnvelopes( )

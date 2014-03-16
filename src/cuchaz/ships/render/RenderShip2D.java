@@ -73,15 +73,17 @@ public class RenderShip2D
 				// get the block texture
 				Block block = Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )];
 				Icon icon = block.getBlockTexture( world, coords.posX, coords.posY, coords.posZ, side.getId() );
-				
-				drawTexturedBlock(
-					( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
-					( maxHeight - shipHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
-					z,
-					blockSize,
-					blockSize,
-					icon
-				);
+				if( icon != null )
+				{
+					drawTexturedBlock(
+						( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
+						( maxHeight - shipHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
+						z,
+						blockSize,
+						blockSize,
+						icon
+					);
+				}
 			}
 		}
 	}
@@ -154,6 +156,11 @@ public class RenderShip2D
 	
 	public static void drawTexturedBlock( double x, double y, double z, double width, double height, Icon icon )
 	{
+		if( icon == null )
+		{
+			throw new IllegalArgumentException( "No icon for block!" );
+		}
+		
 		// get the texture u/v for this icon
 		double minU = (double)icon.getInterpolatedU( 0.0 );
 		double maxU = (double)icon.getInterpolatedU( 16.0 );
