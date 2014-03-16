@@ -28,6 +28,7 @@ import cuchaz.modsShared.BlockUtils.Neighbors;
 import cuchaz.modsShared.BoundingBoxInt;
 import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.Envelopes;
+import cuchaz.modsShared.Profiler;
 import cuchaz.modsShared.RotatedBB;
 
 public class ShipGeometry
@@ -50,11 +51,17 @@ public class ShipGeometry
 		m_holes = null;
 		m_trappedAir = null;
 		
-		/* TEMP */ Ships.logger.info( "A" );
+		// TEMP
+		Profiler.reset();
+		Profiler.start( "computeBoundary" );
+		
 		computeBoundaryAndHoles();
-		/* TEMP */ Ships.logger.info( "B" );
+		/* TEMP */ Profiler.stopStart( "computeBoundary", "computeTrappedAir" ); 
 		computeTrappedAir();
-		/* TEMP */ Ships.logger.info( "C" );
+		
+		// TEMP
+		Profiler.stop( "computeTrappedAir" );
+		System.out.println( Profiler.getReport() );
 	}
 	
 	public Envelopes getEnvelopes( )

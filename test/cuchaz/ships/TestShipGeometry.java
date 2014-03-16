@@ -236,6 +236,16 @@ public class TestShipGeometry
 			2, 1, 0,   2, 1, 1,   2, 1, 2
 		) );
 		
+		// TEMP
+		for( TreeSet<ChunkCoordinates> boundary : geometry.getOuterBoundaries() )
+		{
+			for( ChunkCoordinates coords : boundary )
+			{
+				System.out.print( String.format( "(%2d,%2d,%2d) ", coords.posX, coords.posY, coords.posZ ) );
+			}
+			System.out.println( "" );
+		}
+		
 		// check outer boundaries
 		assertEquals( 7, geometry.getOuterBoundaries().size() );
 		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(

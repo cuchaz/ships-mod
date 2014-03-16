@@ -35,6 +35,8 @@ public class TestShipLag
 				shipBlocks.getGeometry();
 				long diff = System.currentTimeMillis() - time;
 				
+				System.out.println( String.format( "Time: %.2fs", diff/1000.0 ) );
+				
 				// this shouldn't take more than 1/10 of a second
 				assertTrue( diff <= 100 );
 			}
