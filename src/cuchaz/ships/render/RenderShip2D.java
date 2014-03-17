@@ -21,9 +21,9 @@ import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
 
-import cuchaz.modsShared.BlockArray;
-import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.ColorUtils;
+import cuchaz.modsShared.blocks.BlockArray;
+import cuchaz.modsShared.blocks.BlockSide;
 
 public class RenderShip2D
 {

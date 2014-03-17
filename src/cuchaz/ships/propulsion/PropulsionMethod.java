@@ -10,23 +10,20 @@
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
-import java.util.Set;
-import java.util.TreeSet;
-
-import net.minecraft.util.ChunkCoordinates;
+import cuchaz.modsShared.blocks.BlockSet;
 
 public abstract class PropulsionMethod
 {
 	private String m_name;
 	private String m_namePlural;
-	private Set<ChunkCoordinates> m_coords;
+	private BlockSet m_coords;
 	
 	protected PropulsionMethod( String name, String namePlural )
 	{
-		this( name, namePlural, new TreeSet<ChunkCoordinates>() );
+		this( name, namePlural, new BlockSet() );
 	}
 	
-	protected PropulsionMethod( String name, String namePlural, Set<ChunkCoordinates> coords )
+	protected PropulsionMethod( String name, String namePlural, BlockSet coords )
 	{
 		m_name = name;
 		m_namePlural = namePlural;
@@ -43,7 +40,7 @@ public abstract class PropulsionMethod
 		return m_namePlural;
 	}
 	
-	public Set<ChunkCoordinates> getCoords( )
+	public BlockSet getCoords( )
 	{
 		return m_coords;
 	}

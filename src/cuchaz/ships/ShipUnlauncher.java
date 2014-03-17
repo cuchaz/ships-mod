@@ -13,7 +13,6 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -21,10 +20,12 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.Util;
+import cuchaz.modsShared.blocks.BlockMap;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.math.CircleRange;
 
 public class ShipUnlauncher
 {
@@ -47,7 +48,7 @@ public class ShipUnlauncher
 				// if any placed ship block has a neighbor that's not a ship block and not a separator block, the flag fails
 				
 				// put all the placed blocks into a data structure that has fast lookup
-				TreeSet<ChunkCoordinates> placedBlocks = new TreeSet<ChunkCoordinates>();
+				BlockSet placedBlocks = new BlockSet();
 				placedBlocks.addAll( unlauncher.m_correspondence.values() );
 				
 				// check for the neighbors of each ship block
@@ -141,7 +142,7 @@ public class ShipUnlauncher
 		m_waterHeightInBlockSpace = MathHelper.floor_double( m_ship.getWaterHeight() + 0.5 ) - ty;
 		
 		// get the set of coords we care about
-		TreeSet<ChunkCoordinates> allCoords = new TreeSet<ChunkCoordinates>();
+		BlockSet allCoords = new BlockSet();
 		allCoords.addAll( m_ship.getShipWorld().coords() );
 		allCoords.addAll( m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( m_waterHeightInBlockSpace ) );
 		
@@ -153,7 +154,7 @@ public class ShipUnlauncher
 		int sin = new int[] { 0, 1, 0, -1 }[rotation];
 		
 		// compute the actual correspondence
-		m_correspondence = new TreeMap<ChunkCoordinates,ChunkCoordinates>();
+		m_correspondence = new BlockMap<ChunkCoordinates>();
 		for( ChunkCoordinates coords : allCoords )
 		{
 			// rotate the coords

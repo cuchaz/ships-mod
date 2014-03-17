@@ -18,8 +18,8 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.Environment;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShip;
 
 public class PacketPilotShip extends Packet

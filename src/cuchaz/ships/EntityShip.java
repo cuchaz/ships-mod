@@ -12,8 +12,6 @@ package cuchaz.ships;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -34,14 +32,15 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.BlockArray;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.CircleRange;
-import cuchaz.modsShared.CompareReal;
-import cuchaz.modsShared.Envelopes;
 import cuchaz.modsShared.Environment;
-import cuchaz.modsShared.RotatedBB;
+import cuchaz.modsShared.blocks.BlockArray;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.Envelopes;
+import cuchaz.modsShared.math.CircleRange;
+import cuchaz.modsShared.math.CompareReal;
+import cuchaz.modsShared.math.RotatedBB;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
@@ -351,7 +350,7 @@ public class EntityShip extends Entity
 	public double getWaterHeight( )
 	{
 		// search in the ship box for water blocks (and air wall blocks)
-		Set<ChunkCoordinates> waterCoords = new TreeSet<ChunkCoordinates>();
+		BlockSet waterCoords = new BlockSet();
 		BlockUtils.worldRangeQuery( waterCoords, worldObj, boundingBox );
 		
 		Iterator<ChunkCoordinates> iter = waterCoords.iterator();

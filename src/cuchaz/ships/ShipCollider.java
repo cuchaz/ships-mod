@@ -27,11 +27,12 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.Environment;
-import cuchaz.modsShared.RotatedBB;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.math.BoxCorner;
+import cuchaz.modsShared.math.RotatedBB;
 import cuchaz.ships.render.ShipDebugRenderInfo;
 
 public class ShipCollider
@@ -445,7 +446,7 @@ public class ShipCollider
 			Math.max( from.yCoord, to.yCoord ),
 			Math.max( from.zCoord, to.zCoord )
 		);
-		List<ChunkCoordinates> nearbyBlocks = m_ship.getShipWorld().getGeometry().rangeQuery( box );
+		BlockSet nearbyBlocks = m_ship.getShipWorld().getGeometry().rangeQuery( box );
 		
 		// sort the boxes by their line/box intersection distance to the "from" point
 		// throw out boxes that don't actually intersect the line segment
@@ -481,7 +482,7 @@ public class ShipCollider
  		AxisAlignedBB combinedBlockBox = shipBlockBox.func_111270_a( nextShipBlockBox );
  		
  		// do a range query to get colliding world blocks
-		List<ChunkCoordinates> nearbyWorldBlocks = new ArrayList<ChunkCoordinates>();
+ 		BlockSet nearbyWorldBlocks = new BlockSet();
 		BlockUtils.worldRangeQuery( nearbyWorldBlocks, m_ship.worldObj, combinedBlockBox );
         
         // get the scaling that avoids the collision

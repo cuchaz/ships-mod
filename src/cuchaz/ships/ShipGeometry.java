@@ -12,56 +12,47 @@ package cuchaz.ships;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.BlockConditionChecker;
-import cuchaz.modsShared.BlockUtils.BlockExplorer;
-import cuchaz.modsShared.BlockUtils.Neighbors;
-import cuchaz.modsShared.BoundingBoxInt;
-import cuchaz.modsShared.BoxCorner;
-import cuchaz.modsShared.Envelopes;
-import cuchaz.modsShared.Profiler;
-import cuchaz.modsShared.RotatedBB;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSetHeightIndex;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.BlockSubset;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.BlockConditionChecker;
+import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
+import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Envelopes;
+import cuchaz.modsShared.math.BoxCorner;
+import cuchaz.modsShared.math.RotatedBB;
 
 public class ShipGeometry
 {
 	public static final Neighbors ShipBlockNeighbors = Neighbors.Edges;
 	public static final Neighbors VoidBlockNeighbors = Neighbors.Faces;
 	
-	private TreeSet<ChunkCoordinates> m_blocks;
+	private BlockSet m_blocks;
 	private Envelopes m_envelopes;
-	private List<TreeSet<ChunkCoordinates>> m_outerBoundaries;
-	private List<TreeSet<ChunkCoordinates>> m_holes;
-	private TreeMap<Integer,TreeSet<ChunkCoordinates>> m_trappedAir;
+	private List<BlockSet> m_outerBoundaries;
+	private List<BlockSet> m_holes;
+	private TreeMap<Integer,BlockSet> m_trappedAir;
 	
-	public ShipGeometry( Set<ChunkCoordinates> blocks )
+	public ShipGeometry( BlockSet blocks )
 	{
-		m_blocks = new TreeSet<ChunkCoordinates>( blocks );
+		m_blocks = new BlockSet( blocks );
 		
 		m_envelopes = new Envelopes( m_blocks );
 		m_outerBoundaries = null;
 		m_holes = null;
 		m_trappedAir = null;
 		
-		// TEMP
-		Profiler.reset();
-		Profiler.start( "computeBoundary" );
-		
 		computeBoundaryAndHoles();
-		/* TEMP */ Profiler.stopStart( "computeBoundary", "computeTrappedAir" ); 
 		computeTrappedAir();
-		
-		// TEMP
-		Profiler.stop( "computeTrappedAir" );
-		System.out.println( Profiler.getReport() );
 	}
 	
 	public Envelopes getEnvelopes( )
@@ -69,29 +60,29 @@ public class ShipGeometry
 		return m_envelopes;
 	}
 	
-	public List<TreeSet<ChunkCoordinates>> getOuterBoundaries( )
+	public List<BlockSet> getOuterBoundaries( )
 	{
 		return m_outerBoundaries;
 	}
 	
-	public List<TreeSet<ChunkCoordinates>> getHoles( )
+	public List<BlockSet> getHoles( )
 	{
 		return m_holes;
 	}
 	
-	public TreeSet<ChunkCoordinates> getTrappedAir( int y )
+	public BlockSet getTrappedAir( int y )
 	{
 		// if y is too big, clamp it. ie when the ship is underwater, we get the max trapped air
 		y = Math.min( y, m_trappedAir.lastKey() );
-		TreeSet<ChunkCoordinates> coords = m_trappedAir.get( y );
+		BlockSet coords = m_trappedAir.get( y );
 		if( coords == null )
 		{
-			coords = new TreeSet<ChunkCoordinates>();
+			coords = new BlockSet();
 		}
 		return coords;
 	}
 	
-	public TreeSet<ChunkCoordinates> getTrappedAirFromWaterHeight( int waterHeightInBlockSpace )
+	public BlockSet getTrappedAirFromWaterHeight( int waterHeightInBlockSpace )
 	{
 		// remember, the water height is the y-value of the surface of the water
 		// it's always at the top of the water block
@@ -99,20 +90,20 @@ public class ShipGeometry
 		return getTrappedAir( waterHeightInBlockSpace - 1 );
 	}
 
-	public TreeSet<ChunkCoordinates> getTrappedAirFromWaterHeight( double waterHeightInBlockSpace )
+	public BlockSet getTrappedAirFromWaterHeight( double waterHeightInBlockSpace )
 	{
 		// for double water height values, round up to the top of the block, then subtract 1
 		// or, just round down
 		return getTrappedAir( MathHelper.floor_double( waterHeightInBlockSpace ) );
 	}
 	
-	public List<ChunkCoordinates> rangeQuery( RotatedBB box )
+	public BlockSet rangeQuery( RotatedBB box )
 	{
 		// get the bounds in y
 		int minY = MathHelper.floor_double( box.getMinY() );
 		int maxY = MathHelper.floor_double( box.getMaxY() );
 		
-		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		BlockSet blocks = new BlockSet();
 		for( int y=minY; y<=maxY; y++ )
 		{
 			// add up the blocks from the xz range query
@@ -121,7 +112,7 @@ public class ShipGeometry
 		return blocks;
 	}
 	
-	public List<ChunkCoordinates> xzRangeQuery( int y, RotatedBB box )
+	public BlockSet xzRangeQuery( int y, RotatedBB box )
 	{
 		// UNDONE: we can probably optimize this using a better algorithm
 		
@@ -146,7 +137,7 @@ public class ShipGeometry
 		
 		// search over the blocks in the range
 		ChunkCoordinates coords = new ChunkCoordinates();
-		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		BlockSet blocks = new BlockSet();
 		for( int x=minX; x<=maxX; x++ )
 		{
 			for( int z=minZ; z<=maxZ; z++ )
@@ -168,13 +159,13 @@ public class ShipGeometry
 		return blocks;
 	}
 	
-	public List<ChunkCoordinates> rangeQuery( AxisAlignedBB box )
+	public BlockSet rangeQuery( AxisAlignedBB box )
 	{
 		// get the block coordinate bounds for y
 		int minY = MathHelper.floor_double( box.minY );
 		int maxY = MathHelper.floor_double( box.maxY );
 		
-		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		BlockSet blocks = new BlockSet();
 		for( int y=minY; y<=maxY; y++ )
 		{
 			blocks.addAll( rangeQuery( box, y ) );
@@ -182,7 +173,7 @@ public class ShipGeometry
 		return blocks;
 	}
 	
-	public List<ChunkCoordinates> rangeQuery( AxisAlignedBB box, int y )
+	public BlockSet rangeQuery( AxisAlignedBB box, int y )
 	{
 		// get the block coordinate bounds for x and z
 		int minX = MathHelper.floor_double( box.minX );
@@ -191,7 +182,7 @@ public class ShipGeometry
 		int maxZ = MathHelper.floor_double( box.maxZ );
 		
 		ChunkCoordinates coords = new ChunkCoordinates();
-		List<ChunkCoordinates> blocks = new ArrayList<ChunkCoordinates>();
+		BlockSet blocks = new BlockSet();
 		for( int x=minX; x<=maxX; x++ )
 		{
 			for( int z=minZ; z<=maxZ; z++ )
@@ -240,7 +231,7 @@ public class ShipGeometry
 	private void computeBoundaryAndHoles( )
 	{
 		// first, get all blocks touching the ship on a face (aka the boundary)
-		final TreeSet<ChunkCoordinates> boundaryBlocks = new TreeSet<ChunkCoordinates>();
+		final BlockSet boundaryBlocks = new BlockSet();
 		ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
 		for( ChunkCoordinates coords : m_blocks )
 		{
@@ -255,14 +246,16 @@ public class ShipGeometry
 		}
 		
 		// boundaryBlocks will have some number of connected components. Find them all and classify each as inner/outer
-		m_outerBoundaries = new ArrayList<TreeSet<ChunkCoordinates>>();
-		m_holes = new ArrayList<TreeSet<ChunkCoordinates>>();
-		for( TreeSet<ChunkCoordinates> component : BlockUtils.getConnectedComponents( boundaryBlocks, VoidBlockNeighbors ) )
+		m_outerBoundaries = new ArrayList<BlockSet>();
+		m_holes = new ArrayList<BlockSet>();
+		BlockSet shellExtra = new BlockSet();
+		for( BlockSet component : BlockUtils.getConnectedComponents( boundaryBlocks, VoidBlockNeighbors ) )
 		{
 			// is this component the outer boundary?
-			if( isConnectedToShell( component.first() ) )
+			if( isConnectedToShell( component.first(), shellExtra ) )
 			{
 				m_outerBoundaries.add( component );
+				shellExtra.addAll( component );
 			}
 			else
 			{
@@ -272,12 +265,12 @@ public class ShipGeometry
 		}
 	}
 	
-	private boolean isConnectedToShell( ChunkCoordinates coords )
+	private boolean isConnectedToShell( ChunkCoordinates coords, BlockSet shellExtra )
 	{
-		return isConnectedToShell( coords, null );
+		return isConnectedToShell( coords, shellExtra, null );
 	}
 	
-	private boolean isConnectedToShell( ChunkCoordinates coords, final Integer maxY )
+	private boolean isConnectedToShell( ChunkCoordinates coords, final BlockSet shellExtra, final Integer maxY )
 	{
 		// don't check more blocks than can fit in the shell
 		final BoundingBoxInt box = m_envelopes.getBoundingBox();
@@ -292,7 +285,7 @@ public class ShipGeometry
 				public boolean isConditionMet( ChunkCoordinates coords )
 				{
 					// is this a shell block?
-					return !box.containsPoint( coords );
+					return !box.containsPoint( coords ) || shellExtra.contains( coords );
 				}
 			},
 			new BlockExplorer( )
@@ -300,7 +293,7 @@ public class ShipGeometry
 				@Override
 				public boolean shouldExploreBlock( ChunkCoordinates coords )
 				{
-					return !m_blocks.contains( coords ) && ( maxY == null || coords.posY <= maxY );
+					return ( maxY == null || coords.posY <= maxY ) && !m_blocks.contains( coords );
 				}
 			},
 			VoidBlockNeighbors
@@ -331,42 +324,90 @@ public class ShipGeometry
 		int minY = m_envelopes.getBoundingBox().minY;
 		int maxY = m_envelopes.getBoundingBox().maxY;
 		
-		// check the ship layer-by layer starting from the bottom
-		m_trappedAir = new TreeMap<Integer,TreeSet<ChunkCoordinates>>();
-		for( int waterLevel=minY; waterLevel<=maxY+1; waterLevel++ )
+		m_trappedAir = new TreeMap<Integer,BlockSet>();
+		
+		BlockSet shellExtra = new BlockSet();
+		
+		// analyze the outer boundaries
+		BlockSetHeightIndex boundaryIndex = new BlockSetHeightIndex( m_outerBoundaries );
+		List<BlockSubset> partialBoundaries = new ArrayList<BlockSubset>();
+		List<BlockSubset> nextPartialBoundaries = new ArrayList<BlockSubset>();
+		for( int y=minY; y<=maxY+1; y++ )
 		{
-			TreeSet<ChunkCoordinates> trappedAirAtThisWaterLevel = new TreeSet<ChunkCoordinates>();
-			
-			// hole blocks are always trapped air
-			for( Set<ChunkCoordinates> hole : m_holes )
+			// add all the boundaries starting at y
+			for( BlockSet boundary : boundaryIndex.getByMinY( y ) )
 			{
-				trappedAirAtThisWaterLevel.addAll( BlockUtils.getBlocksAtYAndBelow( hole, waterLevel ) );
+				partialBoundaries.add( new BlockSubset( boundary ) );
 			}
 			
-			// get the outer boundary components under water (clip them when needed)
-			List<TreeSet<ChunkCoordinates>> outerBoundariesUnderwater = new ArrayList<TreeSet<ChunkCoordinates>>();
-			for( TreeSet<ChunkCoordinates> outerBoundary : m_outerBoundaries )
+			// grow any existing partial boundaries to y
+			// NOTE: could make index structure to make y queries faster
+			// but that might not be worth it in this case
+			for( BlockSubset partialBoundary : partialBoundaries )
 			{
-				TreeSet<ChunkCoordinates> clippedOuterBoundary = BlockUtils.getBlocksAtYAndBelow( outerBoundary, waterLevel );
-				for( TreeSet<ChunkCoordinates> clippedOuterBoundaryComponent : BlockUtils.getConnectedComponents( clippedOuterBoundary, VoidBlockNeighbors ) )
+				for( ChunkCoordinates coords : partialBoundary.getParent() )
 				{
-					if( !clippedOuterBoundaryComponent.isEmpty() )
+					if( coords.posY == y )
 					{
-						outerBoundariesUnderwater.add( clippedOuterBoundaryComponent );
+						partialBoundary.add( coords );
 					}
 				}
 			}
 			
-			for( TreeSet<ChunkCoordinates> component : outerBoundariesUnderwater )
+			BlockSet trappedAirUpToThisY = new BlockSet();
+			m_trappedAir.put( y, trappedAirUpToThisY );
+			
+			// compute the trapped air so far
+			nextPartialBoundaries.clear();
+			for( BlockSubset partialBoundary : partialBoundaries )
 			{
-				// if the component is isolated from the shell, it's trapped air
-				if( !isConnectedToShell( component.first(), waterLevel ) )
+				if( !isConnectedToShell( partialBoundary.first(), shellExtra, y ) )
 				{
-					trappedAirAtThisWaterLevel.addAll( BlockUtils.getHoleFromInnerBoundary( component, m_blocks, VoidBlockNeighbors, waterLevel ) );
+					trappedAirUpToThisY.addAll( BlockUtils.getHoleFromInnerBoundary( partialBoundary, m_blocks, VoidBlockNeighbors, y ) );
+					nextPartialBoundaries.add( partialBoundary );
+				}
+				else
+				{
+					shellExtra.addAll( partialBoundary.getParent() );
 				}
 			}
 			
-			m_trappedAir.put( waterLevel, trappedAirAtThisWaterLevel );
+			// swap the lists
+			List<BlockSubset> temp = partialBoundaries;
+			partialBoundaries = nextPartialBoundaries;
+			nextPartialBoundaries = temp;
+		}
+		
+		// add holes to the trapped air
+		BlockSetHeightIndex holeIndex = new BlockSetHeightIndex( m_holes );
+		List<BlockSubset> partialHoles = new ArrayList<BlockSubset>();
+		for( int y=minY; y<=maxY+1; y++ )
+		{
+			// add all the holes starting at y
+			for( BlockSet hole : holeIndex.getByMinY( y ) )
+			{
+				partialHoles.add( new BlockSubset( hole ) );
+			}
+			
+			// grow any existing partial holes to y
+			for( BlockSubset partialHole : partialHoles )
+			{
+				for( ChunkCoordinates coords : partialHole.getParent() )
+				{
+					if( coords.posY == y )
+					{
+						partialHole.add( coords );
+					}
+				}
+			}
+			
+			// add the hole blocks to the trapped air
+			BlockSet trappedAirUpToThisY = m_trappedAir.get( y );
+			assert( trappedAirUpToThisY != null );
+			for( BlockSubset partialHole : partialHoles )
+			{
+				trappedAirUpToThisY.addAll( BlockUtils.getHoleFromInnerBoundary( partialHole, m_blocks, VoidBlockNeighbors, y ) );
+			}
 		}
 	}
 }

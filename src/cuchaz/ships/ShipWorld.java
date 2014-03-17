@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -41,10 +39,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.Environment;
-import cuchaz.modsShared.BlockUtils.UpdateRules;
-import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.modsShared.blocks.BlockMap;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
+import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
@@ -55,8 +55,9 @@ public class ShipWorld extends DetachedWorld
 	
 	private EntityShip m_ship;
 	private BlocksStorage m_storage;
-	private TreeMap<ChunkCoordinates,TileEntity> m_tileEntities;
-	private TreeSet<ChunkCoordinates> m_changedBlocks;
+	private BlockMap<TileEntity> m_tileEntities;
+	private BlockSet m_changedBlocks;
+	private boolean m_needsRenderUpdate;
 	
 	private ShipWorld( World world )
 	{
@@ -66,10 +67,10 @@ public class ShipWorld extends DetachedWorld
 		m_ship = null;
 		m_storage = new BlocksStorage();
 		m_tileEntities = null;
-		m_changedBlocks = new TreeSet<ChunkCoordinates>();
+		m_changedBlocks = new BlockSet();
 	}
 	
-	public ShipWorld( World world, ChunkCoordinates originCoords, List<ChunkCoordinates> blocks )
+	public ShipWorld( World world, ChunkCoordinates originCoords, BlockSet blocks )
 	{
 		this( world );
 		
@@ -77,7 +78,7 @@ public class ShipWorld extends DetachedWorld
 		m_storage.readFromWorld( world, originCoords, blocks );
 		
 		// copy the tile entities
-		m_tileEntities = new TreeMap<ChunkCoordinates, TileEntity>();
+		m_tileEntities = new BlockMap<TileEntity>();
 		for( ChunkCoordinates worldCoords : blocks )
 		{
 			// does this block have a tile entity?
@@ -137,7 +138,7 @@ public class ShipWorld extends DetachedWorld
 				m_storage.readFromStream( in );
 				
 				// read the tile entities
-				m_tileEntities = new TreeMap<ChunkCoordinates, TileEntity>();
+				m_tileEntities = new BlockMap<TileEntity>();
 				int numTileEntities = in.readInt();
 				for( int i = 0; i < numTileEntities; i++ )
 				{
@@ -342,6 +343,13 @@ public class ShipWorld extends DetachedWorld
 		return false;
 	}
 	
+	public boolean needsRenderUpdate( )
+	{
+		boolean val = m_needsRenderUpdate;
+		m_needsRenderUpdate = false;
+		return val;
+	}
+	
 	public boolean applyBlockChange( int x, int y, int z, int newBlockId, int newMeta )
 	{
 		m_lookupCoords.set( x, y, z );
@@ -374,6 +382,8 @@ public class ShipWorld extends DetachedWorld
 			{
 				tileEntity.updateContainingBlockInfo();
 			}
+			
+			m_needsRenderUpdate = true;
 		}
 		
 		return isAllowed;

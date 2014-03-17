@@ -13,14 +13,14 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.Util;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
@@ -83,7 +83,7 @@ public class ShipPhysics
 		m_blocks = blocks;
 		
 		// get all the watertight blocks
-		TreeSet<ChunkCoordinates> watertightBlocks = new TreeSet<ChunkCoordinates>();
+		BlockSet watertightBlocks = new BlockSet();
 		for( ChunkCoordinates coords : m_blocks.coords() )
 		{
 			if( MaterialProperties.isWatertight( getBlock( coords ) ) )

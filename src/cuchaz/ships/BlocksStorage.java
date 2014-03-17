@@ -15,10 +15,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -28,20 +26,22 @@ import net.minecraft.world.World;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
 
-import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.modsShared.blocks.BlockMap;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BoundingBoxInt;
 
 public class BlocksStorage
 {
 	private static final String Encoding = "UTF-8";
 	private static final ChunkCoordinates Origin = new ChunkCoordinates( 0, 0, 0 );
 	
-	private TreeMap<ChunkCoordinates,BlockStorage> m_blocks;
+	private BlockMap<BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
 	private ShipGeometry m_geometry;
 	
 	public BlocksStorage( )
 	{
-		m_blocks = new TreeMap<ChunkCoordinates,BlockStorage>();
+		m_blocks = new BlockMap<BlockStorage>();
 		m_airBlockStorage = new BlockStorage();
 		m_geometry = null;
 	}
@@ -52,7 +52,7 @@ public class BlocksStorage
 		m_geometry = null;
 	}
 	
-	public void readFromWorld( World world, ChunkCoordinates originCoords, List<ChunkCoordinates> blocks )
+	public void readFromWorld( World world, ChunkCoordinates originCoords, BlockSet blocks )
 	{
 		clear();
 		
@@ -103,7 +103,7 @@ public class BlocksStorage
 	throws IOException
 	{
 		out.writeInt( m_blocks.size() );
-		for( Map.Entry<ChunkCoordinates, BlockStorage> entry : m_blocks.entrySet() )
+		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
 		{
 			ChunkCoordinates coords = entry.getKey();
 			BlockStorage storage = entry.getValue();
@@ -153,7 +153,7 @@ public class BlocksStorage
 	{
 		if( m_geometry == null )
 		{
-			m_geometry = new ShipGeometry( m_blocks.keySet() );
+			m_geometry = new ShipGeometry( new BlockSet( m_blocks.keySet() ) );
 		}
 		return m_geometry;
 	}

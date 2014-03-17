@@ -20,9 +20,9 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.CircleRange;
 import cuchaz.modsShared.ColorUtils;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.math.CircleRange;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.PilotAction;
 

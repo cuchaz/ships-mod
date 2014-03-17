@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -22,6 +21,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.blocks.BlockSet;
 
 @SideOnly( Side.CLIENT )
 public class ShipDebugRenderInfo
@@ -33,7 +33,7 @@ public class ShipDebugRenderInfo
 	public ShipDebugRenderInfo( )
 	{
 		m_isRendered = false;
-		m_collidedCoords = new TreeSet<ChunkCoordinates>();
+		m_collidedCoords = new BlockSet();
 		m_queryBoxes = new HashMap<Entity,AxisAlignedBB>();
 	}
 	

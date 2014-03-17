@@ -19,13 +19,13 @@ import net.minecraft.util.Vec3;
 
 import org.lwjgl.opengl.GL11;
 
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BoxCorner;
 import cuchaz.modsShared.ColorUtils;
-import cuchaz.modsShared.CompareReal;
-import cuchaz.modsShared.Matrix3;
-import cuchaz.modsShared.RotatedBB;
-import cuchaz.modsShared.Vector3;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.math.BoxCorner;
+import cuchaz.modsShared.math.CompareReal;
+import cuchaz.modsShared.math.Matrix3;
+import cuchaz.modsShared.math.RotatedBB;
+import cuchaz.modsShared.math.Vector3;
 
 public class RenderUtils
 {

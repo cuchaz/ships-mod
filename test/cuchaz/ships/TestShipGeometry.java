@@ -10,13 +10,13 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import static org.junit.Assert.*;
-
-import java.util.TreeSet;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import net.minecraft.util.ChunkCoordinates;
 
 import org.junit.Test;
+
+import cuchaz.modsShared.blocks.BlockSet;
 
 public class TestShipGeometry
 {
@@ -236,16 +236,6 @@ public class TestShipGeometry
 			2, 1, 0,   2, 1, 1,   2, 1, 2
 		) );
 		
-		// TEMP
-		for( TreeSet<ChunkCoordinates> boundary : geometry.getOuterBoundaries() )
-		{
-			for( ChunkCoordinates coords : boundary )
-			{
-				System.out.print( String.format( "(%2d,%2d,%2d) ", coords.posX, coords.posY, coords.posZ ) );
-			}
-			System.out.println( "" );
-		}
-		
 		// check outer boundaries
 		assertEquals( 7, geometry.getOuterBoundaries().size() );
 		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
@@ -417,14 +407,14 @@ public class TestShipGeometry
 		assertEquals( 0, geometry.getTrappedAir( 2 ).size() );
 	}
 	
-	private TreeSet<ChunkCoordinates> getBlocks( int ... coords )
+	private BlockSet getBlocks( int ... coords )
 	{
 		if( coords.length % 3 != 0 )
 		{
 			throw new IllegalArgumentException( "Need coordinates in multiples of three!" );
 		}
 		
-		TreeSet<ChunkCoordinates> blocks = new TreeSet<ChunkCoordinates>();
+		BlockSet blocks = new BlockSet();
 		int numCoords = coords.length/3;
 		for( int i=0; i<numCoords; i++ )
 		{

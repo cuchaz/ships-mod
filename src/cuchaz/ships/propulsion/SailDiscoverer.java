@@ -12,14 +12,13 @@ package cuchaz.ships.propulsion;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.ChunkCoordinates;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.Neighbors;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.ships.BlocksStorage;
 
 public class SailDiscoverer implements PropulsionDiscoverer
@@ -28,7 +27,7 @@ public class SailDiscoverer implements PropulsionDiscoverer
 	public List<PropulsionMethod> getPropulsionMethods( BlocksStorage shipBlocks, BlockSide frontDirection )
 	{
 		// collect all the cloth blocks into connected components
-		Set<ChunkCoordinates> clothCoords = new TreeSet<ChunkCoordinates>();
+		BlockSet clothCoords = new BlockSet();
 		for( ChunkCoordinates coords : shipBlocks.coords() )
 		{
 			if( shipBlocks.getBlock( coords ).id == Block.cloth.blockID )
@@ -36,11 +35,11 @@ public class SailDiscoverer implements PropulsionDiscoverer
 				clothCoords.add( coords );
 			}
 		}
-		List<TreeSet<ChunkCoordinates>> clothComponents = BlockUtils.getConnectedComponents( clothCoords, Neighbors.Edges );
+		List<BlockSet> clothComponents = BlockUtils.getConnectedComponents( clothCoords, Neighbors.Edges );
 		 
 		// build the sails
 		List<PropulsionMethod> sails = new ArrayList<PropulsionMethod>();
-		for( TreeSet<ChunkCoordinates> component : clothComponents )
+		for( BlockSet component : clothComponents )
 		{
 			Sail sail = new Sail( shipBlocks, component, frontDirection );
 			if( sail.isValid() )

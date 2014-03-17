@@ -37,8 +37,8 @@ public class TestShipLag
 				
 				System.out.println( String.format( "Time: %.2fs", diff/1000.0 ) );
 				
-				// this shouldn't take more than 1/10 of a second
-				assertTrue( diff <= 100 );
+				// this shouldn't take more than 0.2 seconds
+				assertTrue( diff <= 200 );
 			}
 		}.run();
 	}

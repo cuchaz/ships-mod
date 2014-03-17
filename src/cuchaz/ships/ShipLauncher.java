@@ -13,21 +13,21 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.List;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import cuchaz.modsShared.BlockArray;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.BlockExplorer;
-import cuchaz.modsShared.BlockUtils.UpdateRules;
-import cuchaz.modsShared.BoundingBoxInt;
-import cuchaz.modsShared.Envelopes;
+import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.Environment;
+import cuchaz.modsShared.blocks.BlockArray;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
+import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Envelopes;
 import cuchaz.ships.packets.PacketShipLaunched;
 
 public class ShipLauncher
@@ -66,7 +66,7 @@ public class ShipLauncher
 	private int m_y;
 	private int m_z;
 	private ShipType m_shipType;
-	private List<ChunkCoordinates> m_blocks; // NOTE: blocks are in world coordinates
+	private BlockSet m_blocks; // NOTE: blocks are in world coordinates
 	private List<Boolean> m_launchFlags;
 	private ShipWorld m_shipWorld;
 	private ShipPhysics m_shipPhysics;

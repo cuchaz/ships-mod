@@ -11,30 +11,30 @@
 package cuchaz.ships;
 
 import java.util.Iterator;
-import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChunkCoordinates;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.UpdateRules;
 import cuchaz.modsShared.Environment;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 
 public class WaterDisplacer
 {
 	private EntityShip m_ship;
-	private TreeSet<ChunkCoordinates> m_displacedBlocks;
+	private BlockSet m_displacedBlocks;
 	
 	public WaterDisplacer( EntityShip ship )
 	{
 		m_ship = ship;
-		m_displacedBlocks = new TreeSet<ChunkCoordinates>();
+		m_displacedBlocks = new BlockSet();
 	}
 	
 	public void update( double waterHeightInBlockSpace )
 	{
 		// which blocks should be displaced?
-		TreeSet<ChunkCoordinates> shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
+		BlockSet shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
 		
 		for( ChunkCoordinates coords : shouldBeDisplaced )
 		{
@@ -86,12 +86,12 @@ public class WaterDisplacer
 		m_displacedBlocks.clear();
 	}
 	
-	private TreeSet<ChunkCoordinates> getBlocksThatShouldBeDisplaced( double waterHeightInBlockSpace )
+	private BlockSet getBlocksThatShouldBeDisplaced( double waterHeightInBlockSpace )
 	{
-		TreeSet<ChunkCoordinates> out = new TreeSet<ChunkCoordinates>();
+		BlockSet out = new BlockSet();
 		
 		// get all the trapped air blocks
-		TreeSet<ChunkCoordinates> trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
+		BlockSet trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
 		if( trappedAirBlocks.isEmpty() )
 		{
 			// the ship is out of the water or flooded

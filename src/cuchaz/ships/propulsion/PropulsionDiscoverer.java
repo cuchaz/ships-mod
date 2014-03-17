@@ -12,7 +12,7 @@ package cuchaz.ships.propulsion;
 
 import java.util.List;
 
-import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.BlocksStorage;
 
 public interface PropulsionDiscoverer

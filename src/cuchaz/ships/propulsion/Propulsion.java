@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.util.ChunkCoordinates;
-import cuchaz.modsShared.BlockArray;
-import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.blocks.BlockArray;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.Ships;
 

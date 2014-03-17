@@ -16,8 +16,8 @@ import java.io.IOException;
 
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.UpdateRules;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 
 public class BlockStorage
 {

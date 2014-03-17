@@ -22,11 +22,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatMessageComponent;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.BlockCallback;
-import cuchaz.modsShared.BlockUtils.BlockExplorer;
-import cuchaz.modsShared.BlockUtils.Neighbors;
-import cuchaz.modsShared.BlockUtils.SearchAction;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.BlockCallback;
+import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
+import cuchaz.modsShared.blocks.BlockUtils.SearchAction;
 
 public class CommandShips extends CommandBase
 {

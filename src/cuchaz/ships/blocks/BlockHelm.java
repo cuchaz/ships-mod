@@ -21,7 +21,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.BlockSide;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.TileEntityHelm;
 import cuchaz.ships.gui.Gui;

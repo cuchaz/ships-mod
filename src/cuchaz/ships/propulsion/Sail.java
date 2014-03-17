@@ -10,11 +10,10 @@
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
-import java.util.Set;
-
 import net.minecraft.util.ChunkCoordinates;
-import cuchaz.modsShared.BlockSide;
 import cuchaz.modsShared.Util;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.BlocksStorage;
 
 public class Sail extends PropulsionMethod
@@ -23,7 +22,7 @@ public class Sail extends PropulsionMethod
 	
 	private int m_numExposedBlocks;
 	
-	protected Sail( BlocksStorage shipBlocks, Set<ChunkCoordinates> sailBlocks, BlockSide frontDirection )
+	protected Sail( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection )
 	{
 		super( "Sail", "Sails", sailBlocks );
 		
@@ -46,7 +45,7 @@ public class Sail extends PropulsionMethod
 		return m_numExposedBlocks >= getCoords().size()/2;
 	}
 	
-	private int getNumExposedBlocks( BlocksStorage shipBlocks, Set<ChunkCoordinates> sailBlocks, BlockSide frontDirection )
+	private int getNumExposedBlocks( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection )
 	{
 		int numExposedBlocks = 0;
 		ChunkCoordinates neighborCoords = new ChunkCoordinates();

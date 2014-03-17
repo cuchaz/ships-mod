@@ -22,12 +22,12 @@ import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL20;
 
-import cuchaz.modsShared.BlockArray;
-import cuchaz.modsShared.BlockSide;
-import cuchaz.modsShared.BlockUtils;
-import cuchaz.modsShared.BlockUtils.BlockConditionChecker;
-import cuchaz.modsShared.BlockUtils.BlockExplorer;
-import cuchaz.modsShared.BlockUtils.Neighbors;
+import cuchaz.modsShared.blocks.BlockArray;
+import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.BlockConditionChecker;
+import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.Util;
 import cuchaz.ships.MaterialProperties;

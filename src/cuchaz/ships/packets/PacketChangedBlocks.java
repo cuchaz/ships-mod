@@ -13,10 +13,10 @@ package cuchaz.ships.packets;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.TreeSet;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChunkCoordinates;
+import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipWorld;
 
@@ -24,7 +24,7 @@ public class PacketChangedBlocks extends Packet
 {
 	public static final String Channel = "changedBlocks";
 	
-	private TreeSet<ChunkCoordinates> m_changedBlocks;
+	private BlockSet m_changedBlocks;
 	private EntityShip m_ship;
 	private int m_entityId;
 	private int m_numChangedBlocks;
@@ -39,7 +39,7 @@ public class PacketChangedBlocks extends Packet
 		super( Channel );
 	}
 	
-	public PacketChangedBlocks( EntityShip ship, TreeSet<ChunkCoordinates> changedBlocks )
+	public PacketChangedBlocks( EntityShip ship, BlockSet changedBlocks )
 	{
 		this();
 		

@@ -17,7 +17,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
@@ -32,10 +31,11 @@ import net.minecraft.world.World;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.BlockUtils;
 import cuchaz.modsShared.Environment;
-import cuchaz.modsShared.BlockUtils.BlockExplorer;
-import cuchaz.modsShared.BoundingBoxInt;
+import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipGeometry;
@@ -119,7 +119,7 @@ public class ItemShipClipboard extends Item
 		ShipType shipType = Ships.m_blockShip.getShipType( world, blockX, blockY, blockZ );
 		
 		// find all the blocks connected to the ship block
-		List<ChunkCoordinates> blocks = BlockUtils.searchForBlocks(
+		BlockSet blocks = BlockUtils.searchForBlocks(
 			blockX, blockY, blockZ,
 			shipType.getMaxNumBlocks(),
 			new BlockExplorer( )
