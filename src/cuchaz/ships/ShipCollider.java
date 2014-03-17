@@ -224,6 +224,66 @@ public class ShipCollider
 		dz = applyBackoff( dz, originalDz );
 		oldEntityBox.offset( 0, 0, dz );
 		
+		// handle stairs/slabs
+		if( entity.stepHeight > 0 && ( originalDx != dx || originalDz != dz ) )
+		{
+			// stupid roundoff error gumble grumble...
+			final double EpsilonStairs = 1e-2;
+			
+			// pop up the target over the step height
+			newEntityBox.minY = oldEntityBox.minY + entity.stepHeight + EpsilonStairs;
+			newEntityBox.maxY = oldEntityBox.maxY + entity.stepHeight + EpsilonStairs;
+			possibleCollisions = trajectoryQuery( oldEntityBox, newEntityBox );
+			
+			// what's the rest of the distance to the target?
+			double originalStairsDx = newEntityBox.minX - oldEntityBox.minX;
+			double originalStairsDy = newEntityBox.minY - oldEntityBox.minY;
+			double originalStairsDz = newEntityBox.minZ - oldEntityBox.minZ;
+			
+			double stairsDx = originalStairsDx;
+			double stairsDy = originalStairsDy;
+			double stairsDz = originalStairsDz;
+			
+			AxisAlignedBB tempBox = oldEntityBox.copy();
+			if( !possibleCollisions.isEmpty() )
+			{
+				for( PossibleCollision collision : possibleCollisions )
+				{
+					stairsDy = collision.box.calculateYOffset( tempBox, stairsDy );
+				}
+				stairsDy = applyBackoff( stairsDy, originalDy );
+				tempBox.offset( 0, stairsDy, 0 );
+				
+				for( PossibleCollision collision : possibleCollisions )
+				{
+					stairsDx = collision.box.calculateXOffset( tempBox, stairsDx );
+				}
+				stairsDx = applyBackoff( stairsDx, originalDx );
+				tempBox.offset( stairsDx, 0, 0 );
+				
+				for( PossibleCollision collision : possibleCollisions )
+				{
+					stairsDz = collision.box.calculateZOffset( tempBox, stairsDz );
+				}
+				stairsDz = applyBackoff( stairsDz, originalDz );
+				tempBox.offset( 0, 0, stairsDz );
+			}
+			else
+			{
+				tempBox.offset( stairsDx, stairsDy, stairsDz );
+			}
+			
+			// did we step up?
+			if( Math.abs( stairsDx ) > EpsilonStairs || Math.abs( stairsDz ) > EpsilonStairs )
+			{
+				// apply the change
+				dx += stairsDx;
+				dy += stairsDy;
+				dz += stairsDz;
+				oldEntityBox.setBB( tempBox );
+			}
+		}
+		
 		// translate back into world coordinates
 		Vec3 newPos = Vec3.createVectorHelper(
 			( oldEntityBox.minX + oldEntityBox.maxX )/2,
