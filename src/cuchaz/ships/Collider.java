@@ -11,6 +11,7 @@
 package cuchaz.ships;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
 public class Collider
@@ -52,6 +53,18 @@ public class Collider
 			// collide with the ships
 			ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ,oldYSize, entity );
 		}
+	}
+	
+	public static boolean isEntityOnShipLadder( EntityLivingBase entity )
+	{
+		for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
+		{
+			if( ship.getCollider().isEntityOnLadder( entity ) )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private static boolean isEntityOnAnyShip( Entity entity )

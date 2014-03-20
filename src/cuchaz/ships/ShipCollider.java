@@ -225,10 +225,10 @@ public class ShipCollider
 		oldEntityBox.offset( 0, 0, dz );
 		
 		// handle stairs/slabs
-		if( entity.stepHeight > 0 && ( originalDx != dx || originalDz != dz ) )
+		if( entity.stepHeight > 0 && ( originalDx != dx || originalDz != dz ) && originalDy != dy )
 		{
-			// stupid roundoff error gumble grumble...
-			final double EpsilonStairs = 1e-2;
+			// stupid roundoff error grumble grumble...
+			final double EpsilonStairs = 1e-6;
 			
 			// pop up the target over the step height
 			newEntityBox.minY = oldEntityBox.minY + entity.stepHeight + EpsilonStairs;
@@ -522,6 +522,45 @@ public class ShipCollider
 			}
 		}
 		return intersections;
+	}
+	
+	public boolean isEntityOnLadder( EntityLivingBase entity )
+	{
+		ShipWorld shipWorld = m_ship.getShipWorld();
+		AxisAlignedBB entityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		getEntityBoxInBlockSpace( entityBox, entity );
+		for( ChunkCoordinates coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
+		{
+			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
+			if( block != null && block.isLadder( shipWorld, coords.posX, coords.posY, coords.posZ, entity ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public double getDistanceSqToEntity( Entity entity )
+	{
+		// find the nearest neighbor block of entity
+		// UNDONE: could optimize this with something like a kd tree, or an oct-tree,
+		// but I'm lazy. This is probably fast enough for now
+		
+		// get the point of the entity in blocks space
+		Vec3 p = Vec3.createVectorHelper( entity.posX, entity.posY, entity.posZ );
+		m_ship.worldToShip( p );
+		m_ship.shipToBlocks( p );
+		
+		double minDistSq = Double.POSITIVE_INFINITY;
+		for( ChunkCoordinates coords : m_ship.getShipWorld().coords() )
+		{
+			double dx = coords.posX - p.xCoord;
+			double dy = coords.posY - p.yCoord;
+			double dz = coords.posZ - p.zCoord;
+			double dist = dx*dx + dy*dy + dz*dz;
+			minDistSq = Math.min( minDistSq, dist );
+		}
+		return Math.sqrt( minDistSq );
 	}
 	
 	private void checkBlockCollision( BlockCollisionResult result, ChunkCoordinates coords, double dx, double dy, double dz, float dYaw )

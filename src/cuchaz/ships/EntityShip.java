@@ -12,6 +12,8 @@ package cuchaz.ships;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -33,7 +35,6 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.Environment;
-import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -41,6 +42,7 @@ import cuchaz.modsShared.blocks.Envelopes;
 import cuchaz.modsShared.math.CircleRange;
 import cuchaz.modsShared.math.CompareReal;
 import cuchaz.modsShared.math.RotatedBB;
+import cuchaz.modsShared.perf.DelayTimer;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
@@ -77,6 +79,8 @@ public class EntityShip extends Entity
 	private float m_pitchFromServer;
 	private ShipCollider m_collider;
 	private WaterDisplacer m_waterDisplacer;
+	private DelayTimer m_throttleKillDelay;
+	private Map<Integer,Entity> m_ridersLastTick;
 	
 	public EntityShip( World world )
 	{
@@ -107,6 +111,8 @@ public class EntityShip extends Entity
 		m_pitchFromServer = 0;
 		m_collider = new ShipCollider( this );
 		m_waterDisplacer = new WaterDisplacer( this );
+		m_throttleKillDelay = null;
+		m_ridersLastTick = new TreeMap<Integer,Entity>();
 	}
 	
 	@Override
@@ -341,6 +347,27 @@ public class EntityShip extends Entity
 			
 			m_waterDisplacer.update( waterHeightInBlockSpace );
 			moveRiders( riders, dx, dy, dz, dYaw );
+			
+			// are there no riders?
+			if( riders.isEmpty() && ( linearThrottle != 0 || angularThrottle != 0 ) )
+			{
+				// kill the throttle after a delay
+				if( m_throttleKillDelay == null )
+				{
+					m_throttleKillDelay = new DelayTimer( 20 * 2 );
+				}
+				if( m_throttleKillDelay.isDelayedUpdate() )
+				{
+					linearThrottle = 0;
+					angularThrottle = 0;
+					m_throttleKillDelay = null;
+				}
+			}
+			else
+			{
+				// stop the timer
+				m_throttleKillDelay = null;
+			}
 		}
 		
 		// update the world
@@ -371,12 +398,12 @@ public class EntityShip extends Entity
 		
 		// compute the average y from the top envelope of these blocks
 		double sum = 0;
-		BlockArray topEnvelope = new Envelopes( waterCoords ).getEnvelope( BlockSide.Top );
+		BlockSet topEnvelope = new Envelopes( waterCoords ).getEnvelope( BlockSide.Top ).toBlockSet();
 		for( ChunkCoordinates coords : topEnvelope )
 		{
 			sum += coords.posY + 1; // +1 for the top of the block
 		}
-		return sum/topEnvelope.getWidth()/topEnvelope.getHeight();
+		return sum/topEnvelope.size();
 	}
 
 	@Override
@@ -723,6 +750,33 @@ public class EntityShip extends Entity
 	
 	private void moveRiders( List<Entity> riders, double dx, double dy, double dz, float dYaw )
 	{
+		// remove all current riders from the last known riders
+		// meaning, only lost riders will be left
+		for( Entity rider : riders )
+		{
+			if( m_ridersLastTick.containsKey( rider.entityId ) )
+			{
+				m_ridersLastTick.remove( rider.entityId );
+			}
+		}
+		for( Entity rider : m_ridersLastTick.values() )
+		{
+			// impart some velocity to the old rider
+			rider.motionX += motionX;
+			rider.motionY += motionY;
+			rider.motionZ += motionZ;
+			
+			// TEMP
+			Ships.logger.info( "Pushed lost rider: (%.2f,%.2f,%.2f)", motionX, motionY, motionZ );
+		}
+		
+		// update the last known riders
+		m_ridersLastTick.clear();
+		for( Entity rider : riders )
+		{
+			m_ridersLastTick.put( rider.entityId, rider );
+		}
+		
 		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
 		
 		// first, move the riders

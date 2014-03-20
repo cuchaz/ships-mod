@@ -15,6 +15,7 @@ import java.util.List;
 
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -125,6 +126,28 @@ public class ShipIntermediary
 			}
 		}
 		return false;
+	}
+	
+	public static boolean isEntityOnShipLadder( EntityLivingBase entity )
+	{
+		// just forward to the collider
+		return Collider.isEntityOnShipLadder( entity );
+	}
+	
+	public static double getDistanceSqToEntity( Entity src, Entity dest )
+	{
+		// is either entity a ship?
+		if( src instanceof EntityShip )
+		{
+			return ((EntityShip)src).getCollider().getDistanceSqToEntity( dest );
+		}
+		else if( dest instanceof EntityShip )
+		{
+			return ((EntityShip)dest).getCollider().getDistanceSqToEntity( src );
+		}
+		
+		// returning a negative number signals that the original distance function should be executed
+		return -1;
 	}
 	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )

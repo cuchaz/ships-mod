@@ -56,6 +56,8 @@ public class CoreModTransformer implements IClassTransformer
 			tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 			tailAdapter = new WorldAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 			tailAdapter = new EntityRendererAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			tailAdapter = new EntityLadderAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			tailAdapter = new EntityDistanceAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
 			
 			// run the transformations
 			new ClassReader( classData ).accept( tailAdapter, 0 );

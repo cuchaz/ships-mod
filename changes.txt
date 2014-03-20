@@ -2,4 +2,9 @@
 v0.7 beta change log
 
 Performance improvements for large ships
-Fixed a crash by improving world emulation
+Fixed a few crashes caused by inter-mod interactions
+Added support for stairs, slabs, and ladders to the collision system
+Fixed a bug where the ship levitator would only levitate the client-side ship
+Fixed a bug where ships would incorrectly sink when they sailed too close to land
+When all riders leave a ship, the ship will slow down and stop
+Updated supporters list

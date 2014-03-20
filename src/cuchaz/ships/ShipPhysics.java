@@ -218,7 +218,7 @@ public class ShipPhysics
 		// compute the viscosity
 		double airSurfaceArea = 0;
 		double waterSurfaceArea = 0;
-		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( leadingSide ) )
+		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( leadingSide ).toBlockSet() )
 		{
 			double fractionSubmerged = leadingSide.getFractionSubmerged( coords.posY, waterHeight );
 			waterSurfaceArea += fractionSubmerged;
@@ -421,7 +421,7 @@ public class ShipPhysics
 	{
 		int centerCoord = (int)center;
 		double viscosity = 0;
-		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( side ) )
+		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( side ).toBlockSet() )
 		{
 			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
 			double dist = Math.abs( side.getU( coords.posX, coords.posY, coords.posZ ) - centerCoord );
