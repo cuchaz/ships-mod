@@ -427,6 +427,27 @@ public class ShipCollider
 			m_ship.posY + dy,
 			m_ship.posZ + dz
 		);
+		
+		// we just moved the ship. Push any colliding entities out of the way
+		@SuppressWarnings( "unchecked" )
+		List<Entity> entities = (List<Entity>)m_ship.worldObj.getEntitiesWithinAABB( Entity.class, m_ship.boundingBox );
+		for( Entity entity : entities )
+		{
+			// ignore self
+			if( entity == m_ship )
+			{
+				continue;
+			}
+			
+			// the src position is the current position, but moved by the delta
+			double srcX = entity.posX + dx;
+			double srcY = entity.posY + dy;
+			double srcZ = entity.posZ + dz;
+			double srcYSize = entity.ySize;
+			
+			// try to move the entity along the trajectory
+			onNearbyEntityMoved( srcX, srcY, srcZ, srcYSize, entity );
+		}
 	}
 	
 	public List<Entity> getRiders( )

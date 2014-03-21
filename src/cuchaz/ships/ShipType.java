@@ -78,6 +78,20 @@ public enum ShipType
 				'z', new ItemStack( Item.dyePowder, 1, 4 ) // lapis lazuli
 			);
 		}
+	},
+	Huge( 2000, false )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Huge Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xxx", "xyx", "xxx",
+				'x', new ItemStack( Item.dyePowder, 1, 4 ), // lapis lazuli
+				'y', new ItemStack( Item.redstone )
+			);
+		}
 	};
 	
 	private int m_maxNumBlocks;

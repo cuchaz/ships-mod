@@ -34,6 +34,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.EntityUtils;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
@@ -411,14 +412,8 @@ public class EntityShip extends Entity
 	{
 		// NOTE: return true if we handled the interaction
 		
-		// only do this on the client
-		if( Environment.isServer() )
-		{
-			return false;
-		}
-		
 		// what did the player hit?
-		double reachDist = Minecraft.getMinecraft().playerController.getBlockReachDistance();
+		double reachDist = EntityUtils.getPlayerReachDistance( player );
 		HitList hits = new HitList();
 		hits.addHits( this, player, reachDist );
 		HitList.Entry hit = hits.getClosestHit();
@@ -429,13 +424,6 @@ public class EntityShip extends Entity
 		
 		// activate the block
 		Block block = Block.blocksList[m_shipWorld.getBlockId( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ )];
-		
-		// LOGGING
-		Ships.logger.fine( "EntityShip.interact(): (%d,%d,%d) %s",
-			hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
-			block.getUnlocalizedName()
-		);
-		
 		return block.onBlockActivated(
 			m_shipWorld,
 			hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,
@@ -761,13 +749,20 @@ public class EntityShip extends Entity
 		}
 		for( Entity rider : m_ridersLastTick.values() )
 		{
-			// impart some velocity to the old rider
-			rider.motionX += motionX;
-			rider.motionY += motionY;
-			rider.motionZ += motionZ;
+			Vec3 delta = getRiderDelta( rider, dx, dy, dz, dYaw );
 			
-			// TEMP
-			Ships.logger.info( "Pushed lost rider: (%.2f,%.2f,%.2f)", motionX, motionY, motionZ );
+			// impart some velocity to the old rider
+			rider.motionX += delta.xCoord;
+			rider.motionY += delta.yCoord;
+			rider.motionZ += delta.zCoord;
+			
+			// apply the delta for one last time
+			rider.rotationYaw -= dYaw;
+			rider.setPosition(
+				rider.posX + delta.xCoord,
+				rider.posY + delta.yCoord,
+				rider.posZ + delta.zCoord
+			);
 		}
 		
 		// update the last known riders
@@ -777,30 +772,17 @@ public class EntityShip extends Entity
 			m_ridersLastTick.put( rider.entityId, rider );
 		}
 		
-		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
-		
 		// first, move the riders
 		for( Entity rider : riders )
 		{
-			// apply rotation of position relative to the ship center
-			p.xCoord = rider.posX + dx;
-			p.zCoord = rider.posZ + dz;
-			worldToShip( p );
-			float yawRad = (float)Math.toRadians( dYaw );
-			float cos = MathHelper.cos( yawRad );
-			float sin = MathHelper.sin( yawRad );
-			double x = p.xCoord*cos + p.zCoord*sin;
-			double z = -p.xCoord*sin + p.zCoord*cos;
-			p.xCoord = x;
-			p.zCoord = z;
-			shipToWorld( p );
+			Vec3 delta = getRiderDelta( rider, dx, dy, dz, dYaw );
 			
 			// apply the transformation
 			rider.rotationYaw -= dYaw;
 			rider.setPosition(
-				p.xCoord,
-				rider.posY + dy,
-				p.zCoord
+				rider.posX + delta.xCoord,
+				rider.posY + delta.yCoord,
+				rider.posZ + delta.zCoord
 			);
 		}
 	}
@@ -810,6 +792,30 @@ public class EntityShip extends Entity
 		m_pilotActions = actions;
 		m_sideShipForward = sideShipForward;
 		m_sendPilotChangesToServer = sendPilotChangesToServer;
+	}
+	
+	private Vec3 getRiderDelta( Entity rider, double shipDx, double shipDy, double shipDz, double shipDyaw )
+	{
+		Vec3 p = Vec3.createVectorHelper( 0, 0, 0 );
+		
+		// apply rotation of position relative to the ship center
+		p.xCoord = rider.posX + shipDx;
+		p.zCoord = rider.posZ + shipDz;
+		worldToShip( p );
+		float yawRad = (float)Math.toRadians( shipDyaw );
+		float cos = MathHelper.cos( yawRad );
+		float sin = MathHelper.sin( yawRad );
+		double x = p.xCoord*cos + p.zCoord*sin;
+		double z = -p.xCoord*sin + p.zCoord*cos;
+		p.xCoord = x;
+		p.zCoord = z;
+		shipToWorld( p );
+		
+		// convert the new position into a delta vector
+		p.xCoord -= rider.posX;
+		p.yCoord = shipDy;
+		p.zCoord -= rider.posZ;
+		return p;
 	}
 	
 	@SideOnly( Side.CLIENT )

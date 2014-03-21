@@ -83,7 +83,6 @@ public class GuiShipLaunch extends GuiShip
 		}
 		else
 		{
-			//valueText = GuiString.ShipTooLarge.getLocalizedText();
 			valueText = String.format( "%d%s / %d",
 				m_shipLauncher.getNumBlocksChecked(),
 				( m_shipLauncher.getNumBlocksChecked() == m_shipLauncher.getNumBlocksToCheck() ? "+" : "" ),
@@ -110,9 +109,9 @@ public class GuiShipLaunch extends GuiShip
 		{
 			BlockArray envelope = m_shipLauncher.getShipEnvelope( shipSide );
 			int x = LeftMargin;
-			int y = getLineY( 6 );
+			int y = getLineY( 3 );
 			int width = xSize - LeftMargin*2;
-			int height = 64;
+			int height = 96;
 			RenderShip2D.drawWater(
 				envelope,
 				m_shipLauncher.getEquilibriumWaterHeight(),

@@ -6,5 +6,8 @@ Fixed a few crashes caused by inter-mod interactions
 Added support for stairs, slabs, and ladders to the collision system
 Fixed a bug where the ship levitator would only levitate the client-side ship
 Fixed a bug where ships would incorrectly sink when they sailed too close to land
+Fixed a bug where players could jump through walls on a moving ship
 When all riders leave a ship, the ship will slow down and stop
+Players jumping on moving ships follow the ship a little bit better
 Updated supporters list
+Block cap increased to 2000
