@@ -691,7 +691,7 @@ public class ShipCollider
 		// instead of exactly on the boundary
 		
 		// distance in game coords, but small enough not to notice
-		final double Backoff = 0.001;
+		final double Backoff = 1e-3;
 		
 		if( d != 0 && d != originalD )
 		{

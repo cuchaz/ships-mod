@@ -456,9 +456,9 @@ public class EntityShip extends Entity
 	public void worldToShipDirection( Vec3 v )
 	{
 		// just apply the rotation
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		float cos = MathHelper.cos( yawRad );
-		float sin = MathHelper.sin( yawRad );
+		double yawRad = Math.toRadians( rotationYaw );
+		double cos = Math.cos( yawRad );
+		double sin = Math.sin( yawRad );
 		double x = v.xCoord*cos - v.zCoord*sin;
 		double z = v.xCoord*sin + v.zCoord*cos;
 		
@@ -468,9 +468,9 @@ public class EntityShip extends Entity
 	
 	public double worldToShipX( double x, double z )
 	{
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		double cos = MathHelper.cos( yawRad );
-		double sin = MathHelper.sin( yawRad );
+		double yawRad = Math.toRadians( rotationYaw );
+		double cos = Math.cos( yawRad );
+		double sin = Math.sin( yawRad );
 		return ( x - posX )*cos - ( z - posZ )*sin;
 	}
 	
@@ -481,9 +481,9 @@ public class EntityShip extends Entity
 	
 	public double worldToShipZ( double x, double z )
 	{
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		double cos = MathHelper.cos( yawRad );
-		double sin = MathHelper.sin( yawRad );
+		double yawRad = Math.toRadians( rotationYaw );
+		double cos = Math.cos( yawRad );
+		double sin = Math.sin( yawRad );
 		return ( x - posX )*sin + ( z - posZ )*cos;
 	}
 	
@@ -501,9 +501,9 @@ public class EntityShip extends Entity
 	public void shipToWorldDirection( Vec3 v )
 	{
 		// just apply the rotation
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		float cos = MathHelper.cos( yawRad );
-		float sin = MathHelper.sin( yawRad );
+		double yawRad = Math.toRadians( rotationYaw );
+		double cos = Math.cos( yawRad );
+		double sin = Math.sin( yawRad );
 		double x = v.xCoord*cos + v.zCoord*sin;
 		double z = -v.xCoord*sin + v.zCoord*cos;
 		
@@ -513,9 +513,9 @@ public class EntityShip extends Entity
 	
 	public double shipToWorldX( double x, double z )
 	{
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		double cos = MathHelper.cos( yawRad );
-		double sin = MathHelper.sin( yawRad );
+		double yawRad = Math.toRadians( rotationYaw );
+		double cos = Math.cos( yawRad );
+		double sin = Math.sin( yawRad );
 		return x*cos + z*sin + posX;
 	}
 	
@@ -526,9 +526,9 @@ public class EntityShip extends Entity
 	
 	public double shipToWorldZ( double x, double z )
 	{
-		float yawRad = (float)Math.toRadians( rotationYaw );
-		double cos = MathHelper.cos( yawRad );
-		double sin = MathHelper.sin( yawRad );
+		double yawRad = Math.toRadians( rotationYaw );
+		double cos = Math.cos( yawRad );
+		double sin = Math.sin( yawRad );
 		return -x*sin + z*cos + posZ;
 	}
 	
