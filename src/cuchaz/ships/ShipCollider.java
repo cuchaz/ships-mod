@@ -473,29 +473,45 @@ public class ShipCollider
 	
 	public boolean isEntityAboard( Entity entity )
 	{
-		// easy check first
-		if( !entity.onGround )
+		if( entity instanceof EntityLivingBase )
 		{
-			return false;
+			return isEntityStandingOnBlock( entity ) || isEntityOnLadder( (EntityLivingBase)entity );
 		}
-		
-		final double RiderEpsilon = 1e-1;
-		
+		return isEntityStandingOnBlock( entity );
+	}
+	
+	public boolean isEntityStandingOnBlock( Entity entity )
+	{
 		// get the bounding box of the entity in block space
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		getEntityBoxInBlockSpace( box, entity );
+		AxisAlignedBB checkBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		getEntityBoxInBlockSpace( checkBox, entity );
 		
-		// get the closest block y the entity could be standing on
-		int blockY = MathHelper.floor_double( box.minY + 0.5 ) - 1;
-		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( box, blockY ) )
+		// change the box so it only occupies space JUST UNDER the entity
+		checkBox.maxY = checkBox.minY;
+		checkBox.minY -= 0.1;
+		
+		// get the list of nearby boxes that could be colliding
+		List<AxisAlignedBB> nearbyBoxes = new ArrayList<AxisAlignedBB>();
+		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( checkBox.expand( 0, 1, 0 ) ) )
 		{
-			boolean isOnBlock = Math.abs( coords.posY + 1 - box.minY ) <= RiderEpsilon;
-			if( isOnBlock )
+			getCollisionBoxesInBlockSpace( nearbyBoxes, coords, checkBox );
+		}
+		return !nearbyBoxes.isEmpty();
+	}
+	
+	public boolean isEntityOnLadder( EntityLivingBase entity )
+	{
+		ShipWorld shipWorld = m_ship.getShipWorld();
+		AxisAlignedBB entityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		getEntityBoxInBlockSpace( entityBox, entity );
+		for( ChunkCoordinates coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
+		{
+			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
+			if( block != null && block.isLadder( shipWorld, coords.posX, coords.posY, coords.posZ, entity ) )
 			{
 				return true;
 			}
 		}
-		
 		return false;
 	}
 	
@@ -543,22 +559,6 @@ public class ShipCollider
 			}
 		}
 		return intersections;
-	}
-	
-	public boolean isEntityOnLadder( EntityLivingBase entity )
-	{
-		ShipWorld shipWorld = m_ship.getShipWorld();
-		AxisAlignedBB entityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		getEntityBoxInBlockSpace( entityBox, entity );
-		for( ChunkCoordinates coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
-		{
-			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
-			if( block != null && block.isLadder( shipWorld, coords.posX, coords.posY, coords.posZ, entity ) )
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	public double getDistanceSqToEntity( Entity entity )
