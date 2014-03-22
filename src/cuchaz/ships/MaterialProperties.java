@@ -138,7 +138,9 @@ public class MaterialProperties
 			return true;
 		}
 		
-		return block.blockMaterial.isLiquid() || block.blockMaterial == Material.fire || block.blockMaterial == Ships.m_materialAirWall;
+		return !block.blockMaterial.isSolid() && block.blockMaterial.isReplaceable();
+		// this should include: liquid blocks, fire blocks, air blocks
+		// this should exclude: solid blocks, circuits
 		
 		// UNDONE: add dock blocks
 	}

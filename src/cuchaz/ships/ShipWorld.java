@@ -117,6 +117,9 @@ public class ShipWorld extends DetachedWorld
 				);
 			}
 		}
+		
+		// UNDONE: copy hanging entities
+		
 	}
 	
 	public ShipWorld( World world, byte[] data )
@@ -206,6 +209,8 @@ public class ShipWorld extends DetachedWorld
 				);
 			}
 		}
+		
+		// UNDONE: restore hanging entities
 	}
 	
 	public BlocksStorage getBlocksStorage( )

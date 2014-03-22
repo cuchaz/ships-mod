@@ -10,35 +10,34 @@
  ******************************************************************************/
 package cuchaz.ships.persistence;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.TreeMap;
 
-import net.minecraft.nbt.NBTTagCompound;
-import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipWorld;
 
-public enum ShipPersistence
+public enum ShipWorldPersistence
 {
 	V1( 1 )
 	{
 		@Override
-		public void read( EntityShip ship, NBTTagCompound nbt )
+		public ShipWorld read( InputStream in )
 		{
-			ship.setShipWorld( new ShipWorld( ship.worldObj, nbt.getByteArray( "blocks" ) ) );
+			return null;
 		}
 		
 		@Override
-		public void write( EntityShip ship, NBTTagCompound nbt )
+		public void write( ShipWorld shipWorld, OutputStream out )
 		{
-			nbt.setByteArray( "blocks", ship.getShipWorld().getData() );
 		}
 	};
 	
-	private static TreeMap<Integer,ShipPersistence> m_versions;
+	private static TreeMap<Integer,ShipWorldPersistence> m_versions;
 	
 	static
 	{
-		m_versions = new TreeMap<Integer,ShipPersistence>();
-		for( ShipPersistence persistence : values() )
+		m_versions = new TreeMap<Integer,ShipWorldPersistence>();
+		for( ShipWorldPersistence persistence : values() )
 		{
 			m_versions.put( persistence.getVersion(), persistence );
 		}
@@ -51,20 +50,20 @@ public enum ShipPersistence
 		return m_version;
 	}
 	
-	private ShipPersistence( int version )
+	private ShipWorldPersistence( int version )
 	{
 		m_version = version;
 	}
 	
-	public abstract void read( EntityShip ship, NBTTagCompound nbt );
-	public abstract void write( EntityShip ship, NBTTagCompound nbt );
+	public abstract ShipWorld read( InputStream in );
+	public abstract void write( ShipWorld shipWorld, OutputStream out );
 	
-	public static ShipPersistence get( int version )
+	public static ShipWorldPersistence get( int version )
 	{
 		return m_versions.get( version );
 	}
 	
-	public static ShipPersistence getNewestVersion( )
+	public static ShipWorldPersistence getNewestVersion( )
 	{
 		return m_versions.lastEntry().getValue();
 	}
