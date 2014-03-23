@@ -43,6 +43,13 @@ public class PacketHandler implements IPacketHandler
 	{
 		EntityPlayer player = (EntityPlayer)iPlayer;
 		
+		// does this packet even have data? (dost thou even lift?!)
+		if( customPacket.data == null )
+		{
+			Ships.logger.warning( "Received packet with no data on channel: %s! Dropping it. Check your Forge log. There's probably an upstream exception", customPacket.channel );
+			return;
+		}
+		
 		Packet packet = m_packetTypes.get( customPacket.channel );
 		if( packet != null )
 		{

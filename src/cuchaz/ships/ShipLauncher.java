@@ -12,9 +12,11 @@ package cuchaz.ships;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityHanging;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -288,32 +290,47 @@ public class ShipLauncher
 		);
 		ship.setShipWorld( shipWorld );
 		
-		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
-		
-		// remove the world blocks, but don't tell the clients. They'll do it later when the ship blocks are sent over
+		// translate the ship blocks into world space
+		BlockSet worldBlocks = new BlockSet();
 		for( ChunkCoordinates blockCoords : shipWorld.coords() )
 		{
-			worldCoords.posX = blockCoords.posX + launchX;
-			worldCoords.posY = blockCoords.posY + launchY;
-			worldCoords.posZ = blockCoords.posZ + launchZ;
-			
-			if( worldCoords.posY < waterHeight )
+			worldBlocks.add( new ChunkCoordinates(
+				blockCoords.posX + launchX,
+				blockCoords.posY + launchY,
+				blockCoords.posZ + launchZ
+			) );
+		}
+		
+		// remove the world blocks, but don't tell the clients. They'll do it later when the ship blocks are sent over
+		for( ChunkCoordinates cords : worldBlocks )
+		{
+			if( cords.posY < waterHeight )
 			{
-				BlockUtils.changeBlockWithoutNotifyingIt( ship.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+				BlockUtils.changeBlockWithoutNotifyingIt( ship.worldObj, cords.posX, cords.posY, cords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 			}
 			else
 			{
-				BlockUtils.removeBlockWithoutNotifyingIt( ship.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, UpdateRules.UpdateNoOne );
+				BlockUtils.removeBlockWithoutNotifyingIt( ship.worldObj, cords.posX, cords.posY, cords.posZ, UpdateRules.UpdateNoOne );
 			}
 		}
 		
 		// restore the trapped air to water
+		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
 		for( ChunkCoordinates blockCoords : shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - launchY ) )
 		{
 			worldCoords.posX = blockCoords.posX + launchX;
 			worldCoords.posY = blockCoords.posY + launchY;
 			worldCoords.posZ = blockCoords.posZ + launchZ;
 			BlockUtils.changeBlockWithoutNotifyingIt( ship.worldObj, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+		}
+		
+		// remove any hanging entities
+		for( Map.Entry<ChunkCoordinates,EntityHanging> entry : shipWorld.getNearbyHangingEntities( ship.worldObj, worldBlocks ).entrySet() )
+		{
+			EntityHanging hangingEntity = entry.getValue();
+			
+			// remove the hanging entity from the world
+			ship.worldObj.removeEntity( hangingEntity );
 		}
 	}
 	

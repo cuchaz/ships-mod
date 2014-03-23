@@ -10,11 +10,6 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,8 +20,9 @@ import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityHanging;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet62LevelSound;
 import net.minecraft.server.MinecraftServer;
@@ -56,18 +52,37 @@ public class ShipWorld extends DetachedWorld
 	private EntityShip m_ship;
 	private BlocksStorage m_storage;
 	private BlockMap<TileEntity> m_tileEntities;
+	private BlockMap<EntityHanging> m_hangingEntities;
 	private BlockSet m_changedBlocks;
 	private boolean m_needsRenderUpdate;
 	
-	private ShipWorld( World world )
+	public ShipWorld( World world )
 	{
 		super( world, "Ship" );
 		
 		// init defaults
 		m_ship = null;
 		m_storage = new BlocksStorage();
-		m_tileEntities = null;
+		m_tileEntities = new BlockMap<TileEntity>();
+		m_hangingEntities = new BlockMap<EntityHanging>();
 		m_changedBlocks = new BlockSet();
+	}
+	
+	public ShipWorld( World world, BlocksStorage storage, BlockMap<TileEntity> tileEntities, BlockMap<EntityHanging> hangingEntities )
+	{
+		this( world );
+		
+		// save args
+		m_storage = storage;
+		m_tileEntities = tileEntities;
+		m_hangingEntities = hangingEntities;
+		
+		// init the tile entities in the world
+		for( TileEntity tileEntity : m_tileEntities.values() )
+		{
+			tileEntity.setWorldObj( this );
+			tileEntity.validate();
+		}
 	}
 	
 	public ShipWorld( World world, ChunkCoordinates originCoords, BlockSet blocks )
@@ -78,7 +93,6 @@ public class ShipWorld extends DetachedWorld
 		m_storage.readFromWorld( world, originCoords, blocks );
 		
 		// copy the tile entities
-		m_tileEntities = new BlockMap<TileEntity>();
 		for( ChunkCoordinates worldCoords : blocks )
 		{
 			// does this block have a tile entity?
@@ -118,49 +132,42 @@ public class ShipWorld extends DetachedWorld
 			}
 		}
 		
-		// UNDONE: copy hanging entities
-		
-	}
-	
-	public ShipWorld( World world, byte[] data )
-	{
-		this( world );
-		
-		DataInputStream in = new DataInputStream( new ByteArrayInputStream( data ) );
-		try
+		// copy hanging entities
+		for( Map.Entry<ChunkCoordinates,EntityHanging> entry : getNearbyHangingEntities( world, blocks ).entrySet() )
 		{
-			// read the version number
-			int version = in.readInt();
-			if( version != 1 )
+			ChunkCoordinates worldCoords = entry.getKey();
+			EntityHanging hangingEntity = entry.getValue();
+			
+			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
+			
+			try
 			{
-				Ships.logger.warning( "ShipBlocks persistence version %s not supported! Blocks loading skipped!", version );
-			}
-			else
-			{
-				// read the blocks
-				m_storage.readFromStream( in );
+				// copy the hanging entity
+				NBTTagCompound nbt = new NBTTagCompound();
+				hangingEntity.writeToNBTOptional( nbt );
+				EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, this );
 				
-				// read the tile entities
-				m_tileEntities = new BlockMap<TileEntity>();
-				int numTileEntities = in.readInt();
-				for( int i = 0; i < numTileEntities; i++ )
-				{
-					// create the tile entity
-					NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
-					TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
-					ChunkCoordinates coords = new ChunkCoordinates( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
-					
-					// restore it to the world
-					tileEntity.setWorldObj( this );
-					tileEntity.validate();
-					
-					m_tileEntities.put( coords, tileEntity );
-				}
+				// save it to the ship world
+				hangingEntityCopy.xPosition = relativeCoords.posX;
+				hangingEntityCopy.yPosition = relativeCoords.posY;
+				hangingEntityCopy.zPosition = relativeCoords.posZ;
+				hangingEntityCopy.posX -= originCoords.posX;
+				hangingEntityCopy.posY -= originCoords.posY;
+				hangingEntityCopy.posZ -= originCoords.posZ;
+				m_hangingEntities.put( relativeCoords, hangingEntityCopy );
+				
+				// reset the hanging entity's bounding box after the move
+				hangingEntityCopy.setDirection( hangingEntityCopy.hangingDirection );
 			}
-		}
-		catch( IOException ex )
-		{
-			throw new Error( "Unable to deserialize blocks!", ex );
+			catch( Exception ex )
+			{
+				Ships.logger.warning(
+					ex,
+					"Hanging entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but hanging entity was not moved.",
+					hangingEntity.getClass().getName(),
+					worldCoords.posX, worldCoords.posY, worldCoords.posZ
+				);
+			}
 		}
 	}
 	
@@ -210,7 +217,73 @@ public class ShipWorld extends DetachedWorld
 			}
 		}
 		
-		// UNDONE: restore hanging entities
+		// compute the translation from block space to world space
+		ChunkCoordinates translation = correspondence.get( new ChunkCoordinates( 0, 0, 0 ) );
+		
+		// restore hanging entities (on the server only)
+		if( !world.isRemote )
+		{
+			for( Map.Entry<ChunkCoordinates,EntityHanging> entry : m_hangingEntities.entrySet() )
+			{
+				ChunkCoordinates coordsShip = entry.getKey();
+				ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
+				EntityHanging hangingEntity = entry.getValue();
+				
+				try
+				{
+					// copy the hanging entity
+					NBTTagCompound nbt = new NBTTagCompound();
+					hangingEntity.writeToNBTOptional( nbt );
+					EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
+					
+					// save it to the ship world
+					hangingEntityCopy.xPosition = coordsWorld.posX;
+					hangingEntityCopy.yPosition = coordsWorld.posY;
+					hangingEntityCopy.zPosition = coordsWorld.posZ;
+					hangingEntityCopy.posX += translation.posX;
+					hangingEntityCopy.posY += translation.posY;
+					hangingEntityCopy.posZ += translation.posZ;
+					
+					// reset the hanging entity's bounding box after the move
+					hangingEntityCopy.setDirection( hangingEntityCopy.hangingDirection );
+					
+					// then spawn it
+					world.spawnEntityInWorld( hangingEntityCopy );
+				}
+				catch( Exception ex )
+				{
+					Ships.logger.warning(
+						ex,
+						"Hanging entity %s at (%d,%d,%d) didn't like being moved to the world. The block was moved, the but hanging entity was not moved.",
+						hangingEntity.getClass().getName(),
+						coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ
+					);
+				}
+			}
+		}
+	}
+	
+	public BlockMap<EntityHanging> getNearbyHangingEntities( World world, BlockSet blocks )
+	{
+		// get the bounding box of the blocks
+		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		blocks.getBoundingBox().toAxisAlignedBB( box );
+		
+		// collect the hanging entities that are hanging on a block in the block set
+		BlockMap<EntityHanging> out = new BlockMap<EntityHanging>();
+		ChunkCoordinates entityBlock = new ChunkCoordinates( 0, 0, 0 );
+		@SuppressWarnings( "unchecked" )
+		List<EntityHanging> hangingEntities = (List<EntityHanging>)world.getEntitiesWithinAABB( EntityHanging.class, box );
+		for( EntityHanging hangingEntity : hangingEntities )
+		{
+			// is this hanging entity actually on a ship block?
+			entityBlock.set( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
+			if( blocks.contains( entityBlock ) )
+			{
+				out.put( new ChunkCoordinates( entityBlock ), hangingEntity );
+			}
+		}
+		return out;
 	}
 	
 	public BlocksStorage getBlocksStorage( )
@@ -248,9 +321,14 @@ public class ShipWorld extends DetachedWorld
 		return m_storage.coords();
 	}
 	
-	public Set<Map.Entry<ChunkCoordinates,TileEntity>> tileEntities( )
+	public BlockMap<TileEntity> tileEntities( )
 	{
-		return m_tileEntities.entrySet();
+		return m_tileEntities;
+	}
+	
+	public BlockMap<EntityHanging> hangingEntities( )
+	{
+		return m_hangingEntities;
 	}
 	
 	public ShipGeometry getGeometry( )
@@ -636,36 +714,4 @@ public class ShipWorld extends DetachedWorld
 		entity.worldObj = m_ship.worldObj;
 		return m_ship.worldObj.spawnEntityInWorld( entity );
     }
-	
-	public byte[] getData( )
-	{
-		ByteArrayOutputStream data = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream( data );
-		
-		// UNDONE: we could use compression here if we need it
-		
-		try
-		{
-			// write out persistence version number
-			out.writeInt( 1 );
-			
-			// write out the blocks
-			m_storage.writeToStream( out );
-			
-			// write out the tile entities
-			out.writeInt( m_tileEntities.size() );
-			for( TileEntity tileEntity : m_tileEntities.values() )
-			{
-				NBTTagCompound nbt = new NBTTagCompound();
-				tileEntity.writeToNBT( nbt );
-				NBTBase.writeNamedTag( nbt, out );
-			}
-		}
-		catch( IOException ex )
-		{
-			throw new Error( "Unable to serialize blocks!", ex );
-		}
-		
-		return data.toByteArray();
-	}
 }

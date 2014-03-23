@@ -16,7 +16,9 @@ import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.ShipWorld;
+import cuchaz.ships.Ships;
+import cuchaz.ships.persistence.ShipWorldPersistence;
+import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class PacketShipBlocks extends Packet
 {
@@ -35,7 +37,7 @@ public class PacketShipBlocks extends Packet
 		this();
 		
 		m_entityId = ship.entityId;
-		m_blocksData = ship.getShipWorld().getData();
+		m_blocksData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() );
 	}
 
 	@Override
@@ -67,7 +69,15 @@ public class PacketShipBlocks extends Packet
 		// send the blocks to the ship
 		if( ship.getShipWorld() == null )
 		{
-			ship.setShipWorld( new ShipWorld( ship.worldObj, m_blocksData ) );
+			try
+			{
+				ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, m_blocksData ) );
+			}
+			catch( UnrecognizedPersistenceVersion ex )
+			{
+				Ships.logger.warning( ex, "Unable to read ship! Ship will be removed from world" );
+				ship.setDead();
+			}
 		}
 	}
 }

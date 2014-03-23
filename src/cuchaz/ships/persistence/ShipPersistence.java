@@ -14,7 +14,6 @@ import java.util.TreeMap;
 
 import net.minecraft.nbt.NBTTagCompound;
 import cuchaz.ships.EntityShip;
-import cuchaz.ships.ShipWorld;
 
 public enum ShipPersistence
 {
@@ -22,14 +21,15 @@ public enum ShipPersistence
 	{
 		@Override
 		public void read( EntityShip ship, NBTTagCompound nbt )
+		throws UnrecognizedPersistenceVersion
 		{
-			ship.setShipWorld( new ShipWorld( ship.worldObj, nbt.getByteArray( "blocks" ) ) );
+			ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, nbt.getByteArray( "blocks" ) ) );
 		}
 		
 		@Override
 		public void write( EntityShip ship, NBTTagCompound nbt )
 		{
-			nbt.setByteArray( "blocks", ship.getShipWorld().getData() );
+			nbt.setByteArray( "blocks", ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() ) );
 		}
 	};
 	
@@ -40,32 +40,47 @@ public enum ShipPersistence
 		m_versions = new TreeMap<Integer,ShipPersistence>();
 		for( ShipPersistence persistence : values() )
 		{
-			m_versions.put( persistence.getVersion(), persistence );
+			m_versions.put( persistence.m_version, persistence );
 		}
 	}
 	
 	private int m_version;
-	
-	public int getVersion( )
-	{
-		return m_version;
-	}
 	
 	private ShipPersistence( int version )
 	{
 		m_version = version;
 	}
 	
-	public abstract void read( EntityShip ship, NBTTagCompound nbt );
+	public abstract void read( EntityShip ship, NBTTagCompound nbt ) throws UnrecognizedPersistenceVersion;
 	public abstract void write( EntityShip ship, NBTTagCompound nbt );
 	
-	public static ShipPersistence get( int version )
+	private static ShipPersistence get( int version )
 	{
 		return m_versions.get( version );
 	}
 	
-	public static ShipPersistence getNewestVersion( )
+	private static ShipPersistence getNewestVersion( )
 	{
 		return m_versions.lastEntry().getValue();
+	}
+	
+	public static void readAnyVersion( EntityShip ship, NBTTagCompound nbt )
+	throws UnrecognizedPersistenceVersion
+	{
+		int version = nbt.getByte( "version" );
+		ShipPersistence persistence = get( version );
+		if( persistence == null )
+		{
+			throw new UnrecognizedPersistenceVersion( version );
+		}
+		
+		persistence.read( ship, nbt );
+	}
+	
+	public static void writeNewestVersion( EntityShip ship, NBTTagCompound nbt )
+	{
+		ShipPersistence persistence = getNewestVersion();
+		nbt.setByte( "version", (byte)persistence.m_version );
+		persistence.write( ship, nbt );
 	}
 }

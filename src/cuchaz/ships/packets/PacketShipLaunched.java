@@ -19,6 +19,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipWorld;
+import cuchaz.ships.Ships;
+import cuchaz.ships.persistence.ShipWorldPersistence;
+import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class PacketShipLaunched extends Packet
 {
@@ -48,7 +51,7 @@ public class PacketShipLaunched extends Packet
 		this();
 		
 		m_entityId = ship.entityId;
-		m_blocksData = ship.getShipWorld().getData();
+		m_blocksData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() );
 		m_waterHeight = waterHeight;
 		m_launchX = launchX;
 		m_launchY = launchY;
@@ -98,7 +101,15 @@ public class PacketShipLaunched extends Packet
 	
 	public void process( EntityShip ship )
 	{
-		ShipWorld shipWorld = new ShipWorld( ship.worldObj, m_blocksData );
-		ShipLauncher.initShip( ship, shipWorld, m_waterHeight, m_launchX, m_launchY, m_launchZ );
+		try
+		{
+			ShipWorld shipWorld = ShipWorldPersistence.readAnyVersion( ship.worldObj, m_blocksData );
+			ShipLauncher.initShip( ship, shipWorld, m_waterHeight, m_launchX, m_launchY, m_launchZ );
+		}
+		catch( UnrecognizedPersistenceVersion ex )
+		{
+			Ships.logger.warning( ex, "Unable to read ship! Ship will be removed from world" );
+			ship.setDead();
+		}
 	}
 }

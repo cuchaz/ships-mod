@@ -48,6 +48,7 @@ import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
 import cuchaz.ships.persistence.ShipPersistence;
+import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class EntityShip extends Entity 
@@ -188,15 +189,13 @@ public class EntityShip extends Entity
 	@Override
 	protected void readEntityFromNBT( NBTTagCompound nbt )
 	{
-		int version = nbt.getByte( "version" );
-		ShipPersistence persistence = ShipPersistence.get( version );
-		if( persistence != null )
+		try
 		{
-			persistence.read( this, nbt );
+			ShipPersistence.readAnyVersion( this, nbt );
 		}
-		else
+		catch( UnrecognizedPersistenceVersion ex )
 		{
-			Ships.logger.warning( "Tried to load ship with unknown persistence version %d. Ship will not be loaded.", version );
+			Ships.logger.warning( ex, "Unable to read ship. Removing ship from world." );
 			setDead();
 		}
 	}
@@ -204,7 +203,7 @@ public class EntityShip extends Entity
 	@Override
 	protected void writeEntityToNBT( NBTTagCompound nbt )
 	{
-		ShipPersistence.getNewestVersion().write( this, nbt );
+		ShipPersistence.writeNewestVersion( this, nbt );
 	}
 	
 	public ShipWorld getShipWorld( )

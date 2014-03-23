@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
@@ -81,25 +82,27 @@ public class RenderShip extends Render
 		// NOTE: (x,y,z) is the vector from the camera to the entity origin
 		// ie x = ship.posX - camera.posX
 		
-		// load the blocks texture
-		RenderManager.instance.renderEngine.bindTexture( TextureMap.locationBlocksTexture );
+		ShipWorld shipWorld = ship.getShipWorld();
 		
 		// prep for rendering in blocks space
-		m_renderBlocks.blockAccess = ship.getShipWorld();
+		m_renderBlocks.blockAccess = shipWorld;
 		GL11.glPushMatrix();
 		GL11.glTranslated( x, y, z );
 		GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 		RenderHelper.disableStandardItemLighting();
+		RenderManager.renderPosX = 0;
+		RenderManager.renderPosY = 0;
+		RenderManager.renderPosZ = 0;
+		RenderManager.instance.worldObj = shipWorld;
 		
 		// handle the display list
-		GL11.glCallList( getDisplayList( ship ) );
-		
-		ShipWorld shipWorld = ship.getShipWorld();
+		RenderManager.instance.renderEngine.bindTexture( TextureMap.locationBlocksTexture );
+		GL11.glCallList( getDisplayList( ship, partialTickTime ) );
 		
 		// collect all the tile entities we need to render
 		m_tileEntitiesToRender.clear();
-		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
+		for( ChunkCoordinates coords : shipWorld.coords() )
 		{
 			TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
 			if( tileEntity != null && TileEntityRenderer.instance.hasSpecialRenderer( tileEntity ) )
@@ -120,6 +123,14 @@ public class RenderShip extends Render
 			);
 		}
 		
+		// draw all the hanging entities
+		for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
+		{
+			// UNDONE: item frames draw all black and I have no idea how to set the brightness correctly
+			// try adding traces to the block drawing functions to check for color/brightness? =(
+			RenderManager.instance.renderEntity( hangingEntity, partialTickTime );
+		}
+		
 		RenderHelper.enableStandardItemLighting();
 		GL11.glPopMatrix();
 		
@@ -130,7 +141,7 @@ public class RenderShip extends Render
 		}
 	}
 	
-	private int getDisplayList( EntityShip ship )
+	private int getDisplayList( EntityShip ship, float partialTickTime )
 	{
 		// does the ship have a list already?
 		Integer id = m_displayListIds.get( ship );
@@ -150,13 +161,13 @@ public class RenderShip extends Render
 			
 			// build the list
 			GL11.glNewList( id, GL11.GL_COMPILE );
-			renderShip( ship );
+			renderShip( ship, partialTickTime );
 			GL11.glEndList();
 		}
 		return id;
 	}
 	
-	private void renderShip( EntityShip ship )
+	private void renderShip( EntityShip ship, float partialTickTime )
 	{
 		Tessellator tessellator = Tessellator.instance;
 		tessellator.startDrawingQuads();
