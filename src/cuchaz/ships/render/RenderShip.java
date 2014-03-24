@@ -111,6 +111,12 @@ public class RenderShip extends Render
 			}
 		}
 		
+		// draw all the hanging entities
+		for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
+		{
+			RenderManager.instance.renderEntity( hangingEntity, partialTickTime );
+		}
+		
 		// now render all the special tile entities
 		for( TileEntity tileEntity : m_tileEntitiesToRender )
 		{
@@ -121,14 +127,6 @@ public class RenderShip extends Render
 				tileEntity.zCoord,
 				partialTickTime
 			);
-		}
-		
-		// draw all the hanging entities
-		for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
-		{
-			// UNDONE: item frames draw all black and I have no idea how to set the brightness correctly
-			// try adding traces to the block drawing functions to check for color/brightness? =(
-			RenderManager.instance.renderEntity( hangingEntity, partialTickTime );
 		}
 		
 		RenderHelper.enableStandardItemLighting();

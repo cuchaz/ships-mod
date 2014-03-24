@@ -83,6 +83,12 @@ public class ShipWorld extends DetachedWorld
 			tileEntity.setWorldObj( this );
 			tileEntity.validate();
 		}
+		
+		// init the hanging entities in the world
+		for( EntityHanging hangingEntity : m_hangingEntities.values() )
+		{
+			hangingEntity.setWorld( this );
+		}
 	}
 	
 	public ShipWorld( World world, ChunkCoordinates originCoords, BlockSet blocks )
@@ -362,6 +368,13 @@ public class ShipWorld extends DetachedWorld
 	public int getBlockId( ChunkCoordinates coords )
 	{
 		return getBlockStorage( coords ).id;
+	}
+	
+	@Override
+	public boolean blockExists( int x, int y, int z )
+	{
+		// always return true. a block outside the ship will still exist, even if it's just air
+		return true;
 	}
 	
 	@Override
