@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 jeff.
+ * Copyright (c) 2014 jeff.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
@@ -15,31 +15,28 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChunkCoordinates;
-import cuchaz.ships.ShipLauncher;
-import cuchaz.ships.ShipLauncher.LaunchFlag;
-import cuchaz.ships.Ships;
+import cuchaz.ships.items.ItemShipEraser;
 
-public class PacketLaunchShip extends Packet
+public class PacketEraseShip extends Packet
 {
-	public static final String Channel = "launchShip";
+	public static final String Channel = "eraseShip";
 	
 	private int m_x;
 	private int m_y;
 	private int m_z;
 	
-	public PacketLaunchShip( )
+	public PacketEraseShip( )
 	{
 		super( Channel );
 	}
 	
-	public PacketLaunchShip( ChunkCoordinates coords )
+	public PacketEraseShip( int x, int y, int z )
 	{
 		this();
 		
-		m_x = coords.posX;
-		m_y = coords.posY;
-		m_z = coords.posZ;
+		m_x = x;
+		m_y = y;
+		m_z = z;
 	}
 	
 	@Override
@@ -63,23 +60,6 @@ public class PacketLaunchShip extends Packet
 	@Override
 	public void onPacketReceived( EntityPlayer player )
 	{
-		// spawn the ship
-		ShipLauncher launcher = new ShipLauncher( player.worldObj, new ChunkCoordinates( m_x, m_y, m_z ) );
-		if( launcher.isLaunchable() )
-		{
-			launcher.launch();
-		}
-		else
-		{
-			// debug info
-			Ships.logger.warning(
-				"Server can't launch ship at: (%d,%d,%d)",
-				m_x, m_y, m_z
-			);
-			for( LaunchFlag flag : LaunchFlag.values() )
-			{
-				Ships.logger.warning( "\t" + flag.name() + ": " + launcher.getLaunchFlag( flag ) );
-			}
-		}
+		ItemShipEraser.eraseShip( player.worldObj, player, m_x, m_y, m_z );
 	}
 }

@@ -172,7 +172,7 @@ public class ItemShipClipboard extends Item
 		// make sure we're in creative mode
 		if( !player.capabilities.isCreativeMode )
 		{
-			message( player, GuiString.PastingOnlyCreative );
+			message( player, GuiString.OnlyCreative );
 			return false;
 		}
 		

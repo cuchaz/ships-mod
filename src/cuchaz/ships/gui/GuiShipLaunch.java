@@ -60,7 +60,7 @@ public class GuiShipLaunch extends GuiShip
 		if( button.id == m_buttonLaunchShip.id )
 		{
 			// tell the server to spawn a ship
-			PacketLaunchShip packet = new PacketLaunchShip( m_shipLauncher.getX(), m_shipLauncher.getY(), m_shipLauncher.getZ() );
+			PacketLaunchShip packet = new PacketLaunchShip( m_shipLauncher.getShipBlock() );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}

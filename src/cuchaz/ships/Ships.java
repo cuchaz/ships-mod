@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
@@ -56,9 +57,12 @@ import cuchaz.ships.items.ItemMagicBucket;
 import cuchaz.ships.items.ItemMagicShipLevitator;
 import cuchaz.ships.items.ItemPaddle;
 import cuchaz.ships.items.ItemShipClipboard;
+import cuchaz.ships.items.ItemShipEraser;
+import cuchaz.ships.items.ItemShipPlaque;
 import cuchaz.ships.items.ItemSupporterPlaque;
 import cuchaz.ships.items.SupporterPlaqueType;
 import cuchaz.ships.packets.PacketChangedBlocks;
+import cuchaz.ships.packets.PacketEraseShip;
 import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPasteShip;
@@ -69,6 +73,7 @@ import cuchaz.ships.packets.PacketShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 import cuchaz.ships.render.RenderShip;
+import cuchaz.ships.render.RenderShipPlaque;
 import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 
@@ -76,7 +81,7 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 	// NOTE: 16-character limit for channel names
 	channels = { PacketLaunchShip.Channel, PacketShipLaunched.Channel, PacketUnlaunchShip.Channel,
 		PacketRequestShipBlocks.Channel, PacketShipBlocks.Channel, PacketPilotShip.Channel,
-		PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel, PacketPasteShip.Channel },
+		PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel, PacketPasteShip.Channel, PacketEraseShip.Channel },
 	packetHandler = PacketHandler.class,
 	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
 	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server
@@ -97,6 +102,8 @@ public class Ships extends DummyModContainer
 	public static final ItemShipClipboard m_itemShipClipboard = new ItemShipClipboard( 7324 );
 	public static final ItemListOfSupporters m_itemListOfSupporters = new ItemListOfSupporters( 7325 );
 	public static final ItemSupporterPlaque m_itemSupporterPlaque = new ItemSupporterPlaque( 7326 );
+	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser( 7327 );
+	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque( 7328 );
 	
 	// block registration: use ids [3170-3190]
 	public static final BlockShip m_blockShip = new BlockShip( 3170 );
@@ -106,6 +113,7 @@ public class Ships extends DummyModContainer
 	// entity registration
 	public static final int EntityShipId = 174;
 	public static final int EntitySupporterPlaqueId = 175;
+	public static final int EntityShipPlaqueId = 176;
 	
 	private File m_source;
 	
@@ -115,7 +123,7 @@ public class Ships extends DummyModContainer
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
-		meta.version = "0.7 BETA";
+		meta.version = "0.8 BETA";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "";
@@ -250,6 +258,7 @@ public class Ships extends DummyModContainer
 		// set renderers
 		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
 		RenderingRegistry.registerEntityRenderingHandler( EntitySupporterPlaque.class, new RenderSupporterPlaque() );
+		RenderingRegistry.registerEntityRenderingHandler( EntityShipPlaque.class, new RenderShipPlaque() );
 		
 		// set tile entity renderers
 		registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
@@ -278,12 +287,16 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemShipClipboard, "shipClipboard" );
 		GameRegistry.registerItem( m_itemListOfSupporters, "listOfSupporters" );
 		GameRegistry.registerItem( m_itemSupporterPlaque, "supporterPlaque" );
+		GameRegistry.registerItem( m_itemShipEraser, "shipEraser" );
+		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
 		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, this, 256, 10, true );
 		EntityRegistry.registerGlobalEntityID( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId );
 		EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, false );
+		EntityRegistry.registerGlobalEntityID( EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId );
+		EntityRegistry.registerModEntity( EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId, this, 256, 10, false );
 		
 		// tile entities
 		GameRegistry.registerTileEntity( TileEntityHelm.class, "helm" );
@@ -301,6 +314,8 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_itemMagicShipLevitator, "Magic Ship Levitator" );
 		LanguageRegistry.addName( m_itemShipClipboard, "Ship Clipboard" );
 		LanguageRegistry.addName( m_itemListOfSupporters, "Cuchaz Interactive List of Supporters" );
+		LanguageRegistry.addName( m_itemShipEraser, "Ship Eraser" );
+		LanguageRegistry.addName( m_itemShipPlaque, "Ship Plaque" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
@@ -322,21 +337,21 @@ public class Ships extends DummyModContainer
 		
 		// paddle
 		GameRegistry.addRecipe(
-			new ItemStack( m_itemPaddle, 1 ),
+			new ItemStack( m_itemPaddle ),
 			" xx", " xx", "x  ",
 			'x', stickStack
 		);
 		
 		// magic bucket
 		GameRegistry.addRecipe(
-			new ItemStack( m_itemMagicBucket, 1 ),
+			new ItemStack( m_itemMagicBucket ),
 			"   ", "x x", " x ",
 			'x', goldStack
 		);
 		
 		// helm
 		GameRegistry.addRecipe(
-			new ItemStack( m_blockHelm, 1 ),
+			new ItemStack( m_blockHelm ),
 			" x ", "x x", "yxy",
 			'x', stickStack,
 			'y', ironStack
@@ -344,10 +359,18 @@ public class Ships extends DummyModContainer
 		
 		// list of supporters
 		GameRegistry.addRecipe(
-			new ItemStack( m_itemListOfSupporters, 1 ),
+			new ItemStack( m_itemListOfSupporters ),
 			"yyy", "yxy", "yyy",
 			'x', ShipType.Tiny.newItemStack(),
 			'y', paperStack
+		);
+		
+		// ship plaque
+		GameRegistry.addRecipe(
+			new ItemStack( m_itemShipPlaque ),
+			"   ", " x ", "yyy",
+			'x', new ItemStack( Item.ingotIron ),
+			'y', new ItemStack( Block.planks )
 		);
 	}
 }

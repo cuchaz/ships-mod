@@ -13,6 +13,7 @@ package cuchaz.ships.gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -30,7 +31,7 @@ public enum Gui
 		@SideOnly( Side.CLIENT )
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
-			return new GuiShipLaunch( new ContainerShip(), new ShipLauncher( world, x, y, z ) );
+			return new GuiShipLaunch( new ContainerShip(), new ShipLauncher( world, new ChunkCoordinates( x, y, z ) ) );
 		}
 	},
 	UnbuildShip

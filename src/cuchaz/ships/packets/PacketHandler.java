@@ -36,6 +36,7 @@ public class PacketHandler implements IPacketHandler
 		m_packetTypes.put( PacketShipBlockEvent.Channel, new PacketShipBlockEvent() );
 		m_packetTypes.put( PacketChangedBlocks.Channel, new PacketChangedBlocks() );
 		m_packetTypes.put( PacketPasteShip.Channel, new PacketPasteShip() );
+		m_packetTypes.put( PacketEraseShip.Channel, new PacketEraseShip() );
 	}
 	
 	@Override

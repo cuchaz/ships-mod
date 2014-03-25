@@ -97,7 +97,7 @@ public class GuiShipPropulsion extends GuiShip
 		}
 		
 		// get the ship info from the launcher
-		m_shipLauncher = new ShipLauncher( world, shipBlockCoords.posX, shipBlockCoords.posY, shipBlockCoords.posZ );
+		m_shipLauncher = new ShipLauncher( world, shipBlockCoords );
 		if( m_shipLauncher.getShipWorld() == null )
 		{
 			// there's no valid ship

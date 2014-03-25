@@ -37,13 +37,14 @@ public enum GuiString
 	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." ),
 	NoShipOnClipboard( "No ship was found on the clipboard!" ),
 	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." ),
-	PastingOnlyCreative( "Ship pasting only works in creative mode." ),
+	OnlyCreative( "This only works in creative mode." ),
 	NoPropulsion( "No propulsion methods found!" ),
 	FoundPropulsion( "Found %s" ),
 	ShipUnlaunchOverride( "Override docking check" ),
 	ShipUnlaunchOverrideWarning( "Warning: You may not be able to launch your ship after docking here." ),
 	ListOfSupporters( "Cuchaz Interactive: List of Supporters" ),
-	NotASupporter( "Become a supporter of Cuchaz Interactive to use this feature. http://www.patreon.com/cuchaz" );
+	NotASupporter( "Become a supporter of Cuchaz Interactive to use this feature. http://www.patreon.com/cuchaz" ),
+	EraserUsage( "Use the eraser on a ship block to erase a ship."  );
 	
 	private String m_unlocalizedText;
 	

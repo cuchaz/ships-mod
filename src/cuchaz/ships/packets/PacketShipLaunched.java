@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChunkCoordinates;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipWorld;
@@ -29,7 +30,6 @@ public class PacketShipLaunched extends Packet
 	
 	private int m_entityId;
 	private byte[] m_blocksData;
-	private int m_waterHeight;
 	private int m_launchX;
 	private int m_launchY;
 	private int m_launchZ;
@@ -46,16 +46,15 @@ public class PacketShipLaunched extends Packet
 		super( Channel );
 	}
 	
-	public PacketShipLaunched( EntityShip ship, int waterHeight, int launchX, int launchY, int launchZ )
+	public PacketShipLaunched( EntityShip ship, ChunkCoordinates shipBlock )
 	{
 		this();
 		
 		m_entityId = ship.entityId;
 		m_blocksData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() );
-		m_waterHeight = waterHeight;
-		m_launchX = launchX;
-		m_launchY = launchY;
-		m_launchZ = launchZ;
+		m_launchX = shipBlock.posX;
+		m_launchY = shipBlock.posY;
+		m_launchZ = shipBlock.posZ;
 	}
 
 	@Override
@@ -64,7 +63,6 @@ public class PacketShipLaunched extends Packet
 		out.writeInt( m_entityId );
 		out.writeInt( m_blocksData.length );
 		out.write( m_blocksData );
-		out.writeInt( m_waterHeight );
 		out.writeInt( m_launchX );
 		out.writeInt( m_launchY );
 		out.writeInt( m_launchZ );
@@ -76,7 +74,6 @@ public class PacketShipLaunched extends Packet
 		m_entityId = in.readInt();
 		m_blocksData = new byte[in.readInt()]; // this is potentially risky?
 		in.read( m_blocksData );
-		m_waterHeight = in.readInt();
 		m_launchX = in.readInt();
 		m_launchY = in.readInt();
 		m_launchZ = in.readInt();
@@ -104,7 +101,7 @@ public class PacketShipLaunched extends Packet
 		try
 		{
 			ShipWorld shipWorld = ShipWorldPersistence.readAnyVersion( ship.worldObj, m_blocksData );
-			ShipLauncher.initShip( ship, shipWorld, m_waterHeight, m_launchX, m_launchY, m_launchZ );
+			ShipLauncher.initShip( ship, shipWorld, new ChunkCoordinates( m_launchX, m_launchY, m_launchZ ) );
 		}
 		catch( UnrecognizedPersistenceVersion ex )
 		{
