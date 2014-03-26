@@ -21,11 +21,10 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import cuchaz.ships.gui.Gui;
 
 public class EntityShipPlaque extends EntityHanging implements IEntityAdditionalSpawnData
 {
-	private static final String DefaultName = "USS Tenacious";
-	
 	private String m_name;
 	private int m_supporterId;
 	
@@ -34,7 +33,7 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 		super( world );
 		// called by deserializer. don't set anything here except default values
 		
-		m_name = DefaultName;
+		m_name = "";
 		m_supporterId = 0;
 	}
 	
@@ -44,7 +43,7 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 		super( world, x, y, z, direction );
 		hangingDirection = direction;
 		
-		m_name = DefaultName;
+		m_name = "";
 		m_supporterId = supporterId;
 		
 		initPlaque();
@@ -53,6 +52,10 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 	public String getName( )
 	{
 		return m_name;
+	}
+	public void setName( String val )
+	{
+		m_name = val;
 	}
 	
 	public int getSupporterId( )
@@ -66,6 +69,9 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
         super.writeEntityToNBT( nbt );
         nbt.setString( "name", m_name );
 		nbt.setInteger( "supporterId", m_supporterId );
+		
+		// TEMP
+		Ships.logger.info( "Wrote name: " + m_name + ". It's " + nbt.getString( "name" ) );
 	}
 	
 	@Override
@@ -75,6 +81,9 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 		m_name = nbt.getString( "name" );
 		m_supporterId = nbt.getInteger( "supporterId" );
 		initPlaque();
+		
+		// TEMP
+		Ships.logger.info( "Read name: " + m_name );
 	}
 	
 	@Override
@@ -153,4 +162,20 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 	{
 		// ignore position updates from the server
 	}
+	
+	@Override
+	public boolean interactFirst( EntityPlayer player )
+    {
+		// is this the player that placed the plaque?
+		int supporterId = Supporters.getId( player.username );
+		if( m_supporterId != supporterId )
+		{
+			return false;
+		}
+		
+		// show the edit GUI
+		Gui.ShipPlaque.open( player, player.worldObj, entityId, 0, 0 );
+		
+		return true;
+    }
 }

@@ -11,6 +11,7 @@
 package cuchaz.ships.gui;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ChunkCoordinates;
@@ -19,6 +20,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.ContainerShip;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.EntityShipPlaque;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.Ships;
@@ -77,6 +79,22 @@ public enum Gui
 		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
 		{
 			return new GuiListOfSupporters( new ContainerShip() );
+		}
+	},
+	ShipPlaque
+	{
+		@Override
+		@SideOnly( Side.CLIENT )
+		public GuiContainer getGui( EntityPlayer player, World world, int x, int y, int z )
+		{
+			// get the ship plaque entity from the block (entity id is assigned to x)
+			int entityId = x;
+			Entity entity = world.getEntityByID( entityId );
+			if( entity instanceof EntityShipPlaque )
+			{
+				return new GuiShipPlaque( new ContainerShip(), (EntityShipPlaque)entity );
+			}
+			return null;
 		}
 	};
 	

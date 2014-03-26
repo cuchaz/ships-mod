@@ -83,7 +83,7 @@ public class ItemShipPlaque extends ItemHangingEntity
 		return false;
 	}
 
-	private boolean canUse( EntityPlayer player )
+	public static boolean canUse( EntityPlayer player )
 	{
 		int supporterId = Supporters.getId( player.username );
 		if( supporterId != Supporters.InvalidSupporterId )
