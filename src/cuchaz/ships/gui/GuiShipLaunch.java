@@ -103,6 +103,18 @@ public class GuiShipLaunch extends GuiShip
 			2
 		);
 		
+		// show any sink messages if needed
+		if( m_shipLauncher.getSinkWaterHeight() == null )
+		{
+			// ship is unsinkable
+			drawText( GuiString.ShipIsUnsinkable.getLocalizedText(), 3 );
+		}
+		else if( m_shipLauncher.getSinkWaterHeight() - m_shipLauncher.getEquilibriumWaterHeight() < 0.5 )
+		{
+			// ship floats close to the sink line
+			drawText( GuiString.ShipFloatsCloseToSinkLine.getLocalizedText(), 3, NoColor );
+		}
+		
 		// draw the ship and show the water height
 		BlockSide shipSide = m_shipLauncher.getShipSide();
 		if( shipSide != null )
@@ -115,6 +127,7 @@ public class GuiShipLaunch extends GuiShip
 			RenderShip2D.drawWater(
 				envelope,
 				m_shipLauncher.getEquilibriumWaterHeight(),
+				m_shipLauncher.getSinkWaterHeight(),
 				x, y, zLevel, width, height
 			);
 			RenderShip2D.drawShip(

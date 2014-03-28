@@ -59,7 +59,7 @@ public class ShipLauncher
 				return launcher.m_equilibriumWaterHeight < launcher.getShipBoundingBox().maxY + 1;
 			}
 		};
-
+		
 		public abstract boolean computeValue( ShipLauncher launcher );
 	}
 	
@@ -71,6 +71,7 @@ public class ShipLauncher
 	private ShipWorld m_shipWorld;
 	private ShipPhysics m_shipPhysics;
 	private Double m_equilibriumWaterHeight;
+	private Double m_sinkWaterHeight;
 	private int m_numBlocksChecked;
 	
 	public ShipLauncher( final World world, ChunkCoordinates shipBlock )
@@ -116,6 +117,7 @@ public class ShipLauncher
 				m_shipWorld = new ShipWorld( m_world, m_shipBlock, m_blocks );
 				m_shipPhysics = new ShipPhysics( m_shipWorld.getBlocksStorage() );
 				m_equilibriumWaterHeight = m_shipPhysics.getEquilibriumWaterHeight();
+				m_sinkWaterHeight = m_shipPhysics.getSinkWaterHeight();
 			}
 		}
 		else
@@ -124,6 +126,7 @@ public class ShipLauncher
 			m_shipWorld = null;
 			m_shipPhysics = null;
 			m_equilibriumWaterHeight = null;
+			m_sinkWaterHeight = null;
 			m_numBlocksChecked = numBlocksToCheck;
 		}
 		
@@ -239,6 +242,11 @@ public class ShipLauncher
 	public Double getEquilibriumWaterHeight( )
 	{
 		return m_equilibriumWaterHeight;
+	}
+	
+	public Double getSinkWaterHeight( )
+	{
+		return m_sinkWaterHeight;
 	}
 	
 	public EntityShip launch( )

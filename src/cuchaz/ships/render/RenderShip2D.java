@@ -28,9 +28,10 @@ import cuchaz.modsShared.blocks.BlockSide;
 public class RenderShip2D
 {
 	private static final int WaterColor = ColorUtils.getColor( 43, 99, 225 );
+	private static final int SinkColor = ColorUtils.getColor( 200, 0, 0 );
 	private static final ResourceLocation ShipTexture = TextureMap.locationBlocksTexture;
 	
-	public static void drawWater( BlockArray envelope, Double waterHeight, int x, int y, double z, int maxWidth, int maxHeight )
+	public static void drawWater( BlockArray envelope, Double waterHeight, Double sinkHeight, int x, int y, double z, int maxWidth, int maxHeight )
 	{
 		double blockSize = getBlockSize( maxWidth, maxHeight, envelope );
 		double shipHeight = (double)envelope.getHeight()*blockSize;
@@ -45,6 +46,13 @@ public class RenderShip2D
 		
 		// draw the water rect
 		drawWater( x, y + maxHeight - waterRectHeight, z, maxWidth, waterRectHeight );
+		
+		if( sinkHeight != null )
+		{
+			// draw the sink line
+			int sinkLineY = (int)( ( sinkHeight - envelope.getVMin() )*blockSize + ( maxHeight - shipHeight )/2.0 );
+			drawColoredBlock( x, y + maxHeight - sinkLineY, z, maxWidth, 1.0, SinkColor );
+		}
 	}
 	
 	public static void drawWater( int x, int y, double z, int maxWidth, int maxHeight )

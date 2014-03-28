@@ -46,7 +46,9 @@ public enum GuiString
 	NotASupporter( "Become a supporter of Cuchaz Interactive to use this feature. http://www.patreon.com/cuchaz" ),
 	EraserUsage( "Use the eraser on a ship block to erase a ship."  ),
 	ShipPlaque( "Name your ship" ),
-	Done( "Done" );
+	Done( "Done" ),
+	ShipIsUnsinkable( "Ship is un-sinkable!" ),
+	ShipFloatsCloseToSinkLine( "Ship is close to sinking!" );
 	
 	private String m_unlocalizedText;
 	

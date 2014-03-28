@@ -34,11 +34,11 @@ import cuchaz.modsShared.math.RotatedBB;
 public class ShipGeometry
 {
 	public static final Neighbors ShipBlockNeighbors = Neighbors.Edges;
-	public static final Neighbors VoidBlockNeighbors = Neighbors.Faces;
+	public static final Neighbors VoidBlockNeighbors = Neighbors.Edges;
 	
 	private BlockSet m_blocks;
 	private Envelopes m_envelopes;
-	private List<BlockSet> m_outerBoundaries;
+	private BlockSet m_outerBoundary;
 	private List<BlockSet> m_holes;
 	private TreeMap<Integer,BlockSet> m_trappedAir;
 	
@@ -47,7 +47,7 @@ public class ShipGeometry
 		m_blocks = new BlockSet( blocks );
 		
 		m_envelopes = new Envelopes( m_blocks );
-		m_outerBoundaries = null;
+		m_outerBoundary = null;
 		m_holes = null;
 		m_trappedAir = null;
 		
@@ -60,9 +60,9 @@ public class ShipGeometry
 		return m_envelopes;
 	}
 	
-	public List<BlockSet> getOuterBoundaries( )
+	public BlockSet getOuterBoundary( )
 	{
-		return m_outerBoundaries;
+		return m_outerBoundary;
 	}
 	
 	public List<BlockSet> getHoles( )
@@ -246,16 +246,14 @@ public class ShipGeometry
 		}
 		
 		// boundaryBlocks will have some number of connected components. Find them all and classify each as inner/outer
-		m_outerBoundaries = new ArrayList<BlockSet>();
 		m_holes = new ArrayList<BlockSet>();
-		BlockSet shellExtra = new BlockSet();
 		for( BlockSet component : BlockUtils.getConnectedComponents( boundaryBlocks, VoidBlockNeighbors ) )
 		{
 			// is this component the outer boundary?
-			if( isConnectedToShell( component.first(), shellExtra ) )
+			if( isConnectedToShell( component.first() ) )
 			{
-				m_outerBoundaries.add( component );
-				shellExtra.addAll( component );
+				assert( m_outerBoundary == null );
+				m_outerBoundary = component;
 			}
 			else
 			{
@@ -263,6 +261,11 @@ public class ShipGeometry
 				m_holes.add( BlockUtils.getHoleFromInnerBoundary( component, m_blocks, VoidBlockNeighbors ) );
 			}
 		}
+	}
+	
+	private boolean isConnectedToShell( ChunkCoordinates coords )
+	{
+		return isConnectedToShell( coords, new BlockSet() );
 	}
 	
 	private boolean isConnectedToShell( ChunkCoordinates coords, BlockSet shellExtra )
@@ -310,12 +313,12 @@ public class ShipGeometry
 	
 	private void computeTrappedAir( )
 	{
-		// needs blocks and boundaries
+		// needs blocks and boundary
 		if( m_blocks == null )
 		{
 			throw new Error( "Need blocks!" );
 		}
-		if( m_outerBoundaries == null || m_holes == null )
+		if( m_outerBoundary == null || m_holes == null )
 		{
 			throw new Error( "Need boundaries!" );
 		}
@@ -329,21 +332,37 @@ public class ShipGeometry
 		BlockSet shellExtra = new BlockSet();
 		
 		// analyze the outer boundaries
-		BlockSetHeightIndex boundaryIndex = new BlockSetHeightIndex( m_outerBoundaries );
-		List<BlockSubset> partialBoundaries = new ArrayList<BlockSubset>();
+		BlockSetHeightIndex boundaryIndex = new BlockSetHeightIndex( m_outerBoundary );
+		List<BlockSet> segments = new ArrayList<BlockSet>();
 		List<BlockSubset> nextPartialBoundaries = new ArrayList<BlockSubset>();
 		for( int y=minY; y<=maxY+1; y++ )
 		{
+			// get all the segments at y
+			// UNDONE: change BlockSetHeightIndex to answer this query
+			List<BlockSet> ySegments = BlockUtils.getConnectedComponents( boundaryIndex.get( y ), VoidBlockNeighbors );
+			
+			// UNDONE: need a way to flag a segment as trapped or not
+			
+			// merge them with existing segments
+			for( BlockSet segment : segments )
+			{
+				growSegment( segment, ySegments, VoidBlockNeighbors );
+			}
+			
+			segments.addAll( ySegments );
+			
+			/////////////// UNDONE: continue re-designing the algorithm below here
+			
 			// add all the boundaries starting at y
 			for( BlockSet boundary : boundaryIndex.getByMinY( y ) )
 			{
-				partialBoundaries.add( new BlockSubset( boundary ) );
+				segments.add( new BlockSubset( boundary ) );
 			}
 			
 			// grow any existing partial boundaries to y
 			// NOTE: could make index structure to make y queries faster
 			// but that might not be worth it in this case
-			for( BlockSubset partialBoundary : partialBoundaries )
+			for( BlockSubset partialBoundary : segments )
 			{
 				for( ChunkCoordinates coords : partialBoundary.getParent() )
 				{
@@ -359,7 +378,7 @@ public class ShipGeometry
 			
 			// compute the trapped air so far
 			nextPartialBoundaries.clear();
-			for( BlockSubset partialBoundary : partialBoundaries )
+			for( BlockSubset partialBoundary : segments )
 			{
 				if( !isConnectedToShell( partialBoundary.first(), shellExtra, y ) )
 				{
@@ -368,13 +387,16 @@ public class ShipGeometry
 				}
 				else
 				{
+					// was this partial boundary part of trapped air in the last y?
+					
+					
 					shellExtra.addAll( partialBoundary.getParent() );
 				}
 			}
 			
 			// swap the lists
-			List<BlockSubset> temp = partialBoundaries;
-			partialBoundaries = nextPartialBoundaries;
+			List<BlockSubset> temp = segments;
+			segments = nextPartialBoundaries;
 			nextPartialBoundaries = temp;
 		}
 		
@@ -409,5 +431,39 @@ public class ShipGeometry
 				trappedAirUpToThisY.addAll( BlockUtils.getHoleFromInnerBoundary( partialHole, m_blocks, VoidBlockNeighbors, y ) );
 			}
 		}
+	}
+
+	private void growSegment( BlockSet segment, List<BlockSet> ySegments, Neighbors neighbors )
+	{
+		// NOTE: y segments are all exactly at y, segment is strictly below y
+		
+		// find the segment in ySegments connect to segment, if any
+		for( BlockSet ySegment : ySegments )
+		{
+			if( isYConnected( segment, ySegment, neighbors ) )
+			{
+				segment.addAll( ySegment );
+				ySegments.remove( ySegment );
+				return;
+			}
+		}
+	}
+
+	private boolean isYConnected( BlockSet below, BlockSet at, Neighbors neighbors )
+	{
+		// NOTE: below is strictly below y, at is strictly at y
+		ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
+		for( ChunkCoordinates coords : at )
+		{
+			for( int i=0; i<neighbors.getNumNeighbors(); i++ )
+			{
+				neighbors.getNeighbor( neighborCoords, coords, i );
+				if( neighborCoords.posY == coords.posY - 1 && below.contains( neighborCoords ) )
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

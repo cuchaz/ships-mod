@@ -38,11 +38,13 @@ public class ShipPhysics
 	{
 		public int numBlocksAtSurface;
 		public int numBlocksUnderwater;
+		public int numFillableBlocks;
 		
 		public DisplacementEntry( )
 		{
 			numBlocksAtSurface = 0;
 			numBlocksUnderwater = 0;
+			numFillableBlocks = 0;
 		}
 	}
 	
@@ -77,6 +79,7 @@ public class ShipPhysics
 	private double m_shipMass;
 	private Vec3 m_centerOfMass;
 	private Double m_equilibriumWaterHeight;
+	private Double m_sinkWaterHeight;
 	
 	public ShipPhysics( BlocksStorage blocks )
 	{
@@ -146,6 +149,7 @@ public class ShipPhysics
 		// compute some extra stuff
 		m_centerOfMass = computeCenterOfMass();
 		m_equilibriumWaterHeight = computeEquilibriumWaterHeight();
+		m_sinkWaterHeight = computeSinkWaterHeight();
 	}
 	
 	public double getMass( )
@@ -391,6 +395,14 @@ public class ShipPhysics
 		
 		// The ship will sink!
 		return null;
+	}
+	
+	private Double computeSinkWaterHeight( )
+	{
+		for( DisplacementEntry entry : m_displacement.descendingMap().values() )
+		{
+			if( entry.
+		}
 	}
 	
 	private Vec3 computeCenterOfMass( )
