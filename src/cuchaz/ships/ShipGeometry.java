@@ -11,7 +11,9 @@
 package cuchaz.ships;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.util.AxisAlignedBB;
@@ -273,6 +275,11 @@ public class ShipGeometry
 		return isConnectedToShell( coords, shellExtra, null );
 	}
 	
+	private boolean isConnectedToShell( ChunkCoordinates coords, Integer maxY )
+	{
+		return isConnectedToShell( coords, new BlockSet(), maxY );
+	}
+	
 	private boolean isConnectedToShell( ChunkCoordinates coords, final BlockSet shellExtra, final Integer maxY )
 	{
 		// don't check more blocks than can fit in the shell
@@ -333,7 +340,8 @@ public class ShipGeometry
 		
 		// analyze the outer boundaries
 		BlockSetHeightIndex boundaryIndex = new BlockSetHeightIndex( m_outerBoundary );
-		List<BlockSet> segments = new ArrayList<BlockSet>();
+		Map<BlockSet,Boolean> segments = new HashMap<BlockSet,Boolean>(); // ok to hash on instance
+		
 		List<BlockSubset> nextPartialBoundaries = new ArrayList<BlockSubset>();
 		for( int y=minY; y<=maxY+1; y++ )
 		{
@@ -341,35 +349,30 @@ public class ShipGeometry
 			// UNDONE: change BlockSetHeightIndex to answer this query
 			List<BlockSet> ySegments = BlockUtils.getConnectedComponents( boundaryIndex.get( y ), VoidBlockNeighbors );
 			
-			// UNDONE: need a way to flag a segment as trapped or not
-			
 			// merge them with existing segments
-			for( BlockSet segment : segments )
+			for( BlockSet ySegment : ySegments )
 			{
-				growSegment( segment, ySegments, VoidBlockNeighbors );
-			}
-			
-			segments.addAll( ySegments );
-			
-			/////////////// UNDONE: continue re-designing the algorithm below here
-			
-			// add all the boundaries starting at y
-			for( BlockSet boundary : boundaryIndex.getByMinY( y ) )
-			{
-				segments.add( new BlockSubset( boundary ) );
-			}
-			
-			// grow any existing partial boundaries to y
-			// NOTE: could make index structure to make y queries faster
-			// but that might not be worth it in this case
-			for( BlockSubset partialBoundary : segments )
-			{
-				for( ChunkCoordinates coords : partialBoundary.getParent() )
+				List<BlockSet> connectedSegments = getYConnectedSegments( ySegment, segments );
+				if( connectedSegments.isEmpty() )
 				{
-					if( coords.posY == y )
+					// add the new segment
+					boolean isTrapped = !isConnectedToShell( ySegment.first(), y );
+					segments.put( ySegment, isTrapped );
+				}
+				else
+				{
+					// merge all the segments
+					BlockSet baseSegment = connectedSegments.get( 0 );
+					boolean isTrapped = segments.get( baseSegment );
+					for( int i=1; i<connectedSegments.size(); i++ )
 					{
-						partialBoundary.add( coords );
+						BlockSet nextSegment = connectedSegments.get( i );
+						baseSegment.addAll( nextSegment );
+						segments.remove( nextSegment );
+						isTrapped = isTrapped && segments.get( nextSegment );
 					}
+					baseSegment.addAll( ySegment );
+					segments.put( baseSegment, isTrapped );
 				}
 			}
 			
@@ -377,27 +380,15 @@ public class ShipGeometry
 			m_trappedAir.put( y, trappedAirUpToThisY );
 			
 			// compute the trapped air so far
-			nextPartialBoundaries.clear();
-			for( BlockSubset partialBoundary : segments )
+			for( Map.Entry<BlockSet,Boolean> entry : segments.entrySet() )
 			{
-				if( !isConnectedToShell( partialBoundary.first(), shellExtra, y ) )
+				BlockSet segment = entry.getKey();
+				boolean isTrapped = entry.getValue();
+				if( isTrapped )
 				{
-					trappedAirUpToThisY.addAll( BlockUtils.getHoleFromInnerBoundary( partialBoundary, m_blocks, VoidBlockNeighbors, y ) );
-					nextPartialBoundaries.add( partialBoundary );
-				}
-				else
-				{
-					// was this partial boundary part of trapped air in the last y?
-					
-					
-					shellExtra.addAll( partialBoundary.getParent() );
+					trappedAirUpToThisY.addAll( segment );
 				}
 			}
-			
-			// swap the lists
-			List<BlockSubset> temp = segments;
-			segments = nextPartialBoundaries;
-			nextPartialBoundaries = temp;
 		}
 		
 		// add holes to the trapped air
