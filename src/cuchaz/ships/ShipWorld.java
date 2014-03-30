@@ -183,7 +183,7 @@ public class ShipWorld extends DetachedWorld
 		m_storage.writeToWorld( world, correspondence );
 		
 		// bail out the boat if needed (it might have water in the trapped air blocks)
-		for( Coords coordsShip : getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
+		for( Coords coordsShip : getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
 		{
 			Coords coordsWorld = correspondence.get( coordsShip );
 			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients );
@@ -340,6 +340,11 @@ public class ShipWorld extends DetachedWorld
 	public ShipGeometry getGeometry( )
 	{
 		return m_storage.getGeometry();
+	}
+	
+	public ShipDisplacement getDisplacement( )
+	{
+		return m_storage.getDisplacement();
 	}
 	
 	public BoundingBoxInt getBoundingBox( )

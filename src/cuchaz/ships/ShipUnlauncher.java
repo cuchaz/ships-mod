@@ -12,7 +12,6 @@ package cuchaz.ships;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -101,7 +100,7 @@ public class ShipUnlauncher
 	
 	private EntityShip m_ship;
 	private List<Boolean> m_unlaunchFlags;
-	private TreeMap<Coords,Coords> m_correspondence;
+	private BlockMap<Coords> m_correspondence;
 	private int m_waterHeightInBlockSpace;
 	private double m_deltaRotationRadians;
 	private Vec3 m_deltaTranslation;
@@ -144,7 +143,7 @@ public class ShipUnlauncher
 		// get the set of coords we care about
 		BlockSet allCoords = new BlockSet();
 		allCoords.addAll( m_ship.getShipWorld().coords() );
-		allCoords.addAll( m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( m_waterHeightInBlockSpace ) );
+		allCoords.addAll( m_ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight( m_waterHeightInBlockSpace ) );
 		
 		// compute the snap rotation
 		double yaw = CircleRange.mapZeroToTwoPi( Math.toRadians( m_ship.rotationYaw ) );

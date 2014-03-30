@@ -91,7 +91,7 @@ public class WaterDisplacer
 		BlockSet out = new BlockSet();
 		
 		// get all the trapped air blocks
-		BlockSet trappedAirBlocks = m_ship.getShipWorld().getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
+		BlockSet trappedAirBlocks = m_ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
 		if( trappedAirBlocks.isEmpty() )
 		{
 			// the ship is out of the water or flooded

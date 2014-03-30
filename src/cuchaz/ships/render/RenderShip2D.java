@@ -31,7 +31,7 @@ public class RenderShip2D
 	private static final int SinkColor = ColorUtils.getColor( 200, 0, 0 );
 	private static final ResourceLocation ShipTexture = TextureMap.locationBlocksTexture;
 	
-	public static void drawWater( BlockArray envelope, Double waterHeight, Double sinkHeight, int x, int y, double z, int maxWidth, int maxHeight )
+	public static void drawWater( BlockArray envelope, Double waterHeight, Integer sinkHeight, int x, int y, double z, int maxWidth, int maxHeight )
 	{
 		double blockSize = getBlockSize( maxWidth, maxHeight, envelope );
 		double shipHeight = (double)envelope.getHeight()*blockSize;

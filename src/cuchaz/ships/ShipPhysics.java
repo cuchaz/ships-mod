@@ -12,13 +12,11 @@ package cuchaz.ships;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.Util;
-import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.propulsion.Propulsion;
@@ -33,20 +31,6 @@ public class ShipPhysics
 	private static final double BaseAngularDrag = Util.perSecondToPerTick( 1 );
 	private static final float AngularAccelerationFactor = 20.0f;
 	private static final int NumSimulationTicks = 20*Util.TicksPerSecond;
-	
-	private static class DisplacementEntry
-	{
-		public int numBlocksAtSurface;
-		public int numBlocksUnderwater;
-		public int numFillableBlocks;
-		
-		public DisplacementEntry( )
-		{
-			numBlocksAtSurface = 0;
-			numBlocksUnderwater = 0;
-			numFillableBlocks = 0;
-		}
-	}
 	
 	public static class AccelerationEntry
 	{
@@ -75,69 +59,14 @@ public class ShipPhysics
 	}
 	
 	private BlocksStorage m_blocks;
-	private TreeMap<Integer,DisplacementEntry> m_displacement;
 	private double m_shipMass;
 	private Vec3 m_centerOfMass;
 	private Double m_equilibriumWaterHeight;
-	private Double m_sinkWaterHeight;
+	private Integer m_sinkWaterHeight;
 	
 	public ShipPhysics( BlocksStorage blocks )
 	{
 		m_blocks = blocks;
-		
-		// get all the watertight blocks
-		BlockSet watertightBlocks = new BlockSet();
-		for( Coords coords : m_blocks.coords() )
-		{
-			if( MaterialProperties.isWatertight( getBlock( coords ) ) )
-			{
-				watertightBlocks.add( coords );
-			}
-		}
-		
-		int minY = m_blocks.getBoundingBox().minY;
-		int maxY = m_blocks.getBoundingBox().maxY;
-		
-		// initialize displacement
-		m_displacement = new TreeMap<Integer,DisplacementEntry>();
-		for( int y=minY; y<=maxY+1; y++ )
-		{
-			m_displacement.put( y, new DisplacementEntry() );
-		}
-
-		// compute displacement for the ship blocks
-		for( Coords coords : watertightBlocks )
-		{
-			for( int y=maxY+1; y>=coords.y; y-- )
-			{
-				DisplacementEntry entry = m_displacement.get( y );
-				if( y == coords.y )
-				{
-					entry.numBlocksAtSurface++;
-				}
-				else
-				{
-					entry.numBlocksUnderwater++;
-				}
-			}
-		}
-		
-		// update displacement for trapped air blocks
-		for( int y=minY; y<=maxY+1; y++ )
-		{
-			DisplacementEntry entry = m_displacement.get( y );
-			for( Coords coords : m_blocks.getGeometry().getTrappedAir( y ) )
-			{
-				if( y == coords.y )
-				{
-					entry.numBlocksAtSurface++;
-				}
-				else
-				{
-					entry.numBlocksUnderwater++;
-				}
-			}
-		}
 		
 		// compute the total mass
 		m_shipMass = 0.0;
@@ -149,7 +78,7 @@ public class ShipPhysics
 		// compute some extra stuff
 		m_centerOfMass = computeCenterOfMass();
 		m_equilibriumWaterHeight = computeEquilibriumWaterHeight();
-		m_sinkWaterHeight = computeSinkWaterHeight();
+		m_sinkWaterHeight = m_blocks.getDisplacement().getSinkY();
 	}
 	
 	public double getMass( )
@@ -172,22 +101,22 @@ public class ShipPhysics
 	{
 		// get the surface block level
 		int surfaceLevel = MathHelper.floor_double( waterHeight );
-		DisplacementEntry entry = m_displacement.get( surfaceLevel );
 		
 		// compute the mass of the displaced water
-		double displacedWaterMass = 0;
-		if( entry != null )
-		{
-			double surfaceFraction = getBlockFractionSubmerged( surfaceLevel, waterHeight );
-			displacedWaterMass = ( (double)entry.numBlocksUnderwater + (double)entry.numBlocksAtSurface*surfaceFraction )*getWaterBlockMass();
-		}
-		
-		return displacedWaterMass;
+		double surfaceFraction = getBlockFractionSubmerged( surfaceLevel, waterHeight );
+		int numUnderwaterBlocks = m_blocks.getDisplacement().getNumUnderwaterBlocks( surfaceLevel );
+		int numSurfaceBlocks = m_blocks.getDisplacement().getNumSurfaceBlocks( surfaceLevel );
+		return ( (double)numUnderwaterBlocks + (double)numSurfaceBlocks*surfaceFraction )*getWaterBlockMass();
 	}
 	
 	public Double getEquilibriumWaterHeight( )
 	{
 		return m_equilibriumWaterHeight;
+	}
+	
+	public Integer getSinkWaterHeight( )
+	{
+		return m_sinkWaterHeight;
 	}
 	
 	public boolean willItFloat( )
@@ -379,9 +308,11 @@ public class ShipPhysics
 		int maxY = m_blocks.getBoundingBox().maxY;
 		for( int y=minY; y<=maxY+1; y++ )
 		{
+			int numUnderwaterBlocks = m_blocks.getDisplacement().getNumUnderwaterBlocks( y );
+			int numSurfaceBlocks = m_blocks.getDisplacement().getNumSurfaceBlocks( y );
+			
 			// assume water completely submerges this layer
-			DisplacementEntry entry = m_displacement.get( y );
-			double displacedWaterMass = ( entry.numBlocksUnderwater + entry.numBlocksAtSurface )*getWaterBlockMass();
+			double displacedWaterMass = ( numUnderwaterBlocks + numSurfaceBlocks )*getWaterBlockMass();
 			
 			// did we displace too much water?
 			if( displacedWaterMass > m_shipMass )
@@ -389,20 +320,12 @@ public class ShipPhysics
 				// good, the water height is in this block level
 				
 				// now solve for the water height
-				return y + ( m_shipMass - entry.numBlocksUnderwater*getWaterBlockMass() )/entry.numBlocksAtSurface/getWaterBlockMass();
+				return y + ( m_shipMass - numUnderwaterBlocks*getWaterBlockMass() )/numSurfaceBlocks/getWaterBlockMass();
 			}
 		}
 		
 		// The ship will sink!
 		return null;
-	}
-	
-	private Double computeSinkWaterHeight( )
-	{
-		for( DisplacementEntry entry : m_displacement.descendingMap().values() )
-		{
-			// UNDONE: write this. Need double-value entries
-		}
 	}
 	
 	private Vec3 computeCenterOfMass( )

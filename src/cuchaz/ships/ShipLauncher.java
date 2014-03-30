@@ -26,6 +26,7 @@ import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
+import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
@@ -63,6 +64,8 @@ public class ShipLauncher
 		public abstract boolean computeValue( ShipLauncher launcher );
 	}
 	
+	public static final Neighbors ShipBlockNeighbors = Neighbors.Edges;
+	
 	private World m_world;
 	private Coords m_shipBlock;
 	private ShipType m_shipType;
@@ -71,7 +74,7 @@ public class ShipLauncher
 	private ShipWorld m_shipWorld;
 	private ShipPhysics m_shipPhysics;
 	private Double m_equilibriumWaterHeight;
-	private Double m_sinkWaterHeight;
+	private Integer m_sinkWaterHeight;
 	private int m_numBlocksChecked;
 	
 	public ShipLauncher( final World world, Coords shipBlock )
@@ -97,7 +100,7 @@ public class ShipLauncher
 					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
-			ShipGeometry.ShipBlockNeighbors
+			ShipBlockNeighbors
 		);
 		
 		if( m_blocks != null )
@@ -244,7 +247,7 @@ public class ShipLauncher
 		return m_equilibriumWaterHeight;
 	}
 	
-	public Double getSinkWaterHeight( )
+	public Integer getSinkWaterHeight( )
 	{
 		return m_sinkWaterHeight;
 	}
@@ -317,7 +320,7 @@ public class ShipLauncher
 		
 		// restore the trapped air to water
 		Coords worldCoords = new Coords( 0, 0, 0 );
-		for( Coords blockCoords : shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - shipBlock.y ) )
+		for( Coords blockCoords : shipWorld.getDisplacement().getTrappedAirFromWaterHeight( waterHeight - shipBlock.y ) )
 		{
 			worldCoords.x = blockCoords.x + shipBlock.x;
 			worldCoords.y = blockCoords.y + shipBlock.y;

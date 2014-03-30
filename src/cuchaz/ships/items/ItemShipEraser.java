@@ -27,7 +27,6 @@ import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.MaterialProperties;
-import cuchaz.ships.ShipGeometry;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipType;
 import cuchaz.ships.ShipWorld;
@@ -94,7 +93,7 @@ public class ItemShipEraser extends Item
 					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
-			ShipGeometry.ShipBlockNeighbors
+			ShipLauncher.ShipBlockNeighbors
 		);
 		
 		// did we find too many blocks?

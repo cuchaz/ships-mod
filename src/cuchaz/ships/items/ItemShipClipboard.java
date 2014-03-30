@@ -38,7 +38,7 @@ import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.MaterialProperties;
-import cuchaz.ships.ShipGeometry;
+import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipType;
 import cuchaz.ships.Ships;
 import cuchaz.ships.gui.GuiString;
@@ -130,7 +130,7 @@ public class ItemShipClipboard extends Item
 					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
-			ShipGeometry.ShipBlockNeighbors
+			ShipLauncher.ShipBlockNeighbors
 		);
 		
 		// did we find too many blocks?

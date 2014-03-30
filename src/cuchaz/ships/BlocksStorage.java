@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import net.minecraft.block.Block;
 import net.minecraft.world.World;
 
 import org.apache.commons.codec.binary.Base64InputStream;
@@ -38,18 +39,21 @@ public class BlocksStorage
 	private BlockMap<BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
 	private ShipGeometry m_geometry;
+	private ShipDisplacement m_displacement;
 	
 	public BlocksStorage( )
 	{
 		m_blocks = new BlockMap<BlockStorage>();
 		m_airBlockStorage = new BlockStorage();
 		m_geometry = null;
+		m_displacement = null;
 	}
 	
 	public void clear( )
 	{
 		m_blocks.clear();
 		m_geometry = null;
+		m_displacement = null;
 	}
 	
 	public void readFromWorld( World world, Coords originCoords, BlockSet blocks )
@@ -156,6 +160,24 @@ public class BlocksStorage
 			m_geometry = new ShipGeometry( new BlockSet( m_blocks.keySet() ) );
 		}
 		return m_geometry;
+	}
+	
+	public ShipDisplacement getDisplacement( )
+	{
+		if( m_displacement == null )
+		{
+			BlockSet watertightBlocks = new BlockSet();
+			for( Coords coords : m_blocks.keySet() )
+			{
+				Block block = Block.blocksList[getBlock( coords ).id];
+				if( MaterialProperties.isWatertight( block ) )
+				{
+					watertightBlocks.add( coords );
+				}
+			}
+			m_displacement = new ShipDisplacement( watertightBlocks );
+		}
+		return m_displacement;
 	}
 	
 	public int getNumBlocks( )
