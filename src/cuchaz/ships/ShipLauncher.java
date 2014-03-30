@@ -17,7 +17,6 @@ import java.util.Map;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityHanging;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.PacketDispatcher;
@@ -29,6 +28,7 @@ import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.blocks.Envelopes;
 import cuchaz.ships.packets.PacketShipLaunched;
 
@@ -64,7 +64,7 @@ public class ShipLauncher
 	}
 	
 	private World m_world;
-	private ChunkCoordinates m_shipBlock;
+	private Coords m_shipBlock;
 	private ShipType m_shipType;
 	private BlockSet m_blocks; // NOTE: blocks are in world coordinates
 	private List<Boolean> m_launchFlags;
@@ -74,27 +74,27 @@ public class ShipLauncher
 	private Double m_sinkWaterHeight;
 	private int m_numBlocksChecked;
 	
-	public ShipLauncher( final World world, ChunkCoordinates shipBlock )
+	public ShipLauncher( final World world, Coords shipBlock )
 	{
 		m_world = world;
 		m_shipBlock = shipBlock;
 		
 		// get the ship type from the block
-		m_shipType = Ships.m_blockShip.getShipType( world, m_shipBlock.posX, m_shipBlock.posY, m_shipBlock.posZ );
+		m_shipType = Ships.m_blockShip.getShipType( world, m_shipBlock.x, m_shipBlock.y, m_shipBlock.z );
 		
 		// determine how many blocks to check
 		int numBlocksToCheck = getNumBlocksToCheck();
 		
 		// find all the blocks connected to the ship block
 		m_blocks = BlockUtils.searchForBlocks(
-			m_shipBlock.posX, m_shipBlock.posY, m_shipBlock.posZ,
+			m_shipBlock.x, m_shipBlock.y, m_shipBlock.z,
 			numBlocksToCheck,
 			new BlockExplorer( )
 			{
 				@Override
-				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			ShipGeometry.ShipBlockNeighbors
@@ -138,7 +138,7 @@ public class ShipLauncher
 		}
 	}
 	
-	public ChunkCoordinates getShipBlock( )
+	public Coords getShipBlock( )
 	{
 		return m_shipBlock;
 	}
@@ -270,15 +270,15 @@ public class ShipLauncher
 		return ship;
 	}
 	
-	public static void initShip( EntityShip ship, ShipWorld shipWorld, ChunkCoordinates shipBlock )
+	public static void initShip( EntityShip ship, ShipWorld shipWorld, Coords shipBlock )
 	{
 		Vec3 centerOfMass = new ShipPhysics( shipWorld.getBlocksStorage() ).getCenterOfMass();
 		
 		// set ship properties
 		ship.setPositionAndRotation(
-			shipBlock.posX + centerOfMass.xCoord,
-			shipBlock.posY + centerOfMass.yCoord,
-			shipBlock.posZ + centerOfMass.zCoord,
+			shipBlock.x + centerOfMass.xCoord,
+			shipBlock.y + centerOfMass.yCoord,
+			shipBlock.z + centerOfMass.zCoord,
 			0, 0
 		);
 		ship.setShipWorld( shipWorld );
@@ -286,16 +286,16 @@ public class ShipLauncher
 		removeShipFromWorld( ship.worldObj, shipWorld, shipBlock, UpdateRules.UpdateNoOne );
 	}
 	
-	public static void removeShipFromWorld( World world, ShipWorld shipWorld, ChunkCoordinates shipBlock, UpdateRules updateRules )
+	public static void removeShipFromWorld( World world, ShipWorld shipWorld, Coords shipBlock, UpdateRules updateRules )
 	{
 		// translate the ship blocks into world space
 		BlockSet worldBlocks = new BlockSet();
-		for( ChunkCoordinates blockCoords : shipWorld.coords() )
+		for( Coords blockCoords : shipWorld.coords() )
 		{
-			worldBlocks.add( new ChunkCoordinates(
-				blockCoords.posX + shipBlock.posX,
-				blockCoords.posY + shipBlock.posY,
-				blockCoords.posZ + shipBlock.posZ
+			worldBlocks.add( new Coords(
+				blockCoords.x + shipBlock.x,
+				blockCoords.y + shipBlock.y,
+				blockCoords.z + shipBlock.z
 			) );
 		}
 		
@@ -303,30 +303,30 @@ public class ShipLauncher
 		int waterHeight = computeWaterHeight( world, shipWorld, shipBlock );
 		
 		// remove the world blocks, but don't tell the clients. They'll do it later when the ship blocks are sent over
-		for( ChunkCoordinates cords : worldBlocks )
+		for( Coords cords : worldBlocks )
 		{
-			if( cords.posY < waterHeight )
+			if( cords.y < waterHeight )
 			{
-				BlockUtils.changeBlockWithoutNotifyingIt( world, cords.posX, cords.posY, cords.posZ, Block.waterStill.blockID, 0, updateRules );
+				BlockUtils.changeBlockWithoutNotifyingIt( world, cords.x, cords.y, cords.z, Block.waterStill.blockID, 0, updateRules );
 			}
 			else
 			{
-				BlockUtils.removeBlockWithoutNotifyingIt( world, cords.posX, cords.posY, cords.posZ, updateRules );
+				BlockUtils.removeBlockWithoutNotifyingIt( world, cords.x, cords.y, cords.z, updateRules );
 			}
 		}
 		
 		// restore the trapped air to water
-		ChunkCoordinates worldCoords = new ChunkCoordinates( 0, 0, 0 );
-		for( ChunkCoordinates blockCoords : shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - shipBlock.posY ) )
+		Coords worldCoords = new Coords( 0, 0, 0 );
+		for( Coords blockCoords : shipWorld.getGeometry().getTrappedAirFromWaterHeight( waterHeight - shipBlock.y ) )
 		{
-			worldCoords.posX = blockCoords.posX + shipBlock.posX;
-			worldCoords.posY = blockCoords.posY + shipBlock.posY;
-			worldCoords.posZ = blockCoords.posZ + shipBlock.posZ;
-			BlockUtils.changeBlockWithoutNotifyingIt( world, worldCoords.posX, worldCoords.posY, worldCoords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+			worldCoords.x = blockCoords.x + shipBlock.x;
+			worldCoords.y = blockCoords.y + shipBlock.y;
+			worldCoords.z = blockCoords.z + shipBlock.z;
+			BlockUtils.changeBlockWithoutNotifyingIt( world, worldCoords.x, worldCoords.y, worldCoords.z, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
 		}
 		
 		// remove any hanging entities
-		for( Map.Entry<ChunkCoordinates,EntityHanging> entry : shipWorld.getNearbyHangingEntities( world, worldBlocks ).entrySet() )
+		for( Map.Entry<Coords,EntityHanging> entry : shipWorld.getNearbyHangingEntities( world, worldBlocks ).entrySet() )
 		{
 			EntityHanging hangingEntity = entry.getValue();
 			
@@ -335,7 +335,7 @@ public class ShipLauncher
 		}
 	}
 	
-	private static int computeWaterHeight( World world, ShipWorld shipWorld, ChunkCoordinates shipBlock )
+	private static int computeWaterHeight( World world, ShipWorld shipWorld, Coords shipBlock )
 	{
 		int maxWaterHeight = 0;
 		
@@ -356,13 +356,13 @@ public class ShipLauncher
 		return maxWaterHeight;
 	}
 	
-	private static int computeWaterHeight( World world, ShipWorld shipWorld, ChunkCoordinates shipBlock, int blockX, int blockZ )
+	private static int computeWaterHeight( World world, ShipWorld shipWorld, Coords shipBlock, int blockX, int blockZ )
 	{
 		// start at the top of the box
 		Envelopes envelopes = shipWorld.getGeometry().getEnvelopes();
-		int x = blockX + shipBlock.posX;
-		int y = envelopes.getBoundingBox().maxY+1 + shipBlock.posY;
-		int z = blockZ + shipBlock.posZ;
+		int x = blockX + shipBlock.x;
+		int y = envelopes.getBoundingBox().maxY+1 + shipBlock.y;
+		int z = blockZ + shipBlock.z;
 		
 		// drop until we hit air
 		boolean foundAir = false;

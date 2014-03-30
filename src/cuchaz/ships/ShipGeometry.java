@@ -11,24 +11,21 @@
 package cuchaz.ships;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSetHeightIndex;
 import cuchaz.modsShared.blocks.BlockSide;
-import cuchaz.modsShared.blocks.BlockSubset;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockConditionChecker;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.blocks.Envelopes;
 import cuchaz.modsShared.math.BoxCorner;
 import cuchaz.modsShared.math.RotatedBB;
@@ -37,6 +34,12 @@ public class ShipGeometry
 {
 	public static final Neighbors ShipBlockNeighbors = Neighbors.Edges;
 	public static final Neighbors VoidBlockNeighbors = Neighbors.Edges;
+	
+	private static class ClassifiedSegment
+	{
+		BlockSet segment;
+		boolean isTrapped;
+	}
 	
 	private BlockSet m_blocks;
 	private Envelopes m_envelopes;
@@ -138,7 +141,7 @@ public class ShipGeometry
 		}
 		
 		// search over the blocks in the range
-		ChunkCoordinates coords = new ChunkCoordinates();
+		Coords coords = new Coords();
 		BlockSet blocks = new BlockSet();
 		for( int x=minX; x<=maxX; x++ )
 		{
@@ -154,7 +157,7 @@ public class ShipGeometry
 				
 				if( blockIntersectsBoxXZ( x, z, box ) )
 				{
-					blocks.add( new ChunkCoordinates( coords ) );
+					blocks.add( new Coords( coords ) );
 				}
 			}
 		}
@@ -183,7 +186,7 @@ public class ShipGeometry
 		int maxX = MathHelper.floor_double( box.maxX );
 		int maxZ = MathHelper.floor_double( box.maxZ );
 		
-		ChunkCoordinates coords = new ChunkCoordinates();
+		Coords coords = new Coords();
 		BlockSet blocks = new BlockSet();
 		for( int x=minX; x<=maxX; x++ )
 		{
@@ -192,7 +195,7 @@ public class ShipGeometry
 				coords.set( x, y, z );
 				if( m_blocks.contains( coords ) )
 				{
-					blocks.add( new ChunkCoordinates( coords ) );
+					blocks.add( new Coords( coords ) );
 				}
 			}
 		}
@@ -234,15 +237,15 @@ public class ShipGeometry
 	{
 		// first, get all blocks touching the ship on a face (aka the boundary)
 		final BlockSet boundaryBlocks = new BlockSet();
-		ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
-		for( ChunkCoordinates coords : m_blocks )
+		Coords neighborCoords = new Coords( 0, 0, 0 );
+		for( Coords coords : m_blocks )
 		{
 			for( int i=0; i<VoidBlockNeighbors.getNumNeighbors(); i++ )
 			{
 				VoidBlockNeighbors.getNeighbor( neighborCoords, coords, i );
 				if( !m_blocks.contains( neighborCoords ) )
 				{
-					boundaryBlocks.add( new ChunkCoordinates( neighborCoords ) );
+					boundaryBlocks.add( new Coords( neighborCoords ) );
 				}
 			}
 		}
@@ -265,22 +268,22 @@ public class ShipGeometry
 		}
 	}
 	
-	private boolean isConnectedToShell( ChunkCoordinates coords )
+	private boolean isConnectedToShell( Coords coords )
 	{
 		return isConnectedToShell( coords, new BlockSet() );
 	}
 	
-	private boolean isConnectedToShell( ChunkCoordinates coords, BlockSet shellExtra )
+	private boolean isConnectedToShell( Coords coords, BlockSet shellExtra )
 	{
 		return isConnectedToShell( coords, shellExtra, null );
 	}
 	
-	private boolean isConnectedToShell( ChunkCoordinates coords, Integer maxY )
+	private boolean isConnectedToShell( Coords coords, Integer maxY )
 	{
 		return isConnectedToShell( coords, new BlockSet(), maxY );
 	}
 	
-	private boolean isConnectedToShell( ChunkCoordinates coords, final BlockSet shellExtra, final Integer maxY )
+	private boolean isConnectedToShell( Coords coords, final BlockSet shellExtra, final Integer maxY )
 	{
 		// don't check more blocks than can fit in the shell
 		final BoundingBoxInt box = m_envelopes.getBoundingBox();
@@ -292,7 +295,7 @@ public class ShipGeometry
 			new BlockConditionChecker( )
 			{
 				@Override
-				public boolean isConditionMet( ChunkCoordinates coords )
+				public boolean isConditionMet( Coords coords )
 				{
 					// is this a shell block?
 					return !box.containsPoint( coords ) || shellExtra.contains( coords );
@@ -301,9 +304,9 @@ public class ShipGeometry
 			new BlockExplorer( )
 			{
 				@Override
-				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( Coords coords )
 				{
-					return ( maxY == null || coords.posY <= maxY ) && !m_blocks.contains( coords );
+					return ( maxY == null || coords.y <= maxY ) && !m_blocks.contains( coords );
 				}
 			},
 			VoidBlockNeighbors
@@ -336,43 +339,38 @@ public class ShipGeometry
 		
 		m_trappedAir = new TreeMap<Integer,BlockSet>();
 		
-		BlockSet shellExtra = new BlockSet();
-		
-		// analyze the outer boundaries
+		// analyze the outer boundary
 		BlockSetHeightIndex boundaryIndex = new BlockSetHeightIndex( m_outerBoundary );
-		Map<BlockSet,Boolean> segments = new HashMap<BlockSet,Boolean>(); // ok to hash on instance
-		
-		List<BlockSubset> nextPartialBoundaries = new ArrayList<BlockSubset>();
+		List<ClassifiedSegment> boundarySegments = new ArrayList<ClassifiedSegment>();
 		for( int y=minY; y<=maxY+1; y++ )
 		{
 			// get all the segments at y
-			// UNDONE: change BlockSetHeightIndex to answer this query
 			List<BlockSet> ySegments = BlockUtils.getConnectedComponents( boundaryIndex.get( y ), VoidBlockNeighbors );
 			
 			// merge them with existing segments
 			for( BlockSet ySegment : ySegments )
 			{
-				List<BlockSet> connectedSegments = getYConnectedSegments( ySegment, segments );
+				List<ClassifiedSegment> connectedSegments = getYConnectedSegments( ySegment, boundarySegments, VoidBlockNeighbors );
 				if( connectedSegments.isEmpty() )
 				{
 					// add the new segment
-					boolean isTrapped = !isConnectedToShell( ySegment.first(), y );
-					segments.put( ySegment, isTrapped );
+					ClassifiedSegment classifiedSegment = new ClassifiedSegment();
+					classifiedSegment.segment = ySegment;
+					classifiedSegment.isTrapped = !isConnectedToShell( ySegment.first(), y );
+					boundarySegments.add( classifiedSegment );
 				}
 				else
 				{
-					// merge all the segments
-					BlockSet baseSegment = connectedSegments.get( 0 );
-					boolean isTrapped = segments.get( baseSegment );
+					// merge all the existing segments
+					ClassifiedSegment baseSegment = connectedSegments.get( 0 );
 					for( int i=1; i<connectedSegments.size(); i++ )
 					{
-						BlockSet nextSegment = connectedSegments.get( i );
-						baseSegment.addAll( nextSegment );
-						segments.remove( nextSegment );
-						isTrapped = isTrapped && segments.get( nextSegment );
+						ClassifiedSegment nextSegment = connectedSegments.get( i );
+						baseSegment.isTrapped = baseSegment.isTrapped && nextSegment.isTrapped;
+						baseSegment.segment.addAll( nextSegment.segment );
+						boundarySegments.remove( nextSegment );
 					}
-					baseSegment.addAll( ySegment );
-					segments.put( baseSegment, isTrapped );
+					baseSegment.segment.addAll( ySegment );
 				}
 			}
 			
@@ -380,76 +378,58 @@ public class ShipGeometry
 			m_trappedAir.put( y, trappedAirUpToThisY );
 			
 			// compute the trapped air so far
-			for( Map.Entry<BlockSet,Boolean> entry : segments.entrySet() )
+			for( ClassifiedSegment segment : boundarySegments )
 			{
-				BlockSet segment = entry.getKey();
-				boolean isTrapped = entry.getValue();
-				if( isTrapped )
+				if( segment.isTrapped )
 				{
-					trappedAirUpToThisY.addAll( segment );
+					trappedAirUpToThisY.addAll( segment.segment );
 				}
 			}
 		}
 		
-		// add holes to the trapped air
-		BlockSetHeightIndex holeIndex = new BlockSetHeightIndex( m_holes );
-		List<BlockSubset> partialHoles = new ArrayList<BlockSubset>();
+		// analyze the holes
+		BlockSetHeightIndex holeIndex = new BlockSetHeightIndex();
+		for( BlockSet hole : m_holes )
+		{
+			holeIndex.add( hole );
+		}
+		BlockSet holeBlocks = new BlockSet();
 		for( int y=minY; y<=maxY+1; y++ )
 		{
-			// add all the holes starting at y
-			for( BlockSet hole : holeIndex.getByMinY( y ) )
+			// add the blocks for this y
+			BlockSet layer = holeIndex.get( y );
+			if( layer != null )
 			{
-				partialHoles.add( new BlockSubset( hole ) );
+				holeBlocks.addAll( layer );
 			}
 			
-			// grow any existing partial holes to y
-			for( BlockSubset partialHole : partialHoles )
-			{
-				for( ChunkCoordinates coords : partialHole.getParent() )
-				{
-					if( coords.posY == y )
-					{
-						partialHole.add( coords );
-					}
-				}
-			}
-			
-			// add the hole blocks to the trapped air
-			BlockSet trappedAirUpToThisY = m_trappedAir.get( y );
-			assert( trappedAirUpToThisY != null );
-			for( BlockSubset partialHole : partialHoles )
-			{
-				trappedAirUpToThisY.addAll( BlockUtils.getHoleFromInnerBoundary( partialHole, m_blocks, VoidBlockNeighbors, y ) );
-			}
+			m_trappedAir.get( y ).addAll( holeBlocks );
 		}
 	}
-
-	private void growSegment( BlockSet segment, List<BlockSet> ySegments, Neighbors neighbors )
+	
+	private List<ClassifiedSegment> getYConnectedSegments( BlockSet ySegment, Iterable<ClassifiedSegment> segments, Neighbors neighbors )
 	{
-		// NOTE: y segments are all exactly at y, segment is strictly below y
-		
-		// find the segment in ySegments connect to segment, if any
-		for( BlockSet ySegment : ySegments )
+		List<ClassifiedSegment> connectedSegments = new ArrayList<ClassifiedSegment>();
+		for( ClassifiedSegment segment : segments )
 		{
-			if( isYConnected( segment, ySegment, neighbors ) )
+			if( isYConnected( segment.segment, ySegment, neighbors ) )
 			{
-				segment.addAll( ySegment );
-				ySegments.remove( ySegment );
-				return;
+				connectedSegments.add( segment );
 			}
 		}
+		return connectedSegments;
 	}
-
+	
 	private boolean isYConnected( BlockSet below, BlockSet at, Neighbors neighbors )
 	{
 		// NOTE: below is strictly below y, at is strictly at y
-		ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
-		for( ChunkCoordinates coords : at )
+		Coords neighborCoords = new Coords( 0, 0, 0 );
+		for( Coords coords : at )
 		{
 			for( int i=0; i<neighbors.getNumNeighbors(); i++ )
 			{
 				neighbors.getNeighbor( neighborCoords, coords, i );
-				if( neighborCoords.posY == coords.posY - 1 && below.contains( neighborCoords ) )
+				if( neighborCoords.y == coords.y - 1 && below.contains( neighborCoords ) )
 				{
 					return true;
 				}

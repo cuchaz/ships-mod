@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 
 import org.apache.commons.codec.binary.Base64InputStream;
@@ -29,11 +28,12 @@ import org.apache.commons.codec.binary.Base64OutputStream;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Coords;
 
 public class BlocksStorage
 {
 	private static final String Encoding = "UTF-8";
-	private static final ChunkCoordinates Origin = new ChunkCoordinates( 0, 0, 0 );
+	private static final Coords Origin = new Coords( 0, 0, 0 );
 	
 	private BlockMap<BlockStorage> m_blocks;
 	private final BlockStorage m_airBlockStorage;
@@ -52,31 +52,31 @@ public class BlocksStorage
 		m_geometry = null;
 	}
 	
-	public void readFromWorld( World world, ChunkCoordinates originCoords, BlockSet blocks )
+	public void readFromWorld( World world, Coords originCoords, BlockSet blocks )
 	{
 		clear();
 		
 		// copy the blocks into storage
-		for( ChunkCoordinates worldCoords : blocks )
+		for( Coords worldCoords : blocks )
 		{
 			BlockStorage storage = new BlockStorage();
 			storage.readFromWorld( world, worldCoords );
 			
 			// make all the blocks relative to the origin block
-			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
+			Coords relativeCoords = new Coords( worldCoords.x - originCoords.x, worldCoords.y - originCoords.y, worldCoords.z - originCoords.z );
 			m_blocks.put( relativeCoords, storage );
 		}
 		
 		// UNDONE: find any nearby hanging entities and store them too
 	}
 	
-	public void writeToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence )
+	public void writeToWorld( World world, Map<Coords,Coords> correspondence )
 	{
 		// copy the blocks to the world
-		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+		for( Map.Entry<Coords,BlockStorage> entry : m_blocks.entrySet() )
 		{
-			ChunkCoordinates coordsShip = entry.getKey();
-			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
+			Coords coordsShip = entry.getKey();
+			Coords coordsWorld = correspondence.get( coordsShip );
 			BlockStorage storage = entry.getValue();
 			storage.writeToWorld( world, coordsWorld );
 		}
@@ -90,7 +90,7 @@ public class BlocksStorage
 		int numBlocks = in.readInt();
 		for( int i = 0; i < numBlocks; i++ )
 		{
-			ChunkCoordinates coords = new ChunkCoordinates( in.readInt(), in.readInt(), in.readInt() );
+			Coords coords = new Coords( in.readInt(), in.readInt(), in.readInt() );
 			
 			BlockStorage storage = new BlockStorage();
 			storage.readFromStream( in );
@@ -103,14 +103,14 @@ public class BlocksStorage
 	throws IOException
 	{
 		out.writeInt( m_blocks.size() );
-		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+		for( Map.Entry<Coords,BlockStorage> entry : m_blocks.entrySet() )
 		{
-			ChunkCoordinates coords = entry.getKey();
+			Coords coords = entry.getKey();
 			BlockStorage storage = entry.getValue();
 			
-			out.writeInt( coords.posX );
-			out.writeInt( coords.posY );
-			out.writeInt( coords.posZ );
+			out.writeInt( coords.x );
+			out.writeInt( coords.y );
+			out.writeInt( coords.z );
 			storage.writeToStream( out );
 		}
 	}
@@ -139,12 +139,12 @@ public class BlocksStorage
 	public String dumpBlocks( )
 	{
 		StringBuilder buf = new StringBuilder();
-		for( Map.Entry<ChunkCoordinates,BlockStorage> entry : m_blocks.entrySet() )
+		for( Map.Entry<Coords,BlockStorage> entry : m_blocks.entrySet() )
 		{
-			ChunkCoordinates coords = entry.getKey();
+			Coords coords = entry.getKey();
 			BlockStorage storage = entry.getValue();
 			
-			buf.append( String.format( "%3d,%3d,%3d %4d %4d\n", coords.posX, coords.posY, coords.posZ, storage.id, storage.meta ) );
+			buf.append( String.format( "%3d,%3d,%3d %4d %4d\n", coords.x, coords.y, coords.z, storage.id, storage.meta ) );
 		}
 		return buf.toString();
 	}
@@ -163,12 +163,12 @@ public class BlocksStorage
 		return m_blocks.size();
 	}
 	
-	public Set<ChunkCoordinates> coords( )
+	public Set<Coords> coords( )
 	{
 		return m_blocks.keySet();
 	}
 	
-	public BlockStorage getBlock( ChunkCoordinates coords )
+	public BlockStorage getBlock( Coords coords )
 	{
 		BlockStorage storage = m_blocks.get( coords );
 		if( storage == null )

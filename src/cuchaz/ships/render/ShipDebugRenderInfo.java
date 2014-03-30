@@ -10,24 +10,22 @@
  ******************************************************************************/
 package cuchaz.ships.render;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.Coords;
 
 @SideOnly( Side.CLIENT )
 public class ShipDebugRenderInfo
 {
 	private boolean m_isRendered;
-	private Set<ChunkCoordinates> m_collidedCoords;
+	private BlockSet m_collidedCoords;
 	private Map<Entity,AxisAlignedBB> m_queryBoxes;
 	
 	public ShipDebugRenderInfo( )
@@ -44,7 +42,7 @@ public class ShipDebugRenderInfo
 		// RenderManager.field_85095_o;
 	}
 	
-	public Collection<ChunkCoordinates> getCollidedCoords( )
+	public BlockSet getCollidedCoords( )
 	{
 		return m_collidedCoords;
 	}
@@ -59,7 +57,7 @@ public class ShipDebugRenderInfo
 		m_isRendered = true;
 	}
 	
-	public void addCollidedCoord( ChunkCoordinates coords )
+	public void addCollidedCoord( Coords coords )
 	{
 		if( m_isRendered )
 		{

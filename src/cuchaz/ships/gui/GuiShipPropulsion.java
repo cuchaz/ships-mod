@@ -16,20 +16,20 @@ import java.io.IOException;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.Container;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL20;
 
+import cuchaz.modsShared.ColorUtils;
+import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockConditionChecker;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
-import cuchaz.modsShared.ColorUtils;
-import cuchaz.modsShared.Util;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.Ships;
@@ -66,26 +66,26 @@ public class GuiShipPropulsion extends GuiShip
 		
 		// this should be the helm
 		assert( world.getBlockId( helmX, helmY, helmZ ) == Ships.m_blockHelm.blockID );
-		ChunkCoordinates helmCoords = new ChunkCoordinates( helmX, helmY, helmZ );
+		Coords helmCoords = new Coords( helmX, helmY, helmZ );
 		
 		// find the ship block
-		ChunkCoordinates shipBlockCoords = BlockUtils.searchForBlock(
+		Coords shipBlockCoords = BlockUtils.searchForBlock(
 			helmX, helmY, helmZ,
 			10000,
 			new BlockConditionChecker( )
 			{
 				@Override
-				public boolean isConditionMet( ChunkCoordinates coords )
+				public boolean isConditionMet( Coords coords )
 				{
-					return world.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockShip.blockID;
+					return world.getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockShip.blockID;
 				}
 			},
 			new BlockExplorer( )
 			{
 				@Override
-				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			Neighbors.Edges
@@ -113,11 +113,11 @@ public class GuiShipPropulsion extends GuiShip
 		m_shipEnvelope = m_shipLauncher.getShipEnvelope( BlockSide.Top );
 		
 		// compute an envelope for the helm
-		helmCoords.posX -= shipBlockCoords.posX;
-		helmCoords.posY -= shipBlockCoords.posY;
-		helmCoords.posZ -= shipBlockCoords.posZ;
+		helmCoords.x -= shipBlockCoords.x;
+		helmCoords.y -= shipBlockCoords.y;
+		helmCoords.z -= shipBlockCoords.z;
 		m_helmEnvelope = m_shipEnvelope.newEmptyCopy();
-		m_helmEnvelope.setBlock( helmCoords.posX, helmCoords.posZ, helmCoords );
+		m_helmEnvelope.setBlock( helmCoords.x, helmCoords.z, helmCoords );
 		
 		// get the propulsion
 		m_propulsion = new Propulsion( m_shipLauncher.getShipWorld().getBlocksStorage() );

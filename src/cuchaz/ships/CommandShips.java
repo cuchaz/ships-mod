@@ -20,13 +20,13 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatMessageComponent;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockCallback;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.blocks.BlockUtils.SearchAction;
+import cuchaz.modsShared.blocks.Coords;
 
 public class CommandShips extends CommandBase
 {
@@ -176,21 +176,21 @@ public class CommandShips extends CommandBase
 			public void process( final ICommandSender sender, String[] args )
 			{
 				// make a list of positions we will use to seed our search
-				List<ChunkCoordinates> seedBlocks = new ArrayList<ChunkCoordinates>();
+				List<Coords> seedBlocks = new ArrayList<Coords>();
 				for( EntityShip ship : ShipLocator.getShipsServer() )
 				{
-					seedBlocks.add( new ChunkCoordinates(
+					seedBlocks.add( new Coords(
 						MathHelper.floor_double( ship.posX ),
 						MathHelper.floor_double( ship.posY ),
 						MathHelper.floor_double( ship.posZ )
 					) );
 				}
-				seedBlocks.add( sender.getPlayerCoordinates() );
+				seedBlocks.add( new Coords( sender.getPlayerCoordinates() ) );
 				
 				// for each seed block, search around it looking for air walls
 				final int NumBlocks = 4000;
-				final List<ChunkCoordinates> airWallBlocks = new ArrayList<ChunkCoordinates>();
-				for( ChunkCoordinates coords : seedBlocks )
+				final List<Coords> airWallBlocks = new ArrayList<Coords>();
+				for( Coords coords : seedBlocks )
 				{
 					BlockUtils.exploreBlocks(
 						coords,
@@ -198,9 +198,9 @@ public class CommandShips extends CommandBase
 						new BlockCallback( )
 						{
 							@Override
-							public SearchAction foundBlock( ChunkCoordinates coords )
+							public SearchAction foundBlock( Coords coords )
 							{
-								if( sender.getEntityWorld().getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
+								if( sender.getEntityWorld().getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockAirWall.blockID )
 								{
 									airWallBlocks.add( coords );
 								}
@@ -210,7 +210,7 @@ public class CommandShips extends CommandBase
 						new BlockExplorer( )
 						{
 							@Override
-							public boolean shouldExploreBlock( ChunkCoordinates coords )
+							public boolean shouldExploreBlock( Coords coords )
 							{
 								return true;
 							}
@@ -220,9 +220,9 @@ public class CommandShips extends CommandBase
 				}
 				
 				// replace all the air wall blocks with water
-				for( ChunkCoordinates coords : airWallBlocks )
+				for( Coords coords : airWallBlocks )
 				{
-					sender.getEntityWorld().setBlock( coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID );
+					sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, Block.waterStill.blockID );
 				}
 				replyAllAdmins( sender, String.format( "Converted %d air wall blocks back to water.", airWallBlocks.size() ) );
 			}

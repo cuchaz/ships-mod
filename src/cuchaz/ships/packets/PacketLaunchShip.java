@@ -15,7 +15,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChunkCoordinates;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLauncher.LaunchFlag;
 import cuchaz.ships.Ships;
@@ -33,13 +33,13 @@ public class PacketLaunchShip extends Packet
 		super( Channel );
 	}
 	
-	public PacketLaunchShip( ChunkCoordinates coords )
+	public PacketLaunchShip( Coords coords )
 	{
 		this();
 		
-		m_x = coords.posX;
-		m_y = coords.posY;
-		m_z = coords.posZ;
+		m_x = coords.x;
+		m_y = coords.y;
+		m_z = coords.z;
 	}
 	
 	@Override
@@ -64,7 +64,7 @@ public class PacketLaunchShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// spawn the ship
-		ShipLauncher launcher = new ShipLauncher( player.worldObj, new ChunkCoordinates( m_x, m_y, m_z ) );
+		ShipLauncher launcher = new ShipLauncher( player.worldObj, new Coords( m_x, m_y, m_z ) );
 		if( launcher.isLaunchable() )
 		{
 			launcher.launch();

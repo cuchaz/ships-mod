@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChunkCoordinates;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipWorld;
@@ -46,15 +46,15 @@ public class PacketShipLaunched extends Packet
 		super( Channel );
 	}
 	
-	public PacketShipLaunched( EntityShip ship, ChunkCoordinates shipBlock )
+	public PacketShipLaunched( EntityShip ship, Coords shipBlock )
 	{
 		this();
 		
 		m_entityId = ship.entityId;
 		m_blocksData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() );
-		m_launchX = shipBlock.posX;
-		m_launchY = shipBlock.posY;
-		m_launchZ = shipBlock.posZ;
+		m_launchX = shipBlock.x;
+		m_launchY = shipBlock.y;
+		m_launchZ = shipBlock.z;
 	}
 
 	@Override
@@ -101,7 +101,7 @@ public class PacketShipLaunched extends Packet
 		try
 		{
 			ShipWorld shipWorld = ShipWorldPersistence.readAnyVersion( ship.worldObj, m_blocksData );
-			ShipLauncher.initShip( ship, shipWorld, new ChunkCoordinates( m_launchX, m_launchY, m_launchZ ) );
+			ShipLauncher.initShip( ship, shipWorld, new Coords( m_launchX, m_launchY, m_launchZ ) );
 		}
 		catch( UnrecognizedPersistenceVersion ex )
 		{

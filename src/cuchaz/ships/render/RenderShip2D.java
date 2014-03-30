@@ -14,7 +14,6 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.Icon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -24,6 +23,7 @@ import org.lwjgl.opengl.GL11;
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.Coords;
 
 public class RenderShip2D
 {
@@ -72,15 +72,15 @@ public class RenderShip2D
 		{
 			for( int v=envelope.getVMin(); v<=envelope.getVMax(); v++ )
 			{
-				ChunkCoordinates coords = envelope.getBlock( u, v );
+				Coords coords = envelope.getBlock( u, v );
 				if( coords == null )
 				{
 					continue;
 				}
 				
 				// get the block texture
-				Block block = Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )];
-				Icon icon = block.getBlockTexture( world, coords.posX, coords.posY, coords.posZ, side.getId() );
+				Block block = Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )];
+				Icon icon = block.getBlockTexture( world, coords.x, coords.y, coords.z, side.getId() );
 				if( icon != null )
 				{
 					drawTexturedBlock(
@@ -106,7 +106,7 @@ public class RenderShip2D
 		{
 			for( int v=envelope.getVMin(); v<=envelope.getVMax(); v++ )
 			{
-				ChunkCoordinates coords = envelope.getBlock( u, v );
+				Coords coords = envelope.getBlock( u, v );
 				if( coords == null )
 				{
 					continue;

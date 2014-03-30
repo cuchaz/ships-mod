@@ -31,13 +31,13 @@ import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 
 import org.lwjgl.opengl.GL11;
 
 import cuchaz.modsShared.ColorUtils;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.HitList;
 import cuchaz.ships.ShipWorld;
@@ -102,7 +102,7 @@ public class RenderShip extends Render
 		
 		// collect all the tile entities we need to render
 		m_tileEntitiesToRender.clear();
-		for( ChunkCoordinates coords : shipWorld.coords() )
+		for( Coords coords : shipWorld.coords() )
 		{
 			TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
 			if( tileEntity != null && TileEntityRenderer.instance.hasSpecialRenderer( tileEntity ) )
@@ -172,7 +172,7 @@ public class RenderShip extends Render
 		
 		// draw all the blocks (but defer special tile entities for later rendering)
 		ShipWorld shipWorld = ship.getShipWorld();
-		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
+		for( Coords coords : ship.getShipWorld().coords() )
 		{
 			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
 			
@@ -200,10 +200,10 @@ public class RenderShip extends Render
 		tessellator.draw();
 	}
 	
-	private void renderBlock( ShipWorld shipWorld, Block block, ChunkCoordinates coords )
+	private void renderBlock( ShipWorld shipWorld, Block block, Coords coords )
 	{
 		// get the block shape
-		block.setBlockBoundsBasedOnState( shipWorld, coords.posX, coords.posY, coords.posZ );
+		block.setBlockBoundsBasedOnState( shipWorld, coords.x, coords.y, coords.z );
 		
 		// do we have a tile entity that needs special rendering?
 		TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
@@ -219,29 +219,29 @@ public class RenderShip extends Render
 			// but use the color multiplier instead of ambient occlusion
 			// AO just looks weird and I can't make it look good yet
 			
-			int colorMultiplier = block.colorMultiplier( shipWorld, coords.posX, coords.posY, coords.posZ );
+			int colorMultiplier = block.colorMultiplier( shipWorld, coords.x, coords.y, coords.z );
 	        float colorR = (float)( colorMultiplier >> 16 & 255 )/255.0F;
 	        float colorG = (float)( colorMultiplier >> 8 & 255 )/255.0F;
 	        float colorB = (float)( colorMultiplier & 255 )/255.0F;
 			m_renderBlocks.setRenderBoundsFromBlock( block );
-			m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.posX, coords.posY, coords.posZ, colorR, colorG, colorB );
+			m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.x, coords.y, coords.z, colorR, colorG, colorB );
 		}
 		else
 		{
 			// render using the usual functions
 			// they don't cause any issues with AO
-			m_renderBlocks.renderBlockByRenderType( block, coords.posX, coords.posY, coords.posZ );
+			m_renderBlocks.renderBlockByRenderType( block, coords.x, coords.y, coords.z );
 		}
 	}
 	
-	private void renderBlockFailsafe( Block block, ChunkCoordinates coords )
+	private void renderBlockFailsafe( Block block, Coords coords )
 	{
 		// as a fallback, just try to render something
 		try
 		{
 			block.setBlockBounds( 0, 0, 0, 1, 1, 1 );
 			m_renderBlocks.setRenderBoundsFromBlock( block );
-			m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.posX, coords.posY, coords.posZ, 1, 1, 1 );
+			m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.x, coords.y, coords.z, 1, 1, 1 );
 		}
 		catch( Throwable t )
 		{
@@ -276,7 +276,7 @@ public class RenderShip extends Render
 		
 		// render all ship blocks
 		List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
-		for( ChunkCoordinates coords : ship.getShipWorld().coords() )
+		for( Coords coords : ship.getShipWorld().coords() )
 		{
 			boxes.clear();
 			ship.getCollider().getCollisionBoxesInBlockSpace( boxes, coords, ship.getCollider().getBlockBoxInBlockSpace( coords ) );
@@ -327,7 +327,7 @@ public class RenderShip extends Render
 		if( hit != null && hit.type == HitList.Type.Ship )
 		{
 			boxes.clear();
-			ChunkCoordinates coords = new ChunkCoordinates( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ );
+			Coords coords = new Coords( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ );
 			ship.getCollider().getCollisionBoxesInBlockSpace( boxes, coords, ship.getCollider().getBlockBoxInBlockSpace( coords ) );
 			for( AxisAlignedBB box : boxes )
 			{

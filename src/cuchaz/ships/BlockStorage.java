@@ -14,10 +14,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
+import cuchaz.modsShared.blocks.Coords;
 
 public class BlockStorage
 {
@@ -42,14 +42,14 @@ public class BlockStorage
 		meta = in.readInt();
 	}
 	
-	public void readFromWorld( World world, ChunkCoordinates coords )
+	public void readFromWorld( World world, Coords coords )
 	{
-		id = world.getBlockId( coords.posX, coords.posY, coords.posZ );
-		meta = world.getBlockMetadata( coords.posX, coords.posY, coords.posZ );
+		id = world.getBlockId( coords.x, coords.y, coords.z );
+		meta = world.getBlockMetadata( coords.x, coords.y, coords.z );
 	}
 	
-	public void writeToWorld( World world, ChunkCoordinates coords )
+	public void writeToWorld( World world, Coords coords )
 	{
-		BlockUtils.changeBlockWithoutNotifyingIt( world, coords.posX, coords.posY, coords.posZ, id, meta, UpdateRules.UpdateClients );
+		BlockUtils.changeBlockWithoutNotifyingIt( world, coords.x, coords.y, coords.z, id, meta, UpdateRules.UpdateClients );
 	}
 }

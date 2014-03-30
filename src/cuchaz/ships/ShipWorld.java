@@ -28,7 +28,6 @@ import net.minecraft.network.packet.Packet62LevelSound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -41,13 +40,14 @@ import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
 public class ShipWorld extends DetachedWorld
 {	
 	// NOTE: this member var is essentially cache. It works as long as the client/server are single-threaded
-	private ChunkCoordinates m_lookupCoords = new ChunkCoordinates( 0, 0, 0 );
+	private Coords m_lookupCoords = new Coords( 0, 0, 0 );
 	
 	private EntityShip m_ship;
 	private BlocksStorage m_storage;
@@ -91,7 +91,7 @@ public class ShipWorld extends DetachedWorld
 		}
 	}
 	
-	public ShipWorld( World world, ChunkCoordinates originCoords, BlockSet blocks )
+	public ShipWorld( World world, Coords originCoords, BlockSet blocks )
 	{
 		this( world );
 		
@@ -99,16 +99,16 @@ public class ShipWorld extends DetachedWorld
 		m_storage.readFromWorld( world, originCoords, blocks );
 		
 		// copy the tile entities
-		for( ChunkCoordinates worldCoords : blocks )
+		for( Coords worldCoords : blocks )
 		{
 			// does this block have a tile entity?
-			TileEntity tileEntity = world.getBlockTileEntity( worldCoords.posX, worldCoords.posY, worldCoords.posZ );
+			TileEntity tileEntity = world.getBlockTileEntity( worldCoords.x, worldCoords.y, worldCoords.z );
 			if( tileEntity == null )
 			{
 				continue;
 			}
 			
-			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
+			Coords relativeCoords = new Coords( worldCoords.x - originCoords.x, worldCoords.y - originCoords.y, worldCoords.z - originCoords.z );
 			
 			try
 			{
@@ -119,9 +119,9 @@ public class ShipWorld extends DetachedWorld
 				
 				// initialize the tile entity
 				tileEntityCopy.setWorldObj( this );
-				tileEntityCopy.xCoord = relativeCoords.posX;
-				tileEntityCopy.yCoord = relativeCoords.posY;
-				tileEntityCopy.zCoord = relativeCoords.posZ;
+				tileEntityCopy.xCoord = relativeCoords.x;
+				tileEntityCopy.yCoord = relativeCoords.y;
+				tileEntityCopy.zCoord = relativeCoords.z;
 				tileEntityCopy.validate();
 				
 				// save it to the ship world
@@ -133,18 +133,18 @@ public class ShipWorld extends DetachedWorld
 					ex,
 					"Tile entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but tile entity was not moved.",
 					tileEntity.getClass().getName(),
-					worldCoords.posX, worldCoords.posY, worldCoords.posZ
+					worldCoords.x, worldCoords.y, worldCoords.z
 				);
 			}
 		}
 		
 		// copy hanging entities
-		for( Map.Entry<ChunkCoordinates,EntityHanging> entry : getNearbyHangingEntities( world, blocks ).entrySet() )
+		for( Map.Entry<Coords,EntityHanging> entry : getNearbyHangingEntities( world, blocks ).entrySet() )
 		{
-			ChunkCoordinates worldCoords = entry.getKey();
+			Coords worldCoords = entry.getKey();
 			EntityHanging hangingEntity = entry.getValue();
 			
-			ChunkCoordinates relativeCoords = new ChunkCoordinates( worldCoords.posX - originCoords.posX, worldCoords.posY - originCoords.posY, worldCoords.posZ - originCoords.posZ );
+			Coords relativeCoords = new Coords( worldCoords.x - originCoords.x, worldCoords.y - originCoords.y, worldCoords.z - originCoords.z );
 			
 			try
 			{
@@ -154,12 +154,12 @@ public class ShipWorld extends DetachedWorld
 				EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, this );
 				
 				// save it to the ship world
-				hangingEntityCopy.xPosition = relativeCoords.posX;
-				hangingEntityCopy.yPosition = relativeCoords.posY;
-				hangingEntityCopy.zPosition = relativeCoords.posZ;
-				hangingEntityCopy.posX -= originCoords.posX;
-				hangingEntityCopy.posY -= originCoords.posY;
-				hangingEntityCopy.posZ -= originCoords.posZ;
+				hangingEntityCopy.xPosition = relativeCoords.x;
+				hangingEntityCopy.yPosition = relativeCoords.y;
+				hangingEntityCopy.zPosition = relativeCoords.z;
+				hangingEntityCopy.posX -= originCoords.x;
+				hangingEntityCopy.posY -= originCoords.y;
+				hangingEntityCopy.posZ -= originCoords.z;
 				m_hangingEntities.put( relativeCoords, hangingEntityCopy );
 				
 				// reset the hanging entity's bounding box after the move
@@ -171,29 +171,29 @@ public class ShipWorld extends DetachedWorld
 					ex,
 					"Hanging entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but hanging entity was not moved.",
 					hangingEntity.getClass().getName(),
-					worldCoords.posX, worldCoords.posY, worldCoords.posZ
+					worldCoords.x, worldCoords.y, worldCoords.z
 				);
 			}
 		}
 	}
 	
-	public void restoreToWorld( World world, Map<ChunkCoordinates,ChunkCoordinates> correspondence, int waterHeightInBlockSpace )
+	public void restoreToWorld( World world, Map<Coords,Coords> correspondence, int waterHeightInBlockSpace )
 	{
 		// restore the blocks
 		m_storage.writeToWorld( world, correspondence );
 		
 		// bail out the boat if needed (it might have water in the trapped air blocks)
-		for( ChunkCoordinates coordsShip : getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
+		for( Coords coordsShip : getGeometry().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
 		{
-			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
-			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, UpdateRules.UpdateClients );
+			Coords coordsWorld = correspondence.get( coordsShip );
+			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients );
 		}
 		
 		// restore the tile entities
-		for( Map.Entry<ChunkCoordinates,TileEntity> entry : m_tileEntities.entrySet() )
+		for( Map.Entry<Coords,TileEntity> entry : m_tileEntities.entrySet() )
 		{
-			ChunkCoordinates coordsShip = entry.getKey();
-			ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
+			Coords coordsShip = entry.getKey();
+			Coords coordsWorld = correspondence.get( coordsShip );
 			TileEntity tileEntity = entry.getValue();
 			
 			try
@@ -202,37 +202,37 @@ public class ShipWorld extends DetachedWorld
 				tileEntity.writeToNBT( nbt );
 				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
 				tileEntityCopy.setWorldObj( world );
-				tileEntityCopy.xCoord = coordsWorld.posX;
-				tileEntityCopy.yCoord = coordsWorld.posY;
-				tileEntityCopy.zCoord = coordsWorld.posZ;
+				tileEntityCopy.xCoord = coordsWorld.x;
+				tileEntityCopy.yCoord = coordsWorld.y;
+				tileEntityCopy.zCoord = coordsWorld.z;
 				tileEntityCopy.validate();
 				
-				world.setBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ, tileEntityCopy );
+				world.setBlockTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z, tileEntityCopy );
 			}
 			catch( Exception ex )
 			{
 				// remove the tile entity
-				world.removeBlockTileEntity( coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ );
+				world.removeBlockTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z );
 				
 				Ships.logger.warning(
 					ex,
 					"Tile entity %s at (%d,%d,%d) didn't like being moved to the world. The tile entity has been removed from its block to prevent further errors.",
 					tileEntity.getClass().getName(),
-					coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ
+					coordsWorld.x, coordsWorld.y, coordsWorld.z
 				);
 			}
 		}
 		
 		// compute the translation from block space to world space
-		ChunkCoordinates translation = correspondence.get( new ChunkCoordinates( 0, 0, 0 ) );
+		Coords translation = correspondence.get( new Coords( 0, 0, 0 ) );
 		
 		// restore hanging entities (on the server only)
 		if( !world.isRemote )
 		{
-			for( Map.Entry<ChunkCoordinates,EntityHanging> entry : m_hangingEntities.entrySet() )
+			for( Map.Entry<Coords,EntityHanging> entry : m_hangingEntities.entrySet() )
 			{
-				ChunkCoordinates coordsShip = entry.getKey();
-				ChunkCoordinates coordsWorld = correspondence.get( coordsShip );
+				Coords coordsShip = entry.getKey();
+				Coords coordsWorld = correspondence.get( coordsShip );
 				EntityHanging hangingEntity = entry.getValue();
 				
 				try
@@ -243,12 +243,12 @@ public class ShipWorld extends DetachedWorld
 					EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
 					
 					// save it to the ship world
-					hangingEntityCopy.xPosition = coordsWorld.posX;
-					hangingEntityCopy.yPosition = coordsWorld.posY;
-					hangingEntityCopy.zPosition = coordsWorld.posZ;
-					hangingEntityCopy.posX += translation.posX;
-					hangingEntityCopy.posY += translation.posY;
-					hangingEntityCopy.posZ += translation.posZ;
+					hangingEntityCopy.xPosition = coordsWorld.x;
+					hangingEntityCopy.yPosition = coordsWorld.y;
+					hangingEntityCopy.zPosition = coordsWorld.z;
+					hangingEntityCopy.posX += translation.x;
+					hangingEntityCopy.posY += translation.y;
+					hangingEntityCopy.posZ += translation.z;
 					
 					// reset the hanging entity's bounding box after the move
 					hangingEntityCopy.setDirection( hangingEntityCopy.hangingDirection );
@@ -262,7 +262,7 @@ public class ShipWorld extends DetachedWorld
 						ex,
 						"Hanging entity %s at (%d,%d,%d) didn't like being moved to the world. The block was moved, the but hanging entity was not moved.",
 						hangingEntity.getClass().getName(),
-						coordsWorld.posX, coordsWorld.posY, coordsWorld.posZ
+						coordsWorld.x, coordsWorld.y, coordsWorld.z
 					);
 				}
 			}
@@ -277,7 +277,7 @@ public class ShipWorld extends DetachedWorld
 		
 		// collect the hanging entities that are hanging on a block in the block set
 		BlockMap<EntityHanging> out = new BlockMap<EntityHanging>();
-		ChunkCoordinates entityBlock = new ChunkCoordinates( 0, 0, 0 );
+		Coords entityBlock = new Coords( 0, 0, 0 );
 		@SuppressWarnings( "unchecked" )
 		List<EntityHanging> hangingEntities = (List<EntityHanging>)world.getEntitiesWithinAABB( EntityHanging.class, box );
 		for( EntityHanging hangingEntity : hangingEntities )
@@ -286,7 +286,7 @@ public class ShipWorld extends DetachedWorld
 			entityBlock.set( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
 			if( blocks.contains( entityBlock ) )
 			{
-				out.put( new ChunkCoordinates( entityBlock ), hangingEntity );
+				out.put( new Coords( entityBlock ), hangingEntity );
 			}
 		}
 		return out;
@@ -322,7 +322,7 @@ public class ShipWorld extends DetachedWorld
 		return m_storage.getNumBlocks();
 	}
 	
-	public Set<ChunkCoordinates> coords( )
+	public Set<Coords> coords( )
 	{
 		return m_storage.coords();
 	}
@@ -353,7 +353,7 @@ public class ShipWorld extends DetachedWorld
 		return getBlockStorage( m_lookupCoords );
 	}
 	
-	public BlockStorage getBlockStorage( ChunkCoordinates coords )
+	public BlockStorage getBlockStorage( Coords coords )
 	{
 		return m_storage.getBlock( coords );
 	}
@@ -365,7 +365,7 @@ public class ShipWorld extends DetachedWorld
 		return getBlockId( m_lookupCoords );
 	}
 	
-	public int getBlockId( ChunkCoordinates coords )
+	public int getBlockId( Coords coords )
 	{
 		return getBlockStorage( coords ).id;
 	}
@@ -384,7 +384,7 @@ public class ShipWorld extends DetachedWorld
 		return getBlockTileEntity( m_lookupCoords );
 	}
 	
-	public TileEntity getBlockTileEntity( ChunkCoordinates coords )
+	public TileEntity getBlockTileEntity( Coords coords )
 	{
 		return m_tileEntities.get( coords );
 	}
@@ -396,7 +396,7 @@ public class ShipWorld extends DetachedWorld
 		return getBlockMetadata( m_lookupCoords );
 	}
 	
-	public int getBlockMetadata( ChunkCoordinates coords )
+	public int getBlockMetadata( Coords coords )
 	{
 		return getBlockStorage( coords ).meta;
 	}
@@ -410,7 +410,7 @@ public class ShipWorld extends DetachedWorld
 			// on the server, buffer the changes to be broadcast to the client
 			if( Environment.isServer() )
 			{
-				m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
+				m_changedBlocks.add( new Coords( x, y, z ) );
 			}
 			return true;
 		}
@@ -432,7 +432,7 @@ public class ShipWorld extends DetachedWorld
 			// on the server, buffer the changes to be broadcast to the client
 			if( Environment.isServer() )
 			{
-				m_changedBlocks.add( new ChunkCoordinates( x, y, z ) );
+				m_changedBlocks.add( new Coords( x, y, z ) );
 			}
 			return true;
 		}
@@ -452,7 +452,7 @@ public class ShipWorld extends DetachedWorld
 		return applyBlockChange( m_lookupCoords, newBlockId, newMeta );
 	}
 	
-	public boolean applyBlockChange( ChunkCoordinates coords, int newBlockId, int newMeta )
+	public boolean applyBlockChange( Coords coords, int newBlockId, int newMeta )
 	{
 		// lookup the affected block
 		BlockStorage storage = getBlockStorage( coords );
@@ -538,11 +538,11 @@ public class ShipWorld extends DetachedWorld
 	public void updateEntities( )
 	{
 		// update the tile entities
-		Iterator<Map.Entry<ChunkCoordinates,TileEntity>> iter = m_tileEntities.entrySet().iterator();
+		Iterator<Map.Entry<Coords,TileEntity>> iter = m_tileEntities.entrySet().iterator();
 		while( iter.hasNext() )
 		{
-			Map.Entry<ChunkCoordinates,TileEntity> entry = iter.next();
-			ChunkCoordinates coords = entry.getKey();
+			Map.Entry<Coords,TileEntity> entry = iter.next();
+			Coords coords = entry.getKey();
 			TileEntity entity = entry.getValue();
 			
 			try
@@ -558,7 +558,7 @@ public class ShipWorld extends DetachedWorld
 					ex,
 					"Tile entity %s at (%d,%d,%d) had a problem during an update! The tile entity has been removed from its block to prevent further errors.",
 					entity.getClass().getName(),
-					coords.posX, coords.posY, coords.posZ
+					coords.x, coords.y, coords.z
 				);
 			}
 		}

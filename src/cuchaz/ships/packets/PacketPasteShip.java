@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChunkCoordinates;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 
 public class PacketPasteShip extends Packet
@@ -69,13 +69,13 @@ public class PacketPasteShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// paste the blocks on the server
-		Map<ChunkCoordinates,ChunkCoordinates> correspondence = new TreeMap<ChunkCoordinates,ChunkCoordinates>();
-		for( ChunkCoordinates shipCoords : m_blocks.coords() )
+		Map<Coords,Coords> correspondence = new TreeMap<Coords,Coords>();
+		for( Coords shipCoords : m_blocks.coords() )
 		{
-			ChunkCoordinates worldCoords = new ChunkCoordinates(
-				shipCoords.posX + m_dx,
-				shipCoords.posY + m_dy,
-				shipCoords.posZ + m_dz
+			Coords worldCoords = new Coords(
+				shipCoords.x + m_dx,
+				shipCoords.y + m_dy,
+				shipCoords.z + m_dz
 			);
 			correspondence.put( shipCoords, worldCoords );
 		}

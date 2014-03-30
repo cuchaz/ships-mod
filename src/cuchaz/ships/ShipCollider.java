@@ -21,7 +21,6 @@ import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -31,6 +30,7 @@ import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.math.BoxCorner;
 import cuchaz.modsShared.math.RotatedBB;
 import cuchaz.ships.render.ShipDebugRenderInfo;
@@ -39,10 +39,10 @@ public class ShipCollider
 {
 	private static class PossibleCollision
 	{
-		public ChunkCoordinates coords;
+		public Coords coords;
 		public AxisAlignedBB box;
 		
-		public PossibleCollision( ChunkCoordinates coords, AxisAlignedBB box )
+		public PossibleCollision( Coords coords, AxisAlignedBB box )
 		{
 			this.coords = coords;
 			this.box = box;
@@ -320,35 +320,35 @@ public class ShipCollider
 		EntityAccessor.updateFallState( entity, dy, entity.onGround );
 	}
 	
-	public AxisAlignedBB getBlockBoxInBlockSpace( ChunkCoordinates coords )
+	public AxisAlignedBB getBlockBoxInBlockSpace( Coords coords )
 	{
 		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
-		block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ );
+		block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.x, coords.y, coords.z );
 		return AxisAlignedBB.getBoundingBox(
-			block.getBlockBoundsMinX() + coords.posX,
-			block.getBlockBoundsMinY() + coords.posY,
-			block.getBlockBoundsMinZ() + coords.posZ,
-			block.getBlockBoundsMaxX() + coords.posX,
-			block.getBlockBoundsMaxY() + coords.posY,
-			block.getBlockBoundsMaxZ() + coords.posZ
+			block.getBlockBoundsMinX() + coords.x,
+			block.getBlockBoundsMinY() + coords.y,
+			block.getBlockBoundsMinZ() + coords.z,
+			block.getBlockBoundsMaxX() + coords.x,
+			block.getBlockBoundsMaxY() + coords.y,
+			block.getBlockBoundsMaxZ() + coords.z
 		);
 	}
 	
-	public void getCollisionBoxesInBlockSpace( List<AxisAlignedBB> out, ChunkCoordinates coords, AxisAlignedBB box )
+	public void getCollisionBoxesInBlockSpace( List<AxisAlignedBB> out, Coords coords, AxisAlignedBB box )
 	{
 		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
-		block.addCollisionBoxesToList( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ, box, out, null );
+		block.addCollisionBoxesToList( m_ship.getShipWorld(), coords.x, coords.y, coords.z, box, out, null );
 	}
 	
-	public RotatedBB getBlockBoxInWorldSpace( ChunkCoordinates coords )
+	public RotatedBB getBlockBoxInWorldSpace( Coords coords )
 	{
 		return m_ship.blocksToWorld( getBlockBoxInBlockSpace( coords ) );
 	}
 	
-	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, ChunkCoordinates coords )
+	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, Coords coords )
 	{
 		// transform the block center into world space
-		Vec3 p = Vec3.createVectorHelper( coords.posX + 0.5, coords.posY + 0.5, coords.posZ + 0.5 );
+		Vec3 p = Vec3.createVectorHelper( coords.x + 0.5, coords.y + 0.5, coords.z + 0.5 );
 		m_ship.blocksToShip( p );
 		m_ship.shipToWorld( p );
 		
@@ -367,7 +367,7 @@ public class ShipCollider
 		);
 	}
 	
-	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, ChunkCoordinates coords, double shipX, double shipY, double shipZ, float shipYaw )
+	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, Coords coords, double shipX, double shipY, double shipZ, float shipYaw )
 	{
 		// temporarily place the ship at the new position
 		double oldX = m_ship.posX;
@@ -398,7 +398,7 @@ public class ShipCollider
 		double scaling = 1.0;
 		int numCollidingBoxes = 0;
 		BlockCollisionResult collisionResult = new BlockCollisionResult();
-		for( ChunkCoordinates coords : m_ship.getShipWorld().coords() )
+		for( Coords coords : m_ship.getShipWorld().coords() )
 		{
 			checkBlockCollision( collisionResult, coords, dx, dy, dz, dYaw );
 			if( collisionResult.scaling < 1.0 )
@@ -492,7 +492,7 @@ public class ShipCollider
 		
 		// get the list of nearby boxes that could be colliding
 		List<AxisAlignedBB> nearbyBoxes = new ArrayList<AxisAlignedBB>();
-		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( checkBox.expand( 0, 1, 0 ) ) )
+		for( Coords coords : m_ship.getShipWorld().getGeometry().rangeQuery( checkBox.expand( 0, 1, 0 ) ) )
 		{
 			getCollisionBoxesInBlockSpace( nearbyBoxes, coords, checkBox );
 		}
@@ -504,10 +504,10 @@ public class ShipCollider
 		ShipWorld shipWorld = m_ship.getShipWorld();
 		AxisAlignedBB entityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		getEntityBoxInBlockSpace( entityBox, entity );
-		for( ChunkCoordinates coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
+		for( Coords coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
 		{
 			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
-			if( block != null && block.isLadder( shipWorld, coords.posX, coords.posY, coords.posZ, entity ) )
+			if( block != null && block.isLadder( shipWorld, coords.x, coords.y, coords.z, entity ) )
 			{
 				return true;
 			}
@@ -519,7 +519,7 @@ public class ShipCollider
 	{
 		// UNDONE: can optimize this by converting box into ship coords and doing a range query
 		
-		for( ChunkCoordinates coords : m_ship.getShipWorld().coords() )
+		for( Coords coords : m_ship.getShipWorld().coords() )
 		{
 			AxisAlignedBB shipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 			getBlockWorldBoundingBox( shipBlockBox, coords );
@@ -548,11 +548,11 @@ public class ShipCollider
 		// sort the boxes by their line/box intersection distance to the "from" point
 		// throw out boxes that don't actually intersect the line segment
 		List<MovingObjectPosition> intersections = new ArrayList<MovingObjectPosition>();
-		for( ChunkCoordinates coords : nearbyBlocks )
+		for( Coords coords : nearbyBlocks )
 		{
 			// get the intersection point with the line segment
 			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
-			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getShipWorld(), coords.posX, coords.posY, coords.posZ, from, to );
+			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getShipWorld(), coords.x, coords.y, coords.z, from, to );
 			if( intersection != null )
 			{
 				intersections.add( intersection );
@@ -573,18 +573,18 @@ public class ShipCollider
 		m_ship.shipToBlocks( p );
 		
 		double minDistSq = Double.POSITIVE_INFINITY;
-		for( ChunkCoordinates coords : m_ship.getShipWorld().coords() )
+		for( Coords coords : m_ship.getShipWorld().coords() )
 		{
-			double dx = coords.posX - p.xCoord;
-			double dy = coords.posY - p.yCoord;
-			double dz = coords.posZ - p.zCoord;
+			double dx = coords.x - p.xCoord;
+			double dy = coords.y - p.yCoord;
+			double dz = coords.z - p.zCoord;
 			double dist = dx*dx + dy*dy + dz*dz;
 			minDistSq = Math.min( minDistSq, dist );
 		}
 		return Math.sqrt( minDistSq );
 	}
 	
-	private void checkBlockCollision( BlockCollisionResult result, ChunkCoordinates coords, double dx, double dy, double dz, float dYaw )
+	private void checkBlockCollision( BlockCollisionResult result, Coords coords, double dx, double dy, double dz, float dYaw )
 	{
 		// get the current world bounding box for the ship block
 		AxisAlignedBB shipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
@@ -608,14 +608,14 @@ public class ShipCollider
         // get the scaling that avoids the collision
         result.scaling = 1;
         List<AxisAlignedBB> worldBlockBoxes = new ArrayList<AxisAlignedBB>();
-        for( ChunkCoordinates worldCoords : nearbyWorldBlocks )
+        for( Coords worldCoords : nearbyWorldBlocks )
 		{
         	// get the block collision boxes
-        	Block worldBlock = Block.blocksList[m_ship.worldObj.getBlockId( worldCoords.posX, worldCoords.posY, worldCoords.posZ )];
+        	Block worldBlock = Block.blocksList[m_ship.worldObj.getBlockId( worldCoords.x, worldCoords.y, worldCoords.z )];
         	worldBlockBoxes.clear();
         	worldBlock.addCollisionBoxesToList(
         		m_ship.worldObj,
-        		worldCoords.posX, worldCoords.posY, worldCoords.posZ,
+        		worldCoords.x, worldCoords.y, worldCoords.z,
         		combinedBlockBox,
         		worldBlockBoxes,
         		null
@@ -631,7 +631,7 @@ public class ShipCollider
         	// did this block impede us? and should we break it?
         	if( blockScaling < 1 && worldBlock instanceof BlockFlower )
         	{
-        		m_ship.worldObj.destroyBlock( worldCoords.posX, worldCoords.posY, worldCoords.posZ, false );
+        		m_ship.worldObj.destroyBlock( worldCoords.x, worldCoords.y, worldCoords.z, false );
         	}
         	else
         	{
@@ -716,7 +716,7 @@ public class ShipCollider
 		// collect the boxes for the blocks in that box
 		List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
 		List<PossibleCollision> collisions = new ArrayList<PossibleCollision>();
-		for( ChunkCoordinates coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox.expand( 1, 1, 1 ) ) )
+		for( Coords coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox.expand( 1, 1, 1 ) ) )
 		// NOTE: expand trajectoryBox by 1 so we pick up boxes whose collision boxes are outside their bounding boxes
 		{
 			boxes.clear();

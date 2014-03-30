@@ -15,9 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.Ships;
 
@@ -56,7 +56,7 @@ public class Propulsion
 	}
 	
 	private BlocksStorage m_blocksStorage;
-	private ChunkCoordinates m_helmCoords;
+	private Coords m_helmCoords;
 	private BlockSide m_frontSide;
 	private List<PropulsionMethod> m_methods;
 	private Map<Class<? extends PropulsionMethod>,MethodCount> m_typeCounts;
@@ -116,13 +116,13 @@ public class Propulsion
 		BlockArray envelope = m_blocksStorage.getGeometry().getEnvelopes().getEnvelope( BlockSide.Top ).newEmptyCopy();
 		for( PropulsionMethod method : m_methods )
 		{
-			for( ChunkCoordinates coords : method.getCoords() )
+			for( Coords coords : method.getCoords() )
 			{
 				// keep the top-most block
-				ChunkCoordinates oldCoords = envelope.getBlock( coords.posX, coords.posZ );
-				if( oldCoords == null || coords.posY > oldCoords.posY )
+				Coords oldCoords = envelope.getBlock( coords.x, coords.z );
+				if( oldCoords == null || coords.y > oldCoords.y )
 				{
-					envelope.setBlock( coords.posX, coords.posZ, coords );
+					envelope.setBlock( coords.x, coords.z, coords );
 				}
 			}
 		}
@@ -162,12 +162,12 @@ public class Propulsion
 		return buf.toString(); 
 	}
 	
-	private ChunkCoordinates findHelm( BlocksStorage blocksStorage )
+	private Coords findHelm( BlocksStorage blocksStorage )
 	{
 		// UNDONE: optimize this by setting the helm coords instead of searching for the helm
 		
 		// always return the direction the helm is facing
-		for( ChunkCoordinates coords : blocksStorage.coords() )
+		for( Coords coords : blocksStorage.coords() )
 		{
 			if( blocksStorage.getBlock( coords ).id == Ships.m_blockHelm.blockID )
 			{

@@ -16,7 +16,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
@@ -26,6 +25,7 @@ import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipGeometry;
 import cuchaz.ships.ShipLauncher;
@@ -89,9 +89,9 @@ public class ItemShipEraser extends Item
 			new BlockExplorer( )
 			{
 				@Override
-				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			ShipGeometry.ShipBlockNeighbors
@@ -111,7 +111,7 @@ public class ItemShipEraser extends Item
 		else
 		{
 			// also add the ship block
-			ChunkCoordinates shipCoords = new ChunkCoordinates( blockX, blockY, blockZ );
+			Coords shipCoords = new Coords( blockX, blockY, blockZ );
 			blocks.add( shipCoords );
 			
 			// remove the ship

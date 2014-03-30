@@ -24,7 +24,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
@@ -36,6 +35,7 @@ import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipGeometry;
@@ -125,9 +125,9 @@ public class ItemShipClipboard extends Item
 			new BlockExplorer( )
 			{
 				@Override
-				public boolean shouldExploreBlock( ChunkCoordinates coords )
+				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )] );
+					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			ShipGeometry.ShipBlockNeighbors
@@ -141,7 +141,7 @@ public class ItemShipClipboard extends Item
 		}
 		
 		// also add the ship block
-		ChunkCoordinates shipCoords = new ChunkCoordinates( blockX, blockY, blockZ );
+		Coords shipCoords = new Coords( blockX, blockY, blockZ );
 		blocks.add( shipCoords );
 		
 		try

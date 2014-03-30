@@ -23,7 +23,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -39,6 +38,7 @@ import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.blocks.Envelopes;
 import cuchaz.modsShared.math.CircleRange;
 import cuchaz.modsShared.math.CompareReal;
@@ -380,11 +380,11 @@ public class EntityShip extends Entity
 		BlockSet waterCoords = new BlockSet();
 		BlockUtils.worldRangeQuery( waterCoords, worldObj, boundingBox );
 		
-		Iterator<ChunkCoordinates> iter = waterCoords.iterator();
+		Iterator<Coords> iter = waterCoords.iterator();
 		while( iter.hasNext() )
 		{
-			ChunkCoordinates coords = iter.next();
-			int blockId = worldObj.getBlockId( coords.posX, coords.posY, coords.posZ );
+			Coords coords = iter.next();
+			int blockId = worldObj.getBlockId( coords.x, coords.y, coords.z );
 			if( blockId != Block.waterStill.blockID && blockId != Ships.m_blockAirWall.blockID )
 			{
 				iter.remove();
@@ -399,9 +399,9 @@ public class EntityShip extends Entity
 		// compute the average y from the top envelope of these blocks
 		double sum = 0;
 		BlockSet topEnvelope = new Envelopes( waterCoords ).getEnvelope( BlockSide.Top ).toBlockSet();
-		for( ChunkCoordinates coords : topEnvelope )
+		for( Coords coords : topEnvelope )
 		{
-			sum += coords.posY + 1; // +1 for the top of the block
+			sum += coords.y + 1; // +1 for the top of the block
 		}
 		return sum/topEnvelope.size();
 	}

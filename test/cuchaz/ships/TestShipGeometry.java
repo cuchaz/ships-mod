@@ -12,395 +12,318 @@ package cuchaz.ships;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import net.minecraft.util.ChunkCoordinates;
+
+import java.util.List;
 
 import org.junit.Test;
 
 import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockUtils;
 
 public class TestShipGeometry
 {
-	// UNDONE: need to update these tests for the new definition of boundaries
+	private static final BlockSet EmptyBlocks = new BlockSet();
 	
 	@Test
 	public void singleBlockOuterBoudaries( )
 	{
-		ShipGeometry geometry = new ShipGeometry( getBlocks(
-			0, 0, 0
-		) );
-		
-		// check outer boundaries
-		assertEquals( 6, geometry.getOuterBoundaries().size() );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( -1, 0, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 0, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, -1, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 1, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 0, -1 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 0, 1 ) ) );
-		
-		// check holes
-		assertEquals( 0, geometry.getHoles().size() );
+		ShipGeometry geometry = getShip( 3,
+			" . ",
+			"...",
+			" . ",
+			
+			"...",
+			".x.",
+			"...",
+			
+			" . ",
+			"...",
+			" . "
+		);
 		
 		// check trapped air
-		assertEquals( 0, geometry.getTrappedAir( 0 ).size() );
-		assertEquals( 0, geometry.getTrappedAir( 1 ).size() );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 0 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 1 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 2 ) );
 	}
 	
 	@Test
 	public void singleBlockHole( )
 	{
-		ShipGeometry geometry = new ShipGeometry( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
+		ShipGeometry geometry = getShip( 5,
+			" ... ",
+			".....",
+			".....",
+			".....",
+			" ... ",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,              2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3,
+			".....",
+			".xxx.",
+			".xxx.",
+			".xxx.",
+			".....",
 			
-			1, 3, 1,   1, 3, 2,   1, 3, 3,
-			2, 3, 1,   2, 3, 2,   2, 3, 3,
-			3, 3, 1,   3, 3, 2,   3, 3, 3
-		) );
-		
-		// check outer boundaries
-		assertEquals( 1, geometry.getOuterBoundaries().size() );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			          0, 0, 1,  0, 0, 2,  0, 0, 3,
-			1, 0, 0,  1, 0, 1,  1, 0, 2,  1, 0, 3,  1, 0, 4,
-			2, 0, 0,  2, 0, 1,  2, 0, 2,  2, 0, 3,  2, 0, 4,
-			3, 0, 0,  3, 0, 1,  3, 0, 2,  3, 0, 3,  3, 0, 4,
-			          4, 0, 1,  4, 0, 2,  4, 0, 3,
+			".....",
+			".xxx.",
+			".x-x.",
+			".xxx.",
+			".....",
 			
-			0, 1, 0,  0, 1, 1,  0, 1, 2,  0, 1, 3,  0, 1, 4,
-			1, 1, 0,                                1, 1, 4,
-			2, 1, 0,                                2, 1, 4,
-			3, 1, 0,                                3, 1, 4,
-			4, 1, 0,  4, 1, 1,  4, 1, 2,  4, 1, 3,  4, 1, 4,
+			".....",
+			".xxx.",
+			".xxx.",
+			".xxx.",
+			".....",
 			
-			0, 2, 0,  0, 2, 1,  0, 2, 2,  0, 2, 3,  0, 2, 4,
-			1, 2, 0,                                1, 2, 4,
-			2, 2, 0,                                2, 2, 4,
-			3, 2, 0,                                3, 2, 4,
-			4, 2, 0,  4, 2, 1,  4, 2, 2,  4, 2, 3,  4, 2, 4,
-			
-			0, 3, 0,  0, 3, 1,  0, 3, 2,  0, 3, 3,  0, 3, 4,
-			1, 3, 0,                                1, 3, 4,
-			2, 3, 0,                                2, 3, 4,
-			3, 3, 0,                                3, 3, 4,
-			4, 3, 0,  4, 3, 1,  4, 3, 2,  4, 3, 3,  4, 3, 4,
-			
-			          0, 4, 1,  0, 4, 2,  0, 4, 3,
-			1, 4, 0,  1, 4, 1,  1, 4, 2,  1, 4, 3,  1, 4, 4,
-			2, 4, 0,  2, 4, 1,  2, 4, 2,  2, 4, 3,  2, 4, 4,
-			3, 4, 0,  3, 4, 1,  3, 4, 2,  3, 4, 3,  3, 4, 4,
-			          4, 4, 1,  4, 4, 2,  4, 4, 3
-		) ) );
-		
-		// check holes
-		assertEquals( 1, geometry.getHoles().size() );
-		assertTrue( geometry.getHoles().contains( getBlocks( 2, 2, 2 ) ) );
+			" ... ",
+			".....",
+			".....",
+			".....",
+			" ... "
+		);
 		
 		// check trapped air
-		assertEquals( 0, geometry.getTrappedAir( 1 ).size() );
-		assertEquals( 1, geometry.getTrappedAir( 2 ).size() );
-		assertEquals( getBlocks( 2, 2, 2 ), geometry.getTrappedAir( 2 ) );
-		assertEquals( 1, geometry.getTrappedAir( 3 ).size() );
-		assertEquals( getBlocks( 2, 2, 2 ), geometry.getTrappedAir( 3 ) );
-		assertEquals( 1, geometry.getTrappedAir( 4 ).size() );
-		assertEquals( getBlocks( 2, 2, 2 ), geometry.getTrappedAir( 4 ) );
+		BlockSet hole = new BlockSet( 1, 2, 2, 2,
+			"x"
+		);
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 0 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 1 ) );
+		assertEquals( hole, geometry.getTrappedAir( 2 ) );
+		assertEquals( hole, geometry.getTrappedAir( 3 ) );
+		assertEquals( hole, geometry.getTrappedAir( 4 ) );
 	}
 	
 	@Test
 	public void threeByThreeByThreeHole( )
 	{
-		ShipGeometry geometry = new ShipGeometry( getBlocks(
-			0, 0, 0,   0, 0, 1,   0, 0, 2,   0, 0, 3,   0, 0, 4,
-			1, 0, 0,   1, 0, 1,   1, 0, 2,   1, 0, 3,   1, 0, 4,
-			2, 0, 0,   2, 0, 1,   2, 0, 2,   2, 0, 3,   2, 0, 4,
-			3, 0, 0,   3, 0, 1,   3, 0, 2,   3, 0, 3,   3, 0, 4,
-			4, 0, 0,   4, 0, 1,   4, 0, 2,   4, 0, 3,   4, 0, 4,
+		ShipGeometry geometry = getShip( 7,
+			" ..... ",
+			".......",
+			".......",
+			".......",
+			".......",
+			".......",
+			" ..... ",
 			
-			0, 1, 0,   0, 1, 1,   0, 1, 2,   0, 1, 3,   0, 1, 4,
-			1, 1, 0,                                    1, 1, 4,
-			2, 1, 0,                                    2, 1, 4,
-			3, 1, 0,                                    3, 1, 4,
-			4, 1, 0,   4, 1, 1,   4, 1, 2,   4, 1, 3,   4, 1, 4,
+			".......",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".......",
 			
-			0, 2, 0,   0, 2, 1,   0, 2, 2,   0, 2, 3,   0, 2, 4,
-			1, 2, 0,                                    1, 2, 4,
-			2, 2, 0,                                    2, 2, 4,
-			3, 2, 0,                                    3, 2, 4,
-			4, 2, 0,   4, 2, 1,   4, 2, 2,   4, 2, 3,   4, 2, 4,
+			".......",
+			".xxxxx.",
+			".x---x.",
+			".x---x.",
+			".x---x.",
+			".xxxxx.",
+			".......",
 			
-			0, 3, 0,   0, 3, 1,   0, 3, 2,   0, 3, 3,   0, 3, 4,
-			1, 3, 0,                                    1, 3, 4,
-			2, 3, 0,                                    2, 3, 4,
-			3, 3, 0,                                    3, 3, 4,
-			4, 3, 0,   4, 3, 1,   4, 3, 2,   4, 3, 3,   4, 3, 4,
+			".......",
+			".xxxxx.",
+			".x---x.",
+			".x---x.",
+			".x---x.",
+			".xxxxx.",
+			".......",
 			
-			0, 4, 0,   0, 4, 1,   0, 4, 2,   0, 4, 3,   0, 4, 4,
-			1, 4, 0,   1, 4, 1,   1, 4, 2,   1, 4, 3,   1, 4, 4,
-			2, 4, 0,   2, 4, 1,   2, 4, 2,   2, 4, 3,   2, 4, 4,
-			3, 4, 0,   3, 4, 1,   3, 4, 2,   3, 4, 3,   3, 4, 4,
-			4, 4, 0,   4, 4, 1,   4, 4, 2,   4, 4, 3,   4, 4, 4
-		) );
-		
-		// don't bother with outer boundaries
-		
-		// check holes
-		assertEquals( 1, geometry.getHoles().size() );
-		assertTrue( geometry.getHoles().contains( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
+			".......",
+			".xxxxx.",
+			".x---x.",
+			".x---x.",
+			".x---x.",
+			".xxxxx.",
+			".......",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3,
-
-			1, 3, 1,   1, 3, 2,   1, 3, 3,
-			2, 3, 1,   2, 3, 2,   2, 3, 3,
-			3, 3, 1,   3, 3, 2,   3, 3, 3
-		) ) );
+			".......",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".......",
+			
+			" ..... ",
+			".......",
+			".......",
+			".......",
+			".......",
+			".......",
+			" ..... "
+		);
 		
 		// check trapped air
-		assertEquals( 0, geometry.getTrappedAir( 0 ).size() );
-		assertEquals( 9, geometry.getTrappedAir( 1 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3
-		), geometry.getTrappedAir( 1 ) );
-		assertEquals( 18, geometry.getTrappedAir( 2 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
-			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 0 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 1 ) );
+		assertEquals( new BlockSet( 3, 2, 2, 2,
+			"xxx",
+			"xxx",
+			"xxx"
 		), geometry.getTrappedAir( 2 ) );
-		assertEquals( 27, geometry.getTrappedAir( 3 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
+		assertEquals( new BlockSet( 3, 2, 2, 2,
+			"xxx",
+			"xxx",
+			"xxx",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3,
-
-			1, 3, 1,   1, 3, 2,   1, 3, 3,
-			2, 3, 1,   2, 3, 2,   2, 3, 3,
-			3, 3, 1,   3, 3, 2,   3, 3, 3
+			"xxx",
+			"xxx",
+			"xxx"
 		), geometry.getTrappedAir( 3 ) );
-		assertEquals( 27, geometry.getTrappedAir( 4 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
+		BlockSet hole = new BlockSet( 3, 2, 2, 2,
+			"xxx",
+			"xxx",
+			"xxx",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3,
-
-			1, 3, 1,   1, 3, 2,   1, 3, 3,
-			2, 3, 1,   2, 3, 2,   2, 3, 3,
-			3, 3, 1,   3, 3, 2,   3, 3, 3
-		), geometry.getTrappedAir( 4 ) );
-		assertEquals( 27, geometry.getTrappedAir( 5 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
+			"xxx",
+			"xxx",
+			"xxx",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3,
-
-			1, 3, 1,   1, 3, 2,   1, 3, 3,
-			2, 3, 1,   2, 3, 2,   2, 3, 3,
-			3, 3, 1,   3, 3, 2,   3, 3, 3
-		), geometry.getTrappedAir( 5 ) );
+			"xxx",
+			"xxx",
+			"xxx"
+		);
+		assertEquals( hole, geometry.getTrappedAir( 4 ) );
+		assertEquals( hole, geometry.getTrappedAir( 5 ) );
+		assertEquals( hole, geometry.getTrappedAir( 6 ) );
 	}
 	
 	@Test
 	public void singleBlockHull( )
 	{
-		ShipGeometry geometry = new ShipGeometry( getBlocks(
-			1, 1, 1,   1, 1, 2,   1, 1, 3,
-			2, 1, 1,   2, 1, 2,   2, 1, 3,
-			3, 1, 1,   3, 1, 2,   3, 1, 3,
+		ShipGeometry geometry = getShip( 5,
+			" ... ",
+			".....",
+			".....",
+			".....",
+			" ... ",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,              2, 2, 3,
-			3, 2, 1,   3, 2, 2,   3, 2, 3
-		) );
-		
-		// check outer boundaries
-		assertEquals( 1, geometry.getOuterBoundaries().size() );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			          0, 0, 1,  0, 0, 2,  0, 0, 3,
-			1, 0, 0,  1, 0, 1,  1, 0, 2,  1, 0, 3,  1, 0, 4,
-			2, 0, 0,  2, 0, 1,  2, 0, 2,  2, 0, 3,  2, 0, 4,
-			3, 0, 0,  3, 0, 1,  3, 0, 2,  3, 0, 3,  3, 0, 4,
-			          4, 0, 1,  4, 0, 2,  4, 0, 3,
+			".....",
+			".xxx.",
+			".xxx.",
+			".xxx.",
+			".....",
 			
-			0, 1, 0,  0, 1, 1,  0, 1, 2,  0, 1, 3,  0, 1, 4,
-			1, 1, 0,                                1, 1, 4,
-			2, 1, 0,                                2, 1, 4,
-			3, 1, 0,                                3, 1, 4,
-			4, 1, 0,  4, 1, 1,  4, 1, 2,  4, 1, 3,  4, 1, 4,
+			".....",
+			".xxx.",
+			".x.x.",
+			".xxx.",
+			".....",
 			
-			0, 2, 0,  0, 2, 1,  0, 2, 2,  0, 2, 3,  0, 2, 4,
-			1, 2, 0,                                1, 2, 4,
-			2, 2, 0,                                2, 2, 4,
-			3, 2, 0,                                3, 2, 4,
-			4, 2, 0,  4, 2, 1,  4, 2, 2,  4, 2, 3,  4, 2, 4,
-			
-			0, 3, 0,  0, 3, 1,  0, 3, 2,  0, 3, 3,  0, 3, 4,
-			1, 3, 0,                                1, 3, 4,
-			2, 3, 0,                                2, 3, 4,
-			3, 3, 0,                                3, 3, 4,
-			4, 3, 0,  4, 3, 1,  4, 3, 2,  4, 3, 3,  4, 3, 4,
-			
-			          0, 4, 1,  0, 4, 2,  0, 4, 3,
-			1, 4, 0,  1, 4, 1,  1, 4, 2,  1, 4, 3,  1, 4, 4,
-			2, 4, 0,  2, 4, 1,  2, 4, 2,  2, 4, 3,  2, 4, 4,
-			3, 4, 0,  3, 4, 1,  3, 4, 2,  3, 4, 3,  3, 4, 4,
-			          4, 4, 1,  4, 4, 2,  4, 4, 3
-		) ) );
-		
-		// check holes
-		assertEquals( 0, geometry.getHoles().size() );
+			" ... ",
+			".....",
+			".....",
+			".....",
+			" ... "
+		);
 		
 		// check trapped air
-		assertEquals( 0, geometry.getTrappedAir( 0 ).size() );
-		assertEquals( 1, geometry.getTrappedAir( 1 ).size() );
-		assertEquals( getBlocks( 1, 1, 1 ), geometry.getTrappedAir( 1 ) );
-		assertEquals( 0, geometry.getTrappedAir( 2 ).size() );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 0 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 1 ) );
+		BlockSet hole = new BlockSet( 1, 2, 2, 2,
+			"x"
+		);
+		assertEquals( hole, geometry.getTrappedAir( 2 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 3 ) );
 	}
 	
 	@Test
 	public void twoLevelHull( )
 	{
-		ShipGeometry geometry = new ShipGeometry( getBlocks(
-			0, 0, 0,   0, 0, 1,   0, 0, 2,   0, 0, 3,   0, 0, 4,
-			1, 0, 0,   1, 0, 1,   1, 0, 2,   1, 0, 3,   1, 0, 4,
-			2, 0, 0,   2, 0, 1,   2, 0, 2,   2, 0, 3,   2, 0, 4,
-			3, 0, 0,   3, 0, 1,   3, 0, 2,   3, 0, 3,   3, 0, 4,
+		ShipGeometry geometry = getShip( 6,
+			" ..... ",
+			".......",
+			".......",
+			".......",
+			".......",
+			" ..... ",
 			
-			0, 1, 0,   0, 1, 1,   0, 1, 2,   0, 1, 3,   0, 1, 4,
-			1, 1, 0,                         1, 1, 3,   1, 1, 4,
-			2, 1, 0,                         2, 1, 3,   2, 1, 4,
-			3, 1, 0,   3, 1, 1,   3, 1, 2,   3, 1, 3,   3, 1, 4,
+			".......",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".xxxxx.",
+			".......",
 			
-			0, 2, 0,   0, 2, 1,   0, 2, 2,   0, 2, 3,   0, 2, 4,
-			1, 2, 0,                                    1, 2, 4,
-			2, 2, 0,                                    2, 2, 4,
-			3, 2, 0,   3, 2, 1,   3, 2, 2,   3, 2, 3,   3, 2, 4
-		) );
-		
-		// check outer boundaries
-		assertEquals( 7, geometry.getOuterBoundaries().size() );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			0, -1, 0,   0, -1, 1,   0, -1, 2,   0, -1, 3,   0, -1, 4,
-			1, -1, 0,   1, -1, 1,   1, -1, 2,   1, -1, 3,   1, -1, 4,
-			2, -1, 0,   2, -1, 1,   2, -1, 2,   2, -1, 3,   2, -1, 4,
-			3, -1, 0,   3, -1, 1,   3, -1, 2,   3, -1, 3,   3, -1, 4
-		) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			0, 0, -1,   1, 0, -1,   2, 0, -1,   3, 0, -1,
-			0, 1, -1,   1, 1, -1,   2, 1, -1,   3, 1, -1,
-			0, 2, -1,   1, 2, -1,   2, 2, -1,   3, 2, -1
-		) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			0, 0, 5,   1, 0, 5,   2, 0, 5,   3, 0, 5,
-			0, 1, 5,   1, 1, 5,   2, 1, 5,   3, 1, 5,
-			0, 2, 5,   1, 2, 5,   2, 2, 5,   3, 2, 5
-		) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			-1, 0, 0,   -1, 0, 1,   -1, 0, 2,   -1, 0, 3,   -1, 0, 4,
-			-1, 1, 0,   -1, 1, 1,   -1, 1, 2,   -1, 1, 3,   -1, 1, 4,
-			-1, 2, 0,   -1, 2, 1,   -1, 2, 2,   -1, 2, 3,   -1, 2, 4
-		) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			4, 0, 0,   4, 0, 1,   4, 0, 2,   4, 0, 3,   4, 0, 4,
-			4, 1, 0,   4, 1, 1,   4, 1, 2,   4, 1, 3,   4, 1, 4,
-			4, 2, 0,   4, 2, 1,   4, 2, 2,   4, 2, 3,   4, 2, 4
-		) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			1, 1, 1,   1, 1, 2,
-			2, 1, 1,   2, 1, 2,
+			".......",
+			".xxxxx.",
+			".x..xx.",
+			".x..xx.",
+			".xxxxx.",
+			".......",
 			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3
-		) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks(
-			0, 3, 0,   0, 3, 1,   0, 3, 2,   0, 3, 3,   0, 3, 4,
-			1, 3, 0,                                    1, 3, 4,
-			2, 3, 0,                                    2, 3, 4,
-			3, 3, 0,   3, 3, 1,   3, 3, 2,   3, 3, 3,   3, 3, 4
-		) ) );
-		
-		// check holes
-		assertEquals( 0, geometry.getHoles().size() );
+			".......",
+			".xxxxx.",
+			".x...x.",
+			".x...x.",
+			".xxxxx.",
+			".......",
+			
+			" ..... ",
+			".......",
+			".......",
+			".......",
+			".......",
+			" ..... "
+		);
 		
 		// check trapped air
-		assertEquals( 0, geometry.getTrappedAir( 0 ).size() );
-		assertEquals( 4, geometry.getTrappedAir( 1 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,
-			2, 1, 1,   2, 1, 2
-		), geometry.getTrappedAir( 1 ) );
-		assertEquals( 10, geometry.getTrappedAir( 2 ).size() );
-		assertEquals( getBlocks(
-			1, 1, 1,   1, 1, 2,
-			2, 1, 1,   2, 1, 2,
-			
-			1, 2, 1,   1, 2, 2,   1, 2, 3,
-			2, 2, 1,   2, 2, 2,   2, 2, 3
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 0 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 1 ) );
+		assertEquals( new BlockSet( 2, 2, 2, 2,
+			"xx",
+			"xx"
 		), geometry.getTrappedAir( 2 ) );
-		assertEquals( 0, geometry.getTrappedAir( 3 ).size() );
+		assertEquals( new BlockSet( 2, 2, 2, 2,
+			"xx",
+			"xx",
+			
+			"xxx",
+			"xxx"
+		), geometry.getTrappedAir( 3 ) );
+		assertEquals( EmptyBlocks, geometry.getTrappedAir( 4 ) );
 	}
 	
+	/*
 	@Test
 	public void singleBlockHullEdgeNeighbors( )
 	{
 		ShipGeometry geometry = new ShipGeometry( getBlocks(
 			
-			           1, 0, 1,
+			           2, 1, 2,
 			
-			           0, 1, 1,
-			1, 1, 0,              1, 1, 2,
-			           2, 1, 1
+			           1, 2, 2,
+			2, 2, 1,              2, 2, 3,
+			           3, 2, 2
 		) );
 		
 		// check outer boundaries
-		assertEquals( 18, geometry.getOuterBoundaries().size() );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, -1, 1 ) ) );
-		
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 0, 1 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 0, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 0, 2 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 0, 1 ) ) );
-		
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( -1, 1, 1 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 1, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 1, 2 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 1, -1 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 1, 1 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 1, 3 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 1, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 1, 2 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 3, 1, 1 ) ) );
-		
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 0, 2, 1 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 2, 0 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 1, 2, 2 ) ) );
-		assertTrue( geometry.getOuterBoundaries().contains( getBlocks( 2, 2, 1 ) ) );
+		assertTrue( geometry.getOuterBoundary().equals( getBlocks(
+			0, 0, 0,  0, 0, 1,  0, 0, 2,  0, 0, 3,  0, 0, 4,
+			1, 0, 0,  1, 0, 1,  1, 0, 2,  1, 0, 3,  1, 0, 4,
+			2, 0, 0,  2, 0, 1,  2, 0, 2,  2, 0, 3,  2, 0, 4,
+			3, 0, 0,  3, 0, 1,  3, 0, 2,  3, 0, 3,  3, 0, 4,
+			4, 0, 0,  4, 0, 1,  4, 0, 2,  4, 0, 3,  4, 0, 4,
+			
+			0, 1, 0,  0, 1, 1,  0, 1, 2,  0, 1, 3,  0, 1, 4,
+			1, 1, 0,  1, 1, 1,  1, 1, 2,  1, 1, 3,  1, 1, 4,
+			2, 1, 0,  2, 1, 1,  2, 1, 2,  2, 1, 3,  2, 1, 4,
+			3, 1, 0,  3, 1, 1,  3, 1, 2,  3, 1, 3,  3, 1, 4,
+			4, 1, 0,  4, 1, 1,  4, 1, 2,  4, 1, 3,  4, 1, 4,
+			
+			0, 2, 0,  0, 2, 1,  0, 2, 2,  0, 2, 3,  0, 2, 4,
+			1, 2, 0,  1, 2, 1,  1, 2, 2,  1, 2, 3,  1, 2, 4,
+			2, 2, 0,  2, 2, 1,  2, 2, 2,  2, 2, 3,  2, 2, 4,
+			3, 2, 0,  3, 2, 1,  3, 2, 2,  3, 2, 3,  3, 2, 4,
+			4, 2, 0,  4, 2, 1,  4, 2, 2,  4, 2, 3,  4, 2, 4,
+			
+			0, 3, 0,  0, 3, 1,  0, 3, 2,  0, 3, 3,  0, 3, 4,
+			1, 3, 0,  1, 3, 1,  1, 3, 2,  1, 3, 3,  1, 3, 4,
+			2, 3, 0,  2, 3, 1,  2, 3, 2,  2, 3, 3,  2, 3, 4,
+			3, 3, 0,  3, 3, 1,  3, 3, 2,  3, 3, 3,  3, 3, 4,
+			4, 3, 0,  4, 3, 1,  4, 3, 2,  4, 3, 3,  4, 3, 4
+		) ) );
 		
 		// check holes
 		assertEquals( 0, geometry.getHoles().size() );
@@ -411,20 +334,28 @@ public class TestShipGeometry
 		assertEquals( getBlocks( 1, 1, 1 ), geometry.getTrappedAir( 1 ) );
 		assertEquals( 0, geometry.getTrappedAir( 2 ).size() );
 	}
+	*/
 	
-	private BlockSet getBlocks( int ... coords )
+	private ShipGeometry getShip( int numLayers, String ... lines )
 	{
-		if( coords.length % 3 != 0 )
+		BlockSet shipBlocks = new BlockSet( numLayers, 'x', lines );
+		BlockSet outerBoundary = new BlockSet( numLayers, '.', lines );
+		BlockSet holeBlocks = new BlockSet( numLayers, '-', lines );
+		
+		// build the ship and check it
+		ShipGeometry geometry = new ShipGeometry( shipBlocks );
+		
+		// check the outer boundary
+		assertEquals( outerBoundary, geometry.getOuterBoundary() );
+		
+		// check the holes
+		List<BlockSet> holes = BlockUtils.getConnectedComponents( holeBlocks, ShipGeometry.VoidBlockNeighbors );
+		assertEquals( holes.size(), geometry.getHoles().size() );
+		for( BlockSet hole : holes )
 		{
-			throw new IllegalArgumentException( "Need coordinates in multiples of three!" );
+			assertTrue( geometry.getHoles().contains( hole ) );
 		}
 		
-		BlockSet blocks = new BlockSet();
-		int numCoords = coords.length/3;
-		for( int i=0; i<numCoords; i++ )
-		{
-			blocks.add( new ChunkCoordinates( coords[i*3+0], coords[i*3+1], coords[i*3+2] ) );
-		}
-		return blocks;
+		return geometry;
 	}
 }

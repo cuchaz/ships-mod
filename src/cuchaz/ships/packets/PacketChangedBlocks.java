@@ -15,8 +15,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipWorld;
 
@@ -53,11 +53,11 @@ public class PacketChangedBlocks extends Packet
 		ShipWorld world = m_ship.getShipWorld();
 		out.writeInt( m_ship.entityId );
 		out.writeInt( m_changedBlocks.size() );
-		for( ChunkCoordinates coords : m_changedBlocks )
+		for( Coords coords : m_changedBlocks )
 		{
-			out.writeShort( coords.posX );
-			out.writeShort( coords.posY );
-			out.writeShort( coords.posZ );
+			out.writeShort( coords.x );
+			out.writeShort( coords.y );
+			out.writeShort( coords.z );
 			out.writeShort( world.getBlockId( coords ) );
 			out.writeByte( world.getBlockMetadata( coords ) );
 		}

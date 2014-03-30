@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
@@ -87,7 +87,7 @@ public class ShipPhysics
 		
 		// get all the watertight blocks
 		BlockSet watertightBlocks = new BlockSet();
-		for( ChunkCoordinates coords : m_blocks.coords() )
+		for( Coords coords : m_blocks.coords() )
 		{
 			if( MaterialProperties.isWatertight( getBlock( coords ) ) )
 			{
@@ -106,12 +106,12 @@ public class ShipPhysics
 		}
 
 		// compute displacement for the ship blocks
-		for( ChunkCoordinates coords : watertightBlocks )
+		for( Coords coords : watertightBlocks )
 		{
-			for( int y=maxY+1; y>=coords.posY; y-- )
+			for( int y=maxY+1; y>=coords.y; y-- )
 			{
 				DisplacementEntry entry = m_displacement.get( y );
-				if( y == coords.posY )
+				if( y == coords.y )
 				{
 					entry.numBlocksAtSurface++;
 				}
@@ -126,9 +126,9 @@ public class ShipPhysics
 		for( int y=minY; y<=maxY+1; y++ )
 		{
 			DisplacementEntry entry = m_displacement.get( y );
-			for( ChunkCoordinates coords : m_blocks.getGeometry().getTrappedAir( y ) )
+			for( Coords coords : m_blocks.getGeometry().getTrappedAir( y ) )
 			{
-				if( y == coords.posY )
+				if( y == coords.y )
 				{
 					entry.numBlocksAtSurface++;
 				}
@@ -141,7 +141,7 @@ public class ShipPhysics
 		
 		// compute the total mass
 		m_shipMass = 0.0;
-		for( ChunkCoordinates coords : m_blocks.coords() )
+		for( Coords coords : m_blocks.coords() )
 		{
 			m_shipMass += MaterialProperties.getMass( getBlock( coords ) );
 		}
@@ -222,9 +222,9 @@ public class ShipPhysics
 		// compute the viscosity
 		double airSurfaceArea = 0;
 		double waterSurfaceArea = 0;
-		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( leadingSide ).toBlockSet() )
+		for( Coords coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( leadingSide ).toBlockSet() )
 		{
-			double fractionSubmerged = leadingSide.getFractionSubmerged( coords.posY, waterHeight );
+			double fractionSubmerged = leadingSide.getFractionSubmerged( coords.y, waterHeight );
 			waterSurfaceArea += fractionSubmerged;
 			airSurfaceArea += 1 - fractionSubmerged;
 		}
@@ -364,10 +364,10 @@ public class ShipPhysics
 	public String dumpBlockProperties( )
 	{
 		StringBuilder buf = new StringBuilder();
-		for( ChunkCoordinates coords : m_blocks.coords() )
+		for( Coords coords : m_blocks.coords() )
 		{
 			double mass = MaterialProperties.getMass( getBlock( coords ) );
-			buf.append( String.format( "%3d,%3d,%3d %4d %4.1f\n", coords.posX, coords.posY, coords.posZ, m_blocks.getBlock( coords ).id, mass ) );
+			buf.append( String.format( "%3d,%3d,%3d %4d %4.1f\n", coords.x, coords.y, coords.z, m_blocks.getBlock( coords ).id, mass ) );
 		}
 		return buf.toString();
 	}
@@ -401,7 +401,7 @@ public class ShipPhysics
 	{
 		for( DisplacementEntry entry : m_displacement.descendingMap().values() )
 		{
-			if( entry.
+			// UNDONE: write this. Need double-value entries
 		}
 	}
 	
@@ -409,13 +409,13 @@ public class ShipPhysics
 	{
 		Vec3 com = Vec3.createVectorHelper( 0, 0, 0 );
 		double totalMass = 0.0;
-		for( ChunkCoordinates coords : m_blocks.coords() )
+		for( Coords coords : m_blocks.coords() )
 		{
 			double mass = MaterialProperties.getMass( getBlock( coords ) );
 			totalMass += mass;
-			com.xCoord += mass*( coords.posX + 0.5 );
-			com.yCoord += mass*( coords.posY + 0.5 );
-			com.zCoord += mass*( coords.posZ + 0.5 );
+			com.xCoord += mass*( coords.x + 0.5 );
+			com.yCoord += mass*( coords.y + 0.5 );
+			com.zCoord += mass*( coords.z + 0.5 );
 		}
 		com.xCoord /= totalMass;
 		com.yCoord /= totalMass;
@@ -433,16 +433,16 @@ public class ShipPhysics
 	{
 		int centerCoord = (int)center;
 		double viscosity = 0;
-		for( ChunkCoordinates coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( side ).toBlockSet() )
+		for( Coords coords : m_blocks.getGeometry().getEnvelopes().getEnvelope( side ).toBlockSet() )
 		{
-			double fractionSubmerged = side.getFractionSubmerged( coords.posY, waterHeight );
-			double dist = Math.abs( side.getU( coords.posX, coords.posY, coords.posZ ) - centerCoord );
+			double fractionSubmerged = side.getFractionSubmerged( coords.y, waterHeight );
+			double dist = Math.abs( side.getU( coords.x, coords.y, coords.z ) - centerCoord );
 			viscosity += ( fractionSubmerged*WaterViscosity + ( 1 - fractionSubmerged )*AirViscosity )*dist;
 		}
 		return viscosity*AngularViscosityScale;
 	}
 	
-	private Block getBlock( ChunkCoordinates coords )
+	private Block getBlock( Coords coords )
 	{
 		return Block.blocksList[m_blocks.getBlock( coords ).id];
 	}

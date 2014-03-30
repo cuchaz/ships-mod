@@ -24,9 +24,9 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import cuchaz.modsShared.blocks.BlockMap;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.ShipWorld;
 
@@ -50,7 +50,7 @@ public enum ShipWorldPersistence
 				// create the tile entity
 				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
-				ChunkCoordinates coords = new ChunkCoordinates( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
+				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 				tileEntities.put( coords, tileEntity );
 			}
 			
@@ -92,7 +92,7 @@ public enum ShipWorldPersistence
 				// create the tile entity
 				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
-				ChunkCoordinates coords = new ChunkCoordinates( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
+				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 				tileEntities.put( coords, tileEntity );
 			}
 			
@@ -104,7 +104,7 @@ public enum ShipWorldPersistence
 				// create the hanging entity
 				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
 				EntityHanging hangingEntity = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
-				ChunkCoordinates coords = new ChunkCoordinates( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
+				Coords coords = new Coords( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
 				hangingEntities.put( coords, hangingEntity );
 			}
 			

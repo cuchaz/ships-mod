@@ -14,11 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
-import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 
 public class SailDiscoverer implements PropulsionDiscoverer
@@ -28,7 +28,7 @@ public class SailDiscoverer implements PropulsionDiscoverer
 	{
 		// collect all the cloth blocks into connected components
 		BlockSet clothCoords = new BlockSet();
-		for( ChunkCoordinates coords : shipBlocks.coords() )
+		for( Coords coords : shipBlocks.coords() )
 		{
 			if( shipBlocks.getBlock( coords ).id == Block.cloth.blockID )
 			{

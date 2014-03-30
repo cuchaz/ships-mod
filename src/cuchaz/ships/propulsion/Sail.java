@@ -10,10 +10,10 @@
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
-import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 
 public class Sail extends PropulsionMethod
@@ -48,20 +48,20 @@ public class Sail extends PropulsionMethod
 	private int getNumExposedBlocks( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection )
 	{
 		int numExposedBlocks = 0;
-		ChunkCoordinates neighborCoords = new ChunkCoordinates();
+		Coords neighborCoords = new Coords();
 		BlockSide backDirection = frontDirection.getOppositeSide();
-		for( ChunkCoordinates coords : sailBlocks )
+		for( Coords coords : sailBlocks )
 		{
 			neighborCoords.set(
-				coords.posX + frontDirection.getDx(),
-				coords.posY + frontDirection.getDy(),
-				coords.posZ + frontDirection.getDz()
+				coords.x + frontDirection.getDx(),
+				coords.y + frontDirection.getDy(),
+				coords.z + frontDirection.getDz()
 			);
 			int frontId = shipBlocks.getBlock( neighborCoords ).id;
 			neighborCoords.set(
-				coords.posX + backDirection.getDx(),
-				coords.posY + backDirection.getDy(),
-				coords.posZ + backDirection.getDz()
+				coords.x + backDirection.getDx(),
+				coords.y + backDirection.getDy(),
+				coords.z + backDirection.getDz()
 			);
 			int backId = shipBlocks.getBlock( neighborCoords ).id;
 			

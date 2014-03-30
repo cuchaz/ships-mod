@@ -14,11 +14,11 @@ import java.util.Iterator;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
+import cuchaz.modsShared.blocks.Coords;
 
 public class WaterDisplacer
 {
@@ -36,14 +36,14 @@ public class WaterDisplacer
 		// which blocks should be displaced?
 		BlockSet shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
 		
-		for( ChunkCoordinates coords : shouldBeDisplaced )
+		for( Coords coords : shouldBeDisplaced )
 		{
 			// is the block displaced?
-			int blockId = m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ );
+			int blockId = m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z );
 			if( blockId == Block.waterStill.blockID )
 			{
 				// it's not. We should displace it
-				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Ships.m_blockAirWall.blockID, 0, UpdateRules.UpdateClients );
+				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, Ships.m_blockAirWall.blockID, 0, UpdateRules.UpdateClients );
 				m_displacedBlocks.add( coords );
 			}
 			else if( blockId == Ships.m_blockAirWall.blockID )
@@ -54,16 +54,16 @@ public class WaterDisplacer
 		}
 		
 		// are there any blocks that are displaced, but shouldn't be?
-		Iterator<ChunkCoordinates> iter = m_displacedBlocks.iterator();
+		Iterator<Coords> iter = m_displacedBlocks.iterator();
 		while( iter.hasNext() )
 		{
-			ChunkCoordinates coords = iter.next();
+			Coords coords = iter.next();
 			if( !shouldBeDisplaced.contains( coords ) )
 			{
 				// restore it
-				if( m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
+				if( m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockAirWall.blockID )
 				{
-					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
 				}
 				iter.remove();
 			}
@@ -75,11 +75,11 @@ public class WaterDisplacer
 		// only actually remove blocks on the server
 		if( Environment.isServer() )
 		{
-			for( ChunkCoordinates coords : m_displacedBlocks )
+			for( Coords coords : m_displacedBlocks )
 			{
-				if( m_ship.worldObj.getBlockId( coords.posX, coords.posY, coords.posZ ) == Ships.m_blockAirWall.blockID )
+				if( m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockAirWall.blockID )
 				{
-					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.posX, coords.posY, coords.posZ, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
 				}
 			}
 		}
@@ -100,7 +100,7 @@ public class WaterDisplacer
 		
 		// find the world blocks that intersect the trapped air blocks
 		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		for( ChunkCoordinates coords : trappedAirBlocks )
+		for( Coords coords : trappedAirBlocks )
 		{
 			m_ship.getCollider().getBlockWorldBoundingBox( box, coords );
 			

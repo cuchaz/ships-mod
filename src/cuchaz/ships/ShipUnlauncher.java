@@ -16,7 +16,6 @@ import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
@@ -25,6 +24,7 @@ import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.math.CircleRange;
 
 public class ShipUnlauncher
@@ -52,15 +52,15 @@ public class ShipUnlauncher
 				placedBlocks.addAll( unlauncher.m_correspondence.values() );
 				
 				// check for the neighbors of each ship block
-				ChunkCoordinates neighborCoords = new ChunkCoordinates( 0, 0, 0 );
-				for( ChunkCoordinates coords : placedBlocks )
+				Coords neighborCoords = new Coords( 0, 0, 0 );
+				for( Coords coords : placedBlocks )
 				{
 					// for each neighbor
 					for( BlockSide side : BlockSide.values() )
 					{
-						neighborCoords.posX = coords.posX + side.getDx();
-						neighborCoords.posY = coords.posY + side.getDy();
-						neighborCoords.posZ = coords.posZ + side.getDz();
+						neighborCoords.x = coords.x + side.getDx();
+						neighborCoords.y = coords.y + side.getDy();
+						neighborCoords.z = coords.z + side.getDz();
 						
 						// skip ship blocks
 						if( placedBlocks.contains( neighborCoords ) )
@@ -93,15 +93,15 @@ public class ShipUnlauncher
 		
 		public abstract boolean computeValue( ShipUnlauncher unlauncher );
 
-		protected Block getBlock( IBlockAccess world, ChunkCoordinates coords )
+		protected Block getBlock( IBlockAccess world, Coords coords )
 		{
-			return Block.blocksList[world.getBlockId( coords.posX, coords.posY, coords.posZ )];
+			return Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )];
 		}
 	}
 	
 	private EntityShip m_ship;
 	private List<Boolean> m_unlaunchFlags;
-	private TreeMap<ChunkCoordinates,ChunkCoordinates> m_correspondence;
+	private TreeMap<Coords,Coords> m_correspondence;
 	private int m_waterHeightInBlockSpace;
 	private double m_deltaRotationRadians;
 	private Vec3 m_deltaTranslation;
@@ -154,18 +154,18 @@ public class ShipUnlauncher
 		int sin = new int[] { 0, 1, 0, -1 }[rotation];
 		
 		// compute the actual correspondence
-		m_correspondence = new BlockMap<ChunkCoordinates>();
-		for( ChunkCoordinates coords : allCoords )
+		m_correspondence = new BlockMap<Coords>();
+		for( Coords coords : allCoords )
 		{
 			// rotate the coords
-			int x = coords.posX*cos + coords.posZ*sin;
-			int z = -coords.posX*sin + coords.posZ*cos;
-			ChunkCoordinates worldCoords = new ChunkCoordinates( x, coords.posY, z );
+			int x = coords.x*cos + coords.z*sin;
+			int z = -coords.x*sin + coords.z*cos;
+			Coords worldCoords = new Coords( x, coords.y, z );
 			
 			// translate to the world
-			worldCoords.posX += tx;
-			worldCoords.posY += ty;
-			worldCoords.posZ += tz;
+			worldCoords.x += tx;
+			worldCoords.y += ty;
+			worldCoords.z += tz;
 			
 			m_correspondence.put( coords, worldCoords );
 		}
