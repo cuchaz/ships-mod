@@ -28,7 +28,7 @@ import cuchaz.modsShared.blocks.Coords;
 public class RenderShip2D
 {
 	private static final int WaterColor = ColorUtils.getColor( 43, 99, 225 );
-	private static final int SinkColor = ColorUtils.getColor( 200, 0, 0 );
+	private static final int SinkColor = ColorUtils.getColor( 203, 113, 113 );
 	private static final ResourceLocation ShipTexture = TextureMap.locationBlocksTexture;
 	
 	public static void drawWater( BlockArray envelope, Double waterHeight, Integer sinkHeight, int x, int y, double z, int maxWidth, int maxHeight )

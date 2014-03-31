@@ -100,7 +100,7 @@ public class TestShipDisplacement
 		// check surface blocks
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 0 ) );
 		assertEquals( 9, displacement.getNumSurfaceBlocks( 1 ) );
-		assertEquals( 8, displacement.getNumSurfaceBlocks( 2 ) );
+		assertEquals( 9, displacement.getNumSurfaceBlocks( 2 ) );
 		assertEquals( 9, displacement.getNumSurfaceBlocks( 3 ) );
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 4 ) );
 		
@@ -108,8 +108,8 @@ public class TestShipDisplacement
 		assertEquals( 0, displacement.getNumUnderwaterBlocks( 0 ) );
 		assertEquals( 0, displacement.getNumUnderwaterBlocks( 1 ) );
 		assertEquals( 9, displacement.getNumUnderwaterBlocks( 2 ) );
-		assertEquals( 17, displacement.getNumUnderwaterBlocks( 3 ) );
-		assertEquals( 26, displacement.getNumUnderwaterBlocks( 4 ) );
+		assertEquals( 18, displacement.getNumUnderwaterBlocks( 3 ) );
+		assertEquals( 27, displacement.getNumUnderwaterBlocks( 4 ) );
 		
 		// check fillable blocks
 		assertEquals( 0, displacement.getNumFillableBlocks( 0 ) );
@@ -193,9 +193,9 @@ public class TestShipDisplacement
 		// check surface blocks
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 0 ) );
 		assertEquals( 25, displacement.getNumSurfaceBlocks( 1 ) );
-		assertEquals( 16, displacement.getNumSurfaceBlocks( 2 ) );
-		assertEquals( 16, displacement.getNumSurfaceBlocks( 3 ) );
-		assertEquals( 16, displacement.getNumSurfaceBlocks( 4 ) );
+		assertEquals( 25, displacement.getNumSurfaceBlocks( 2 ) );
+		assertEquals( 25, displacement.getNumSurfaceBlocks( 3 ) );
+		assertEquals( 25, displacement.getNumSurfaceBlocks( 4 ) );
 		assertEquals( 25, displacement.getNumSurfaceBlocks( 5 ) );
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 6 ) );
 		
@@ -203,10 +203,10 @@ public class TestShipDisplacement
 		assertEquals( 0, displacement.getNumUnderwaterBlocks( 0 ) );
 		assertEquals( 0, displacement.getNumUnderwaterBlocks( 1 ) );
 		assertEquals( 25, displacement.getNumUnderwaterBlocks( 2 ) );
-		assertEquals( 41, displacement.getNumUnderwaterBlocks( 3 ) );
-		assertEquals( 57, displacement.getNumUnderwaterBlocks( 4 ) );
-		assertEquals( 73, displacement.getNumUnderwaterBlocks( 5 ) );
-		assertEquals( 98, displacement.getNumUnderwaterBlocks( 6 ) );
+		assertEquals( 50, displacement.getNumUnderwaterBlocks( 3 ) );
+		assertEquals( 75, displacement.getNumUnderwaterBlocks( 4 ) );
+		assertEquals( 100, displacement.getNumUnderwaterBlocks( 5 ) );
+		assertEquals( 125, displacement.getNumUnderwaterBlocks( 6 ) );
 		
 		// check fillable blocks
 		assertEquals( 0, displacement.getNumFillableBlocks( 0 ) );
@@ -284,7 +284,7 @@ public class TestShipDisplacement
 		// check surface blocks
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 0 ) );
 		assertEquals( 9, displacement.getNumSurfaceBlocks( 1 ) );
-		assertEquals( 8, displacement.getNumSurfaceBlocks( 2 ) );
+		assertEquals( 9, displacement.getNumSurfaceBlocks( 2 ) );
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 3 ) );
 		
 		// check underwater blocks
@@ -349,6 +349,27 @@ public class TestShipDisplacement
 			" ..... "
 		);
 		
+		// check surface blocks
+		assertEquals( 0, displacement.getNumSurfaceBlocks( 0 ) );
+		assertEquals( 20, displacement.getNumSurfaceBlocks( 1 ) );
+		assertEquals( 20, displacement.getNumSurfaceBlocks( 2 ) );
+		assertEquals( 20, displacement.getNumSurfaceBlocks( 3 ) );
+		assertEquals( 0, displacement.getNumSurfaceBlocks( 4 ) );
+		
+		// check underwater blocks
+		assertEquals( 0, displacement.getNumUnderwaterBlocks( 0 ) );
+		assertEquals( 0, displacement.getNumUnderwaterBlocks( 1 ) );
+		assertEquals( 20, displacement.getNumUnderwaterBlocks( 2 ) );
+		assertEquals( 40, displacement.getNumUnderwaterBlocks( 3 ) );
+		assertEquals( 50, displacement.getNumUnderwaterBlocks( 4 ) );
+		
+		// check fillable blocks
+		assertEquals( 0, displacement.getNumFillableBlocks( 0 ) );
+		assertEquals( 0, displacement.getNumFillableBlocks( 1 ) );
+		assertEquals( 0, displacement.getNumFillableBlocks( 2 ) );
+		assertEquals( 10, displacement.getNumFillableBlocks( 3 ) );
+		assertEquals( 0, displacement.getNumFillableBlocks( 4 ) );
+		
 		// check trapped air
 		assertEquals( EmptyBlocks, displacement.getTrappedAir( 0 ) );
 		assertEquals( EmptyBlocks, displacement.getTrappedAir( 1 ) );
@@ -398,7 +419,7 @@ public class TestShipDisplacement
 		// check surface blocks
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 0 ) );
 		assertEquals( 1, displacement.getNumSurfaceBlocks( 1 ) );
-		assertEquals( 4, displacement.getNumSurfaceBlocks( 2 ) );
+		assertEquals( 5, displacement.getNumSurfaceBlocks( 2 ) );
 		assertEquals( 0, displacement.getNumSurfaceBlocks( 3 ) );
 		
 		// check underwater blocks
@@ -433,7 +454,12 @@ public class TestShipDisplacement
 		ShipDisplacement displacement = new ShipDisplacement( shipBlocks );
 		
 		// check the outer boundary
-		assertEquals( outerBoundary, displacement.getOuterBoundary() );
+		BlockSet outerBoundaryObserved = new BlockSet();
+		for( BlockSet blocks : displacement.getOuterBoundaries() )
+		{
+			outerBoundaryObserved.addAll( blocks );
+		}
+		assertEquals( outerBoundary, outerBoundaryObserved );
 		
 		// check the holes
 		List<BlockSet> holes = BlockUtils.getConnectedComponents( holeBlocks, ShipDisplacement.VoidBlockNeighbors );

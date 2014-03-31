@@ -69,9 +69,6 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
         super.writeEntityToNBT( nbt );
         nbt.setString( "name", m_name );
 		nbt.setInteger( "supporterId", m_supporterId );
-		
-		// TEMP
-		Ships.logger.info( "Wrote name: " + m_name + ". It's " + nbt.getString( "name" ) );
 	}
 	
 	@Override
@@ -81,9 +78,6 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 		m_name = nbt.getString( "name" );
 		m_supporterId = nbt.getInteger( "supporterId" );
 		initPlaque();
-		
-		// TEMP
-		Ships.logger.info( "Read name: " + m_name );
 	}
 	
 	@Override

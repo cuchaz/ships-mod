@@ -109,7 +109,7 @@ public class GuiShipLaunch extends GuiShip
 			// ship is unsinkable
 			drawText( GuiString.ShipIsUnsinkable.getLocalizedText(), 3 );
 		}
-		else if( m_shipLauncher.getSinkWaterHeight() - m_shipLauncher.getEquilibriumWaterHeight() < 0.5 )
+		else if( m_shipLauncher.getEquilibriumWaterHeight() != null && m_shipLauncher.getSinkWaterHeight() - m_shipLauncher.getEquilibriumWaterHeight() < 0.5 )
 		{
 			// ship floats close to the sink line
 			drawText( GuiString.ShipFloatsCloseToSinkLine.getLocalizedText(), 3, NoColor );

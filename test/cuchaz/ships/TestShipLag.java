@@ -43,8 +43,8 @@ public class TestShipLag
 				System.out.println( String.format( "Time: %.2fs", diff/1000.0 ) );
 				System.out.println( Profiler.getReport() );
 				
-				// this shouldn't take more than 0.2 seconds
-				assertTrue( diff <= 200 );
+				// this shouldn't take more than 0.1 seconds
+				assertTrue( diff <= 100 );
 			}
 		}.run();
 	}
@@ -73,8 +73,8 @@ public class TestShipLag
 				System.out.println( String.format( "Time: %.2fs", diff/1000.0 ) );
 				System.out.println( Profiler.getReport() );
 				
-				// this shouldn't take more than 0.2 seconds
-				assertTrue( diff <= 200 );
+				// this shouldn't take more than 0.1 seconds
+				assertTrue( diff <= 100 );
 			}
 		}.run();
 	}
