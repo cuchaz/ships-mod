@@ -27,24 +27,24 @@ public class ShipDisplacement
 	private static class ClassifiedSegment
 	{
 		BlockSet segment;
+		BlockSet surfaceBlocks;
+		BlockSet underwaterBlocks;
 		boolean isTrapped;
-		int numSurfaceBlocks;
-		int numUnderwaterBlocks;
 	}
 	
 	private static class DisplacementEntry
 	{
-		public int numSurfaceBlocks;
-		public int numUnderwaterBlocks;
 		public int numFillableBlocks;
 		public BlockSet trappedAir;
+		public BlockSet surfaceBlocks;
+		public BlockSet underwaterBlocks;
 		
 		public DisplacementEntry( )
 		{
-			numSurfaceBlocks = 0;
-			numUnderwaterBlocks = 0;
 			numFillableBlocks = 0;
 			trappedAir = new BlockSet();
+			surfaceBlocks = new BlockSet();
+			underwaterBlocks = new BlockSet();
 		}
 	}
 	
@@ -107,14 +107,14 @@ public class ShipDisplacement
 		return getTrappedAir( MathHelper.floor_double( waterHeightInBlockSpace ) );
 	}
 	
-	public int getNumSurfaceBlocks( int y )
+	public BlockSet getSurfaceBlocks( int y )
 	{
-		return get( y ).numSurfaceBlocks;
+		return get( y ).surfaceBlocks;
 	}
 	
-	public int getNumUnderwaterBlocks( int y )
+	public BlockSet getUnderwaterBlocks( int y )
 	{
-		return get( y ).numUnderwaterBlocks;
+		return get( y ).underwaterBlocks;
 	}
 	
 	public int getNumFillableBlocks( int y )
@@ -122,7 +122,7 @@ public class ShipDisplacement
 		return get( y ).numFillableBlocks;
 	}
 	
-	public Integer getSinkY( )
+	public Integer getLastFillY( )
 	{
 		for( Map.Entry<Integer,DisplacementEntry> entry : m_displacement.descendingMap().entrySet() )
 		{
@@ -197,16 +197,17 @@ public class ShipDisplacement
 			DisplacementEntry entry = new DisplacementEntry();
 			m_displacement.put( y, entry );
 			
-			// compute block counts
+			// separate surface blocks from underwater blocks
 			BlockSet yBlocks = shipIndex.get( y );
 			if( yBlocks != null )
 			{
-				entry.numSurfaceBlocks = yBlocks.size();
+				entry.surfaceBlocks.addAll( yBlocks );
 			}
 			if( y > minY )
 			{
 				DisplacementEntry lowerEntry = m_displacement.get( y - 1 );
-				entry.numUnderwaterBlocks = lowerEntry.numSurfaceBlocks + lowerEntry.numUnderwaterBlocks;
+				entry.underwaterBlocks.addAll( lowerEntry.surfaceBlocks );
+				entry.underwaterBlocks.addAll( lowerEntry.underwaterBlocks );
 			}
 		}
 		
@@ -233,8 +234,8 @@ public class ShipDisplacement
 					ClassifiedSegment classifiedSegment = new ClassifiedSegment();
 					classifiedSegment.segment = ySegment;
 					classifiedSegment.isTrapped = !BlockUtils.isConnectedToShell( ySegment.iterator().next(), m_blocks, VoidBlockNeighbors, y );
-					classifiedSegment.numSurfaceBlocks = ySegment.size();
-					classifiedSegment.numUnderwaterBlocks = 0;
+					classifiedSegment.surfaceBlocks = new BlockSet( ySegment );
+					classifiedSegment.underwaterBlocks = new BlockSet();
 					boundarySegments.add( classifiedSegment );
 				}
 				else
@@ -252,14 +253,16 @@ public class ShipDisplacement
 					// merge all the existing segments
 					ClassifiedSegment baseSegment = connectedSegments.get( 0 );
 					baseSegment.segment.addAll( ySegment );
-					baseSegment.numUnderwaterBlocks += baseSegment.numSurfaceBlocks;
-					baseSegment.numSurfaceBlocks = ySegment.size();
+					baseSegment.underwaterBlocks.addAll( baseSegment.surfaceBlocks );
+					baseSegment.surfaceBlocks.clear();
+					baseSegment.surfaceBlocks.addAll( ySegment );
 					for( int i=1; i<connectedSegments.size(); i++ )
 					{
 						ClassifiedSegment nextSegment = connectedSegments.get( i );
 						baseSegment.isTrapped = baseSegment.isTrapped && nextSegment.isTrapped;
 						baseSegment.segment.addAll( nextSegment.segment );
-						baseSegment.numUnderwaterBlocks += nextSegment.numSurfaceBlocks + nextSegment.numUnderwaterBlocks;
+						baseSegment.underwaterBlocks.addAll( nextSegment.surfaceBlocks );
+						baseSegment.underwaterBlocks.addAll( nextSegment.underwaterBlocks );
 						boundarySegments.remove( nextSegment );
 					}
 					
@@ -284,8 +287,8 @@ public class ShipDisplacement
 				if( segment.isTrapped )
 				{
 					entry.trappedAir.addAll( segment.segment );
-					entry.numSurfaceBlocks += segment.numSurfaceBlocks;
-					entry.numUnderwaterBlocks += segment.numUnderwaterBlocks;
+					entry.surfaceBlocks.addAll( segment.surfaceBlocks );
+					entry.underwaterBlocks.addAll( segment.underwaterBlocks );
 				}
 			}
 		}
@@ -297,7 +300,7 @@ public class ShipDisplacement
 			holeIndex.add( hole );
 		}
 		BlockSet holeBlocks = new BlockSet();
-		int numUnderwaterBlocks = 0;
+		BlockSet underwaterBlocks = new BlockSet();
 		for( int y=minY; y<=maxY+1; y++ )
 		{
 			DisplacementEntry entry = m_displacement.get( y );
@@ -307,15 +310,15 @@ public class ShipDisplacement
 			if( layer != null )
 			{
 				holeBlocks.addAll( layer );
-				entry.numSurfaceBlocks += layer.size();
+				entry.surfaceBlocks.addAll( layer );
 			}
-			entry.numUnderwaterBlocks += numUnderwaterBlocks;
+			entry.underwaterBlocks.addAll( underwaterBlocks );
 			entry.trappedAir.addAll( holeBlocks );
 			
 			if( layer != null )
 			{
 				// update the underwater blocks for next time
-				numUnderwaterBlocks += layer.size();
+				underwaterBlocks.addAll( layer );
 			}			
 		}
 	}

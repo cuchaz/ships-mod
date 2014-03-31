@@ -12,6 +12,8 @@ package cuchaz.ships;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.MathHelper;
@@ -58,11 +60,18 @@ public class ShipPhysics
 		}
 	}
 	
+	private static class ScaledDisplacementEntry
+	{
+		double surfaceDisplacement;
+		double underwaterDisplacement;
+	}
+	
 	private BlocksStorage m_blocks;
 	private double m_shipMass;
 	private Vec3 m_centerOfMass;
 	private Double m_equilibriumWaterHeight;
 	private Integer m_sinkWaterHeight;
+	private Map<Integer,ScaledDisplacementEntry> m_displacement;
 	
 	public ShipPhysics( BlocksStorage blocks )
 	{
@@ -77,8 +86,16 @@ public class ShipPhysics
 		
 		// compute some extra stuff
 		m_centerOfMass = computeCenterOfMass();
+		m_displacement = new TreeMap<Integer,ScaledDisplacementEntry>();
 		m_equilibriumWaterHeight = computeEquilibriumWaterHeight();
-		m_sinkWaterHeight = m_blocks.getDisplacement().getSinkY();
+		m_sinkWaterHeight = m_blocks.getDisplacement().getLastFillY();
+		
+		// is the ship unsinkable?
+		ScaledDisplacementEntry lastDisplacement = getScaledDisplacement( m_blocks.getDisplacement().getMaxY() + 1 );
+		if( lastDisplacement.surfaceDisplacement + lastDisplacement.underwaterDisplacement > m_shipMass )
+		{
+			m_sinkWaterHeight = null;
+		}
 	}
 	
 	public double getMass( )
@@ -104,9 +121,7 @@ public class ShipPhysics
 		
 		// compute the mass of the displaced water
 		double surfaceFraction = getBlockFractionSubmerged( surfaceLevel, waterHeight );
-		int numUnderwaterBlocks = m_blocks.getDisplacement().getNumUnderwaterBlocks( surfaceLevel );
-		int numSurfaceBlocks = m_blocks.getDisplacement().getNumSurfaceBlocks( surfaceLevel );
-		return ( (double)numUnderwaterBlocks + (double)numSurfaceBlocks*surfaceFraction )*getWaterBlockMass();
+		return ( (double)getUnderwaterDisplacement( surfaceLevel ) + (double)getSurfaceDisplacement( surfaceLevel )*surfaceFraction )*getWaterBlockMass();
 	}
 	
 	public Double getEquilibriumWaterHeight( )
@@ -301,6 +316,36 @@ public class ShipPhysics
 		return buf.toString();
 	}
 	
+	private double getUnderwaterDisplacement( int y )
+	{
+		return getScaledDisplacement( y ).underwaterDisplacement;
+	}
+	
+	private double getSurfaceDisplacement( int y )
+	{
+		return getScaledDisplacement( y ).surfaceDisplacement;
+	}
+
+	private ScaledDisplacementEntry getScaledDisplacement( int y )
+	{
+		ScaledDisplacementEntry entry = m_displacement.get( y );
+		if( entry == null )
+		{
+			entry = new ScaledDisplacementEntry();
+			entry.surfaceDisplacement = 0;
+			for( Coords coords : m_blocks.getDisplacement().getSurfaceBlocks( y ) )
+			{
+				entry.surfaceDisplacement += MaterialProperties.getDisplacement( getBlock( coords ) );
+			}
+			entry.underwaterDisplacement = 0;
+			for( Coords coords : m_blocks.getDisplacement().getUnderwaterBlocks( y ) )
+			{
+				entry.underwaterDisplacement += MaterialProperties.getDisplacement( getBlock( coords ) );
+			}
+		}
+		return entry;
+	}
+	
 	private Double computeEquilibriumWaterHeight( )
 	{
 		// travel up each layer until we find the one that displaces too much water
@@ -308,11 +353,11 @@ public class ShipPhysics
 		int maxY = m_blocks.getBoundingBox().maxY;
 		for( int y=minY; y<=maxY+1; y++ )
 		{
-			int numUnderwaterBlocks = m_blocks.getDisplacement().getNumUnderwaterBlocks( y );
-			int numSurfaceBlocks = m_blocks.getDisplacement().getNumSurfaceBlocks( y );
+			double underwaterDisplacement = getUnderwaterDisplacement( y );
+			double surfaceDisplacement = getSurfaceDisplacement( y );
 			
 			// assume water completely submerges this layer
-			double displacedWaterMass = ( numUnderwaterBlocks + numSurfaceBlocks )*getWaterBlockMass();
+			double displacedWaterMass = ( underwaterDisplacement + surfaceDisplacement )*getWaterBlockMass();
 			
 			// did we displace too much water?
 			if( displacedWaterMass > m_shipMass )
@@ -320,7 +365,7 @@ public class ShipPhysics
 				// good, the water height is in this block level
 				
 				// now solve for the water height
-				return y + ( m_shipMass - numUnderwaterBlocks*getWaterBlockMass() )/numSurfaceBlocks/getWaterBlockMass();
+				return y + ( m_shipMass - underwaterDisplacement*getWaterBlockMass() )/surfaceDisplacement/getWaterBlockMass();
 			}
 		}
 		

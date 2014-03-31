@@ -14,6 +14,9 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockFence;
+import net.minecraft.block.BlockHalfSlab;
+import net.minecraft.block.BlockStairs;
 import net.minecraft.block.material.Material;
 
 public class MaterialProperties
@@ -119,7 +122,7 @@ public class MaterialProperties
 		{
 			return 0;
 		}
-		return getEntry( block ).mass;
+		return getSizeMultiplier( block )*getEntry( block ).mass;
 	}
 	
 	public static boolean isWatertight( Block block )
@@ -129,6 +132,11 @@ public class MaterialProperties
 			return false;
 		}
 		return getEntry( block ).isWatertight;
+	}
+	
+	public static double getDisplacement( Block block )
+	{
+		return getSizeMultiplier( block );
 	}
 	
 	public static boolean isSeparatorBlock( Block block )
@@ -153,5 +161,37 @@ public class MaterialProperties
 			entry = DefaultProperties;
 		}
 		return entry;
+	}
+	
+	private static double getSizeMultiplier( Block block )
+	{
+		if( block == null )
+		{
+			return 1.0;
+		}
+		
+		// handle stairs, slabs, etc
+		if( block instanceof BlockHalfSlab )
+		{
+			// 1 means half slab, 2 means double slab
+			if( ((BlockHalfSlab)block).quantityDropped( null ) == 1 )
+			{
+				return 0.5;
+			}
+		}
+		else if( block instanceof BlockStairs )
+		{
+			return 0.75;
+		}
+		else if( block.isLadder( null, 0, 0, 0, null ) )
+		{
+			return 0.1;
+		}
+		else if( block instanceof BlockFence )
+		{
+			return 0.5;
+		}
+		
+		return 1.0;
 	}
 }
