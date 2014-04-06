@@ -67,6 +67,11 @@ public class ShipDisplacement
 		computeDisplacement();
 	}
 	
+	public BlockSet getBlocks( )
+	{
+		return m_blocks;
+	}
+	
 	public List<BlockSet> getOuterBoundaries( )
 	{
 		return m_outerBoundaries;

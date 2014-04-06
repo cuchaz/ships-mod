@@ -14,9 +14,11 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockHalfSlab;
 import net.minecraft.block.BlockStairs;
+import net.minecraft.block.BlockTrapDoor;
 import net.minecraft.block.material.Material;
 
 public class MaterialProperties
@@ -131,12 +133,27 @@ public class MaterialProperties
 		{
 			return false;
 		}
+		
+		// HACKHACK: doors aren't watertight
+		if( block instanceof BlockDoor || block instanceof BlockTrapDoor )
+		{
+			return false;
+		}
+		
 		return getEntry( block ).isWatertight;
 	}
 	
 	public static double getDisplacement( Block block )
 	{
-		return getSizeMultiplier( block );
+		if( block == null || block.blockMaterial == Material.air )
+		{
+			return 1.0;
+		}
+		
+		// ship walls are relatively think and the generally provide too much buoyancy
+		// that basically means too many ships are unsinkable
+		// to get a more realistic balance, we'll kludge non-air blocks so they displace slightly less water than their mass
+		return getSizeMultiplier( block ) * 0.9;
 	}
 	
 	public static boolean isSeparatorBlock( Block block )

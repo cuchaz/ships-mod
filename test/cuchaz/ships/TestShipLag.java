@@ -14,6 +14,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import cuchaz.modsShared.perf.Profiler;
+import cuchaz.ships.persistence.BlockStoragePersistence;
 
 public class TestShipLag
 {
@@ -32,8 +33,7 @@ public class TestShipLag
 				System.out.println( "Geometry:" );
 				Profiler.reset();
 				
-				BlocksStorage shipBlocks = new BlocksStorage();
-				shipBlocks.readFromString( BigShip );
+				BlocksStorage shipBlocks = BlockStoragePersistence.readAnyVersion( BigShip );
 				
 				// time it
 				long time = System.currentTimeMillis();
@@ -62,8 +62,7 @@ public class TestShipLag
 				System.out.println( "Displacement:" );
 				Profiler.reset();
 				
-				BlocksStorage shipBlocks = new BlocksStorage();
-				shipBlocks.readFromString( BigShip );
+				BlocksStorage shipBlocks = BlockStoragePersistence.readAnyVersion( BigShip );
 				
 				// time it
 				long time = System.currentTimeMillis();

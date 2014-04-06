@@ -29,7 +29,7 @@ public class PacketShipLaunched extends Packet
 	public static final String Channel = "shipLaunched";
 	
 	private int m_entityId;
-	private byte[] m_blocksData;
+	private byte[] m_shipData;
 	private int m_launchX;
 	private int m_launchY;
 	private int m_launchZ;
@@ -51,18 +51,18 @@ public class PacketShipLaunched extends Packet
 		this();
 		
 		m_entityId = ship.entityId;
-		m_blocksData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() );
+		m_shipData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld(), true );
 		m_launchX = shipBlock.x;
 		m_launchY = shipBlock.y;
 		m_launchZ = shipBlock.z;
 	}
-
+	
 	@Override
 	public void writeData( DataOutputStream out ) throws IOException
 	{
 		out.writeInt( m_entityId );
-		out.writeInt( m_blocksData.length );
-		out.write( m_blocksData );
+		out.writeInt( m_shipData.length );
+		out.write( m_shipData );
 		out.writeInt( m_launchX );
 		out.writeInt( m_launchY );
 		out.writeInt( m_launchZ );
@@ -72,8 +72,8 @@ public class PacketShipLaunched extends Packet
 	public void readData( DataInputStream in ) throws IOException
 	{
 		m_entityId = in.readInt();
-		m_blocksData = new byte[in.readInt()]; // this is potentially risky?
-		in.read( m_blocksData );
+		m_shipData = new byte[Math.min( in.readInt(), MaxPacketSize )];
+		in.read( m_shipData );
 		m_launchX = in.readInt();
 		m_launchY = in.readInt();
 		m_launchZ = in.readInt();
@@ -100,7 +100,7 @@ public class PacketShipLaunched extends Packet
 	{
 		try
 		{
-			ShipWorld shipWorld = ShipWorldPersistence.readAnyVersion( ship.worldObj, m_blocksData );
+			ShipWorld shipWorld = ShipWorldPersistence.readAnyVersion( ship.worldObj, m_shipData, true );
 			ShipLauncher.initShip( ship, shipWorld, new Coords( m_launchX, m_launchY, m_launchZ ) );
 		}
 		catch( UnrecognizedPersistenceVersion ex )

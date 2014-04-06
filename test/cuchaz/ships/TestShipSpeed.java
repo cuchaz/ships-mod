@@ -15,6 +15,7 @@ import java.util.List;
 import org.junit.Test;
 
 import cuchaz.modsShared.Util;
+import cuchaz.ships.persistence.BlockStoragePersistence;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class TestShipSpeed
@@ -52,8 +53,7 @@ public class TestShipSpeed
 			public void onRun( )
 			throws Exception
 			{
-				BlocksStorage shipBlocks = new BlocksStorage();
-				shipBlocks.readFromString( encodedBlocks );
+				BlocksStorage shipBlocks = BlockStoragePersistence.readAnyVersion( encodedBlocks );
 				ShipPhysics physics = new ShipPhysics( shipBlocks );
 				Propulsion propulsion = new Propulsion( shipBlocks );
 				

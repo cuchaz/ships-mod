@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.EntityList;
@@ -36,11 +38,10 @@ public enum ShipWorldPersistence
 	{
 		@Override
 		public ShipWorld onRead( World world, DataInputStream in )
-		throws IOException
+		throws IOException, UnrecognizedPersistenceVersion
 		{
 			// read the blocks
-			BlocksStorage storage = new BlocksStorage();
-			storage.readFromStream( in );
+			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( in );
 			
 			// read the tile entities
 			BlockMap<TileEntity> tileEntities = new BlockMap<TileEntity>();
@@ -62,7 +63,7 @@ public enum ShipWorldPersistence
 		throws IOException
 		{
 			// write out the blocks
-			shipWorld.getBlocksStorage().writeToStream( out );
+			BlockStoragePersistence.V1.write( shipWorld.getBlocksStorage(), out );
 			
 			// write out the tile entities
 			out.writeInt( shipWorld.tileEntities().size() );
@@ -78,11 +79,10 @@ public enum ShipWorldPersistence
 	{
 		@Override
 		public ShipWorld onRead( World world, DataInputStream in )
-		throws IOException
+		throws IOException, UnrecognizedPersistenceVersion
 		{
 			// read the blocks
-			BlocksStorage storage = new BlocksStorage();
-			storage.readFromStream( in );
+			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( in );
 			
 			// read the tile entities
 			BlockMap<TileEntity> tileEntities = new BlockMap<TileEntity>();
@@ -116,7 +116,7 @@ public enum ShipWorldPersistence
 		throws IOException
 		{
 			// write out the blocks
-			shipWorld.getBlocksStorage().writeToStream( out );
+			BlockStoragePersistence.V2.write( shipWorld.getBlocksStorage(), out );
 			
 			// write out the tile entities
 			out.writeInt( shipWorld.tileEntities().size() );
@@ -156,7 +156,7 @@ public enum ShipWorldPersistence
 		m_version = version;
 	}
 	
-	protected abstract ShipWorld onRead( World world, DataInputStream in ) throws IOException;
+	protected abstract ShipWorld onRead( World world, DataInputStream in ) throws IOException, UnrecognizedPersistenceVersion;
 	protected abstract void onWrite( ShipWorld shipWorld, DataOutputStream out ) throws IOException;
 	
 	private static ShipWorldPersistence get( int version )
@@ -172,8 +172,18 @@ public enum ShipWorldPersistence
 	public static ShipWorld readAnyVersion( World world, byte[] data )
 	throws UnrecognizedPersistenceVersion
 	{
+		return readAnyVersion( world, data, false );
+	}
+	
+	public static ShipWorld readAnyVersion( World world, byte[] data, boolean isCompressed )
+	throws UnrecognizedPersistenceVersion
+	{
 		try
 		{
+			if( isCompressed )
+			{
+				return readAnyVersion( world, new GZIPInputStream( new ByteArrayInputStream( data ) ) );
+			}
 			return readAnyVersion( world, new ByteArrayInputStream( data ) );
 		}
 		catch( IOException ex )
@@ -199,10 +209,24 @@ public enum ShipWorldPersistence
 	
 	public static byte[] writeNewestVersion( ShipWorld shipWorld )
 	{
+		return writeNewestVersion( shipWorld, false );
+	}
+	
+	public static byte[] writeNewestVersion( ShipWorld shipWorld, boolean useCompression )
+	{
 		try
 		{
 			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			writeNewestVersion( shipWorld, buf );
+			if( useCompression )
+			{
+				GZIPOutputStream gzipOut = new GZIPOutputStream( buf );
+				writeNewestVersion( shipWorld, gzipOut );
+				gzipOut.finish();
+			}
+			else
+			{
+				writeNewestVersion( shipWorld, buf );
+			}
 			return buf.toByteArray();
 		}
 		catch( IOException ex )

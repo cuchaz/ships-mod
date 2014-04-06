@@ -25,7 +25,7 @@ public class PacketShipBlocks extends Packet
 	public static final String Channel = "shipBlocks";
 	
 	private int m_entityId;
-	private byte[] m_blocksData;
+	private byte[] m_shipData;
 	
 	public PacketShipBlocks( )
 	{
@@ -37,23 +37,23 @@ public class PacketShipBlocks extends Packet
 		this();
 		
 		m_entityId = ship.entityId;
-		m_blocksData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() );
+		m_shipData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld(), true );
 	}
 
 	@Override
 	public void writeData( DataOutputStream out ) throws IOException
 	{
 		out.writeInt( m_entityId );
-		out.writeInt( m_blocksData.length );
-		out.write( m_blocksData );
+		out.writeInt( m_shipData.length );
+		out.write( m_shipData );
 	}
 	
 	@Override
 	public void readData( DataInputStream in ) throws IOException
 	{
 		m_entityId = in.readInt();
-		m_blocksData = new byte[in.readInt()]; // this is potentially risky?
-		in.read( m_blocksData );
+		m_shipData = new byte[Math.min( in.readInt(), MaxPacketSize )];
+		in.read( m_shipData );
 	}
 	
 	@Override
@@ -71,7 +71,7 @@ public class PacketShipBlocks extends Packet
 		{
 			try
 			{
-				ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, m_blocksData ) );
+				ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, m_shipData, true ) );
 			}
 			catch( UnrecognizedPersistenceVersion ex )
 			{

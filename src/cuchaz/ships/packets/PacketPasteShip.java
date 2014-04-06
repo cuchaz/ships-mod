@@ -15,10 +15,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
+import cuchaz.ships.Ships;
+import cuchaz.ships.persistence.BlockStoragePersistence;
+import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class PacketPasteShip extends Packet
 {
@@ -48,26 +53,40 @@ public class PacketPasteShip extends Packet
 	public void writeData( DataOutputStream out )
 	throws IOException
 	{
-		m_blocks.writeToStream( out );
 		out.writeInt( m_dx );
 		out.writeInt( m_dy );
 		out.writeInt( m_dz );
+		GZIPOutputStream gzipOut = new GZIPOutputStream( out );
+		BlockStoragePersistence.writeNewestVersion( m_blocks, gzipOut );
+		gzipOut.finish();
 	}
 	
 	@Override
 	public void readData( DataInputStream in )
 	throws IOException
 	{
-		m_blocks = new BlocksStorage();
-		m_blocks.readFromStream( in );
 		m_dx = in.readInt();
 		m_dy = in.readInt();
 		m_dz = in.readInt();
+		try
+		{
+			GZIPInputStream gzipIn = new GZIPInputStream( in );
+			m_blocks = BlockStoragePersistence.readAnyVersion( gzipIn );
+		}
+		catch( UnrecognizedPersistenceVersion ex )
+		{
+			Ships.logger.warning( "Unable to read ship data", ex );
+		}
 	}
 	
 	@Override
 	public void onPacketReceived( EntityPlayer player )
 	{
+		if( m_blocks == null )
+		{
+			return;
+		}
+		
 		// paste the blocks on the server
 		Map<Coords,Coords> correspondence = new TreeMap<Coords,Coords>();
 		for( Coords shipCoords : m_blocks.coords() )

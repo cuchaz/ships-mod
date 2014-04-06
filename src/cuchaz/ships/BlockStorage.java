@@ -10,10 +10,6 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import net.minecraft.world.World;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
@@ -26,20 +22,13 @@ public class BlockStorage
 	
 	public BlockStorage( )
 	{
-		id = 0;
-		meta = 0;
+		this( 0, 0 );
 	}
 	
-	public void writeToStream( DataOutputStream out ) throws IOException
+	public BlockStorage( int id, int meta )
 	{
-		out.writeInt( id );
-		out.writeInt( meta );
-	}
-	
-	public void readFromStream( DataInputStream in ) throws IOException
-	{
-		id = in.readInt();
-		meta = in.readInt();
+		this.id = id;
+		this.meta = meta;
 	}
 	
 	public void readFromWorld( World world, Coords coords )

@@ -48,7 +48,8 @@ public enum GuiString
 	ShipPlaque( "Name your ship" ),
 	Done( "Done" ),
 	ShipIsUnsinkable( "Ship is un-sinkable!" ),
-	ShipFloatsCloseToSinkLine( "Ship is close to sinking!" );
+	ShipFloatsCloseToSinkLine( "Ship is close to sinking!" ),
+	Sink( "Sink" );
 	
 	private String m_unlocalizedText;
 	

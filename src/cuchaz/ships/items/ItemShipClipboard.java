@@ -43,6 +43,8 @@ import cuchaz.ships.ShipType;
 import cuchaz.ships.Ships;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPasteShip;
+import cuchaz.ships.persistence.BlockStoragePersistence;
+import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class ItemShipClipboard extends Item
 {
@@ -144,27 +146,18 @@ public class ItemShipClipboard extends Item
 		Coords shipCoords = new Coords( blockX, blockY, blockZ );
 		blocks.add( shipCoords );
 		
-		try
-		{
-			// encode the blocks into a string
-			BlocksStorage storage = new BlocksStorage();
-			storage.readFromWorld( world, shipCoords, blocks );
-			String encodedBlocks = storage.writeToString();
-			
-			// save the string to the clipboard
-			StringSelection selection = new StringSelection( encodedBlocks );
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-			clipboard.setContents( selection, selection );
-			
-			message( player, GuiString.CopiedShip );
-			return true;
-		}
-		catch( IOException ex )
-		{
-			Ships.logger.warning( ex, "Unable to copy ship!" );
-			message( player, GuiString.ErrorCheckLogForDetails );
-			return false;
-		}
+		// encode the blocks into a string
+		BlocksStorage storage = new BlocksStorage();
+		storage.readFromWorld( world, shipCoords, blocks );
+		String encodedBlocks = BlockStoragePersistence.writeNewestVersionToString( storage );
+		
+		// save the string to the clipboard
+		StringSelection selection = new StringSelection( encodedBlocks );
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents( selection, selection );
+		
+		message( player, GuiString.CopiedShip );
+		return true;
     }
 	
 	private boolean pasteShip( World world, EntityPlayer player, int blockX, int blockY, int blockZ )
@@ -193,8 +186,7 @@ public class ItemShipClipboard extends Item
 			}
 			
 			// decode the ship
-			BlocksStorage storage = new BlocksStorage();
-			storage.readFromString( encodedBlocks );
+			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( encodedBlocks );
 			
 			// how big is the ship?
 			BoundingBoxInt box = new BoundingBoxInt( storage.getBoundingBox() );
@@ -230,6 +222,11 @@ public class ItemShipClipboard extends Item
 			return false;
 		}
 		catch( UnsupportedFlavorException ex )
+		{
+			message( player, GuiString.NoShipOnClipboard );
+			return false;
+		}
+		catch( UnrecognizedPersistenceVersion ex )
 		{
 			message( player, GuiString.NoShipOnClipboard );
 			return false;

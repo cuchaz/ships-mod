@@ -12,6 +12,7 @@ package cuchaz.ships.render;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.Icon;
@@ -24,6 +25,7 @@ import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.gui.GuiString;
 
 public class RenderShip2D
 {
@@ -52,6 +54,13 @@ public class RenderShip2D
 			// draw the sink line
 			int sinkLineY = (int)( ( sinkHeight - envelope.getVMin() )*blockSize + ( maxHeight - shipHeight )/2.0 );
 			drawColoredBlock( x, y + maxHeight - sinkLineY, z, maxWidth, 1.0, SinkColor );
+			
+			// draw the label
+			FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+			fontRenderer.drawString( GuiString.Sink.getLocalizedText(), x, y + maxHeight - sinkLineY - fontRenderer.FONT_HEIGHT, SinkColor );
+			
+			// put the color back
+			GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 		}
 	}
 	

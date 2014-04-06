@@ -10,22 +10,11 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
-
-import org.apache.commons.codec.binary.Base64InputStream;
-import org.apache.commons.codec.binary.Base64OutputStream;
-
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
@@ -33,7 +22,6 @@ import cuchaz.modsShared.blocks.Coords;
 
 public class BlocksStorage
 {
-	private static final String Encoding = "UTF-8";
 	private static final Coords Origin = new Coords( 0, 0, 0 );
 	
 	private BlockMap<BlockStorage> m_blocks;
@@ -70,8 +58,6 @@ public class BlocksStorage
 			Coords relativeCoords = new Coords( worldCoords.x - originCoords.x, worldCoords.y - originCoords.y, worldCoords.z - originCoords.z );
 			m_blocks.put( relativeCoords, storage );
 		}
-		
-		// UNDONE: find any nearby hanging entities and store them too
 	}
 	
 	public void writeToWorld( World world, Map<Coords,Coords> correspondence )
@@ -84,60 +70,6 @@ public class BlocksStorage
 			BlockStorage storage = entry.getValue();
 			storage.writeToWorld( world, coordsWorld );
 		}
-	}
-
-	public void readFromStream( DataInputStream in )
-	throws IOException
-	{
-		clear();
-		
-		int numBlocks = in.readInt();
-		for( int i = 0; i < numBlocks; i++ )
-		{
-			Coords coords = new Coords( in.readInt(), in.readInt(), in.readInt() );
-			
-			BlockStorage storage = new BlockStorage();
-			storage.readFromStream( in );
-			
-			m_blocks.put( coords, storage );
-		}
-	}
-	
-	public void writeToStream( DataOutputStream out )
-	throws IOException
-	{
-		out.writeInt( m_blocks.size() );
-		for( Map.Entry<Coords,BlockStorage> entry : m_blocks.entrySet() )
-		{
-			Coords coords = entry.getKey();
-			BlockStorage storage = entry.getValue();
-			
-			out.writeInt( coords.x );
-			out.writeInt( coords.y );
-			out.writeInt( coords.z );
-			storage.writeToStream( out );
-		}
-	}
-	
-	public void readFromString( String data )
-	throws IOException
-	{
-		clear();
-		
-		// STREAM MADNESS!!! @_@  MADNESS, I TELL YOU!!
-		DataInputStream in = new DataInputStream( new GZIPInputStream( new Base64InputStream( new ByteArrayInputStream( data.getBytes( Encoding ) ) ) ) );
-		readFromStream( in );
-		in.close();
-	}
-	
-	public String writeToString( )
-	throws IOException
-	{
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream( new GZIPOutputStream( new Base64OutputStream( buffer ) ) );
-		writeToStream( out );
-		out.close();
-		return new String( buffer.toByteArray(), Encoding );
 	}
 	
 	public String dumpBlocks( )
@@ -198,6 +130,11 @@ public class BlocksStorage
 			storage = m_airBlockStorage;
 		}
 		return storage;
+	}
+	
+	public void setBlock( Coords coords, BlockStorage val )
+	{
+		m_blocks.put( coords, val );
 	}
 	
 	public BoundingBoxInt getBoundingBox( )
