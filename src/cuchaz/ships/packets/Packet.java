@@ -45,9 +45,6 @@ public abstract class Packet
 			writeData( out );
 			customPacket.data = data.toByteArray();
 			
-			// TEMP
-			Ships.logger.info( String.format( "Sending packet %s. Payload size: %dk", getClass().getName(), customPacket.data.length/1024 ) );
-			
 			if( customPacket.data.length > MaxPacketSize )
 			{
 				Ships.logger.warning( "Packet payload on channel %s too large! %dk Packet payload will be dropped.", m_channel, customPacket.data.length/1024 );

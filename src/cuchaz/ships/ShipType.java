@@ -92,6 +92,21 @@ public enum ShipType
 				'y', new ItemStack( Item.redstone )
 			);
 		}
+	},
+	Gigantic( 4000, false )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Gigantic Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xzx", "zyz", "xzx",
+				'x', new ItemStack( Item.dyePowder, 1, 4 ), // lapis lazuli
+				'y', new ItemStack( Item.redstone ),
+				'z', new ItemStack( Item.diamond )
+			);
+		}
 	};
 	
 	private int m_maxNumBlocks;
