@@ -11,7 +11,9 @@
 package cuchaz.ships;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import net.minecraft.block.Block;
@@ -368,11 +370,16 @@ public class Ships extends DummyModContainer
 		);
 		
 		// ship plaque
-		GameRegistry.addRecipe(
-			new ItemStack( m_itemShipPlaque ),
-			"   ", " x ", "yyy",
-			'x', new ItemStack( Item.ingotIron ),
-			'y', new ItemStack( Block.planks )
-		);
+		List<ItemStack> plankStacks = new ArrayList<ItemStack>();
+		Block.planks.getSubBlocks( Block.planks.blockID, null, plankStacks );
+		for( ItemStack plankStack : plankStacks )
+		{
+			GameRegistry.addRecipe(
+				new ItemStack( m_itemShipPlaque ),
+				"   ", " x ", "yyy",
+				'x', ironStack,
+				'y', plankStack
+			);
+		}
 	}
 }

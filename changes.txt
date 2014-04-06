@@ -6,7 +6,7 @@ Made change that causes more kinds of blocks to be excluded from ship launching
 Paintings, item frames, and signs now work on ships
 Added ship plaque item for Patreon supporters
 Updated launch GUI to warn you if your ship floats near the sinking point
-Added more optimizations to ship GUIs, launching, and updating
-Updated block physics so stairs, slabs, etc don't weigh as much, and don't displace as much water
+Added more optimizations to ship GUIs, launching, and buoyancy simulations
+Updated block physics so stairs, slabs, etc don't weigh as much and don't displace as much water
 Block limit is now 4000 blocks.
 Various crash fixes
