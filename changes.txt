@@ -5,6 +5,7 @@ Fixed bug where players on slabs, stairs, and ladders weren't being flagged as r
 Made change that causes more kinds of blocks to be excluded from ship launching
 Paintings, item frames, and signs now work on ships
 Added ship plaque item for Patreon supporters
+Added ship eraser. It erases ships in creative mode.
 Updated launch GUI to warn you if your ship floats near the sinking point
 Added more optimizations to ship GUIs, launching, and buoyancy simulations
 Updated block physics so stairs, slabs, etc don't weigh as much and don't displace as much water
