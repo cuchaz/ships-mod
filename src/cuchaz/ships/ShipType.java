@@ -107,6 +107,20 @@ public enum ShipType
 				'z', new ItemStack( Item.diamond )
 			);
 		}
+	},
+	Epic( 8000, false )
+	{
+		@Override
+		protected void registerBlock( )
+		{
+			LanguageRegistry.addName( newItemStack(), "Epic Ship" );
+			GameRegistry.addRecipe(
+				newItemStack(),
+				"xxx", "xyx", "xxx",
+				'x', new ItemStack( Item.diamond ),
+				'y', new ItemStack( Item.redstone )
+			);
+		}
 	};
 	
 	private int m_maxNumBlocks;
