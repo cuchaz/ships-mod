@@ -124,13 +124,16 @@ public class GuiShipPropulsion extends GuiShip
 		m_propulsionEnvelope = m_propulsion.getEnevelope();
 		
 		// create our shader
-		try
+		if( ShaderLoader.areShadersSupported() )
 		{
-			m_desaturationProgramId = ShaderLoader.createProgram( ShaderLoader.load( DesaturationShader ) );
-		}
-		catch( IOException ex )
-		{
-			Ships.logger.warning( ex, "Unable to load shader!" );
+			try
+			{
+				m_desaturationProgramId = ShaderLoader.createProgram( ShaderLoader.load( DesaturationShader ) );
+			}
+			catch( IOException ex )
+			{
+				Ships.logger.warning( ex, "Unable to load shader!" );
+			}
 		}
 		
 		// compute the top speeds
@@ -199,20 +202,35 @@ public class GuiShipPropulsion extends GuiShip
 			m_propulsionEnvelope = BlockArray.Rotation.Ccw90.rotate( m_propulsionEnvelope );
 		}
 		
-		// draw a desaturated ship
+		// draw the ship silhouette to fill in any transparent areas
 		RenderShip2D.drawShipAsColor(
 			m_shipEnvelope,
 			ColorUtils.getGrey( 64 ),
 			x, y, zLevel, width, height
 		);
-		GL20.glUseProgram( m_desaturationProgramId );
-		RenderShip2D.drawShip(
-			m_shipEnvelope,
-			BlockSide.Top,
-			m_shipLauncher.getShipWorld(),
-			x, y, zLevel, width, height
-		);
-		GL20.glUseProgram( 0 );
+		
+		if( ShaderLoader.areShadersSupported() )
+		{
+			// draw a desaturated ship
+			GL20.glUseProgram( m_desaturationProgramId );
+			RenderShip2D.drawShip(
+				m_shipEnvelope,
+				BlockSide.Top,
+				m_shipLauncher.getShipWorld(),
+				x, y, zLevel, width, height
+			);
+			GL20.glUseProgram( 0 );
+		}
+		else
+		{
+			// shaders aren't supported, so just render without saturation
+			RenderShip2D.drawShip(
+				m_shipEnvelope,
+				BlockSide.Top,
+				m_shipLauncher.getShipWorld(),
+				x, y, zLevel, width, height
+			);
+		}
 		
 		// draw the propulsion blocks and the helm at full saturation
 		RenderShip2D.drawShip(

@@ -31,6 +31,7 @@ import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.ShipWorld;
+import cuchaz.ships.Ships;
 
 public enum ShipWorldPersistence
 {
@@ -123,16 +124,36 @@ public enum ShipWorldPersistence
 			for( TileEntity tileEntity : shipWorld.tileEntities().values() )
 			{
 				NBTTagCompound nbt = new NBTTagCompound();
-				tileEntity.writeToNBT( nbt );
+				try
+				{
+					tileEntity.writeToNBT( nbt );
+				}
+				catch( Throwable t )
+				{
+					Ships.logger.warning( t, "Tile entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
+						tileEntity.getClass().getName(),
+						tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord
+					);
+				}
 				NBTBase.writeNamedTag( nbt, out );
 			}
 			
-			// write out the tile entities
+			// write out the hanging entities
 			out.writeInt( shipWorld.hangingEntities().size() );
 			for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
 			{
 				NBTTagCompound nbt = new NBTTagCompound();
-				hangingEntity.writeToNBTOptional( nbt );
+				try
+				{
+					hangingEntity.writeToNBTOptional( nbt );
+				}
+				catch( Throwable t )
+				{
+					Ships.logger.warning( t, "Hanging entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
+						hangingEntity.getClass().getName(),
+						hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition
+					);
+				}
 				NBTBase.writeNamedTag( nbt, out );
 			}
 		}

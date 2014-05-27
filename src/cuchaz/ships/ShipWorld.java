@@ -186,7 +186,13 @@ public class ShipWorld extends DetachedWorld
 		for( Coords coordsShip : getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
 		{
 			Coords coordsWorld = correspondence.get( coordsShip );
-			BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients );
+			
+			// is this block actually water?
+			int blockId = world.getBlockId( coordsWorld.x, coordsWorld.y, coordsWorld.z );
+			if( blockId == Block.waterStill.blockID || blockId == Ships.m_blockAirWall.blockID )
+			{
+				BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients );
+			}
 		}
 		
 		// restore the tile entities
@@ -500,6 +506,18 @@ public class ShipWorld extends DetachedWorld
 			return defaultValue;
 		}
 		return block.isBlockSolidOnSide( this, x, y, z, side );
+	}
+	
+	@Override
+	public boolean isBlockNormalCubeDefault( int x, int y, int z, boolean defaultValue )
+	{
+		m_lookupCoords.set( x, y, z );
+		Block block = Block.blocksList[getBlockId( m_lookupCoords )];
+		if( block == null )
+		{
+			return defaultValue;
+		}
+		return block.isBlockNormalCube( this, x, y, z );
 	}
 	
 	@Override

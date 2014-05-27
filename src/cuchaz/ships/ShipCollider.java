@@ -713,17 +713,21 @@ public class ShipCollider
 		// get a bounding box containing the entire entity trajectory
 		AxisAlignedBB trajectoryBox = oldBox.func_111270_a( newBox );
 		
-		// collect the boxes for the blocks in that box
+		// collect the boxes for the blocks in the trajectory box
 		List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
 		List<PossibleCollision> collisions = new ArrayList<PossibleCollision>();
-		for( Coords coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox.expand( 1, 1, 1 ) ) )
-		// NOTE: expand trajectoryBox by 1 so we pick up boxes whose collision boxes are outside their bounding boxes
+		if( m_ship != null && m_ship.getShipWorld() != null && m_ship.getShipWorld().getGeometry() != null )
+		// NOTE: if one of these things is null, the ship probably hasn't loaded yet, so there shouldn't be any collisions
 		{
-			boxes.clear();
-			getCollisionBoxesInBlockSpace( boxes, coords, trajectoryBox );
-			for( AxisAlignedBB box : boxes )
+			for( Coords coords : m_ship.getShipWorld().getGeometry().rangeQuery( trajectoryBox.expand( 1, 1, 1 ) ) )
+			// NOTE: expand trajectoryBox by 1 so we pick up boxes whose collision boxes are outside their bounding boxes
 			{
-				collisions.add( new PossibleCollision( coords, box ) );
+				boxes.clear();
+				getCollisionBoxesInBlockSpace( boxes, coords, trajectoryBox );
+				for( AxisAlignedBB box : boxes )
+				{
+					collisions.add( new PossibleCollision( coords, box ) );
+				}
 			}
 		}
 		return collisions;

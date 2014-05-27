@@ -20,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GLContext;
 
 public class ShaderLoader
 {
@@ -32,6 +33,11 @@ public class ShaderLoader
 		m_shaderTypes = new HashMap<String,Integer>();
 		m_shaderTypes.put( "frag", GL20.GL_FRAGMENT_SHADER );
 		m_shaderTypes.put( "vert", GL20.GL_VERTEX_SHADER );
+	}
+	
+	public static boolean areShadersSupported( )
+	{
+		return GLContext.getCapabilities().OpenGL20;
 	}
 	
 	public static int load( ResourceLocation loc )

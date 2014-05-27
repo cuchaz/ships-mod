@@ -20,11 +20,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -159,4 +161,35 @@ public class DetachedWorld extends World
 	{
 		return true;
 	}
+	
+	@Override
+	protected boolean chunkExists( int chunkX, int chunkZ )
+	{
+		return true;
+	}
+	
+	@Override
+	public Chunk getChunkFromChunkCoords( int chunkX, int chunkZ )
+    {
+		// detatched worlds don't have chunks
+		return null;
+    }
+	
+	@Override
+	public String getProviderName( )
+	{
+		return "Detatched world";
+	}
+	
+	@Override
+	public boolean isBlockNormalCubeDefault( int blockX, int blockY, int blockZ, boolean defaultValue )
+	{
+		return false;
+	}
+	
+	@Override
+	public boolean isBlockSolidOnSide(int x, int y, int z, ForgeDirection side, boolean _default)
+    {
+		return false;
+    }
 }
