@@ -24,19 +24,38 @@ public class WaterDisplacer
 {
 	private EntityShip m_ship;
 	private BlockSet m_displacedBlocks;
+	private BlockSet m_shouldBeDisplaced;
 	
 	public WaterDisplacer( EntityShip ship )
 	{
 		m_ship = ship;
 		m_displacedBlocks = new BlockSet();
+		m_shouldBeDisplaced = new BlockSet();
 	}
 	
 	public void update( double waterHeightInBlockSpace )
 	{
 		// which blocks should be displaced?
-		BlockSet shouldBeDisplaced = getBlocksThatShouldBeDisplaced( waterHeightInBlockSpace );
+		m_shouldBeDisplaced.clear();
+		getBlocksThatShouldBeDisplaced( m_shouldBeDisplaced, waterHeightInBlockSpace );
 		
-		for( Coords coords : shouldBeDisplaced )
+		// are there any blocks that are displaced, but shouldn't be?
+		Iterator<Coords> iter = m_displacedBlocks.iterator();
+		while( iter.hasNext() )
+		{
+			Coords coords = iter.next();
+			if( !m_shouldBeDisplaced.contains( coords ) )
+			{
+				// restore it
+				if( m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockAirWall.blockID )
+				{
+					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
+				}
+				iter.remove();
+			}
+		}
+		
+		for( Coords coords : m_shouldBeDisplaced )
 		{
 			// is the block displaced?
 			int blockId = m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z );
@@ -50,22 +69,6 @@ public class WaterDisplacer
 			{
 				// yes, it's already displaced
 				// nothing else to do
-			}
-		}
-		
-		// are there any blocks that are displaced, but shouldn't be?
-		Iterator<Coords> iter = m_displacedBlocks.iterator();
-		while( iter.hasNext() )
-		{
-			Coords coords = iter.next();
-			if( !shouldBeDisplaced.contains( coords ) )
-			{
-				// restore it
-				if( m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockAirWall.blockID )
-				{
-					BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, Block.waterStill.blockID, 0, UpdateRules.UpdateClients );
-				}
-				iter.remove();
 			}
 		}
 	}
@@ -86,16 +89,14 @@ public class WaterDisplacer
 		m_displacedBlocks.clear();
 	}
 	
-	private BlockSet getBlocksThatShouldBeDisplaced( double waterHeightInBlockSpace )
+	private void getBlocksThatShouldBeDisplaced( BlockSet out, double waterHeightInBlockSpace )
 	{
-		BlockSet out = new BlockSet();
-		
 		// get all the trapped air blocks
 		BlockSet trappedAirBlocks = m_ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
 		if( trappedAirBlocks.isEmpty() )
 		{
 			// the ship is out of the water or flooded
-			return out;
+			return;
 		}
 		
 		// find the world blocks that intersect the trapped air blocks
@@ -111,7 +112,5 @@ public class WaterDisplacer
 			// query for all the world blocks that intersect it
 			BlockUtils.worldRangeQuery( out, m_ship.worldObj, box );
 		}
-		
-		return out;
 	}
 }

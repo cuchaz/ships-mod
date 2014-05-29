@@ -295,6 +295,14 @@ public class RenderShip extends Render
 			}
 		}
 		
+		// render all the trapped air that displaced water
+		double waterHeightInBlockSpace = ship.shipToBlocksY( ship.worldToShipY( ship.getWaterHeight() ) );
+		for( Coords coords : ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
+		{
+			AxisAlignedBB box = ship.getCollider().getBlockBoxInBlockSpace( coords );
+			RenderUtils.renderBox( box, ColorUtils.getColor( 0, 255, 0 ), -0.4 );
+		}
+		
 		// where is the camera?
 		Vec3 camera = Vec3.createVectorHelper(
 			RenderManager.renderPosX,

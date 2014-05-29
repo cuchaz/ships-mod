@@ -11,7 +11,6 @@
 package cuchaz.ships;
 
 import java.util.Map;
-import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
@@ -117,9 +116,9 @@ public class BlocksStorage
 		return m_blocks.size();
 	}
 	
-	public Set<Coords> coords( )
+	public BlockSet coords( )
 	{
-		return m_blocks.keySet();
+		return m_blocks.blockSet();
 	}
 	
 	public BlockStorage getBlock( Coords coords )

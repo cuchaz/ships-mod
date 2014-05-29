@@ -102,6 +102,19 @@ public class RenderUtils
 		);
 	}
 	
+	public static void renderBox( AxisAlignedBB box, int color, double delta )
+	{
+		renderBox(
+			box.minX - delta,
+			box.maxX + delta,
+			box.minY - delta,
+			box.maxY + delta,
+			box.minZ - delta,
+			box.maxZ + delta,
+			color
+		);
+	}
+	
 	public static void renderBox( double xm, double xp, double ym, double yp, double zm, double zp, int color )
 	{
 		GL11.glDepthMask( false );

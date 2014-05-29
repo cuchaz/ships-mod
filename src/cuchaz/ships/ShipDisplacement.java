@@ -155,19 +155,7 @@ public class ShipDisplacement
 	private void computeBoundaryAndHoles( )
 	{
 		// first, get all blocks touching the ship on an edge (aka the boundary)
-		final BlockSet boundaryBlocks = new BlockSet();
-		Coords neighborCoords = new Coords( 0, 0, 0 );
-		for( Coords coords : m_blocks )
-		{
-			for( int i=0; i<BoundaryNeighbors.getNumNeighbors(); i++ )
-			{
-				BoundaryNeighbors.getNeighbor( neighborCoords, coords, i );
-				if( !m_blocks.contains( neighborCoords ) )
-				{
-					boundaryBlocks.add( new Coords( neighborCoords ) );
-				}
-			}
-		}
+		final BlockSet boundaryBlocks = BlockUtils.getBoundary( m_blocks, BoundaryNeighbors );
 		
 		// boundaryBlocks will have some number of connected components. Find them all and classify each as inner/outer
 		m_holes = new ArrayList<BlockSet>();
@@ -194,7 +182,7 @@ public class ShipDisplacement
 		
 		m_displacement = new TreeMap<Integer,DisplacementEntry>();
 		
-		// pass 1: analyze the ship blocks for block counts
+		// pass 1: compute the displacement of ship blocks
 		BlockSetHeightIndex shipIndex = new BlockSetHeightIndex( m_blocks );
 		for( int y=minY; y<=maxY+1; y++ )
 		{
@@ -257,6 +245,11 @@ public class ShipDisplacement
 					
 					// merge all the existing segments
 					ClassifiedSegment baseSegment = connectedSegments.get( 0 );
+					if( baseSegment.isTrapped )
+					{
+						// fill in holes for inner boundaries
+						ySegment.addAll( BlockUtils.getHoleFromInnerBoundary( ySegment, m_blocks, VoidBlockNeighbors, y, y ) );
+					}
 					baseSegment.segment.addAll( ySegment );
 					baseSegment.underwaterBlocks.addAll( baseSegment.surfaceBlocks );
 					baseSegment.surfaceBlocks.clear();

@@ -323,6 +323,13 @@ public class ShipCollider
 	public AxisAlignedBB getBlockBoxInBlockSpace( Coords coords )
 	{
 		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+		
+		// if this is an air block, then use another block to get bounds
+		if( block == null )
+		{
+			block = Block.stone;
+		}
+		
 		block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.x, coords.y, coords.z );
 		return AxisAlignedBB.getBoundingBox(
 			block.getBlockBoundsMinX() + coords.x,
