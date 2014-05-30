@@ -19,6 +19,7 @@ import java.util.TreeSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -91,9 +92,6 @@ public class RenderShip extends Render
 		GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
 		GL11.glTranslated( ship.blocksToShipX( 0 ), ship.blocksToShipY( 0 ), ship.blocksToShipZ( 0 ) );
 		RenderHelper.disableStandardItemLighting();
-		RenderManager.renderPosX = 0;
-		RenderManager.renderPosY = 0;
-		RenderManager.renderPosZ = 0;
 		RenderManager.instance.worldObj = shipWorld;
 		
 		// handle the display list
@@ -154,7 +152,7 @@ public class RenderShip extends Render
 		if( id == null )
 		{
 			// create a new list
-			id = GL11.glGenLists( 1 );
+			id = GLAllocation.generateDisplayLists( 1 );
 			m_displayListIds.put( ship, id );
 			
 			// build the list

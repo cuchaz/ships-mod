@@ -10,11 +10,15 @@
  ******************************************************************************/
 package cuchaz.ships.blocks;
 
+import java.util.Random;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.Ships;
 import net.minecraft.block.Block;
+import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -66,5 +70,31 @@ public class BlockAirWall extends Block
 	public void registerIcons( IconRegister iconRegister )
 	{
 		// do nothing
+	}
+	
+	@Override
+	public int quantityDropped( Random rand )
+	{
+		return 0;
+	}
+	
+	@Override
+	public int idDropped( int meta, Random random, int fortune )
+	{
+		return 0;
+	}
+	
+	@Override
+	public boolean canHarvestBlock( EntityPlayer player, int meta )
+	{
+		return false;
+	}
+	
+	@Override
+	@SideOnly( Side.CLIENT )
+    public boolean addBlockDestroyEffects( World world, int x, int y, int z, int meta, EffectRenderer effectRenderer )
+	{
+		// don't show block break effects
+		return true;
 	}
 }

@@ -49,7 +49,7 @@ public class RenderShip2D
 		// draw the water rect
 		drawWater( x, y + maxHeight - waterRectHeight, z, maxWidth, waterRectHeight );
 		
-		if( sinkHeight != null )
+		if( waterHeight != null && sinkHeight != null )
 		{
 			// draw the sink line
 			int sinkLineY = (int)( ( sinkHeight - envelope.getVMin() )*blockSize + ( maxHeight - shipHeight )/2.0 );
