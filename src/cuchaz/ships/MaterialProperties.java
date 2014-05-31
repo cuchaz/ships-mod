@@ -20,6 +20,8 @@ import net.minecraft.block.BlockHalfSlab;
 import net.minecraft.block.BlockStairs;
 import net.minecraft.block.BlockTrapDoor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.material.MaterialLiquid;
+import net.minecraft.block.material.MaterialTransparent;
 
 public class MaterialProperties
 {
@@ -163,9 +165,28 @@ public class MaterialProperties
 			return true;
 		}
 		
-		return !block.blockMaterial.isSolid() && block.blockMaterial.isReplaceable();
-		// this should include: liquid blocks, fire blocks, air blocks
-		// this should exclude: solid blocks, circuits
+		Material material = block.blockMaterial;
+		
+		// UNDONE: base this off properties instead of material classes
+		// so we have a hope of detecting mod blocks correctly
+		return material instanceof MaterialLiquid || material instanceof MaterialTransparent;
+		
+		/*
+		if( material.isSolid() )
+		{
+			return false;
+		}
+		
+		if( material.isLiquid() )
+		{
+			return true;
+		}
+		
+		if( !material.isReplaceable() )
+		{
+			return false;
+		}
+		*/
 		
 		// UNDONE: add dock blocks
 	}
