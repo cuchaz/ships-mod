@@ -18,6 +18,7 @@ import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.config.BlockProperties;
 
 public class BlocksStorage
 {
@@ -101,7 +102,7 @@ public class BlocksStorage
 			for( Coords coords : m_blocks.keySet() )
 			{
 				Block block = Block.blocksList[getBlock( coords ).id];
-				if( MaterialProperties.isWatertight( block ) )
+				if( BlockProperties.isWatertight( block ) )
 				{
 					watertightBlocks.add( coords );
 				}

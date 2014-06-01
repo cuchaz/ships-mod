@@ -31,6 +31,7 @@ import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.blocks.Envelopes;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.packets.PacketShipLaunched;
 
 public class ShipLauncher
@@ -97,7 +98,7 @@ public class ShipLauncher
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			ShipBlockNeighbors

@@ -21,6 +21,7 @@ import net.minecraft.util.Vec3;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class ShipPhysics
@@ -81,7 +82,7 @@ public class ShipPhysics
 		m_shipMass = 0.0;
 		for( Coords coords : m_blocks.coords() )
 		{
-			m_shipMass += MaterialProperties.getMass( getBlock( coords ) );
+			m_shipMass += BlockProperties.getMass( getBlock( coords ) );
 		}
 		
 		// compute some extra stuff
@@ -310,7 +311,7 @@ public class ShipPhysics
 		StringBuilder buf = new StringBuilder();
 		for( Coords coords : m_blocks.coords() )
 		{
-			double mass = MaterialProperties.getMass( getBlock( coords ) );
+			double mass = BlockProperties.getMass( getBlock( coords ) );
 			buf.append( String.format( "%3d,%3d,%3d %4d %4.1f\n", coords.x, coords.y, coords.z, m_blocks.getBlock( coords ).id, mass ) );
 		}
 		return buf.toString();
@@ -335,12 +336,12 @@ public class ShipPhysics
 			entry.surfaceDisplacement = 0;
 			for( Coords coords : m_blocks.getDisplacement().getSurfaceBlocks( y ) )
 			{
-				entry.surfaceDisplacement += MaterialProperties.getDisplacement( getBlock( coords ) );
+				entry.surfaceDisplacement += BlockProperties.getDisplacement( getBlock( coords ) );
 			}
 			entry.underwaterDisplacement = 0;
 			for( Coords coords : m_blocks.getDisplacement().getUnderwaterBlocks( y ) )
 			{
-				entry.underwaterDisplacement += MaterialProperties.getDisplacement( getBlock( coords ) );
+				entry.underwaterDisplacement += BlockProperties.getDisplacement( getBlock( coords ) );
 			}
 		}
 		return entry;
@@ -379,7 +380,7 @@ public class ShipPhysics
 		double totalMass = 0.0;
 		for( Coords coords : m_blocks.coords() )
 		{
-			double mass = MaterialProperties.getMass( getBlock( coords ) );
+			double mass = BlockProperties.getMass( getBlock( coords ) );
 			totalMass += mass;
 			com.xCoord += mass*( coords.x + 0.5 );
 			com.yCoord += mass*( coords.y + 0.5 );
@@ -418,6 +419,6 @@ public class ShipPhysics
 	private double getWaterBlockMass( )
 	{
 		// UNDONE: use block y make the mass increase with depth
-		return MaterialProperties.getMass( Block.waterStill );
+		return BlockProperties.getMass( Block.waterStill );
 	}
 }

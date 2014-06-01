@@ -25,6 +25,7 @@ import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.math.CircleRange;
+import cuchaz.ships.config.BlockProperties;
 
 public class ShipUnlauncher
 {
@@ -67,7 +68,7 @@ public class ShipUnlauncher
 							continue;
 						}
 						
-						if( !MaterialProperties.isSeparatorBlock( getBlock( unlauncher.m_ship.worldObj, neighborCoords ) ) )
+						if( !BlockProperties.isSeparator( getBlock( unlauncher.m_ship.worldObj, neighborCoords ) ) )
 						{
 							return false;
 						}

@@ -26,11 +26,11 @@ import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.Coords;
-import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipType;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketEraseShip;
 
@@ -90,7 +90,7 @@ public class ItemShipEraser extends Item
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			ShipLauncher.ShipBlockNeighbors

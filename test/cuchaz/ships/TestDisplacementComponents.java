@@ -1,14 +1,17 @@
 package cuchaz.ships;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import net.minecraft.block.Block;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
-import cuchaz.modsShared.blocks.Coords;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
+import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.persistence.BlockStoragePersistence;
 
 public class TestDisplacementComponents
@@ -73,7 +76,7 @@ public class TestDisplacementComponents
 			{
 				// make sure the block is not watertight
 				Block block = Block.blocksList[shipBlocks.getBlock( coords ).id];
-				assertFalse( MaterialProperties.isWatertight( block ) );
+				assertFalse( BlockProperties.isWatertight( block ) );
 				
 				// this block should not be connected to the shell below this y
 				assertFalse( BlockUtils.isConnectedToShell( coords, shipBlocks.coords(), Neighbors.Faces, y ) );
@@ -97,7 +100,7 @@ public class TestDisplacementComponents
 						coords.x, coords.y, coords.z, y,
 						trappedAir.getBoundingBox().toString(), trappedAir.toString()
 					),
-					MaterialProperties.isWatertight( block )
+					BlockProperties.isWatertight( block )
 				);
 			}
 		}

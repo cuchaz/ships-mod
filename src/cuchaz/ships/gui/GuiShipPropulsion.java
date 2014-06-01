@@ -30,9 +30,9 @@ import cuchaz.modsShared.blocks.BlockUtils.BlockConditionChecker;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.blocks.Coords;
-import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.Ships;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.propulsion.Propulsion;
 import cuchaz.ships.render.RenderShip2D;
 import cuchaz.ships.render.ShaderLoader;
@@ -85,7 +85,7 @@ public class GuiShipPropulsion extends GuiShip
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			Neighbors.Edges

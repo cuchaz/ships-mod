@@ -37,10 +37,10 @@ import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
-import cuchaz.ships.MaterialProperties;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipType;
 import cuchaz.ships.Ships;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPasteShip;
 import cuchaz.ships.persistence.BlockStoragePersistence;
@@ -129,7 +129,7 @@ public class ItemShipClipboard extends Item
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !MaterialProperties.isSeparatorBlock( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
 				}
 			},
 			ShipLauncher.ShipBlockNeighbors
