@@ -277,7 +277,7 @@ public class ItemShipClipboard extends Item
 		{
 			// it's probably not a ship world, try reading just the blocks
 			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( encodedBlocks );
-			return new ShipWorld( world, storage, new BlockMap<TileEntity>(), new BlockMap<EntityHanging>() );
+			return new ShipWorld( world, storage, new BlockMap<TileEntity>(), new BlockMap<EntityHanging>(), 0 );
 		}
 	}
 

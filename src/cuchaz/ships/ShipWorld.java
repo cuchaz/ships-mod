@@ -31,6 +31,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -55,6 +56,7 @@ public class ShipWorld extends DetachedWorld
 	private BlockMap<EntityHanging> m_hangingEntities;
 	private BlockSet m_changedBlocks;
 	private boolean m_needsRenderUpdate;
+	private int m_biomeId;
 	
 	public ShipWorld( World world )
 	{
@@ -66,9 +68,10 @@ public class ShipWorld extends DetachedWorld
 		m_tileEntities = new BlockMap<TileEntity>();
 		m_hangingEntities = new BlockMap<EntityHanging>();
 		m_changedBlocks = new BlockSet();
+		m_biomeId = 0;
 	}
 	
-	public ShipWorld( World world, BlocksStorage storage, BlockMap<TileEntity> tileEntities, BlockMap<EntityHanging> hangingEntities )
+	public ShipWorld( World world, BlocksStorage storage, BlockMap<TileEntity> tileEntities, BlockMap<EntityHanging> hangingEntities, int biomeId )
 	{
 		this( world );
 		
@@ -76,6 +79,7 @@ public class ShipWorld extends DetachedWorld
 		m_storage = storage;
 		m_tileEntities = tileEntities;
 		m_hangingEntities = hangingEntities;
+		m_biomeId = biomeId;
 		
 		// init the tile entities in the world
 		for( TileEntity tileEntity : m_tileEntities.values() )
@@ -175,6 +179,9 @@ public class ShipWorld extends DetachedWorld
 				);
 			}
 		}
+		
+		// copy the biome
+		m_biomeId = world.getBiomeGenForCoords( originCoords.x, originCoords.z ).biomeID;
 	}
 	
 	public void restoreToWorld( World world, Map<Coords,Coords> correspondence, int waterHeightInBlockSpace )
@@ -341,6 +348,11 @@ public class ShipWorld extends DetachedWorld
 	public BlockMap<EntityHanging> hangingEntities( )
 	{
 		return m_hangingEntities;
+	}
+	
+	public int getBiomeId( )
+	{
+		return m_biomeId;
 	}
 	
 	public ShipGeometry getGeometry( )
@@ -750,4 +762,27 @@ public class ShipWorld extends DetachedWorld
 		entity.worldObj = m_ship.worldObj;
 		return m_ship.worldObj.spawnEntityInWorld( entity );
     }
+	
+	@Override
+	public BiomeGenBase getBiomeGenForCoords( int x, int z )
+	{
+		// sanity checking on the biome id
+		int biomeId = m_biomeId;
+		if( m_biomeId < 0 )
+		{
+			biomeId = 0;
+		}
+		else if( biomeId > BiomeGenBase.biomeList.length )
+		{
+			biomeId = BiomeGenBase.biomeList.length - 1;
+		}
+		
+		// get the biome
+		BiomeGenBase biome = BiomeGenBase.biomeList[m_biomeId];
+		if( biome == null )
+		{
+			biome = BiomeGenBase.biomeList[0];
+		}
+		return biome;
+	}
 }

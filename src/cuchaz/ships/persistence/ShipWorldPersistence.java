@@ -59,7 +59,7 @@ public enum ShipWorldPersistence
 				tileEntities.put( coords, tileEntity );
 			}
 			
-			return new ShipWorld( world, storage, tileEntities, new BlockMap<EntityHanging>() );
+			return new ShipWorld( world, storage, tileEntities, new BlockMap<EntityHanging>(), 0 );
 		}
 		
 		@Override
@@ -112,7 +112,7 @@ public enum ShipWorldPersistence
 				hangingEntities.put( coords, hangingEntity );
 			}
 			
-			return new ShipWorld( world, storage, tileEntities, hangingEntities );
+			return new ShipWorld( world, storage, tileEntities, hangingEntities, 0 );
 		}
 		
 		@Override
@@ -159,6 +159,94 @@ public enum ShipWorldPersistence
 				}
 				NBTBase.writeNamedTag( nbt, out );
 			}
+		}
+	},
+	V3( 3 )
+	{
+		@Override
+		public ShipWorld onRead( World world, DataInputStream in )
+		throws IOException, UnrecognizedPersistenceVersion
+		{
+			// read the blocks
+			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( in );
+			
+			// read the tile entities
+			BlockMap<TileEntity> tileEntities = new BlockMap<TileEntity>();
+			int numTileEntities = in.readInt();
+			for( int i = 0; i < numTileEntities; i++ )
+			{
+				// create the tile entity
+				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
+				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
+				tileEntities.put( coords, tileEntity );
+			}
+			
+			// read the hanging entities
+			BlockMap<EntityHanging> hangingEntities = new BlockMap<EntityHanging>();
+			int numHangingEntities = in.readInt();
+			for( int i = 0; i < numHangingEntities; i++ )
+			{
+				// create the hanging entity
+				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				EntityHanging hangingEntity = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
+				Coords coords = new Coords( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
+				hangingEntities.put( coords, hangingEntity );
+			}
+			
+			// read the biome
+			int biomeId = in.readInt();
+			
+			return new ShipWorld( world, storage, tileEntities, hangingEntities, biomeId );
+		}
+		
+		@Override
+		public void onWrite( ShipWorld shipWorld, DataOutputStream out )
+		throws IOException
+		{
+			// write out the blocks
+			BlockStoragePersistence.V2.write( shipWorld.getBlocksStorage(), out );
+			
+			// write out the tile entities
+			out.writeInt( shipWorld.tileEntities().size() );
+			for( TileEntity tileEntity : shipWorld.tileEntities().values() )
+			{
+				NBTTagCompound nbt = new NBTTagCompound();
+				try
+				{
+					tileEntity.writeToNBT( nbt );
+				}
+				catch( Throwable t )
+				{
+					Ships.logger.warning( t, "Tile entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
+						tileEntity.getClass().getName(),
+						tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord
+					);
+				}
+				NBTBase.writeNamedTag( nbt, out );
+			}
+			
+			// write out the hanging entities
+			out.writeInt( shipWorld.hangingEntities().size() );
+			for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
+			{
+				NBTTagCompound nbt = new NBTTagCompound();
+				try
+				{
+					hangingEntity.writeToNBTOptional( nbt );
+				}
+				catch( Throwable t )
+				{
+					Ships.logger.warning( t, "Hanging entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
+						hangingEntity.getClass().getName(),
+						hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition
+					);
+				}
+				NBTBase.writeNamedTag( nbt, out );
+			}
+			
+			// write out the biome
+			out.writeInt( shipWorld.getBiomeId() );
 		}
 	};
 	
