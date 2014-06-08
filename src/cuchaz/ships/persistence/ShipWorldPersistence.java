@@ -21,6 +21,9 @@ import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.codec.binary.Base64InputStream;
+import org.apache.commons.codec.binary.Base64OutputStream;
+
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTBase;
@@ -159,6 +162,8 @@ public enum ShipWorldPersistence
 		}
 	};
 	
+	private static final String Encoding = "UTF-8";
+	
 	private static TreeMap<Integer,ShipWorldPersistence> m_versions;
 	
 	static
@@ -188,6 +193,23 @@ public enum ShipWorldPersistence
 	private static ShipWorldPersistence getNewestVersion( )
 	{
 		return m_versions.lastEntry().getValue();
+	}
+	
+	public static ShipWorld readAnyVersion( World world, String data )
+	throws UnrecognizedPersistenceVersion
+	{
+		try
+		{
+			// STREAM MADNESS!!! @_@  MADNESS, I TELL YOU!!
+			DataInputStream in = new DataInputStream( new GZIPInputStream( new Base64InputStream( new ByteArrayInputStream( data.getBytes( Encoding ) ) ) ) );
+			ShipWorld shipWorld = readAnyVersion( world, in );
+			in.close();
+			return shipWorld;
+		}
+		catch( IOException ex )
+		{
+			throw new UnrecognizedPersistenceVersion(); 
+		}
 	}
 	
 	public static ShipWorld readAnyVersion( World world, byte[] data )
@@ -226,6 +248,22 @@ public enum ShipWorldPersistence
 			throw new UnrecognizedPersistenceVersion( version );
 		}
 		return persistence.onRead( world, din );
+	}
+	
+	public static String writeNewestVersionToString( ShipWorld shipWorld )
+	{
+		try
+		{
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			DataOutputStream out = new DataOutputStream( new GZIPOutputStream( new Base64OutputStream( buffer ) ) );
+			writeNewestVersion( shipWorld, out );
+			out.close();
+			return new String( buffer.toByteArray(), Encoding );
+		}
+		catch( IOException ex )
+		{
+			throw new Error( ex );
+		}
 	}
 	
 	public static byte[] writeNewestVersion( ShipWorld shipWorld )
