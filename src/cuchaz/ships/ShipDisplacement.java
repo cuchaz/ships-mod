@@ -214,68 +214,72 @@ public class ShipDisplacement
 		for( int y=minY; y<=maxY+1; y++ )
 		{
 			// get all the segments at y
-			List<BlockSet> ySegments = BlockUtils.getConnectedComponents( boundaryIndex.get( y ), VoidBlockNeighbors );
-			
-			// merge them with existing segments
-			int numFilledBlocks = 0;
-			for( BlockSet ySegment : ySegments )
+			BlockSet blocksAtY = boundaryIndex.get( y );
+			if( blocksAtY != null )
 			{
-				List<ClassifiedSegment> connectedSegments = getYConnectedSegments( ySegment, boundarySegments, VoidBlockNeighbors );
-				if( connectedSegments.isEmpty() )
+				List<BlockSet> ySegments = BlockUtils.getConnectedComponents( blocksAtY, VoidBlockNeighbors );
+				
+				// merge them with existing segments
+				int numFilledBlocks = 0;
+				for( BlockSet ySegment : ySegments )
 				{
-					// add the new segment
-					ClassifiedSegment classifiedSegment = new ClassifiedSegment();
-					classifiedSegment.segment = ySegment;
-					classifiedSegment.isTrapped = !BlockUtils.isConnectedToShell( ySegment.iterator().next(), m_blocks, VoidBlockNeighbors, y );
-					classifiedSegment.surfaceBlocks = new BlockSet( ySegment );
-					classifiedSegment.underwaterBlocks = new BlockSet();
-					boundarySegments.add( classifiedSegment );
-				}
-				else
-				{
-					// count the number of possibly filled blocks
-					int numPossiblyFilledBlocks = 0;
-					for( ClassifiedSegment segment : connectedSegments )
+					List<ClassifiedSegment> connectedSegments = getYConnectedSegments( ySegment, boundarySegments, VoidBlockNeighbors );
+					if( connectedSegments.isEmpty() )
 					{
-						if( segment.isTrapped )
+						// add the new segment
+						ClassifiedSegment classifiedSegment = new ClassifiedSegment();
+						classifiedSegment.segment = ySegment;
+						classifiedSegment.isTrapped = !BlockUtils.isConnectedToShell( ySegment.iterator().next(), m_blocks, VoidBlockNeighbors, y );
+						classifiedSegment.surfaceBlocks = new BlockSet( ySegment );
+						classifiedSegment.underwaterBlocks = new BlockSet();
+						boundarySegments.add( classifiedSegment );
+					}
+					else
+					{
+						// count the number of possibly filled blocks
+						int numPossiblyFilledBlocks = 0;
+						for( ClassifiedSegment segment : connectedSegments )
 						{
-							numPossiblyFilledBlocks += segment.segment.size();
+							if( segment.isTrapped )
+							{
+								numPossiblyFilledBlocks += segment.segment.size();
+							}
+						}
+						
+						// merge all the existing segments
+						ClassifiedSegment baseSegment = connectedSegments.get( 0 );
+						if( baseSegment.isTrapped )
+						{
+							// fill in holes for inner boundaries
+							ySegment.addAll( BlockUtils.getHoleFromInnerBoundary( ySegment, m_blocks, VoidBlockNeighbors, y, y ) );
+						}
+						baseSegment.segment.addAll( ySegment );
+						baseSegment.underwaterBlocks.addAll( baseSegment.surfaceBlocks );
+						baseSegment.surfaceBlocks.clear();
+						baseSegment.surfaceBlocks.addAll( ySegment );
+						for( int i=1; i<connectedSegments.size(); i++ )
+						{
+							ClassifiedSegment nextSegment = connectedSegments.get( i );
+							baseSegment.isTrapped = baseSegment.isTrapped && nextSegment.isTrapped;
+							baseSegment.segment.addAll( nextSegment.segment );
+							baseSegment.underwaterBlocks.addAll( nextSegment.surfaceBlocks );
+							baseSegment.underwaterBlocks.addAll( nextSegment.underwaterBlocks );
+							boundarySegments.remove( nextSegment );
+						}
+						
+						// record the number of filled blocks
+						if( !baseSegment.isTrapped )
+						{
+							numFilledBlocks += numPossiblyFilledBlocks;
 						}
 					}
-					
-					// merge all the existing segments
-					ClassifiedSegment baseSegment = connectedSegments.get( 0 );
-					if( baseSegment.isTrapped )
-					{
-						// fill in holes for inner boundaries
-						ySegment.addAll( BlockUtils.getHoleFromInnerBoundary( ySegment, m_blocks, VoidBlockNeighbors, y, y ) );
-					}
-					baseSegment.segment.addAll( ySegment );
-					baseSegment.underwaterBlocks.addAll( baseSegment.surfaceBlocks );
-					baseSegment.surfaceBlocks.clear();
-					baseSegment.surfaceBlocks.addAll( ySegment );
-					for( int i=1; i<connectedSegments.size(); i++ )
-					{
-						ClassifiedSegment nextSegment = connectedSegments.get( i );
-						baseSegment.isTrapped = baseSegment.isTrapped && nextSegment.isTrapped;
-						baseSegment.segment.addAll( nextSegment.segment );
-						baseSegment.underwaterBlocks.addAll( nextSegment.surfaceBlocks );
-						baseSegment.underwaterBlocks.addAll( nextSegment.underwaterBlocks );
-						boundarySegments.remove( nextSegment );
-					}
-					
-					// record the number of filled blocks
-					if( !baseSegment.isTrapped )
-					{
-						numFilledBlocks += numPossiblyFilledBlocks;
-					}
 				}
-			}
-			
-			// handle any filled blocks
-			if( numFilledBlocks > 0 )
-			{
-				m_displacement.get( y - 1 ).numFillableBlocks = numFilledBlocks;
+				
+				// handle any filled blocks
+				if( numFilledBlocks > 0 )
+				{
+					m_displacement.get( y - 1 ).numFillableBlocks = numFilledBlocks;
+				}
 			}
 			
 			// compute the trapped air so far

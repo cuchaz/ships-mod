@@ -18,15 +18,18 @@ import cuchaz.ships.BlocksStorage;
 
 public class Sail extends PropulsionMethod
 {
-	public static final double ThrustPerBlock = Util.perSecond2ToPerTick2( 10 ); // N
+	public static final double ThrustPerForwardBlock = Util.perSecond2ToPerTick2( 8 ); // N
+	public static final double ThrustPerSideBlock = Util.perSecond2ToPerTick2( 2 ); // N
 	
-	private int m_numExposedBlocks;
+	private int m_numForwardBlocks;
+	private int m_numSideBlocks;
 	
 	protected Sail( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection )
 	{
 		super( "Sail", "Sails", sailBlocks );
 		
-		m_numExposedBlocks = getNumExposedBlocks( shipBlocks, sailBlocks, frontDirection );
+		m_numForwardBlocks = getNumExposedBlocks( shipBlocks, sailBlocks, frontDirection );
+		m_numSideBlocks = getNumExposedBlocks( shipBlocks, sailBlocks, frontDirection.rotateXZCw( 1 ) );
 	}
 	
 	@Override
@@ -36,36 +39,27 @@ public class Sail extends PropulsionMethod
 		// sails have full strength when the ship isn't moving
 		// when the ship reaches the wind speed, the sails don't add anymore thrust
 		// although, wind speed is implicit here...
-		return ThrustPerBlock*m_numExposedBlocks/( speed + 1 );
+		return ( ThrustPerForwardBlock*m_numForwardBlocks + ThrustPerSideBlock*m_numSideBlocks )/( speed + 1 );
 	}
 	
 	public boolean isValid( )
 	{
-		// if the number of exposed blocks is at least 50% of the sail, it's a good sail
-		return m_numExposedBlocks >= getCoords().size()/2;
+		// sails are always valid
+		return true;
 	}
 	
-	private int getNumExposedBlocks( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection )
+	private int getNumExposedBlocks( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide checkDirection )
 	{
 		int numExposedBlocks = 0;
-		Coords neighborCoords = new Coords();
-		BlockSide backDirection = frontDirection.getOppositeSide();
+		Coords checkCoords = new Coords();
 		for( Coords coords : sailBlocks )
 		{
-			neighborCoords.set(
-				coords.x + frontDirection.getDx(),
-				coords.y + frontDirection.getDy(),
-				coords.z + frontDirection.getDz()
+			checkCoords.set(
+				coords.x + checkDirection.getDx(),
+				coords.y + checkDirection.getDy(),
+				coords.z + checkDirection.getDz()
 			);
-			int frontId = shipBlocks.getBlock( neighborCoords ).id;
-			neighborCoords.set(
-				coords.x + backDirection.getDx(),
-				coords.y + backDirection.getDy(),
-				coords.z + backDirection.getDz()
-			);
-			int backId = shipBlocks.getBlock( neighborCoords ).id;
-			
-			if( frontId == 0 && backId == 0 )
+			if( shipBlocks.getBlock( checkCoords ).id == 0 )
 			{
 				numExposedBlocks++;
 			}
