@@ -28,6 +28,15 @@ public class ObfuscationAwareAdapter extends ClassVisitor
 		m_isObfuscatedEnvironment = isObfuscatedEnvironment;
 	}
 	
+	public ClassVisitor getPreviousClassVisitor( )
+	{
+		return cv;
+	}
+	public void setPreviousClassVisitor( ClassVisitor val )
+	{
+		cv = val;
+	}
+	
 	protected String getRuntimeClassName( String clearClassName )
 	{
 		if( m_isObfuscatedEnvironment )

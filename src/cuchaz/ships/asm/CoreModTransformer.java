@@ -16,12 +16,14 @@ import java.util.List;
 import net.minecraft.launchwrapper.IClassTransformer;
 
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
 public class CoreModTransformer implements IClassTransformer
 {
+	private static ObfuscationAwareAdapter m_adapterHead = null;
+	private static ObfuscationAwareAdapter m_adapterTail = null;
+	
 	@Override
 	public byte[] transform( String name, String transformedName, byte[] classData )
 	{
@@ -48,20 +50,25 @@ public class CoreModTransformer implements IClassTransformer
 				return classData;
 			}
 			
-			ClassWriter writer = new ClassWriter( ClassWriter.COMPUTE_MAXS );
-			
 			// set up the adapter chain
-			ClassVisitor tailAdapter = writer;
-			tailAdapter = new TileEntityInventoryAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-			tailAdapter = new EntityMoveAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-			tailAdapter = new WorldAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-			tailAdapter = new EntityRendererAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-			tailAdapter = new EntityLadderAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
-			tailAdapter = new EntityDistanceAdapter( Opcodes.ASM4, tailAdapter, CoreModPlugin.isObfuscatedEnvironment );
+			if( m_adapterHead == null || m_adapterTail == null )
+			{
+				ObfuscationAwareAdapter adapter = new TileEntityInventoryAdapter( Opcodes.ASM4, null, CoreModPlugin.isObfuscatedEnvironment );
+				m_adapterHead = adapter;
+				adapter = new EntityMoveAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				adapter = new WorldAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				adapter = new EntityRendererAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				adapter = new EntityLadderAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				adapter = new EntityDistanceAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				adapter = new ServerConfigurationManagerAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				m_adapterTail = adapter;
+			}
 			
 			// run the transformations
-			new ClassReader( classData ).accept( tailAdapter, 0 );
-			return writer.toByteArray();
+			ClassWriter classWriter = new ClassWriter( ClassWriter.COMPUTE_MAXS );
+			m_adapterHead.setPreviousClassVisitor( classWriter );
+			new ClassReader( classData ).accept( m_adapterTail, 0 );
+			return classWriter.toByteArray();
 		}
 		catch( Throwable t )
 		{

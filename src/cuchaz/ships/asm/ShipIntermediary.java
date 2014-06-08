@@ -17,6 +17,7 @@ import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
@@ -26,6 +27,7 @@ import net.minecraft.world.World;
 import cuchaz.modsShared.Environment;
 import cuchaz.ships.Collider;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.PlayerRespawner;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
@@ -148,6 +150,11 @@ public class ShipIntermediary
 		
 		// returning a negative number signals that the original distance function should be executed
 		return -1;
+	}
+	
+	public static void onPlayerRespawn( EntityPlayerMP oldPlayer, EntityPlayerMP newPlayer, int dimension )
+	{
+		PlayerRespawner.onPlayerRespawn( oldPlayer, newPlayer, dimension );
 	}
 	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )
