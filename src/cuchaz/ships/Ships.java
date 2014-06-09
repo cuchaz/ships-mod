@@ -50,10 +50,12 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.FMLHacker;
 import cuchaz.ships.blocks.BlockAirWall;
+import cuchaz.ships.blocks.BlockBerth;
 import cuchaz.ships.blocks.BlockHelm;
 import cuchaz.ships.blocks.BlockShip;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
+import cuchaz.ships.items.ItemBerth;
 import cuchaz.ships.items.ItemListOfSupporters;
 import cuchaz.ships.items.ItemMagicBucket;
 import cuchaz.ships.items.ItemMagicShipLevitator;
@@ -108,11 +110,13 @@ public class Ships extends DummyModContainer
 	public static final ItemSupporterPlaque m_itemSupporterPlaque = new ItemSupporterPlaque( 7326 );
 	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser( 7327 );
 	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque( 7328 );
+	public static final ItemBerth m_itemBerth = new ItemBerth( 7329 );
 	
 	// block registration: use ids [3170-3190]
 	public static final BlockShip m_blockShip = new BlockShip( 3170 );
 	public static final BlockAirWall m_blockAirWall = new BlockAirWall( 3171 );
 	public static final BlockHelm m_blockHelm = new BlockHelm( 3712 );
+	public static final BlockBerth m_blockBerth = new BlockBerth( 3713 );
 	
 	// entity registration
 	public static final int EntityShipId = 174;
@@ -283,6 +287,7 @@ public class Ships extends DummyModContainer
 		ShipType.registerBlocks();
 		GameRegistry.registerBlock( m_blockAirWall, "blockAirWall" );
 		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );
+		GameRegistry.registerBlock( m_blockBerth, "blockBerth" );
 		
 		// items
 		GameRegistry.registerItem( m_itemPaddle, "paddle" );
@@ -293,6 +298,7 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemSupporterPlaque, "supporterPlaque" );
 		GameRegistry.registerItem( m_itemShipEraser, "shipEraser" );
 		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
+		GameRegistry.registerItem( m_itemBerth, "berth" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
@@ -311,6 +317,7 @@ public class Ships extends DummyModContainer
 		// block names
 		LanguageRegistry.addName( m_blockAirWall, "Air Wall" );
 		LanguageRegistry.addName( m_blockHelm, "Helm" );
+		LanguageRegistry.addName( m_blockBerth, "Berth" );
 		
 		// item names
 		LanguageRegistry.addName( m_itemPaddle, "Paddle" );
@@ -320,6 +327,7 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_itemListOfSupporters, "Cuchaz Interactive List of Supporters" );
 		LanguageRegistry.addName( m_itemShipEraser, "Ship Eraser" );
 		LanguageRegistry.addName( m_itemShipPlaque, "Ship Plaque" );
+		LanguageRegistry.addName( m_itemBerth, "Berth" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
@@ -338,6 +346,7 @@ public class Ships extends DummyModContainer
 		ItemStack goldStack = new ItemStack( Item.ingotGold );
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		ItemStack paperStack = new ItemStack( Item.paper );
+		ItemStack clothStack = new ItemStack( Block.cloth );
 		
 		// paddle
 		GameRegistry.addRecipe(
@@ -381,5 +390,14 @@ public class Ships extends DummyModContainer
 				'y', plankStack
 			);
 		}
+		
+		// berth
+		GameRegistry.addRecipe(
+			new ItemStack( m_itemBerth ),
+			"   ", "xxx", "yzy",
+			'x', clothStack,
+			'y', stickStack,
+			'z', ironStack
+		);
 	}
 }
