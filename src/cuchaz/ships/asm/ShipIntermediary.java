@@ -152,6 +152,11 @@ public class ShipIntermediary
 		return -1;
 	}
 	
+	public static void onPlayerWakeUp( EntityPlayer player, boolean wasSleepSuccessful )
+	{
+		PlayerRespawner.onPlayerWakeUp( player, wasSleepSuccessful );
+	}
+	
 	public static void onPlayerRespawn( EntityPlayerMP oldPlayer, EntityPlayerMP newPlayer, int dimension )
 	{
 		PlayerRespawner.onPlayerRespawn( oldPlayer, newPlayer, dimension );

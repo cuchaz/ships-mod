@@ -61,6 +61,7 @@ public class CoreModTransformer implements IClassTransformer
 				adapter = new EntityLadderAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
 				adapter = new EntityDistanceAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
 				adapter = new ServerConfigurationManagerAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
+				adapter = new EntityPlayerAdapter( Opcodes.ASM4, adapter, CoreModPlugin.isObfuscatedEnvironment );
 				m_adapterTail = adapter;
 			}
 			
