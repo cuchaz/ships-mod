@@ -11,119 +11,171 @@
 package cuchaz.ships;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
-import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerAccessor;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.EnumStatus;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 
 public class PlayerRespawner
 {
-	public static EnumStatus sleepInBedAt( int x, int y, int z )
+	private static class BerthCoords
+	{
+		World world;
+		int x;
+		int y;
+		int z;
+		
+		public BerthCoords( World world, int x, int y, int z )
+		{
+			this.world = world;
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	}
+	
+	private static Map<Integer,BerthCoords> m_playerSleptInBerth;
+	private static Map<String,BerthCoords> m_playerSavedBerths;
+	
+	static
+	{
+		m_playerSleptInBerth = new TreeMap<Integer,BerthCoords>();
+		m_playerSavedBerths = new TreeMap<String,BerthCoords>();
+	}
+	
+	public static EnumStatus sleepInBedAt( World world, int x, int y, int z, EntityPlayer player )
     {
-		return null;
-		/*
-        PlayerSleepInBedEvent event = new PlayerSleepInBedEvent(this, x, y, z);
-        MinecraftForge.EVENT_BUS.post(event);
-        if (event.result != null)
-        {
-            return event.result;
-        }
-        if (!this.worldObj.isRemote)
-        {
-            if (this.isPlayerSleeping() || !this.isEntityAlive())
+		// sadly, I have to re-implement some logic from EntityPlayer.sleepInBed() to get this to work...
+		
+		if( !world.isRemote )
+		{
+			// on the server, check for some conditions
+            if( player.isPlayerSleeping() || !player.isEntityAlive() )
             {
                 return EnumStatus.OTHER_PROBLEM;
             }
-
-            if (!this.worldObj.provider.isSurfaceWorld())
+            if( !world.provider.isSurfaceWorld() )
             {
                 return EnumStatus.NOT_POSSIBLE_HERE;
             }
-
-            if (this.worldObj.isDaytime())
-            {
-                return EnumStatus.NOT_POSSIBLE_NOW;
-            }
-
-            if (Math.abs(this.posX - (double)x) > 3.0D || Math.abs(this.posY - (double)y) > 2.0D || Math.abs(this.posZ - (double)z) > 3.0D)
-            {
-                return EnumStatus.TOO_FAR_AWAY;
-            }
-
-            double d0 = 8.0D;
-            double d1 = 5.0D;
-            List list = this.worldObj.getEntitiesWithinAABB(EntityMob.class, AxisAlignedBB.getAABBPool().getAABB((double)x - d0, (double)y - d1, (double)z - d0, (double)x + d0, (double)y + d1, (double)z + d0));
-
-            if (!list.isEmpty())
-            {
-                return EnumStatus.NOT_SAFE;
-            }
-        }
-
-        if (this.isRiding())
-        {
-            this.mountEntity((Entity)null);
-        }
-
-        this.setSize(0.2F, 0.2F);
-        this.yOffset = 0.2F;
-
-        if (this.worldObj.blockExists(x, y, z))
-        {
-            int l = this.worldObj.getBlockMetadata(x, y, z);
-            int i1 = BlockBed.getDirection(l);
-            Block block = Block.blocksList[worldObj.getBlockId(x, y, z)];
-            if (block != null)
-            {
-                i1 = block.getBedDirection(worldObj, x, y, z);
-            }
-            float f = 0.5F;
-            float f1 = 0.5F;
-
-            switch (i1)
-            {
-                case 0:
-                    f1 = 0.9F;
-                    break;
-                case 1:
-                    f = 0.1F;
-                    break;
-                case 2:
-                    f1 = 0.1F;
-                    break;
-                case 3:
-                    f = 0.9F;
-            }
-
-            this.func_71013_b(i1);
-            this.setPosition((double)((float)x + f), (double)((float)y + 0.9375F), (double)((float)z + f1));
-        }
-        else
-        {
-            this.setPosition((double)((float)x + 0.5F), (double)((float)y + 0.9375F), (double)((float)z + 0.5F));
-        }
-
-        this.sleeping = true;
-        this.sleepTimer = 0;
-        this.playerLocation = new ChunkCoordinates(x, y, z);
-        this.motionX = this.motionZ = this.motionY = 0.0D;
-
-        if (!this.worldObj.isRemote)
-        {
-            this.worldObj.updateAllPlayersSleepingFlag();
-        }
-
-        return EnumStatus.OK;
-		*/
+			if( world.isDaytime() )
+			{
+				return EnumStatus.NOT_POSSIBLE_NOW;
+			}
+			
+			// get the position of the player in the coordinate system of the blocks
+			Vec3 playerPos = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
+			if( world instanceof ShipWorld )
+			{
+				ShipWorld shipWorld = (ShipWorld)world;
+				EntityShip ship = shipWorld.getShip();
+				ship.worldToShip( playerPos );
+				ship.shipToBlocks( playerPos );
+			}
+			
+			if( Math.abs( playerPos.xCoord - x ) > 3 || Math.abs( playerPos.yCoord - y ) > 2 || Math.abs( playerPos.zCoord - z ) > 3 )
+			{
+				return EnumStatus.TOO_FAR_AWAY;
+			}
+			
+			// are there any mobs nearby?
+			// NOTE: cheat here and use the player position instead of the block position
+			int dXZ = 8;
+			int dY = 5;
+			@SuppressWarnings( "unchecked" )
+			List<EntityMob> mobs = (List<EntityMob>)world.getEntitiesWithinAABB(
+				EntityMob.class,
+				AxisAlignedBB.getAABBPool().getAABB(
+					player.posX - dXZ, player.posY - dY, player.posZ - dXZ,
+					player.posX + dXZ, player.posY + dY, player.posZ + dXZ
+				)
+			);
+			if( !mobs.isEmpty() )
+			{
+				return EnumStatus.NOT_SAFE;
+			}
+		}
+		
+		// NOTE: at this point, we're committed to sleeping
+		
+		if( player.isRiding() )
+		{
+			// stop riding
+			player.mountEntity( null );
+		}
+		
+		// move the player to the sleeping position
+		EntityAccessor.setSize( player, 0.2F, 0.2F );
+		player.yOffset = 0.2F;
+		
+		if( world.blockExists( x, y, z ) )
+		{
+			// move the player into the bed
+			
+			int meta = world.getBlockMetadata( x, y, z );
+			int direction = BlockBed.getDirection( meta );
+			Block block = Block.blocksList[world.getBlockId( x, y, z )];
+			if( block != null )
+			{
+				direction = block.getBedDirection( world, x, y, z );
+			}
+			float dx = 0.5F;
+			float dz = 0.5F;
+			
+			switch( direction )
+			{
+				case 0:
+					dz = 0.9F;
+				break;
+				case 1:
+					dx = 0.1F;
+				break;
+				case 2:
+					dz = 0.1F;
+				break;
+				case 3:
+					dx = 0.9F;
+			}
+			
+			// I can't call this private method and I don't know what it does
+			// let's try not calling it instead. =P
+			//player.func_71013_b( direction );
+			
+			player.setPosition( x + dx, y + 0.9375F, z + dz );
+		}
+		else
+		{
+			// umm... we couldn't find the bed. Just make something up
+			player.setPosition( x + 0.5F, y + 0.9375F, z + 0.5F );
+		}
+		
+		EntityPlayerAccessor.setSleeping( player, true );
+		player.sleepTimer = 0;
+		player.motionX = 0;
+		player.motionZ = 0;
+		player.motionY = 0;
+		
+		if( !world.isRemote )
+		{
+			world.updateAllPlayersSleepingFlag();
+		}
+		
+		// save this player and berth so we can find it again when the player wakes up
+		m_playerSleptInBerth.put( player.entityId, new BerthCoords( world, x, y, z ) );
+		
+		// UNDONE: remove player bed location
+		
+		return EnumStatus.OK;
     }
 	
 	public static void onPlayerWakeUp( EntityPlayer player, boolean wasSleepSuccessful )
@@ -135,44 +187,29 @@ public class PlayerRespawner
 			return;
 		}
 		
-		// ignore interruped sleep
+		// ignore interrupted sleep
 		if( !wasSleepSuccessful )
 		{
 			return;
 		}
 		
-		// is the player at a bed in the world?
-		if( player.playerLocation != null )
+		// what was the last berth the player slept in?
+		BerthCoords coords = m_playerSleptInBerth.get( player.entityId );
+		if( coords == null )
 		{
-			int x = player.playerLocation.posX;
-			int y = player.playerLocation.posY;
-			int z = player.playerLocation.posZ;
-			Block block = Block.blocksList[world.getBlockId( x, y, z )];
-			if( block != null && block.isBed( world, x, y, z, player ) )
-			{
-				saveBedPointer( player, world, x, y, z );
-				return;
-			}
+			return;
 		}
+		m_playerSleptInBerth.remove( player.entityId );
 		
-		// is the player at a bed on a ship?
-		for( EntityShip ship : ShipLocator.getFromEntityLocation( player ) )
+		// is there a berth there?
+		Block block = Block.blocksList[coords.world.getBlockId( coords.x, coords.y, coords.z )];
+		if( block != null && block.blockID == Ships.m_blockBerth.blockID )
 		{
-			
+			// save the berth coords
+			m_playerSavedBerths.put( player.username, coords );
 		}
 	}
 	
-	private static void saveBedPointer( EntityPlayer player, World world, int x, int y, int z )
-	{
-		// TODO Auto-generated method stub
-		
-	}
-	
-	private static void saveBedPointer( EntityPlayer player, EntityShip ship, int x, int y, int z )
-	{
-		// TODO Auto-generated method stub
-	}
-
 	public static void onPlayerRespawn( EntityPlayerMP oldPlayer, EntityPlayerMP newPlayer, int dimension )
 	{
 		// ignore on clients
@@ -192,18 +229,23 @@ public class PlayerRespawner
 		// TEMP
 		Ships.logger.info( "\n\nRespawn!\n\n" );
 		
-		/*
-		// check for a saved ship position
-		// UNDONE: implement these things
-		SavedSpawn savedSpawn = m_savedSpawns.lookup( newPlayer.username, dimension );
-		if( savedSpawn == null )
+		BerthCoords coords = m_playerSavedBerths.get( newPlayer.username );
+		if( coords == null )
 		{
 			return;
 		}
 		
-		// respawn at the saved spawn position
-		Coords spawnPos = savedSpawn.getSpawnPos();
-		newPlayer.setLocationAndAngles( spawnPos.x, spawnPos.y, spawnPos.z, 0, 0 );
-		*/
+		// get the player position in world coords
+		Vec3 p = Vec3.createVectorHelper( coords.x, coords.y, coords.z );
+		if( coords.world instanceof ShipWorld )
+		{
+			ShipWorld shipWorld = (ShipWorld)coords.world;
+			EntityShip ship = shipWorld.getShip();
+			ship.blocksToShip( p );
+			ship.shipToWorld( p );
+		}
+		
+		// respawn at the berth position
+		newPlayer.setLocationAndAngles( p.xCoord, p.yCoord, p.zCoord, 0, 0 );
 	}
 }

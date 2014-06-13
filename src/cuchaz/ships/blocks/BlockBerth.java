@@ -16,7 +16,6 @@ import java.util.Random;
 import net.minecraft.block.BlockBed;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EnumStatus;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -101,21 +100,24 @@ public class BlockBerth extends BlockBed
 		}
 		
 		// start sleeping in the berth
-		EnumStatus enumstatus = PlayerRespawner.sleepInBedAt( x, y, z );
-		if( enumstatus == EnumStatus.OK )
+		switch( PlayerRespawner.sleepInBedAt( world, x, y, z, player ) )
 		{
-			setBedOccupied( world, x, y, z, true );
-		}
-		else
-		{
-			if( enumstatus == EnumStatus.NOT_POSSIBLE_NOW )
-			{
+			case OK:
+				setBedOccupied( world, x, y, z, true );
+			break;
+			
+			case NOT_POSSIBLE_NOW:
 				player.addChatMessage( "tile.bed.noSleep" );
-			}
-			else if( enumstatus == EnumStatus.NOT_SAFE )
-			{
+			break;
+			
+			case NOT_SAFE:
 				player.addChatMessage( "tile.bed.notSafe" );
-			}
+			break;
+			
+			case NOT_POSSIBLE_HERE:
+			case OTHER_PROBLEM:
+			case TOO_FAR_AWAY:
+				player.addChatMessage( "Something bad happened with this berth..." );
 		}
 		
 		return true;
