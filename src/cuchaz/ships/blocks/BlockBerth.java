@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.ships.blocks;
 
-import java.util.List;
 import java.util.Random;
 
 import net.minecraft.block.BlockBed;
@@ -88,7 +87,7 @@ public class BlockBerth extends BlockBed
 		// handle berth occupancy
 		if( isBedOccupied( meta ) )
 		{
-			if( isPlayerInBed( world, x, y, z ) )
+			if( PlayerRespawner.isPlayerInBerth( world, x, y, z ) )
 			{
 				player.addChatMessage( "tile.bed.occupied" );
 				return true;
@@ -100,7 +99,7 @@ public class BlockBerth extends BlockBed
 		}
 		
 		// start sleeping in the berth
-		switch( PlayerRespawner.sleepInBedAt( world, x, y, z, player ) )
+		switch( PlayerRespawner.sleepInBerthAt( world, x, y, z, player ) )
 		{
 			case OK:
 				setBedOccupied( world, x, y, z, true );
@@ -121,23 +120,5 @@ public class BlockBerth extends BlockBed
 		}
 		
 		return true;
-	}
-	
-	@SuppressWarnings( "unchecked" )
-	private boolean isPlayerInBed( World world, int x, int y, int z )
-	{
-		for( EntityPlayer player : (List<EntityPlayer>)world.playerEntities )
-		{
-			// this seems like a tenuous comparison...
-			// but it works in vanilla
-			if( player.isPlayerSleeping()
-				&& player.playerLocation.posX == x
-				&& player.playerLocation.posY == y
-				&& player.playerLocation.posZ == z )
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 }

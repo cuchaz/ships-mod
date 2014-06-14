@@ -11,6 +11,7 @@
 package cuchaz.ships.asm;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -57,6 +58,32 @@ public class EntityPlayerAdapter extends ObfuscationAwareAdapter
 						mv.visitVarInsn( Opcodes.ALOAD, 0 ); // this
 						mv.visitVarInsn( Opcodes.ILOAD, 3 ); // wasSleepSuccessful
 						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "onPlayerWakeUp", String.format( "(L%s;Z)V", EntityPlayerClassName ) );
+					}
+				};
+			}
+			// boolean isInBed( )
+			// func_71065_l
+			else if( methodDesc.equals( "()Z" )
+				&& methodName.equals( getRuntimeMethodName( m_className, "isInBed", "func_71065_l" ) ) )
+			{
+				return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
+				{
+					@Override
+					public void visitCode( )
+					{
+						// call ShipIntermediary.isPlayerInBed( player )
+						mv.visitVarInsn( Opcodes.ALOAD, 0 ); // this
+						mv.visitMethodInsn( Opcodes.INVOKESTATIC, ShipIntermediary.Path, "isPlayerInBed", String.format( "(L%s;)Z", EntityPlayerClassName ) );
+						
+						// boolean return value is on stack now, if it's true, return it
+						// or rather, if it's false, skip to the rest of the method
+						// isTrue = val != 0
+						Label label = new Label();
+						mv.visitInsn( Opcodes.DUP );
+						mv.visitJumpInsn( Opcodes.IFEQ, label );
+						mv.visitInsn( Opcodes.IRETURN );
+						mv.visitLabel( label );
+						mv.visitInsn( Opcodes.POP );
 					}
 				};
 			}

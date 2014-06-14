@@ -162,6 +162,11 @@ public class ShipIntermediary
 		PlayerRespawner.onPlayerRespawn( oldPlayer, newPlayer, dimension );
 	}
 	
+	public static boolean isPlayerInBed( EntityPlayer player )
+	{
+		return PlayerRespawner.isPlayerInBerth( player );
+	}
+	
 	private static double translateDistance( World world, EntityPlayer player, double x, double y, double z )
 	{
 		// is the block on a ship?

@@ -42,6 +42,14 @@ public class PlayerRespawner
 			this.y = y;
 			this.z = z;
 		}
+
+		public boolean equals( World world, int x, int y, int z )
+		{
+			return this.world == world
+				&& this.x == x
+				&& this.y == y
+				&& this.z == z;
+		}
 	}
 	
 	private static Map<Integer,BerthCoords> m_playerSleptInBerth;
@@ -53,7 +61,7 @@ public class PlayerRespawner
 		m_playerSavedBerths = new TreeMap<String,BerthCoords>();
 	}
 	
-	public static EnumStatus sleepInBedAt( World world, int x, int y, int z, EntityPlayer player )
+	public static EnumStatus sleepInBerthAt( World world, int x, int y, int z, EntityPlayer player )
     {
 		// sadly, I have to re-implement some logic from EntityPlayer.sleepInBed() to get this to work...
 		
@@ -159,8 +167,11 @@ public class PlayerRespawner
 			player.setPosition( x + 0.5F, y + 0.9375F, z + 0.5F );
 		}
 		
+		// set sleeping flags
 		EntityPlayerAccessor.setSleeping( player, true );
 		player.sleepTimer = 0;
+		
+		// stop all motion
 		player.motionX = 0;
 		player.motionZ = 0;
 		player.motionY = 0;
@@ -173,10 +184,42 @@ public class PlayerRespawner
 		// save this player and berth so we can find it again when the player wakes up
 		m_playerSleptInBerth.put( player.entityId, new BerthCoords( world, x, y, z ) );
 		
-		// UNDONE: remove player bed location
+		if( !world.isRemote )
+		{
+			// tell all interested clients that the player started sleeping
+			// NOTE: this will eventually call player.sleepInBedAt() on the client.
+			// that's not going to work... we'll have to do something else...
+			/*
+			EntityPlayerMP playerServer = (EntityPlayerMP)player;
+            Packet17Sleep packet = new Packet17Sleep( playerServer, 0, x, y, z );
+            playerServer.getServerForPlayer().getEntityTracker().sendPacketToAllPlayersTrackingEntity( playerServer, packet );
+            playerServer.playerNetServerHandler.setPlayerLocation(
+            	playerServer.posX, playerServer.posY, playerServer.posZ,
+            	playerServer.rotationYaw, playerServer.rotationPitch
+            );
+            playerServer.playerNetServerHandler.sendPacketToPlayer( packet );
+            */
+		}
 		
 		return EnumStatus.OK;
     }
+	
+	public static boolean isPlayerInBerth( EntityPlayer player )
+	{
+		return m_playerSleptInBerth.get( player.entityId ) != null;
+	}
+	
+	public static boolean isPlayerInBerth( World world, int x, int y, int z )
+	{
+		for( BerthCoords coords : m_playerSleptInBerth.values() )
+		{
+			if( coords.equals( world, x, y, z ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public static void onPlayerWakeUp( EntityPlayer player, boolean wasSleepSuccessful )
 	{
@@ -207,6 +250,9 @@ public class PlayerRespawner
 		{
 			// save the berth coords
 			m_playerSavedBerths.put( player.username, coords );
+			
+			// remove old spawn location
+			player.setSpawnChunk( null, false );
 		}
 	}
 	
@@ -225,9 +271,6 @@ public class PlayerRespawner
 			// which means the player will respawn at that bed and we shouldn't do anything
 			return;
 		}
-		
-		// TEMP
-		Ships.logger.info( "\n\nRespawn!\n\n" );
 		
 		BerthCoords coords = m_playerSavedBerths.get( newPlayer.username );
 		if( coords == null )
