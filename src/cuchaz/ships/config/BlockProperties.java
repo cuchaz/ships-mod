@@ -135,6 +135,9 @@ public class BlockProperties
 	
 	private static void readEntries( Map<Block,BlockEntry> entries, File inFile )
 	{
+		// TEMP: don't read entries for now
+		if( true ) return;
+		
 		if( !inFile.exists() )
 		{
 			return;

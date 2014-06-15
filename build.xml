@@ -5,7 +5,7 @@
 	</description>
 	
 	<!-- output file -->
-	<property name="jarName" value="shipsMod-v0.8.beta.jar"/>
+	<property name="jarName" value="shipsMod-v0.9.beta.jar"/>
 	
 	<!-- input paths -->
 	<property name="mcp" location="../forge-v1.6.4/mcp"/>
@@ -34,6 +34,7 @@
 			<fileset dir="${reobf}" includes="cuchaz/modsShared/**/*.class"/>
 			<fileset dir="${reobf}" includes="cuchaz/ships/**/*.class"/>
 			<fileset dir="${reobf}" includes="net/minecraft/entity/EntityAccessor.class"/>
+			<fileset dir="${reobf}" includes="net/minecraft/entity/player/EntityPlayerAccessor.class"/>
 			<fileset dir="${src}" includes="assets/**/*"/>
 		</copy>
 		

@@ -108,7 +108,7 @@ public enum ShipType
 			);
 		}
 	},
-	Epic( 8000, false )
+	Epic( 10000, false )
 	{
 		@Override
 		protected void registerBlock( )
