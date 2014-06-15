@@ -14,9 +14,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShip;

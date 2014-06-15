@@ -135,7 +135,8 @@ public class Ships extends DummyModContainer
 		meta.version = "0.8 BETA";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
-		meta.url = "";
+		meta.url = "http://www.cuchazinteractive.com/shipsMod";
+		meta.credits = "Paddle texture by Snow_Yoshi98";
 		
 		m_source = FMLHacker.getModSource( getClass() );
 		

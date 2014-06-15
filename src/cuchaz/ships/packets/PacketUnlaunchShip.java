@@ -14,7 +14,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;

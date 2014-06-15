@@ -77,6 +77,8 @@ public abstract class MinecraftRunner
 		Method method = classRunnable.getDeclaredMethod( "onRun" );
 		method.setAccessible( true );
 		method.invoke( runnableInstance );
+		
+		cl.close();
 	}
 	
 	public abstract void onRun( ) throws Exception;
