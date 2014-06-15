@@ -49,7 +49,9 @@ public enum GuiString
 	Done( "Done" ),
 	ShipIsUnsinkable( "Ship is un-sinkable!" ),
 	ShipFloatsCloseToSinkLine( "Ship is close to sinking!" ),
-	Sink( "Sink" );
+	Sink( "Sink" ),
+	Slept( "Naps are nap-a-licious!" ),
+	BerthNotFound( "Berth was not found!" );
 	
 	private String m_unlocalizedText;
 	

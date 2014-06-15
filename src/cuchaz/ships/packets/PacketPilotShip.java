@@ -15,12 +15,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import cpw.mods.fml.common.network.PacketDispatcher;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipLocator;
 
 public class PacketPilotShip extends Packet
 {
@@ -74,12 +74,11 @@ public class PacketPilotShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// get the ship
-		Entity entity = player.worldObj.getEntityByID( m_entityId );
-		if( entity == null || !( entity instanceof EntityShip ) )
+		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		if( ship == null )
 		{
 			return;
 		}
-		EntityShip ship = (EntityShip)entity;
 		
 		// handle ship movement
 		ship.setPilotActions( m_actions, m_sideShipForward, false );

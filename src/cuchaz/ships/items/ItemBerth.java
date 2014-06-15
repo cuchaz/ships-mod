@@ -10,7 +10,10 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.BlockBed;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBed;
 import net.minecraft.item.ItemStack;
@@ -25,7 +28,13 @@ public class ItemBerth extends ItemBed
 		super( itemId );
 		
 		setMaxStackSize( 1 );
-		setTextureName( "bed" );
+	}
+	
+	@Override
+	@SideOnly( Side.CLIENT )
+	public void registerIcons( IconRegister iconRegister )
+	{
+		itemIcon = iconRegister.registerIcon( "ships:berth" );
 	}
 	
 	@Override

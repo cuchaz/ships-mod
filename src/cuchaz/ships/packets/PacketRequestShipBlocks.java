@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.common.network.Player;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipLocator;
 
 public class PacketRequestShipBlocks extends Packet
 {
@@ -53,7 +54,7 @@ public class PacketRequestShipBlocks extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// get the ship
-		EntityShip ship = (EntityShip)player.worldObj.getEntityByID( m_entityId );
+		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
 		if( ship == null )
 		{
 			return;

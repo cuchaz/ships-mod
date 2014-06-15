@@ -17,6 +17,7 @@ import java.io.IOException;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipLocator;
 
 public class PacketShipBlockEvent extends Packet
 {
@@ -78,7 +79,7 @@ public class PacketShipBlockEvent extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// get the ship
-		EntityShip ship = (EntityShip)player.worldObj.getEntityByID( m_entityId );
+		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
 		if( ship == null )
 		{
 			return;

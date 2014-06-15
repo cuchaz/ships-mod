@@ -17,6 +17,7 @@ import java.io.IOException;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipUnlauncher;
 
 public class PacketUnlaunchShip extends Packet
@@ -55,12 +56,11 @@ public class PacketUnlaunchShip extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// get the ship
-		Entity entity = player.worldObj.getEntityByID( m_entityId );
-		if( entity == null || !( entity instanceof EntityShip ) )
+		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		if( ship == null )
 		{
 			return;
 		}
-		EntityShip ship = (EntityShip)entity;
 		
 		// unlaunch the ship
 		ShipUnlauncher unlauncher = new ShipUnlauncher( ship );

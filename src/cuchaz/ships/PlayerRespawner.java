@@ -10,9 +10,16 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
@@ -22,22 +29,53 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerAccessor;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.EnumStatus;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ChatMessageComponent;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
+import cuchaz.modsShared.Environment;
+import cuchaz.modsShared.Util;
+import cuchaz.modsShared.blocks.BlockMap;
+import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.blocks.BlockBerth;
+import cuchaz.ships.gui.GuiString;
+import cuchaz.ships.packets.PacketPlayerSleepInBerth;
 
 public class PlayerRespawner
 {
 	private static class BerthCoords
 	{
-		World world;
+		int dimensionId;
+		UUID shipUuid;
 		int x;
 		int y;
 		int z;
 		
+		public BerthCoords( )
+		{
+			this.dimensionId = 0;
+			this.shipUuid = null;
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+		}
+		
 		public BerthCoords( World world, int x, int y, int z )
 		{
-			this.world = world;
+			// sort out the real and ship worlds
+			World realWorld = world;
+			ShipWorld shipWorld = null;
+			if( world instanceof ShipWorld )
+			{
+				shipWorld = (ShipWorld)world;
+				realWorld = shipWorld.getShip().worldObj;
+			}
+			
+			this.dimensionId = realWorld.provider.dimensionId;
+			this.shipUuid = shipWorld != null ? shipWorld.getShip().getPersistentID() : null;
 			this.x = x;
 			this.y = y;
 			this.z = z;
@@ -45,67 +83,140 @@ public class PlayerRespawner
 
 		public boolean equals( World world, int x, int y, int z )
 		{
-			return this.world == world
-				&& this.x == x
-				&& this.y == y
-				&& this.z == z;
+			// easy part first, check the coords
+			if( this.x != x || this.y != y || this.z != z )
+			{
+				return false;
+			}
+			
+			// hard part last, check the dimension/ship
+			if( world instanceof ShipWorld )
+			{
+				return this.shipUuid != null && this.shipUuid.equals( ((ShipWorld)world).getShip().getPersistentID() );
+			}
+			else
+			{
+				return this.dimensionId == world.provider.dimensionId;
+			}
+		}
+		
+		public World getWorldOnServer( )
+		{
+			if( this.shipUuid == null )
+			{
+				return DimensionManager.getWorld( this.dimensionId );
+			}
+			
+			EntityShip ship = getShipOnServer();
+			if( ship != null )
+			{
+				return ship.getShipWorld();
+			}
+			
+			return null;
+		}
+		
+		public EntityShip getShipOnServer( )
+		{
+			if( this.shipUuid == null )
+			{
+				return null;
+			}
+			
+			WorldServer realWorld = DimensionManager.getWorld( this.dimensionId );
+			return ShipLocator.getShip( realWorld, this.shipUuid );
+		}
+
+		public void moveToShip( ShipWorld shipWorld, int x, int y, int z )
+		{
+			this.shipUuid = shipWorld.getShip().getPersistentID();
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+		
+		public void moveToWorld( int x, int y, int z )
+		{
+			this.shipUuid = null;
+			this.x = x;
+			this.y = y;
+			this.z = z;
 		}
 	}
 	
-	private static Map<Integer,BerthCoords> m_playerSleptInBerth;
+	private static Integer m_serverInstanceId;
+	private static Map<Integer,BerthCoords> m_sleepingBerths;
 	private static Map<String,BerthCoords> m_playerSavedBerths;
 	
 	static
 	{
-		m_playerSleptInBerth = new TreeMap<Integer,BerthCoords>();
+		m_serverInstanceId = null;
+		m_sleepingBerths = new TreeMap<Integer,BerthCoords>();
 		m_playerSavedBerths = new TreeMap<String,BerthCoords>();
 	}
 	
+	private static Map<String,BerthCoords> getSavedBerths( WorldServer worldServer )
+	{
+		checkServerInstance( worldServer );
+		return m_playerSavedBerths;
+	}
+	
+	private static void checkServerInstance( WorldServer worldServer )
+	{
+		int currentServerInstanceId = System.identityHashCode( worldServer.getMinecraftServer() );
+		if( m_serverInstanceId == null || m_serverInstanceId != currentServerInstanceId )
+		{
+			m_sleepingBerths.clear();
+			m_playerSavedBerths.clear();
+			loadBerths();
+		}
+	}
+
 	public static EnumStatus sleepInBerthAt( World world, int x, int y, int z, EntityPlayer player )
     {
 		// sadly, I have to re-implement some logic from EntityPlayer.sleepInBed() to get this to work...
 		
-		if( !world.isRemote )
+		World realWorld = player.worldObj;
+		
+		// get the berth position in world coords
+		Vec3 bedPos = Vec3.createVectorHelper( x, y, z );
+		if( world instanceof ShipWorld )
+		{
+			EntityShip ship = ((ShipWorld)world).getShip();
+			ship.blocksToShip( bedPos );
+			ship.shipToWorld( bedPos );
+		}
+		
+		if( !realWorld.isRemote )
 		{
 			// on the server, check for some conditions
             if( player.isPlayerSleeping() || !player.isEntityAlive() )
             {
                 return EnumStatus.OTHER_PROBLEM;
             }
-            if( !world.provider.isSurfaceWorld() )
+            if( !realWorld.provider.isSurfaceWorld() )
             {
                 return EnumStatus.NOT_POSSIBLE_HERE;
             }
-			if( world.isDaytime() )
+			if( realWorld.isDaytime() )
 			{
 				return EnumStatus.NOT_POSSIBLE_NOW;
 			}
 			
-			// get the position of the player in the coordinate system of the blocks
-			Vec3 playerPos = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
-			if( world instanceof ShipWorld )
-			{
-				ShipWorld shipWorld = (ShipWorld)world;
-				EntityShip ship = shipWorld.getShip();
-				ship.worldToShip( playerPos );
-				ship.shipToBlocks( playerPos );
-			}
-			
-			if( Math.abs( playerPos.xCoord - x ) > 3 || Math.abs( playerPos.yCoord - y ) > 2 || Math.abs( playerPos.zCoord - z ) > 3 )
+			if( Math.abs( player.posX - bedPos.xCoord ) > 3 || Math.abs( player.posY - bedPos.yCoord ) > 2 || Math.abs( player.posZ - bedPos.zCoord ) > 3 )
 			{
 				return EnumStatus.TOO_FAR_AWAY;
 			}
 			
 			// are there any mobs nearby?
-			// NOTE: cheat here and use the player position instead of the block position
 			int dXZ = 8;
 			int dY = 5;
 			@SuppressWarnings( "unchecked" )
-			List<EntityMob> mobs = (List<EntityMob>)world.getEntitiesWithinAABB(
+			List<EntityMob> mobs = (List<EntityMob>)realWorld.getEntitiesWithinAABB(
 				EntityMob.class,
 				AxisAlignedBB.getAABBPool().getAABB(
-					player.posX - dXZ, player.posY - dY, player.posZ - dXZ,
-					player.posX + dXZ, player.posY + dY, player.posZ + dXZ
+					bedPos.xCoord - dXZ, bedPos.yCoord - dY, bedPos.zCoord - dXZ,
+					bedPos.xCoord + dXZ, bedPos.yCoord + dY, bedPos.zCoord + dXZ
 				)
 			);
 			if( !mobs.isEmpty() )
@@ -155,16 +266,16 @@ public class PlayerRespawner
 					dx = 0.9F;
 			}
 			
-			// I can't call this private method and I don't know what it does
-			// let's try not calling it instead. =P
+			// this tweaks the player's render position slightly for sleeping
+			// if we don't do it, it's not the end of the world
 			//player.func_71013_b( direction );
 			
-			player.setPosition( x + dx, y + 0.9375F, z + dz );
+			player.setPosition( bedPos.xCoord + dx, bedPos.yCoord + 0.9375F, bedPos.zCoord + dz );
 		}
 		else
 		{
 			// umm... we couldn't find the bed. Just make something up
-			player.setPosition( x + 0.5F, y + 0.9375F, z + 0.5F );
+			player.setPosition( bedPos.xCoord + 0.5F, bedPos.yCoord + 0.9375F, bedPos.zCoord + 0.5F );
 		}
 		
 		// set sleeping flags
@@ -176,29 +287,22 @@ public class PlayerRespawner
 		player.motionZ = 0;
 		player.motionY = 0;
 		
-		if( !world.isRemote )
+		if( !realWorld.isRemote )
 		{
-			world.updateAllPlayersSleepingFlag();
-		}
-		
-		// save this player and berth so we can find it again when the player wakes up
-		m_playerSleptInBerth.put( player.entityId, new BerthCoords( world, x, y, z ) );
-		
-		if( !world.isRemote )
-		{
+			realWorld.updateAllPlayersSleepingFlag();
+			
+			// save this player and berth so we can find it again when the player wakes up
+			m_sleepingBerths.put( player.entityId, new BerthCoords( world, x, y, z ) );
+			
 			// tell all interested clients that the player started sleeping
-			// NOTE: this will eventually call player.sleepInBedAt() on the client.
-			// that's not going to work... we'll have to do something else...
-			/*
 			EntityPlayerMP playerServer = (EntityPlayerMP)player;
-            Packet17Sleep packet = new Packet17Sleep( playerServer, 0, x, y, z );
-            playerServer.getServerForPlayer().getEntityTracker().sendPacketToAllPlayersTrackingEntity( playerServer, packet );
+			Packet packet = new PacketPlayerSleepInBerth( player, world, x, y, z ).getCustomPacket();
+            playerServer.getServerForPlayer().getEntityTracker().sendPacketToAllPlayersTrackingEntity( player, packet );
             playerServer.playerNetServerHandler.setPlayerLocation(
-            	playerServer.posX, playerServer.posY, playerServer.posZ,
-            	playerServer.rotationYaw, playerServer.rotationPitch
+        		player.posX, player.posY, player.posZ,
+        		player.rotationYaw, player.rotationPitch
             );
             playerServer.playerNetServerHandler.sendPacketToPlayer( packet );
-            */
 		}
 		
 		return EnumStatus.OK;
@@ -206,12 +310,12 @@ public class PlayerRespawner
 	
 	public static boolean isPlayerInBerth( EntityPlayer player )
 	{
-		return m_playerSleptInBerth.get( player.entityId ) != null;
+		return m_sleepingBerths.get( player.entityId ) != null;
 	}
 	
 	public static boolean isPlayerInBerth( World world, int x, int y, int z )
 	{
-		for( BerthCoords coords : m_playerSleptInBerth.values() )
+		for( BerthCoords coords : m_sleepingBerths.values() )
 		{
 			if( coords.equals( world, x, y, z ) )
 			{
@@ -224,11 +328,11 @@ public class PlayerRespawner
 	public static void onPlayerWakeUp( EntityPlayer player, boolean wasSleepSuccessful )
 	{
 		// ignore on clients
-		World world = player.worldObj;
-		if( world.isRemote )
+		if( player.worldObj.isRemote )
 		{
 			return;
 		}
+		WorldServer worldServer = (WorldServer)player.worldObj;
 		
 		// ignore interrupted sleep
 		if( !wasSleepSuccessful )
@@ -237,32 +341,41 @@ public class PlayerRespawner
 		}
 		
 		// what was the last berth the player slept in?
-		BerthCoords coords = m_playerSleptInBerth.get( player.entityId );
+		BerthCoords coords = m_sleepingBerths.get( player.entityId );
 		if( coords == null )
 		{
 			return;
 		}
-		m_playerSleptInBerth.remove( player.entityId );
+		m_sleepingBerths.remove( player.entityId );
 		
 		// is there a berth there?
-		Block block = Block.blocksList[coords.world.getBlockId( coords.x, coords.y, coords.z )];
-		if( block != null && block.blockID == Ships.m_blockBerth.blockID )
+		World berthWorld = coords.getWorldOnServer();
+		if( berthWorld == null || berthWorld.getBlockId( coords.x, coords.y, coords.z ) != Ships.m_blockBerth.blockID )
 		{
-			// save the berth coords
-			m_playerSavedBerths.put( player.username, coords );
-			
-			// remove old spawn location
-			player.setSpawnChunk( null, false );
+			return;
 		}
+		
+		// save the berth coords
+		getSavedBerths( worldServer ).put( player.username, coords );
+		saveBerths();
+		
+		// remove old spawn location
+		player.setSpawnChunk( null, false );
+		
+		// let the player know the sleeping worked
+		player.sendChatToPlayer( ChatMessageComponent.createFromTranslationKey( GuiString.Slept.getKey() ) );
 	}
 	
 	public static void onPlayerRespawn( EntityPlayerMP oldPlayer, EntityPlayerMP newPlayer, int dimension )
 	{
+		// NOTE: if we return without doing anything, the player will respawn at the last saved bed or the world spawn
+		
 		// ignore on clients
 		if( oldPlayer.worldObj.isRemote )
 		{
 			return;
 		}
+		WorldServer worldServer = (WorldServer)newPlayer.worldObj;
 		
 		if( oldPlayer.getBedLocation( dimension ) != null )
 		{
@@ -272,23 +385,189 @@ public class PlayerRespawner
 			return;
 		}
 		
-		BerthCoords coords = m_playerSavedBerths.get( newPlayer.username );
+		BerthCoords coords = getSavedBerths( worldServer ).get( newPlayer.username );
 		if( coords == null )
 		{
 			return;
 		}
 		
-		// get the player position in world coords
-		Vec3 p = Vec3.createVectorHelper( coords.x, coords.y, coords.z );
-		if( coords.world instanceof ShipWorld )
+		if( coords.shipUuid == null )
 		{
-			ShipWorld shipWorld = (ShipWorld)coords.world;
-			EntityShip ship = shipWorld.getShip();
-			ship.blocksToShip( p );
-			ship.shipToWorld( p );
+			// spawn at the world pos
+			newPlayer.setLocationAndAngles( coords.x, coords.y, coords.z, 0, 0 );
+		}
+		else
+		{
+			// convert the ship berth pos into a world pos and spawn there
+			Vec3 p = Vec3.createVectorHelper( coords.x, coords.y, coords.z );
+			EntityShip ship = coords.getShipOnServer();
+			if( ship != null )
+			{
+				ship.blocksToShip( p );
+				ship.shipToWorld( p );
+				newPlayer.setLocationAndAngles( p.xCoord, p.yCoord, p.zCoord, 0, 0 );
+			}
+			else
+			{
+				// the ship wasn't found =(
+				newPlayer.sendChatToPlayer( ChatMessageComponent.createFromTranslationKey( GuiString.BerthNotFound.getKey() ) );
+			}
+		}
+	}
+	
+	public static void onShipLaunch( WorldServer worldServer, ShipWorld shipWorld, Coords shipBlock )
+	{
+		// this is only called on the server
+		assert( Environment.isServer() );
+		Map<String,BerthCoords> berths = getSavedBerths( worldServer );
+		
+		boolean changed = false;
+		for( Coords coords : shipWorld.coords() )
+		{
+			// is this block a berth head?
+			int blockId = shipWorld.getBlockId( coords );
+			if( blockId == Ships.m_blockBerth.blockID && BlockBerth.isBlockHeadOfBed( shipWorld.getBlockMetadata( coords ) ) )
+			{
+				// this berth just launched into a ship
+				
+				// get the world coords where the berth used to be
+				int worldX = shipBlock.x + coords.x;
+				int worldY = shipBlock.y + coords.y;
+				int worldZ = shipBlock.z + coords.z;
+				
+				// update any spawn points
+				for( BerthCoords berth : berths.values() )
+				{
+					if( berth.equals( worldServer, worldX, worldY, worldZ ) )
+					{
+						berth.moveToShip( shipWorld, coords.x, coords.y, coords.z );
+						changed = true;
+					}
+				}
+			}
 		}
 		
-		// respawn at the berth position
-		newPlayer.setLocationAndAngles( p.xCoord, p.yCoord, p.zCoord, 0, 0 );
+		if( changed )
+		{
+			saveBerths();
+		}
+	}
+	
+	public static void onShipDock( WorldServer worldServer, ShipWorld shipWorld, BlockMap<Coords> correspondence )
+	{
+		// this is only called on the server
+		assert( Environment.isServer() );
+		Map<String,BerthCoords> berths = getSavedBerths( worldServer );
+		
+		boolean changed = false;
+		for( Coords coords : shipWorld.coords() )
+		{
+			// is this block a berth head?
+			int blockId = shipWorld.getBlockId( coords );
+			if( blockId == Ships.m_blockBerth.blockID && BlockBerth.isBlockHeadOfBed( shipWorld.getBlockMetadata( coords ) ) )
+			{
+				// this berth just docked to the world
+				
+				// update any spawn points
+				for( BerthCoords berth : berths.values() )
+				{
+					if( berth.equals( shipWorld, coords.x, coords.y, coords.z ) )
+					{
+						Coords worldCoords = correspondence.get( coords );
+						berth.moveToWorld( worldCoords.x, worldCoords.y, worldCoords.z );
+						changed = true;
+					}
+				}
+			}
+		}
+		
+		if( changed )
+		{
+			saveBerths();
+		}
+	}
+	
+	private static File getSaveFile( )
+	{
+		return new File( DimensionManager.getCurrentSaveRootDirectory(), "berths.dat" );
+	}
+	
+	private static void saveBerths( )
+	{
+		File file = getSaveFile();
+		
+		DataOutputStream out = null;
+		try
+		{
+			out = new DataOutputStream( new FileOutputStream( file ) );
+			out.writeInt( m_playerSavedBerths.size() );
+			for( Map.Entry<String,BerthCoords> entry : m_playerSavedBerths.entrySet() )
+			{
+				String username = entry.getKey();
+				BerthCoords coords = entry.getValue();
+				
+				out.writeUTF( username );
+				out.writeInt( coords.dimensionId );
+				out.writeBoolean( coords.shipUuid != null );
+				if( coords.shipUuid != null )
+				{
+					// write in big-endian order
+					out.writeLong( coords.shipUuid.getMostSignificantBits() );
+					out.writeLong( coords.shipUuid.getLeastSignificantBits() );
+				}
+				out.writeInt( coords.x );
+				out.writeInt( coords.y );
+				out.writeInt( coords.z );
+			}
+		}
+		catch( IOException ex )
+		{
+			Ships.logger.error( ex, "Unable to save berths! Player spawn points on ships were not saved!" );
+		}
+		finally
+		{
+			Util.closeSilently( out );
+		}
+	}
+	
+	private static void loadBerths( )
+	{
+		File file = getSaveFile();
+		if( !file.exists() )
+		{
+			return;
+		}
+		
+		DataInputStream in = null;
+		try
+		{
+			in = new DataInputStream( new FileInputStream( file ) );
+			int numRecords = in.readInt();
+			for( int i=0; i<numRecords; i++ )
+			{
+				String username = in.readUTF();
+				BerthCoords coords = new BerthCoords();
+				coords.dimensionId = in.readInt();
+				boolean hasShipId = in.readBoolean();
+				if( hasShipId )
+				{
+					// read in big endian order
+					coords.shipUuid = new UUID( in.readLong(), in.readLong() );
+				}
+				coords.x = in.readInt();
+				coords.y = in.readInt();
+				coords.z = in.readInt();
+				
+				m_playerSavedBerths.put( username, coords );
+			}
+		}
+		catch( IOException ex )
+		{
+			Ships.logger.error( ex, "Unable to load berths! Player spawn points on ships were not loaded!" );
+		}
+		finally
+		{
+			Util.closeSilently( in );
+		}
 	}
 }

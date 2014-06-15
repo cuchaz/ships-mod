@@ -12,11 +12,11 @@ package cuchaz.ships;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemInWorldManager;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -37,19 +37,14 @@ public class ShipLocator
 		return ships;
 	}
 	
-	public static List<EntityShip> getShipsServer( )
-	{
-		return getShips( MinecraftServer.getServer().getEntityWorld() );
-	}
-	
 	public static EntityShip getShip( World world, int entityId )
 	{
 		return getShip( getShips( world ), entityId );
 	}
 	
-	public static EntityShip getShipServer( int entityId )
+	public static EntityShip getShip( World world, UUID uuid )
 	{
-		return getShip( getShipsServer(), entityId );
+		return getShip( getShips( world ), uuid );
 	}
 	
 	private static EntityShip getShip( List<EntityShip> ships, int entityId )
@@ -57,6 +52,18 @@ public class ShipLocator
 		for( EntityShip ship : ships )
 		{
 			if( ship.entityId == entityId )
+			{
+				return ship;
+			}
+		}
+		return null;
+	}
+	
+	private static EntityShip getShip( List<EntityShip> ships, UUID uuid )
+	{
+		for( EntityShip ship : ships )
+		{
+			if( ship.getPersistentID().equals( uuid ) )
 			{
 				return ship;
 			}

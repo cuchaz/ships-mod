@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.WorldServer;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockMap;
@@ -204,6 +205,9 @@ public class ShipUnlauncher
 		
 		// restore all the blocks
 		m_ship.getShipWorld().restoreToWorld( m_ship.worldObj, m_correspondence, m_waterHeightInBlockSpace );
+		
+		// update any saved berths
+		PlayerRespawner.onShipDock( (WorldServer)m_ship.worldObj, m_ship.getShipWorld(), m_correspondence );
 	}
 	
 	public void snapToLaunchDirection( )

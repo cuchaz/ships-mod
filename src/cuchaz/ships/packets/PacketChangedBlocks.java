@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
+import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
 
 public class PacketChangedBlocks extends Packet
@@ -92,7 +93,7 @@ public class PacketChangedBlocks extends Packet
 	public void onPacketReceived( EntityPlayer player )
 	{
 		// get the ship
-		EntityShip ship = (EntityShip)player.worldObj.getEntityByID( m_entityId );
+		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
 		if( ship == null )
 		{
 			return;

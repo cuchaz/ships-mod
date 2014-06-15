@@ -19,6 +19,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockArray;
@@ -267,6 +268,9 @@ public class ShipLauncher
 			Ships.logger.warning( "Could not spawn ship in world at (%.2f,%.2f,%.2f)", ship.posX, ship.posY, ship.posZ );
 			return null;
 		}
+		
+		// update any berths
+		PlayerRespawner.onShipLaunch( (WorldServer)m_world, m_shipWorld, m_shipBlock );
 		
 		// tell clients the ship launched
 		PacketDispatcher.sendPacketToAllPlayers( new PacketShipLaunched( ship, m_shipBlock ).getCustomPacket() );

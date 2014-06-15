@@ -79,7 +79,7 @@ public class CommandShips extends CommandBase
 			@Override
 			public void process( ICommandSender sender, String[] args )
 			{
-				List<EntityShip> ships = ShipLocator.getShipsServer();
+				List<EntityShip> ships = ShipLocator.getShips( sender.getEntityWorld() );
 				StringBuilder buf = new StringBuilder();
 				buf.append( "Found " );
 				buf.append( ships.size() );
@@ -120,7 +120,7 @@ public class CommandShips extends CommandBase
 				}
 				
 				// get the ship
-				EntityShip ship = ShipLocator.getShipServer( id );
+				EntityShip ship = ShipLocator.getShip( sender.getEntityWorld(), id );
 				if( ship == null )
 				{
 					reply( sender, String.format( "Ship %d was not found!", id ) );
@@ -156,7 +156,7 @@ public class CommandShips extends CommandBase
 				}
 				
 				// get the ship
-				EntityShip ship = ShipLocator.getShipServer( id );
+				EntityShip ship = ShipLocator.getShip( sender.getEntityWorld(), id );
 				if( ship == null )
 				{
 					reply( sender, String.format( "Ship %d was not found!", id ) );
@@ -177,7 +177,7 @@ public class CommandShips extends CommandBase
 			{
 				// make a list of positions we will use to seed our search
 				List<Coords> seedBlocks = new ArrayList<Coords>();
-				for( EntityShip ship : ShipLocator.getShipsServer() )
+				for( EntityShip ship : ShipLocator.getShips( sender.getEntityWorld() ) )
 				{
 					seedBlocks.add( new Coords(
 						MathHelper.floor_double( ship.posX ),

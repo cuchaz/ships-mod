@@ -12,24 +12,101 @@ package cuchaz.ships.blocks;
 
 import java.util.Random;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.PlayerRespawner;
 import cuchaz.ships.Ships;
 
 public class BlockBerth extends BlockBed
 {
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconFeetTop;
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconFeetEnd;
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconFeetSide;
+	
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconHeadTop;
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconHeadEnd;
+	@SideOnly( Side.CLIENT )
+	private Icon m_iconHeadSide;
+	
 	public BlockBerth( int blockId )
 	{
 		super( blockId );
 		
 	    setHardness( 0.2F );
 	    disableStats();
-	    setTextureName( "bed" ); // UNDONE: get a new texture for berths
+	    setTextureName( "berth" );
+	}
+	
+	@Override
+	@SideOnly( Side.CLIENT )
+	public void registerIcons( IconRegister iconRegister )
+	{
+		m_iconFeetTop = iconRegister.registerIcon( "ships:berthFeetTop" );
+		m_iconFeetEnd = iconRegister.registerIcon( "ships:berthFeetEnd" );
+		m_iconFeetSide = iconRegister.registerIcon( "ships:berthFeetSide" );
+		
+		m_iconHeadTop = iconRegister.registerIcon( "ships:berthHeadTop" );
+		m_iconHeadEnd = iconRegister.registerIcon( "ships:berthHeadEnd" );
+		m_iconHeadSide = iconRegister.registerIcon( "ships:berthHeadSide" );
+	}
+	
+	@Override
+	@SideOnly( Side.CLIENT )
+	public Icon getIcon( int sideId, int meta )
+	{
+		// bottom side is easy
+		BlockSide side = BlockSide.getById( sideId );
+		if( side == BlockSide.Bottom )
+		{
+			return Block.planks.getBlockTextureFromSide( sideId );
+		}
+		
+		// the other sides are trickier...
+		int bedDirection = Direction.bedDirection[getDirection( meta )][sideId];
+		if( isBlockHeadOfBed( meta ) )
+		{
+			if( bedDirection == 2 )
+			{
+				return m_iconHeadEnd;
+			}
+			else if( bedDirection == 4 || bedDirection == 5 )
+			{
+				return m_iconHeadSide;
+			}
+			else
+			{
+				return m_iconHeadTop;
+			}
+		}
+		else
+		{
+			if( bedDirection == 3 )
+			{
+				return m_iconFeetEnd;
+			}
+			else if( bedDirection == 4 || bedDirection == 5 )
+			{
+				return m_iconFeetSide;
+			}
+			else
+			{
+				return m_iconFeetTop;
+			}
+		}
 	}
 	
 	@Override

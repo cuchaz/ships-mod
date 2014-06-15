@@ -38,6 +38,11 @@ public class EnhancedLogger
 	
 	// convenience formatter methods
 	
+	public void error( Throwable t, String message, Object ... args )
+	{
+		log( Level.SEVERE, String.format( message, args ), t );
+	}
+	
 	public void warning( String message, Object ... args )
 	{
 		log( Level.WARNING, String.format( message, args ) );

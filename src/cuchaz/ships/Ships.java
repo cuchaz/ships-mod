@@ -71,6 +71,7 @@ import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPasteShip;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketPlayerSleepInBerth;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 import cuchaz.ships.packets.PacketShipBlocks;
@@ -87,7 +88,7 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 	channels = { PacketLaunchShip.Channel, PacketShipLaunched.Channel, PacketUnlaunchShip.Channel,
 		PacketRequestShipBlocks.Channel, PacketShipBlocks.Channel, PacketPilotShip.Channel,
 		PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel, PacketPasteShip.Channel,
-		PacketEraseShip.Channel, PacketShipPlaque.Channel },
+		PacketEraseShip.Channel, PacketShipPlaque.Channel, PacketPlayerSleepInBerth.Channel },
 	packetHandler = PacketHandler.class,
 	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
 	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server
@@ -397,7 +398,7 @@ public class Ships extends DummyModContainer
 			"   ", "xxx", "yzy",
 			'x', clothStack,
 			'y', stickStack,
-			'z', ironStack
+			'z', goldStack
 		);
 	}
 }
