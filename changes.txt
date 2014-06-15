@@ -1,13 +1,14 @@
 
-v0.8 beta change log
+v0.9 beta change log
 
-Fixed bug where players on slabs, stairs, and ladders weren't being flagged as riding the ship
-Made change that causes more kinds of blocks to be excluded from ship launching
-Paintings, item frames, and signs now work on ships
-Added ship plaque item for Patreon supporters
-Added ship eraser. It erases ships in creative mode.
-Updated launch GUI to warn you if your ship floats near the sinking point
-Added more optimizations to ship GUIs, launching, and buoyancy simulations
-Updated block physics so stairs, slabs, etc don't weigh as much and don't displace as much water
-Block limit is now 4000 blocks.
+Added a new Berth block that looks like a bed, but it works on ships!
+Sail detection was redesigned to make side-facing sails more useful
+Grass now correctly saves its biome color when you launch/dock ships
+Ship clipboard now copies hanging entities (item frames, paintings, ship plaques, etc)
+Ferns, vines, tall grass, etc now correctly launch with ships
+Fixed a bug in the renderer that would not render more than one launched ship at a time
+Fixed a bug that would spawn items from invisible blocks
+Fixed multiple bugs with water displacement inside ship hulls
+Non-solid blocks under the water line now correctly remain part of ships during launching/docking
 Various crash fixes
+Block limit is now 10,000 blocks!
