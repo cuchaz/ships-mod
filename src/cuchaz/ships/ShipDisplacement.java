@@ -141,6 +141,11 @@ public class ShipDisplacement
 	
 	private DisplacementEntry get( int y )
 	{
+		if( m_displacement.isEmpty() )
+		{
+			return EmptyEntry;
+		}
+		
 		// if y is too big, clamp it. ie when the ship is underwater, we get the max trapped air
 		y = Math.min( y, m_displacement.lastKey() );
 		
