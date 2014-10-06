@@ -80,7 +80,7 @@ public class PacketShipBlockEvent extends Packet
 	{
 		// get the ship
 		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
-		if( ship == null )
+		if( ship == null || ship.getShipWorld() == null )
 		{
 			return;
 		}
