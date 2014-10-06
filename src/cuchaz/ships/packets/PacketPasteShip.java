@@ -18,7 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.Ships;
 import cuchaz.ships.items.ItemShipClipboard;
-import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
+import cuchaz.ships.persistence.PersistenceException;
 
 public class PacketPasteShip extends Packet
 {
@@ -77,7 +77,7 @@ public class PacketPasteShip extends Packet
 		{
 			ItemShipClipboard.restoreShip( player.worldObj, m_encodedBlocks, new Coords( m_dx, m_dy, m_dz ) );
 		}
-		catch( UnrecognizedPersistenceVersion ex )
+		catch( PersistenceException ex )
 		{
 			Ships.logger.warning( ex, "Unable to restore ship!" );
 		}

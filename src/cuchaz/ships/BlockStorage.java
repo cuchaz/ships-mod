@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
@@ -39,6 +40,12 @@ public class BlockStorage
 	
 	public void writeToWorld( World world, Coords coords )
 	{
+		// is this actually a valid block id on this Minecraft instance?
+		if( Block.blocksList[id] == null )
+		{
+			Ships.logger.warning( "Unrecognized block id: " + id + ". Cannot restore block" );
+			return;
+		}
 		BlockUtils.changeBlockWithoutNotifyingIt( world, coords.x, coords.y, coords.z, id, meta, UpdateRules.UpdateClients );
 	}
 }

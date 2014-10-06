@@ -21,8 +21,8 @@ import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
+import cuchaz.ships.persistence.PersistenceException;
 import cuchaz.ships.persistence.ShipWorldPersistence;
-import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class PacketShipLaunched extends Packet
 {
@@ -103,7 +103,7 @@ public class PacketShipLaunched extends Packet
 			ShipWorld shipWorld = ShipWorldPersistence.readAnyVersion( ship.worldObj, m_shipData, true );
 			ShipLauncher.initShip( ship, shipWorld, new Coords( m_launchX, m_launchY, m_launchZ ) );
 		}
-		catch( UnrecognizedPersistenceVersion ex )
+		catch( PersistenceException ex )
 		{
 			Ships.logger.warning( ex, "Unable to read ship! Ship will be removed from world" );
 			ship.setDead();

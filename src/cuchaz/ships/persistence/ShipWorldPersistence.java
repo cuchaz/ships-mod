@@ -178,6 +178,11 @@ public enum ShipWorldPersistence
 				// create the tile entity
 				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
+				if( tileEntity == null )
+				{
+					Ships.logger.warning( "Unable to restore tile entity: " + nbt.getString( "id" ) );
+					continue;
+				}
 				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 				tileEntities.put( coords, tileEntity );
 			}
@@ -190,6 +195,11 @@ public enum ShipWorldPersistence
 				// create the hanging entity
 				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
 				EntityHanging hangingEntity = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
+				if( hangingEntity == null )
+				{
+					Ships.logger.warning( "Unable to restore hanging entity: " + nbt.getString( "id" ) );
+					continue;
+				}
 				Coords coords = new Coords( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
 				hangingEntities.put( coords, hangingEntity );
 			}
@@ -284,7 +294,7 @@ public enum ShipWorldPersistence
 	}
 	
 	public static ShipWorld readAnyVersion( World world, String data )
-	throws UnrecognizedPersistenceVersion
+	throws PersistenceException
 	{
 		try
 		{
@@ -296,46 +306,51 @@ public enum ShipWorldPersistence
 		}
 		catch( IOException ex )
 		{
-			throw new UnrecognizedPersistenceVersion(); 
+			throw new CorruptedPersistence( ex ); 
 		}
 	}
 	
 	public static ShipWorld readAnyVersion( World world, byte[] data )
-	throws UnrecognizedPersistenceVersion
+	throws PersistenceException
 	{
 		return readAnyVersion( world, data, false );
 	}
 	
 	public static ShipWorld readAnyVersion( World world, byte[] data, boolean isCompressed )
-	throws UnrecognizedPersistenceVersion
+	throws PersistenceException
 	{
-		try
+		if( isCompressed )
 		{
-			if( isCompressed )
+			try
 			{
 				return readAnyVersion( world, new GZIPInputStream( new ByteArrayInputStream( data ) ) );
 			}
-			return readAnyVersion( world, new ByteArrayInputStream( data ) );
+			catch( IOException ex )
+			{
+				throw new CorruptedPersistence( ex );
+			}
 		}
-		catch( IOException ex )
-		{
-			// byte buffers should never throw an IOException, so writing a crap-ton of boilerplate code to handle
-			// those exception is pretty ridiculous. Just rethrow as an error
-			throw new Error( ex );
-		}
+		return readAnyVersion( world, new ByteArrayInputStream( data ) );
 	}
 	
-	public static ShipWorld readAnyVersion( World world, InputStream in )
-	throws IOException, UnrecognizedPersistenceVersion
+	private static ShipWorld readAnyVersion( World world, InputStream in )
+	throws PersistenceException
 	{
-		DataInputStream din = new DataInputStream( in );
-		int version = din.readInt();
-		ShipWorldPersistence persistence = get( version );
-		if( persistence == null )
+		try
 		{
-			throw new UnrecognizedPersistenceVersion( version );
+			DataInputStream din = new DataInputStream( in );
+			int version = din.readInt();
+			ShipWorldPersistence persistence = get( version );
+			if( persistence == null )
+			{
+				throw new UnrecognizedPersistenceVersion( version );
+			}
+			return persistence.onRead( world, din );
 		}
-		return persistence.onRead( world, din );
+		catch( Exception ex )
+		{
+			throw new CorruptedPersistence( ex );
+		}
 	}
 	
 	public static String writeNewestVersionToString( ShipWorld shipWorld )

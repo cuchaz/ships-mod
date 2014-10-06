@@ -47,8 +47,8 @@ import cuchaz.modsShared.perf.DelayTimer;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
+import cuchaz.ships.persistence.PersistenceException;
 import cuchaz.ships.persistence.ShipPersistence;
-import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 import cuchaz.ships.propulsion.Propulsion;
 
 public class EntityShip extends Entity 
@@ -193,7 +193,7 @@ public class EntityShip extends Entity
 		{
 			ShipPersistence.readAnyVersion( this, nbt );
 		}
-		catch( UnrecognizedPersistenceVersion ex )
+		catch( PersistenceException ex )
 		{
 			Ships.logger.warning( ex, "Unable to read ship. Removing ship from world." );
 			setDead();

@@ -39,6 +39,7 @@ import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.BlockStorage;
 import cuchaz.ships.BlocksStorage;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipType;
@@ -48,8 +49,8 @@ import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPasteShip;
 import cuchaz.ships.persistence.BlockStoragePersistence;
+import cuchaz.ships.persistence.PersistenceException;
 import cuchaz.ships.persistence.ShipWorldPersistence;
-import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class ItemShipClipboard extends Item
 {
@@ -235,7 +236,7 @@ public class ItemShipClipboard extends Item
 			message( player, GuiString.NoShipOnClipboard );
 			return false;
 		}
-		catch( UnrecognizedPersistenceVersion ex )
+		catch( PersistenceException ex )
 		{
 			message( player, GuiString.NoShipOnClipboard );
 			return false;
@@ -243,7 +244,7 @@ public class ItemShipClipboard extends Item
 	}
 	
 	public static void restoreShip( World world, String encodedBlocks, Coords translation )
-	throws UnrecognizedPersistenceVersion
+	throws PersistenceException
 	{
 		// create the ship world
 		ShipWorld shipWorld = decodeShip( world, encodedBlocks );
@@ -261,23 +262,49 @@ public class ItemShipClipboard extends Item
 			correspondence.put( coords, worldCoords );
 		}
 		
+		// if there are unrecognized blocks, just replace them with wood planks
+		boolean foundUnknownBlocks = false;
+		for( Coords coords : shipWorld.coords() )
+		{
+			int blockId = shipWorld.getBlockId( coords );
+			if( Block.blocksList[blockId] == null )
+			{
+				foundUnknownBlocks = true;
+				BlockStorage storage = shipWorld.getBlockStorage( coords );
+				storage.id = Block.planks.blockID;
+				storage.meta = 0;
+			}
+		}
+		if( foundUnknownBlocks )
+		{
+			Ships.logger.warning( "Unknown blocks found in ship! They're probably mod blocks from an uninstalled mod. Replacing with wood planks." );
+		}
+		
 		// update the world
 		shipWorld.restoreToWorld( world, correspondence, shipWorld.getBoundingBox().minY - 1 );
 	}
 	
 	private static ShipWorld decodeShip( World world, String encodedBlocks )
-	throws UnrecognizedPersistenceVersion
+	throws PersistenceException
 	{
 		// decode the ship: older versions just save blocks, newer versions save the whole ship world
 		try
 		{
 			return ShipWorldPersistence.readAnyVersion( world, encodedBlocks );
 		}
-		catch( UnrecognizedPersistenceVersion ex )
+		catch( PersistenceException shipWorldException )
 		{
-			// it's probably not a ship world, try reading just the blocks
-			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( encodedBlocks );
-			return new ShipWorld( world, storage, new BlockMap<TileEntity>(), new BlockMap<EntityHanging>(), 0 );
+			try
+			{
+				// it's probably not a ship world, try reading just the blocks
+				BlocksStorage storage = BlockStoragePersistence.readAnyVersion( encodedBlocks );
+				return new ShipWorld( world, storage, new BlockMap<TileEntity>(), new BlockMap<EntityHanging>(), 0 );
+			}
+			catch( PersistenceException blockStorageException )
+			{
+				// doesn't look like it's a ship world or a block storage... just re-throw the first exception
+				throw shipWorldException;
+			}
 		}
 	}
 

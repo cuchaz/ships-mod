@@ -18,8 +18,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.Ships;
+import cuchaz.ships.persistence.PersistenceException;
 import cuchaz.ships.persistence.ShipWorldPersistence;
-import cuchaz.ships.persistence.UnrecognizedPersistenceVersion;
 
 public class PacketShipBlocks extends Packet
 {
@@ -74,7 +74,7 @@ public class PacketShipBlocks extends Packet
 			{
 				ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, m_shipData, true ) );
 			}
-			catch( UnrecognizedPersistenceVersion ex )
+			catch( PersistenceException ex )
 			{
 				Ships.logger.warning( ex, "Unable to read ship! Ship will be removed from world" );
 				ship.setDead();

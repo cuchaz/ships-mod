@@ -21,7 +21,7 @@ public enum ShipPersistence
 	{
 		@Override
 		public void read( EntityShip ship, NBTTagCompound nbt )
-		throws UnrecognizedPersistenceVersion
+		throws PersistenceException
 		{
 			ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, nbt.getByteArray( "blocks" ) ) );
 		}
@@ -51,7 +51,7 @@ public enum ShipPersistence
 		m_version = version;
 	}
 	
-	public abstract void read( EntityShip ship, NBTTagCompound nbt ) throws UnrecognizedPersistenceVersion;
+	public abstract void read( EntityShip ship, NBTTagCompound nbt ) throws PersistenceException;
 	public abstract void write( EntityShip ship, NBTTagCompound nbt );
 	
 	private static ShipPersistence get( int version )
@@ -65,7 +65,7 @@ public enum ShipPersistence
 	}
 	
 	public static void readAnyVersion( EntityShip ship, NBTTagCompound nbt )
-	throws UnrecognizedPersistenceVersion
+	throws PersistenceException
 	{
 		int version = nbt.getByte( "version" );
 		ShipPersistence persistence = get( version );

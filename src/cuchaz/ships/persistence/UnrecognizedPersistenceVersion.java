@@ -10,7 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.persistence;
 
-public class UnrecognizedPersistenceVersion extends Exception
+public class UnrecognizedPersistenceVersion extends PersistenceException
 {
 	private static final long serialVersionUID = 4074487319960658175L;
 	
