@@ -330,7 +330,7 @@ public class ShipLauncher
 			worldCoords.x = blockCoords.x + shipBlock.x;
 			worldCoords.y = blockCoords.y + shipBlock.y;
 			worldCoords.z = blockCoords.z + shipBlock.z;
-			BlockUtils.changeBlockWithoutNotifyingIt( world, worldCoords.x, worldCoords.y, worldCoords.z, Block.waterStill.blockID, 0, UpdateRules.UpdateNoOne );
+			BlockUtils.changeBlockWithoutNotifyingIt( world, worldCoords.x, worldCoords.y, worldCoords.z, Block.waterStill.blockID, 0, updateRules );
 		}
 		
 		// remove any hanging entities

@@ -68,7 +68,8 @@ public class WaterDisplacer
 			else if( blockId == Ships.m_blockAirWall.blockID )
 			{
 				// yes, it's already displaced
-				// nothing else to do
+				// make sure we remember it's displaced
+				m_displacedBlocks.add( coords );
 			}
 		}
 	}
