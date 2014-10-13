@@ -11,9 +11,7 @@
 package cuchaz.ships;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Logger;
 
 import net.minecraft.block.Block;
@@ -132,7 +130,7 @@ public class Ships extends DummyModContainer
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
-		meta.version = "0.9 BETA";
+		meta.version = "0.10 BETA";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "http://www.cuchazinteractive.com/shipsMod";
@@ -380,26 +378,27 @@ public class Ships extends DummyModContainer
 			'y', paperStack
 		);
 		
-		// ship plaque
-		List<ItemStack> plankStacks = new ArrayList<ItemStack>();
-		Block.planks.getSubBlocks( Block.planks.blockID, null, plankStacks );
-		for( ItemStack plankStack : plankStacks )
+		// ship plaque (for all the wood types)
+		for( int i=0; i<4; i++ )
 		{
 			GameRegistry.addRecipe(
 				new ItemStack( m_itemShipPlaque ),
 				"   ", " x ", "yyy",
 				'x', ironStack,
-				'y', plankStack
+				'y', new ItemStack( Block.planks, 1, i )
 			);
 		}
 		
 		// berth
-		GameRegistry.addRecipe(
-			new ItemStack( m_itemBerth ),
-			"   ", "xxx", "yzy",
-			'x', clothStack,
-			'y', stickStack,
-			'z', goldStack
-		);
+		for( int i=0; i<16; i++ )
+		{
+			GameRegistry.addRecipe(
+				new ItemStack( m_itemBerth ),
+				"   ", "xxx", "yzy",
+				'x', new ItemStack( Block.cloth, 1, i ),
+				'y', stickStack,
+				'z', goldStack
+			);
+		}
 	}
 }

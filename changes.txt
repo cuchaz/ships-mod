@@ -1,14 +1,6 @@
 
-v0.9 beta change log
+v0.10 beta change log
 
-Added a new Berth block that looks like a bed, but it works on ships!
-Sail detection was redesigned to make side-facing sails more useful
-Grass now correctly saves its biome color when you launch/dock ships
-Ship clipboard now copies hanging entities (item frames, paintings, ship plaques, etc)
-Ferns, vines, tall grass, etc now correctly launch with ships
-Fixed a bug in the renderer that would not render more than one launched ship at a time
-Fixed a bug that would spawn items from invisible blocks
-Fixed multiple bugs with water displacement inside ship hulls
-Non-solid blocks under the water line now correctly remain part of ships during launching/docking
+Fixed issue with ships leaving holes in water after server restart
+Fixed issue with ship plaque and berth recipes on servers
 Various crash fixes
-Block limit is now 10,000 blocks!
