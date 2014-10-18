@@ -346,7 +346,6 @@ public class Ships extends DummyModContainer
 		ItemStack goldStack = new ItemStack( Item.ingotGold );
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		ItemStack paperStack = new ItemStack( Item.paper );
-		ItemStack clothStack = new ItemStack( Block.cloth );
 		
 		// paddle
 		GameRegistry.addRecipe(
