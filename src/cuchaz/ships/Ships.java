@@ -11,6 +11,7 @@
 package cuchaz.ships;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -24,6 +25,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.ForgeSubscribe;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -41,6 +45,8 @@ import cpw.mods.fml.common.network.FMLNetworkHandler;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
@@ -51,6 +57,7 @@ import cuchaz.ships.blocks.BlockAirWall;
 import cuchaz.ships.blocks.BlockBerth;
 import cuchaz.ships.blocks.BlockHelm;
 import cuchaz.ships.blocks.BlockShip;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.items.ItemBerth;
@@ -63,6 +70,8 @@ import cuchaz.ships.items.ItemShipEraser;
 import cuchaz.ships.items.ItemShipPlaque;
 import cuchaz.ships.items.ItemSupporterPlaque;
 import cuchaz.ships.items.SupporterPlaqueType;
+import cuchaz.ships.packets.Packet;
+import cuchaz.ships.packets.PacketBlockPropertiesOverrides;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketEraseShip;
 import cuchaz.ships.packets.PacketHandler;
@@ -86,7 +95,8 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 	channels = { PacketLaunchShip.Channel, PacketShipLaunched.Channel, PacketUnlaunchShip.Channel,
 		PacketRequestShipBlocks.Channel, PacketShipBlocks.Channel, PacketPilotShip.Channel,
 		PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel, PacketPasteShip.Channel,
-		PacketEraseShip.Channel, PacketShipPlaque.Channel, PacketPlayerSleepInBerth.Channel },
+		PacketEraseShip.Channel, PacketShipPlaque.Channel, PacketPlayerSleepInBerth.Channel,
+		PacketBlockPropertiesOverrides.Channel },
 	packetHandler = PacketHandler.class,
 	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
 	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server
@@ -204,6 +214,9 @@ public class Ships extends DummyModContainer
 	        
 			// register for network support
 			FMLNetworkHandler.instance().registerNetworkMod( this, getClass(), event.getASMHarvestedData() );
+			
+			// register for forge events
+			MinecraftForge.EVENT_BUS.register( this );
 		}
 		catch( RuntimeException ex )
 		{
@@ -258,6 +271,16 @@ public class Ships extends DummyModContainer
 	{
 		// register our commands
 		event.registerServerCommand( new CommandShips() );
+		
+		try
+		{
+			// load the block properties
+			BlockProperties.readConfigFile();
+		}
+		catch( FileNotFoundException ex )
+		{
+			logger.warning( "Unable to read block properties", ex );
+		}
 	}
 	
 	@SideOnly( Side.CLIENT )
@@ -279,7 +302,7 @@ public class Ships extends DummyModContainer
 		TileEntityRenderer.instance.specialRendererMap.put( c, renderer );
 		renderer.setTileEntityRenderer( TileEntityRenderer.instance );
 	}
-
+	
 	private void loadThings( )
 	{
 		// blocks
@@ -398,6 +421,34 @@ public class Ships extends DummyModContainer
 				'y', stickStack,
 				'z', goldStack
 			);
+		}
+	}
+	
+	@ForgeSubscribe
+	public void onEntityJoin( EntityJoinWorldEvent event )
+	{
+		if( event.world.isRemote )
+		{
+			// ignore on client
+			return;
+		}
+		
+		// is this a player?
+		EntityPlayer player = null;
+		if( event.entity instanceof EntityPlayer )
+		{
+			player = (EntityPlayer)event.entity;
+		}
+		if( player == null )
+		{
+			return;
+		}
+		
+		if( BlockProperties.hasOverrides() )
+		{
+			// send them to the client
+			Packet packet = new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() );
+			PacketDispatcher.sendPacketToPlayer( packet.getCustomPacket(), (Player)player );
 		}
 	}
 }

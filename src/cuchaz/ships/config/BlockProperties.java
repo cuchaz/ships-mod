@@ -12,13 +12,16 @@ package cuchaz.ships.config;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import cuchaz.ships.Ships;
 import net.minecraft.block.Block;
+import cuchaz.ships.Ships;
 
 
 public class BlockProperties
@@ -28,13 +31,10 @@ public class BlockProperties
 	
 	static
 	{
-		// read the overrides
+		m_hardcodedEntries = new HashMap<Block,BlockEntry>();
 		m_overriddenEntries = new HashMap<Block,BlockEntry>();
-		readEntries( m_overriddenEntries, new File( "config/shipBlockProperties.cfg" ) );
 		
 		// add some hard-coded entries for vanilla blocks that have weird shapes, but common materials
-		m_hardcodedEntries = new HashMap<Block,BlockEntry>();
-		
 		final double DoorSizeFactor = 0.3;
 		addScaledEntry( Block.doorWood, new BlockEntry( DoorSizeFactor, DoorSizeFactor, false, false ) );
 		addScaledEntry( Block.doorIron, new BlockEntry( DoorSizeFactor, DoorSizeFactor, false, false ) );
@@ -74,6 +74,35 @@ public class BlockProperties
 		
 		final double ThinPaneFactor = 0.2;
 		addScaledEntry( Block.thinGlass, new BlockEntry( ThinPaneFactor, ThinPaneFactor, true, false ) );
+	}
+	
+	public static void readConfigFile( )
+	throws FileNotFoundException
+	{
+		File inFile = new File( "config/shipBlockProperties.cfg" );
+		if( !inFile.exists() )
+		{
+			return;
+		}
+		
+		m_overriddenEntries.clear();
+		readEntries( m_overriddenEntries, new FileReader( inFile ) );
+		Ships.logger.info( "Read %d block entries from: %s", m_overriddenEntries.size(), inFile.getAbsolutePath() );
+	}
+	
+	public static void setOverrides( String in )
+	{
+		readEntries( m_overriddenEntries, new StringReader( in ) );
+	}
+	
+	public static String getOverrides( )
+	{
+		return writeEntries( m_overriddenEntries );
+	}
+	
+	public static boolean hasOverrides( )
+	{
+		return !m_overriddenEntries.isEmpty();
 	}
 	
 	public static void addScaledEntry( Block block, BlockEntry entry )
@@ -133,16 +162,8 @@ public class BlockProperties
 		return DefaultBlockProperties.getEntry( block );
 	}
 	
-	private static void readEntries( Map<Block,BlockEntry> entries, File inFile )
+	private static void readEntries( Map<Block,BlockEntry> entries, Reader inRaw )
 	{
-		// TEMP: don't read entries for now
-		if( true ) return;
-		
-		if( !inFile.exists() )
-		{
-			return;
-		}
-		
 		// build a map of the block names
 		Map<String,Block> blocks = new HashMap<String,Block>();
 		for( Block block : Block.blocksList )
@@ -156,7 +177,7 @@ public class BlockProperties
 		try
 		{
 			// open the file for reading line-by-line
-			BufferedReader in = new BufferedReader( new FileReader( inFile ) );
+			BufferedReader in = new BufferedReader( inRaw );
 			String line = null;
 			while( ( line = in.readLine() ) != null )
 			{
@@ -195,8 +216,6 @@ public class BlockProperties
 				}
 			}
 			in.close();
-			
-			Ships.logger.info( "Read %d block entries from: %s", entries.size(), inFile.getAbsolutePath() );
 		}
 		catch( IOException ex )
 		{
@@ -218,5 +237,23 @@ public class BlockProperties
 			Boolean.parseBoolean( parts[2] ),
 			Boolean.parseBoolean( parts[3] )
 		);
+	}
+	
+	private static String writeEntries( Map<Block,BlockEntry> entries )
+	{
+		StringBuilder buf = new StringBuilder();
+		for( Map.Entry<Block,BlockEntry> entry : entries.entrySet() )
+		{
+			buf.append( entry.getKey().getUnlocalizedName() );
+			buf.append( "=" );
+			buf.append( entry.getValue().mass );
+			buf.append( "," );
+			buf.append( entry.getValue().displacement );
+			buf.append( "," );
+			buf.append( entry.getValue().isWatertight );
+			buf.append( "," );
+			buf.append( entry.getValue().isSeparator );
+		}
+		return buf.toString();
 	}
 }
