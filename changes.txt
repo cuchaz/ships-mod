@@ -3,6 +3,7 @@ v0.10 beta change log
 
 Fixed issue with ships leaving holes in water after server restart
 Fixed issue with ship plaque and berth recipes on servers
+Fixed issue with hopper inventory on ship launch/dock
 Various crash fixes
 added block properties configuration file
 added proper collision handling between ships

@@ -19,6 +19,7 @@ import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.EntityList;
@@ -552,7 +553,7 @@ public class ShipWorld extends DetachedWorld
 	
 	@Override
 	@SuppressWarnings( "rawtypes" )
-	public List getEntitiesWithinAABB( Class theClass, AxisAlignedBB box )
+	public List selectEntitiesWithinAABB( Class theClass, AxisAlignedBB box, IEntitySelector selector )
 	{
 		// there are no entities in ship world
 		return new ArrayList();
@@ -561,6 +562,14 @@ public class ShipWorld extends DetachedWorld
 		// get the AABB for the query box in world coords
 		// get the entities from the real world
 		// transform them into ship world
+	}
+	
+	@Override
+	@SuppressWarnings( "rawtypes" )
+	public List getEntitiesWithinAABBExcludingEntity( Entity entity, AxisAlignedBB box, IEntitySelector selector )
+    {
+		// there are no entities in ship world
+		return new ArrayList();
 	}
 	
 	@Override
