@@ -29,7 +29,7 @@ import cuchaz.ships.gui.GuiString;
 
 public class ItemShipPlaque extends ItemHangingEntity
 {
-	private static final int MinRank = 3;
+	private static final int MinRank = 4;
 	
 	public ItemShipPlaque( int itemId )
 	{

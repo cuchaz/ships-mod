@@ -42,7 +42,7 @@ public enum GuiString
 	FoundPropulsion( "Found %s" ),
 	ShipUnlaunchOverride( "Override docking check" ),
 	ShipUnlaunchOverrideWarning( "Warning: You may not be able to launch your ship after docking here." ),
-	ListOfSupporters( "Cuchaz Interactive: List of Supporters" ),
+	ListOfSupporters( "Cuchaz Interactive: Supporters" ),
 	NotASupporter( "Become a supporter of Cuchaz Interactive to use this feature. http://www.patreon.com/cuchaz" ),
 	EraserUsage( "Use the eraser on a ship block to erase a ship."  ),
 	ShipPlaque( "Name your ship" ),
