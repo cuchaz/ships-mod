@@ -366,13 +366,29 @@ public class ShipCollider
 	
 	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, Coords coords )
 	{
+		return getBlockBoundingBox( box, coords, null );
+	}
+	
+	public AxisAlignedBB getBlockBoundingBox( AxisAlignedBB box, Coords coords, EntityShip ship )
+	{
 		// transform the block center into world space
 		Vec3 p = Vec3.createVectorHelper( coords.x + 0.5, coords.y + 0.5, coords.z + 0.5 );
 		m_ship.blocksToShip( p );
 		m_ship.shipToWorld( p );
 		
+		if( ship != null )
+		{
+			// and then into ship space
+			ship.worldToShip( p );
+			ship.shipToBlocks( p );
+		}
+	
 		// compute the halfwidth of the bounding box
 		float yawRad = (float)Math.toRadians( m_ship.rotationYaw );
+		if( ship != null )
+		{
+			yawRad -= (float)Math.toRadians( ship.rotationYaw );
+		}
 		double cos = MathHelper.cos( yawRad );
 		double sin = MathHelper.sin( yawRad );
 		double halfSize =  Math.max(
@@ -388,6 +404,11 @@ public class ShipCollider
 	
 	public AxisAlignedBB getBlockWorldBoundingBox( AxisAlignedBB box, Coords coords, double shipX, double shipY, double shipZ, float shipYaw )
 	{
+		return getBlockBoundingBox( box, coords, shipX, shipY, shipZ, shipYaw, null );
+	}
+	
+	public AxisAlignedBB getBlockBoundingBox( AxisAlignedBB box, Coords coords, double shipX, double shipY, double shipZ, float shipYaw, EntityShip ship )
+	{
 		// temporarily place the ship at the new position
 		double oldX = m_ship.posX;
 		double oldY = m_ship.posY;
@@ -400,7 +421,7 @@ public class ShipCollider
 		m_ship.posZ = shipZ;
 		m_ship.rotationYaw = shipYaw;
 		
-		AxisAlignedBB blockWorldBox = getBlockWorldBoundingBox( box, coords );
+		AxisAlignedBB blockWorldBox = getBlockBoundingBox( box, coords, ship );
 		
 		// restore the ship before anyone notices =P
 		m_ship.posX = oldX;
@@ -442,11 +463,14 @@ public class ShipCollider
 			}
 			
 			// handle inter-ship collisions
-			checkShipCollision( collisionResult, ship, dx, dy, dz, dYaw );
-			if( collisionResult.scaling < 1.0 )
+			for( Coords coords : m_ship.getShipWorld().coords() )
 			{
-				scaling = Math.min( scaling, collisionResult.scaling );
-				numCollidingBoxes += collisionResult.numCollidingBoxes;
+				checkShipCollision( collisionResult, coords, dx, dy, dz, dYaw, ship );
+				if( collisionResult.scaling < 1.0 )
+				{
+					scaling = Math.min( scaling, collisionResult.scaling );
+					numCollidingBoxes += collisionResult.numCollidingBoxes;
+				}
 			}
 		}
 		
@@ -683,11 +707,37 @@ public class ShipCollider
         result.numCollidingBoxes = nearbyWorldBlocks.size();
 	}
 	
-	private void checkShipCollision( CollisionResult result, EntityShip ship, double dx, double dy, double dz, float dYaw )
+	private void checkShipCollision( CollisionResult result, Coords coords, double dx, double dy, double dz, float dYaw, EntityShip ship )
 	{
-		// TODO: implement a more detailed collision check
-		result.numCollidingBoxes = 1;
-		result.scaling = getScalingToAvoidCollision( m_ship.boundingBox, dx, dy, dz, ship.boundingBox );
+		// NOTE: all inter-ship collision calculations take place in the other ship's coordinate system
+		
+		// get the current bounding box for the ship block
+		AxisAlignedBB shipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		getBlockBoundingBox( shipBlockBox, coords, ship );
+		
+		// where would the ship block move to?
+		double nextX = m_ship.posX + dx;
+		double nextY = m_ship.posY + dy;
+		double nextZ = m_ship.posZ + dz;
+		float nextYaw = m_ship.rotationYaw + dYaw;
+		AxisAlignedBB nextShipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+ 		getBlockBoundingBox( nextShipBlockBox, coords, nextX, nextY, nextZ, nextYaw, ship );
+ 		
+ 		// get the collisions with the other ship
+ 		List<PossibleCollision> possibleCollisions = trajectoryQuery( shipBlockBox, nextShipBlockBox );
+        
+        // get the scaling that avoids the collisions
+        result.scaling = 1;
+        result.numCollidingBoxes = 0;
+        for( PossibleCollision possibleCollision : possibleCollisions )
+		{
+        	double scaling = getScalingToAvoidCollision( shipBlockBox, dx, dy, dz, possibleCollision.box );
+       		result.scaling = Math.min( result.scaling, scaling );
+       		if( scaling < 1 )
+       		{
+       			result.numCollidingBoxes++;
+       		}
+		}
 	}
 	
 	private double getScalingToAvoidCollision( AxisAlignedBB box, double dx, double dy, double dz, AxisAlignedBB obstacleBox )
