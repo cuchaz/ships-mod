@@ -224,8 +224,23 @@ public class EntityShip extends Entity
 	@Override
 	public boolean canBeCollidedWith()
     {
+		// yes the ship can be collided with in general
         return true;
     }
+	
+	@Override
+	public AxisAlignedBB getBoundingBox()
+    {
+		// but don't let vanilla Minecraft handle the collisions
+		return null;
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBox( Entity entity )
+	{
+		// ships are not pushable by entities either
+		return null;
+	}
 	
 	@Override
 	public void setPosition( double x, double y, double z )

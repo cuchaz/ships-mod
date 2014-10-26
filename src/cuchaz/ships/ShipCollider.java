@@ -49,7 +49,7 @@ public class ShipCollider
 		}
 	}
 	
-	private static class BlockCollisionResult
+	private static class CollisionResult
 	{
 		public double scaling;
 		public int numCollidingBoxes;
@@ -115,6 +115,18 @@ public class ShipCollider
 	
 	public void onNearbyEntityMoved( double oldX, double oldY, double oldZ, double oldYSize, Entity entity )
 	{
+		if( !entity.canBeCollidedWith() )
+		{
+			// skip entities that don't collide
+			return;
+		}
+		
+		if( entity instanceof EntityShip )
+		{
+			// nothing should be calling moveEntity() for ships, so we can ignore this
+			return;
+		}
+		
 		// get a box for the entity's original positions
 		AxisAlignedBB oldEntityBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
 		getEntityBoxInBlockSpace( oldEntityBox, entity, Vec3.createVectorHelper( oldX, oldY, oldZ ) );
@@ -404,10 +416,33 @@ public class ShipCollider
 		// compute the scaling of the delta (between 0 and 1) that avoids collisions
 		double scaling = 1.0;
 		int numCollidingBoxes = 0;
-		BlockCollisionResult collisionResult = new BlockCollisionResult();
+		CollisionResult collisionResult = new CollisionResult();
 		for( Coords coords : m_ship.getShipWorld().coords() )
 		{
 			checkBlockCollision( collisionResult, coords, dx, dy, dz, dYaw );
+			if( collisionResult.scaling < 1.0 )
+			{
+				scaling = Math.min( scaling, collisionResult.scaling );
+				numCollidingBoxes += collisionResult.numCollidingBoxes;
+			}
+		}
+		
+		// look for collisions with other ships
+		AxisAlignedBB nextShipBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		computeShipBoundingBox( nextShipBox, dx, dy, dz, dYaw );
+		AxisAlignedBB queryBox = m_ship.boundingBox.func_111270_a( nextShipBox );
+		@SuppressWarnings( "unchecked" )
+		List<EntityShip> ships = (List<EntityShip>)m_ship.worldObj.getEntitiesWithinAABB( EntityShip.class, queryBox );
+		for( EntityShip ship : ships )
+		{
+			if( ship == m_ship )
+			{
+				// skip self
+				continue;
+			}
+			
+			// handle inter-ship collisions
+			checkShipCollision( collisionResult, ship, dx, dy, dz, dYaw );
 			if( collisionResult.scaling < 1.0 )
 			{
 				scaling = Math.min( scaling, collisionResult.scaling );
@@ -440,10 +475,10 @@ public class ShipCollider
 		List<Entity> entities = (List<Entity>)m_ship.worldObj.getEntitiesWithinAABB( Entity.class, m_ship.boundingBox );
 		for( Entity entity : entities )
 		{
-			// ignore self
-			if( entity == m_ship )
+			if( entity instanceof EntityShip )
 			{
-				continue;
+				// don't push ships here
+				return;
 			}
 			
 			// the src position is the current position, but moved by the delta
@@ -470,7 +505,7 @@ public class ShipCollider
 		while( iter.hasNext() )
 		{
 			Entity entity = iter.next();
-			if( entity == m_ship || !isEntityAboard( entity ) )
+			if( entity instanceof EntityShip || !isEntityAboard( entity ) )
 			{
 				iter.remove();
 			}
@@ -591,7 +626,7 @@ public class ShipCollider
 		return Math.sqrt( minDistSq );
 	}
 	
-	private void checkBlockCollision( BlockCollisionResult result, Coords coords, double dx, double dy, double dz, float dYaw )
+	private void checkBlockCollision( CollisionResult result, Coords coords, double dx, double dy, double dz, float dYaw )
 	{
 		// get the current world bounding box for the ship block
 		AxisAlignedBB shipBlockBox = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
@@ -646,6 +681,13 @@ public class ShipCollider
         	}
 		}
         result.numCollidingBoxes = nearbyWorldBlocks.size();
+	}
+	
+	private void checkShipCollision( CollisionResult result, EntityShip ship, double dx, double dy, double dz, float dYaw )
+	{
+		// TODO: implement a more detailed collision check
+		result.numCollidingBoxes = 1;
+		result.scaling = getScalingToAvoidCollision( m_ship.boundingBox, dx, dy, dz, ship.boundingBox );
 	}
 	
 	private double getScalingToAvoidCollision( AxisAlignedBB box, double dx, double dy, double dz, AxisAlignedBB obstacleBox )
