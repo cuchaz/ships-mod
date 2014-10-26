@@ -444,11 +444,8 @@ public class Ships extends DummyModContainer
 			return;
 		}
 		
-		if( BlockProperties.hasOverrides() )
-		{
-			// send them to the client
-			Packet packet = new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() );
-			PacketDispatcher.sendPacketToPlayer( packet.getCustomPacket(), (Player)player );
-		}
+		// send block overrides to the client
+		Packet packet = new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() );
+		PacketDispatcher.sendPacketToPlayer( packet.getCustomPacket(), (Player)player );
 	}
 }

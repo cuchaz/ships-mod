@@ -92,6 +92,7 @@ public class BlockProperties
 	
 	public static void setOverrides( String in )
 	{
+		m_overriddenEntries.clear();
 		readEntries( m_overriddenEntries, new StringReader( in ) );
 	}
 	
