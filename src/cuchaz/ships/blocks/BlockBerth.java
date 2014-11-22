@@ -48,6 +48,7 @@ public class BlockBerth extends BlockBed
 		
 	    setHardness( 0.2F );
 	    disableStats();
+	    setUnlocalizedName( "berth" );
 	    setTextureName( "berth" );
 	}
 	
