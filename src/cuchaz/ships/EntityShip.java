@@ -34,7 +34,6 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.EntityUtils;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -171,17 +170,14 @@ public class EntityShip extends Entity
 		
 		m_waterDisplacer.restore();
 		
-		if( Environment.isClient() )
+		// use the ship unlauncher to move ship riders to the new ship unlaunch position
+		List<Entity> riders = getCollider().getRiders();
+		if( !riders.isEmpty() )
 		{
-			// use the ship unlauncher to move ship riders to the new ship unlaunch position
-			List<Entity> riders = getCollider().getRiders();
-			if( !riders.isEmpty() )
+			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
+			for( Entity rider : riders )
 			{
-				ShipUnlauncher unlauncher = new ShipUnlauncher( this );
-				for( Entity rider : riders )
-				{
-					unlauncher.applyUnlaunch( rider );
-				}
+				unlauncher.applyUnlaunch( rider );
 			}
 		}
 	}
