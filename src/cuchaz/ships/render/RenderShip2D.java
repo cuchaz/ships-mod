@@ -92,9 +92,16 @@ public class RenderShip2D
 				Icon icon = block.getBlockTexture( world, coords.x, coords.y, coords.z, side.getId() );
 				if( icon != null )
 				{
+					int blockX = envelope.toZeroBasedU( u );
+					// to get the sides to always render from the outside, flip north and east u-coords
+					if( side == BlockSide.North || side == BlockSide.East )
+					{
+						blockX = envelope.getWidth() - blockX - 1;
+					}
+					int blockY = envelope.getHeight() - envelope.toZeroBasedV( v ) - 1;
 					drawTexturedBlock(
-						( maxWidth - shipWidth )/2.0 + x + ( envelope.toZeroBasedU( u ) )*blockSize,
-						( maxHeight - shipHeight )/2.0 + y + ( envelope.getHeight() - envelope.toZeroBasedV( v ) - 1 )*blockSize,
+						( maxWidth - shipWidth )/2.0 + x + blockX*blockSize,
+						( maxHeight - shipHeight )/2.0 + y + blockY*blockSize,
 						z,
 						blockSize,
 						blockSize,

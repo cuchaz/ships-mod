@@ -26,6 +26,9 @@ public class GuiShipLaunch extends GuiShip
 {
 	private ShipLauncher m_shipLauncher;
 	private GuiButton m_buttonLaunchShip;
+	private BlockSide m_shipSide;
+	private GuiButton m_buttonRotateCw;
+	private GuiButton m_buttonRotateCcw;
 	
 	public GuiShipLaunch( Container container, ShipLauncher shipLauncher )
 	{
@@ -34,6 +37,9 @@ public class GuiShipLaunch extends GuiShip
 		m_shipLauncher = shipLauncher;
 		
 		m_buttonLaunchShip = null;
+		m_shipSide = m_shipLauncher.getShipSide();
+		m_buttonRotateCw = null;
+		m_buttonRotateCcw = null;
 	}
 	
 	@Override
@@ -42,9 +48,10 @@ public class GuiShipLaunch extends GuiShip
 	{
 		super.initGui();
 		
-		// add the buttons
+		// add the launch button
 		m_buttonLaunchShip = new GuiButton( 
-			0, guiLeft + LeftMargin,
+			0,
+			guiLeft + LeftMargin,
 			guiTop + ySize - TopMargin - 20,
 			80,
 			20,
@@ -52,6 +59,26 @@ public class GuiShipLaunch extends GuiShip
 		);
 		m_buttonLaunchShip.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add( m_buttonLaunchShip );
+		
+		// add the rotate buttons
+		m_buttonRotateCw = new GuiButton( 
+			1,
+			guiLeft + xSize - LeftMargin - 20 - 20 - 10,
+			guiTop + ySize - TopMargin - 20,
+			20,
+			20,
+			"<"
+		);
+		buttonList.add( m_buttonRotateCw );
+		m_buttonRotateCcw = new GuiButton( 
+			2,
+			guiLeft + xSize - LeftMargin - 20,
+			guiTop + ySize - TopMargin - 20,
+			20,
+			20,
+			">"
+		);
+		buttonList.add( m_buttonRotateCcw );
 	}
 	
 	@Override
@@ -63,6 +90,14 @@ public class GuiShipLaunch extends GuiShip
 			PacketLaunchShip packet = new PacketLaunchShip( m_shipLauncher.getShipBlock() );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
+		}
+		else if( button.id == m_buttonRotateCw.id )
+		{
+			m_shipSide = m_shipSide.rotateXZCw( 1 );
+		}
+		else if( button.id == m_buttonRotateCcw.id )
+		{
+			m_shipSide = m_shipSide.rotateXZCcw( 1 );
 		}
 	}
 	
@@ -116,10 +151,9 @@ public class GuiShipLaunch extends GuiShip
 		}
 		
 		// draw the ship and show the water height
-		BlockSide shipSide = m_shipLauncher.getShipSide();
-		if( shipSide != null )
+		if( m_shipSide != null )
 		{
-			BlockArray envelope = m_shipLauncher.getShipEnvelope( shipSide );
+			BlockArray envelope = m_shipLauncher.getShipEnvelope( m_shipSide );
 			int x = LeftMargin;
 			int y = getLineY( 3 );
 			int width = xSize - LeftMargin*2;
@@ -132,7 +166,7 @@ public class GuiShipLaunch extends GuiShip
 			);
 			RenderShip2D.drawShip(
 				envelope,
-				shipSide,
+				m_shipSide,
 				m_shipLauncher.getShipWorld(),
 				x, y, zLevel, width, height
 			);
