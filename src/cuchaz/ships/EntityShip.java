@@ -188,7 +188,7 @@ public class EntityShip extends Entity
 			{
 				// for players, only adjust position on the client
 				boolean isPlayer = rider instanceof EntityPlayer;
-				if( ( isPlayer && Environment.isServer() ) || !isPlayer )
+				if( ( isPlayer && Environment.isClient() ) || !isPlayer )
 				{
 					unlauncher.applyUnlaunch( rider );
 				}
