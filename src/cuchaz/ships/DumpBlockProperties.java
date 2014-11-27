@@ -92,13 +92,14 @@ public class DumpBlockProperties
 						}
 					}
 					
-					System.out.print( String.format( "\"%s\": [\"%s\", %f, %f, %b, %b]",
+					System.out.print( String.format( "\"%s\": [\"%s\", %f, %f, %b, %b, %b]",
 						block.getUnlocalizedName(),
 						name,
 						entry.mass,
 						entry.displacement,
 						entry.isWatertight,
-						entry.isSeparator
+						entry.isSeparator,
+						entry.isWater
 					) );
 					
 					if( i == blocksToCheck.size() - 1 )

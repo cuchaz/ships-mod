@@ -26,4 +26,12 @@ public class MaterialAirWall extends MaterialTransparent
 		// block movement so water won't flow into this material
         return true;
     }
+	
+	@Override
+	public boolean isSolid()
+    {
+		// pretend we're solid so that we block rain
+		// apparently this doesn't prevent player movement, or suffocate players, so we're all good
+        return true;
+    }
 }

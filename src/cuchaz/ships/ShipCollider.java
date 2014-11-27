@@ -650,6 +650,27 @@ public class ShipCollider
 		return Math.sqrt( minDistSq );
 	}
 	
+	public void getIntersectingWorldBlocks( BlockSet worldBlocks, BlockSet shipBlocks )
+	{
+		getIntersectingWorldBlocks( worldBlocks, shipBlocks, 0, false );
+	}
+	
+	public void getIntersectingWorldBlocks( BlockSet worldBlocks, BlockSet shipBlocks, double epsilon, boolean includeAir )
+	{
+		// find the world blocks that intersect the trapped air blocks
+		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
+		for( Coords coords : shipBlocks )
+		{
+			getBlockWorldBoundingBox( box, coords );
+			
+			// grow the bounding box just a bit so we get more robust collisions
+			box = box.expand( epsilon, epsilon, epsilon );
+			
+			// query for all the world blocks that intersect it
+			BlockUtils.worldRangeQuery( worldBlocks, m_ship.worldObj, box, includeAir );
+		}
+	}
+	
 	private void checkBlockCollision( CollisionResult result, Coords coords, double dx, double dy, double dz, float dYaw )
 	{
 		// get the current world bounding box for the ship block

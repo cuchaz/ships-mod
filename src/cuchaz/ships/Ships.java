@@ -53,6 +53,7 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.FMLHacker;
+import cuchaz.ships.blocks.BlockAirRoof;
 import cuchaz.ships.blocks.BlockAirWall;
 import cuchaz.ships.blocks.BlockBerth;
 import cuchaz.ships.blocks.BlockHelm;
@@ -126,6 +127,7 @@ public class Ships extends DummyModContainer
 	public static final BlockAirWall m_blockAirWall = new BlockAirWall( 3171 );
 	public static final BlockHelm m_blockHelm = new BlockHelm( 3712 );
 	public static final BlockBerth m_blockBerth = new BlockBerth( 3713 );
+	public static final BlockAirWall m_blockAirRoof = new BlockAirRoof( 3174 );
 	
 	// entity registration
 	public static final int EntityShipId = 174;
@@ -311,6 +313,7 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerBlock( m_blockAirWall, "blockAirWall" );
 		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );
 		GameRegistry.registerBlock( m_blockBerth, "blockBerth" );
+		GameRegistry.registerBlock( m_blockAirRoof, "blockAirRoof" );
 		
 		// items
 		GameRegistry.registerItem( m_itemPaddle, "paddle" );
@@ -341,6 +344,7 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_blockAirWall, "Air Wall" );
 		LanguageRegistry.addName( m_blockHelm, "Helm" );
 		LanguageRegistry.addName( m_blockBerth, "Berth" );
+		LanguageRegistry.addName( m_blockAirRoof, "Air Roof" );
 		
 		// item names
 		LanguageRegistry.addName( m_itemPaddle, "Paddle" );

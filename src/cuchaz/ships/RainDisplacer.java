@@ -14,37 +14,30 @@ import java.util.Iterator;
 
 import net.minecraft.block.Block;
 import cuchaz.modsShared.blocks.BlockSet;
+import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
-import cuchaz.ships.config.BlockProperties;
 
-public class WaterDisplacer extends Displacer
+public class RainDisplacer extends Displacer
 {
-	public WaterDisplacer( EntityShip ship )
+	public RainDisplacer( EntityShip ship )
 	{
-		super( ship, Ships.m_blockAirWall );
+		super( ship, Ships.m_blockAirRoof );
 	}
 	
-	public void update( double waterHeightInBlockSpace )
+	public void update( )
 	{
-		// get all the trapped air blocks
-		BlockSet trappedAirBlocks = m_ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
-		if( trappedAirBlocks.isEmpty() )
-		{
-			// the ship is out of the water or flooded
-			return;
-		}
-		
-		// translate to world blocks
+		// use the top envelope of the ship
+		BlockSet topEnvelope = m_ship.getShipWorld().getGeometry().getEnvelopes().getEnvelope( BlockSide.Top ).toBlockSet();
 		m_shouldBeDisplaced.clear();
-		m_ship.getCollider().getIntersectingWorldBlocks( m_shouldBeDisplaced, trappedAirBlocks, 0.01, false );
+		m_ship.getCollider().getIntersectingWorldBlocks( m_shouldBeDisplaced, topEnvelope, -0.5, true );
 		
-		// filter out blocks that aren't water
+		// filter out blocks that aren't air
 		Iterator<Coords> iter = m_shouldBeDisplaced.iterator();
 		while( iter.hasNext() )
 		{
 			Coords coords = iter.next();
 			int blockId = m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z );
-			if( !BlockProperties.isWater( Block.blocksList[blockId] ) )
+			if( Block.blocksList[blockId] != null && blockId != m_block.blockID )
 			{
 				iter.remove();
 			}

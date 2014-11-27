@@ -34,6 +34,7 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.EntityUtils;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -43,6 +44,7 @@ import cuchaz.modsShared.math.CircleRange;
 import cuchaz.modsShared.math.CompareReal;
 import cuchaz.modsShared.math.RotatedBB;
 import cuchaz.modsShared.perf.DelayTimer;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.packets.PacketPilotShip;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipLaunched;
@@ -80,6 +82,7 @@ public class EntityShip extends Entity
 	private float m_pitchFromServer;
 	private ShipCollider m_collider;
 	private WaterDisplacer m_waterDisplacer;
+	private RainDisplacer m_rainDisplacer;
 	private DelayTimer m_throttleKillDelay;
 	private Map<Integer,Entity> m_ridersLastTick;
 	
@@ -112,6 +115,7 @@ public class EntityShip extends Entity
 		m_pitchFromServer = 0;
 		m_collider = new ShipCollider( this );
 		m_waterDisplacer = new WaterDisplacer( this );
+		m_rainDisplacer = new RainDisplacer( this );
 		m_throttleKillDelay = null;
 		m_ridersLastTick = new TreeMap<Integer,Entity>();
 	}
@@ -168,7 +172,12 @@ public class EntityShip extends Entity
 		// LOGGING
 		Ships.logger.info( "EntityShip %d died!", entityId );
 		
-		m_waterDisplacer.restore();
+		// only restore blocks on the server
+		if( Environment.isServer() )
+		{
+			m_waterDisplacer.restore();
+			m_rainDisplacer.restore();
+		}
 		
 		// use the ship unlauncher to move ship riders to the new ship unlaunch position
 		List<Entity> riders = getCollider().getRiders();
@@ -177,7 +186,12 @@ public class EntityShip extends Entity
 			ShipUnlauncher unlauncher = new ShipUnlauncher( this );
 			for( Entity rider : riders )
 			{
-				unlauncher.applyUnlaunch( rider );
+				// for players, only adjust position on the client
+				boolean isPlayer = rider instanceof EntityPlayer;
+				if( ( isPlayer && Environment.isServer() ) || !isPlayer )
+				{
+					unlauncher.applyUnlaunch( rider );
+				}
 			}
 		}
 	}
@@ -357,6 +371,7 @@ public class EntityShip extends Entity
 			dYaw = rotationYaw - prevRotationYaw;
 			
 			m_waterDisplacer.update( waterHeightInBlockSpace );
+			m_rainDisplacer.update();
 			moveRiders( riders, dx, dy, dz, dYaw );
 			
 			// are there no riders?
@@ -395,8 +410,8 @@ public class EntityShip extends Entity
 		while( iter.hasNext() )
 		{
 			Coords coords = iter.next();
-			int blockId = worldObj.getBlockId( coords.x, coords.y, coords.z );
-			if( blockId != Block.waterStill.blockID && blockId != Ships.m_blockAirWall.blockID )
+			Block block = Block.blocksList[worldObj.getBlockId( coords.x, coords.y, coords.z )];
+			if( !BlockProperties.isWater( block ) )
 			{
 				iter.remove();
 			}

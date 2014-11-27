@@ -200,7 +200,8 @@ public class CommandShips extends CommandBase
 							@Override
 							public SearchAction foundBlock( Coords coords )
 							{
-								if( sender.getEntityWorld().getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockAirWall.blockID )
+								int blockId = sender.getEntityWorld().getBlockId( coords.x, coords.y, coords.z );
+								if( blockId == Ships.m_blockAirWall.blockID || blockId == Ships.m_blockAirRoof.blockID )
 								{
 									airWallBlocks.add( coords );
 								}
@@ -219,12 +220,20 @@ public class CommandShips extends CommandBase
 					);
 				}
 				
-				// replace all the air wall blocks with water
+				// replace all the air wall blocks with water, and the air roof blocks with air
 				for( Coords coords : airWallBlocks )
 				{
-					sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, Block.waterStill.blockID );
+					int blockId = sender.getEntityWorld().getBlockId( coords.x, coords.y, coords.z );
+					if( blockId == Ships.m_blockAirWall.blockID )
+					{
+						sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, Block.waterStill.blockID );
+					}
+					else if( blockId == Ships.m_blockAirRoof.blockID )
+					{
+						sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, 0 );
+					}
 				}
-				replyAllAdmins( sender, String.format( "Converted %d air wall blocks back to water.", airWallBlocks.size() ) );
+				replyAllAdmins( sender, String.format( "Removed %d air wall blocks.", airWallBlocks.size() ) );
 			}
 		};
 		

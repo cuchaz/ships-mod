@@ -30,55 +30,55 @@ public class DefaultBlockProperties
 		// btw, mass is a proxy for density since all block volumes are the same
 		
 		// all masses are normalized to water, which has a mass of 1
-		m_properties.put( Material.water, new BlockEntry( 1.0, 1.0, false, true ) );
-	    m_properties.put( Material.lava, new BlockEntry( 2.0, 1.0, false, true ) );
+		m_properties.put( Material.water, new BlockEntry( 1.0, 1.0, false, true, true ) );
+	    m_properties.put( Material.lava, new BlockEntry( 2.0, 1.0, false, true, false ) );
 		
-		m_properties.put( Material.air, new BlockEntry( 0.01, 1.0, false, true ) );
+		m_properties.put( Material.air, new BlockEntry( 0.01, 1.0, false, true, false ) );
 		
 		// solids
-		m_properties.put( Material.wood, new BlockEntry( 0.5, 1.0, true, false ) );
-		m_properties.put( Material.rock, new BlockEntry( 3.0, 1.0, true, false ) );
-		m_properties.put( Material.iron, new BlockEntry( 4.0, 1.0, true, false ) );
-		m_properties.put( Material.glass, new BlockEntry( 0.6, 1.0, true, false ) );
-		m_properties.put( Material.anvil, new BlockEntry( 6.0, 1.0, true, false ) );
-	    m_properties.put( Material.ice, new BlockEntry( 0.8, 1.0, true, false ) );
-	    m_properties.put( Material.clay, new BlockEntry( 3.0, 1.0, true, false ) );
+		m_properties.put( Material.wood, new BlockEntry( 0.5, 1.0, true, false, false ) );
+		m_properties.put( Material.rock, new BlockEntry( 3.0, 1.0, true, false, false ) );
+		m_properties.put( Material.iron, new BlockEntry( 4.0, 1.0, true, false, false ) );
+		m_properties.put( Material.glass, new BlockEntry( 0.6, 1.0, true, false, false ) );
+		m_properties.put( Material.anvil, new BlockEntry( 6.0, 1.0, true, false, false ) );
+	    m_properties.put( Material.ice, new BlockEntry( 0.8, 1.0, true, false, false ) );
+	    m_properties.put( Material.clay, new BlockEntry( 3.0, 1.0, true, false, false ) );
 		
 		// particulates
-		m_properties.put( Material.ground, new BlockEntry( 2.0, 1.0, false, false ) );
-		m_properties.put( Material.grass, new BlockEntry( 2.0, 1.0, false, false ) );
-	    m_properties.put( Material.sand, new BlockEntry( 2.0, 1.0, false, false ) );
-	    m_properties.put( Material.snow, new BlockEntry( 0.6, 1.0, false, false ) );
-	    m_properties.put( Material.craftedSnow, new BlockEntry( 0.6, 1.0, false, false ) );
+		m_properties.put( Material.ground, new BlockEntry( 2.0, 1.0, false, false, false ) );
+		m_properties.put( Material.grass, new BlockEntry( 2.0, 1.0, false, false, false ) );
+	    m_properties.put( Material.sand, new BlockEntry( 2.0, 1.0, false, false, false ) );
+	    m_properties.put( Material.snow, new BlockEntry( 0.6, 1.0, false, false, false ) );
+	    m_properties.put( Material.craftedSnow, new BlockEntry( 0.6, 1.0, false, false, false ) );
 	    
 	    // porous
-		m_properties.put( Material.cloth, new BlockEntry( 0.2, 1.0, false, false ) );
-		m_properties.put( Material.materialCarpet, new BlockEntry( 0.2, 1.0, false, false ) );
-	    m_properties.put( Material.web, new BlockEntry( 0.1, 1.0, false, false ) );
-	    m_properties.put( Material.coral, new BlockEntry( 2.0, 1.0, false, false ) );
-	    m_properties.put( Material.sponge, new BlockEntry( 0.2, 1.0, false, false ) );
+		m_properties.put( Material.cloth, new BlockEntry( 0.2, 1.0, false, false, false ) );
+		m_properties.put( Material.materialCarpet, new BlockEntry( 0.2, 1.0, false, false, false ) );
+	    m_properties.put( Material.web, new BlockEntry( 0.1, 1.0, false, false, false ) );
+	    m_properties.put( Material.coral, new BlockEntry( 2.0, 1.0, false, false, false ) );
+	    m_properties.put( Material.sponge, new BlockEntry( 0.2, 1.0, false, false, false ) );
 		
 		// vegetation/food
-	    m_properties.put( Material.leaves, new BlockEntry( 0.5, 1.0, false, false ) );
-	    m_properties.put( Material.plants, new BlockEntry( 0.5, 1.0, false, false ) );
-	    m_properties.put( Material.vine, new BlockEntry( 0.5, 1.0, false, false ) );
-	    m_properties.put( Material.cactus, new BlockEntry( 0.5, 1.0, false, false ) );
-	    m_properties.put( Material.pumpkin, new BlockEntry( 0.5, 1.0, false, false ) );
-	    m_properties.put( Material.cake, new BlockEntry( 0.5, 1.0, false, false ) );
-	    m_properties.put( Material.dragonEgg, new BlockEntry( 1.2, 1.0, false, false ) );
+	    m_properties.put( Material.leaves, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.plants, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.vine, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.cactus, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.pumpkin, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.cake, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.dragonEgg, new BlockEntry( 1.2, 1.0, false, false, false ) );
 	    
 	    // machines
-	    m_properties.put( Material.circuits, new BlockEntry( 2.0, 1.0, false, false ) );
-	    m_properties.put( Material.redstoneLight, new BlockEntry( 2.0, 1.0, false, false ) );
-	    m_properties.put( Material.tnt, new BlockEntry( 2.0, 1.0, false, false ) );
-	    m_properties.put( Material.piston, new BlockEntry( 2.0, 1.0, false, false ) );
+	    m_properties.put( Material.circuits, new BlockEntry( 2.0, 1.0, false, false, false ) );
+	    m_properties.put( Material.redstoneLight, new BlockEntry( 2.0, 1.0, false, false, false ) );
+	    m_properties.put( Material.tnt, new BlockEntry( 2.0, 1.0, false, false, false ) );
+	    m_properties.put( Material.piston, new BlockEntry( 2.0, 1.0, false, false, false ) );
 	    
 	    // other 
-	    m_properties.put( Material.portal, new BlockEntry( 2.0, 1.0, false, true ) );
-	    m_properties.put( Material.fire, new BlockEntry( 0.0, 1.0, false, true ) );
+	    m_properties.put( Material.portal, new BlockEntry( 2.0, 1.0, false, true, false ) );
+	    m_properties.put( Material.fire, new BlockEntry( 0.0, 1.0, false, true, false ) );
 	    
-	    // for unknown materials, assume same as water
-	    DefaultProperties = new BlockEntry( 1.0, 1.0, false, true );
+	    // for unknown materials, assume same as water, but not water
+	    DefaultProperties = new BlockEntry( 1.0, 1.0, false, true, false );
 	    
 	    // just for fun, make sure we have all the materials covered
 	    // since Material isn't an enum, we have to use reflection here

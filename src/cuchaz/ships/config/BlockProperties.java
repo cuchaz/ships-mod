@@ -36,44 +36,48 @@ public class BlockProperties
 		
 		// add some hard-coded entries for vanilla blocks that have weird shapes, but common materials
 		final double DoorSizeFactor = 0.3;
-		addScaledEntry( Block.doorWood, new BlockEntry( DoorSizeFactor, DoorSizeFactor, false, false ) );
-		addScaledEntry( Block.doorIron, new BlockEntry( DoorSizeFactor, DoorSizeFactor, false, false ) );
+		addScaledEntry( Block.doorWood, new BlockEntry( DoorSizeFactor, DoorSizeFactor, false, false, false ) );
+		addScaledEntry( Block.doorIron, new BlockEntry( DoorSizeFactor, DoorSizeFactor, false, false, false ) );
 		
 		final double TrapDoorSizeFactor = 0.2;
-		addScaledEntry( Block.trapdoor, new BlockEntry( TrapDoorSizeFactor, TrapDoorSizeFactor, false, false ) );
+		addScaledEntry( Block.trapdoor, new BlockEntry( TrapDoorSizeFactor, TrapDoorSizeFactor, false, false, false ) );
 		
 		final double SlabSizeFactor = 0.5;
-		addScaledEntry( Block.stoneSingleSlab, new BlockEntry( SlabSizeFactor, SlabSizeFactor, true, false ) );
-		addScaledEntry( Block.woodSingleSlab, new BlockEntry( SlabSizeFactor, SlabSizeFactor, true, false ) );
+		addScaledEntry( Block.stoneSingleSlab, new BlockEntry( SlabSizeFactor, SlabSizeFactor, true, false, false ) );
+		addScaledEntry( Block.woodSingleSlab, new BlockEntry( SlabSizeFactor, SlabSizeFactor, true, false, false ) );
 		
 		final double StairsSizeFactor = 0.75;
-		addScaledEntry( Block.stairsWoodOak, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsWoodSpruce, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsWoodBirch, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsWoodJungle, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsNetherQuartz, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsCobblestone, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsBrick, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsStoneBrick, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsNetherBrick, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
-		addScaledEntry( Block.stairsSandStone, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false ) );
+		addScaledEntry( Block.stairsWoodOak, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsWoodSpruce, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsWoodBirch, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsWoodJungle, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsNetherQuartz, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsCobblestone, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsBrick, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsStoneBrick, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsNetherBrick, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
+		addScaledEntry( Block.stairsSandStone, new BlockEntry( StairsSizeFactor, StairsSizeFactor, true, false, false ) );
 		
 		final double LadderSizeFactor = 0.1;
-		addScaledEntry( Block.ladder, new BlockEntry( LadderSizeFactor, LadderSizeFactor, false, false ) );
+		addScaledEntry( Block.ladder, new BlockEntry( LadderSizeFactor, LadderSizeFactor, false, false, false ) );
 		
 		final double FenceSizeFactor = 0.5;
-		addScaledEntry( Block.fence, new BlockEntry( FenceSizeFactor, FenceSizeFactor, false, false ) );
-		addScaledEntry( Block.netherFence, new BlockEntry( FenceSizeFactor, FenceSizeFactor, false, false ) );
-		addScaledEntry( Block.fenceIron, new BlockEntry( FenceSizeFactor, FenceSizeFactor, false, false ) );
+		addScaledEntry( Block.fence, new BlockEntry( FenceSizeFactor, FenceSizeFactor, false, false, false ) );
+		addScaledEntry( Block.netherFence, new BlockEntry( FenceSizeFactor, FenceSizeFactor, false, false, false ) );
+		addScaledEntry( Block.fenceIron, new BlockEntry( FenceSizeFactor, FenceSizeFactor, false, false, false ) );
 		
 		final double PressurePlateFactor = 0.2;
-		addScaledEntry( Block.pressurePlateGold, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false ) );
-		addScaledEntry( Block.pressurePlateIron, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false ) );
-		addScaledEntry( Block.pressurePlatePlanks, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false ) );
-		addScaledEntry( Block.pressurePlateStone, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false ) );
+		addScaledEntry( Block.pressurePlateGold, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false, false ) );
+		addScaledEntry( Block.pressurePlateIron, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false, false ) );
+		addScaledEntry( Block.pressurePlatePlanks, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false, false ) );
+		addScaledEntry( Block.pressurePlateStone, new BlockEntry( PressurePlateFactor, PressurePlateFactor, false, false, false ) );
 		
 		final double ThinPaneFactor = 0.2;
-		addScaledEntry( Block.thinGlass, new BlockEntry( ThinPaneFactor, ThinPaneFactor, true, false ) );
+		addScaledEntry( Block.thinGlass, new BlockEntry( ThinPaneFactor, ThinPaneFactor, true, false, false ) );
+		
+		// special ships mod blocks
+		addEntry( Ships.m_blockAirWall, new BlockEntry( 0, 0, false, true, true ) );
+		// TODO: make the air roof block
 	}
 	
 	public static void readConfigFile( )
@@ -139,6 +143,11 @@ public class BlockProperties
 	public static boolean isSeparator( Block block )
 	{
 		return getEntry( block ).isSeparator;
+	}
+	
+	public static boolean isWater( Block block )
+	{
+		return getEntry( block ).isWater;
 	}
 	
 	public static BlockEntry getEntry( Block block )
@@ -227,7 +236,7 @@ public class BlockProperties
 	private static BlockEntry readEntry( String entryString )
 	{
 		String[] parts = entryString.split( "," );
-		if( parts.length != 4 )
+		if( parts.length != 5 )
 		{
 			throw new IllegalArgumentException();
 		}
@@ -236,7 +245,8 @@ public class BlockProperties
 			Double.parseDouble( parts[0] ),
 			Double.parseDouble( parts[1] ),
 			Boolean.parseBoolean( parts[2] ),
-			Boolean.parseBoolean( parts[3] )
+			Boolean.parseBoolean( parts[3] ),
+			Boolean.parseBoolean( parts[4] )
 		);
 	}
 	
@@ -254,6 +264,8 @@ public class BlockProperties
 			buf.append( entry.getValue().isWatertight );
 			buf.append( "," );
 			buf.append( entry.getValue().isSeparator );
+			buf.append( "," );
+			buf.append( entry.getValue().isWater );
 		}
 		return buf.toString();
 	}
