@@ -94,6 +94,8 @@ public class TileEntityProjectorRenderer extends TileEntitySpecialRenderer
 				GL11.glTranslatef( translation.x, translation.y, translation.z );
 				
 				// render ship effects
+				// NOTE: can't use glColor here since we're rendering a call list
+				// the color was already applied when we built the call list
 				GL14.glBlendColor( 49f/255f*alpha, 136f/255f*alpha, alpha, 0f );
 				GL11.glBlendFunc( GL11.GL_CONSTANT_COLOR, GL11.GL_ONE_MINUS_CONSTANT_COLOR );
 				
