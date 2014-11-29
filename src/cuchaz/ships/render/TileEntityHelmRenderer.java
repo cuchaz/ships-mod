@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.ships.render;
 
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -42,7 +41,7 @@ public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 	
 	public void renderTileEntityAt( TileEntityHelm tileEntity, double x, double y, double z, float partialTickTime )
 	{
-		RenderManager.instance.renderEngine.bindTexture( Texture );
+		bindTexture( Texture );
 		
 		// get the rotation angle from the block
 		int rotation = tileEntity.worldObj.getBlockMetadata( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );

@@ -137,4 +137,11 @@ public class TileEntityProjector extends TileEntity
 			worldObj.markBlockForRenderUpdate( xCoord, yCoord, zCoord );
 		}
 	}
+	
+	@Override
+	public boolean shouldRenderInPass( int pass )
+	{
+		// only two passes: 0,1
+		return true;
+	}
 }

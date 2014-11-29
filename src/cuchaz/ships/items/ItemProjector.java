@@ -83,8 +83,11 @@ public class ItemProjector extends Item
 			// tell the server
 			PacketDispatcher.sendPacketToServer( new PacketPlaceProjector( encodedBlocks, x, y + 1, z ).getCustomPacket() );
 			
-			// use the item
-			itemStack.stackSize--;
+			if( !player.capabilities.isCreativeMode )
+			{
+				// use the item
+				itemStack.stackSize--;
+			}
 			return itemStack;
 		}
 		catch( PersistenceException ex )
