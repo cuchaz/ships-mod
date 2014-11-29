@@ -48,14 +48,14 @@ public class RenderShip extends Render
 {
 	private RenderBlocks m_renderBlocks;
 	private Set<Integer> m_blacklistedBlocks;
-	private Map<EntityShip,Integer> m_displayListIds;
+	private Map<ShipWorld,Integer> m_displayListIds;
 	private List<TileEntity> m_tileEntitiesToRender;
 	
 	public RenderShip( )
 	{
 		m_renderBlocks = new RenderBlocks();
 		m_blacklistedBlocks = new TreeSet<Integer>();
-		m_displayListIds = new HashMap<EntityShip,Integer>(); // fine to hash on instance
+		m_displayListIds = new HashMap<ShipWorld,Integer>(); // fine to hash on instance
 		m_tileEntitiesToRender = new ArrayList<TileEntity>();
 	}
 	
@@ -86,7 +86,6 @@ public class RenderShip extends Render
 		ShipWorld shipWorld = ship.getShipWorld();
 		
 		// prep for rendering in blocks space
-		m_renderBlocks.blockAccess = shipWorld;
 		GL11.glPushMatrix();
 		GL11.glTranslated( x, y, z );
 		GL11.glRotatef( yaw, 0.0f, 1.0f, 0.0f );
@@ -96,7 +95,7 @@ public class RenderShip extends Render
 		
 		// handle the display list
 		RenderManager.instance.renderEngine.bindTexture( TextureMap.locationBlocksTexture );
-		GL11.glCallList( getDisplayList( ship, partialTickTime ) );
+		GL11.glCallList( getDisplayList( m_renderBlocks, shipWorld ) );
 		
 		// collect all the tile entities we need to render
 		m_tileEntitiesToRender.clear();
@@ -137,12 +136,12 @@ public class RenderShip extends Render
 		}
 	}
 	
-	private int getDisplayList( EntityShip ship, float partialTickTime )
+	public int getDisplayList( RenderBlocks renderBlocks, ShipWorld shipWorld )
 	{
 		// does the ship have a list already?
-		Integer id = m_displayListIds.get( ship );
+		Integer id = m_displayListIds.get( shipWorld );
 		
-		if( id != null && ship.getShipWorld().needsRenderUpdate() )
+		if( id != null && shipWorld.needsRenderUpdate() )
 		{
 			// invalidate the old list
 			GL11.glDeleteLists( id, 1 );
@@ -153,24 +152,24 @@ public class RenderShip extends Render
 		{
 			// create a new list
 			id = GLAllocation.generateDisplayLists( 1 );
-			m_displayListIds.put( ship, id );
+			m_displayListIds.put( shipWorld, id );
 			
 			// build the list
 			GL11.glNewList( id, GL11.GL_COMPILE );
-			renderShip( ship, partialTickTime );
+			renderShip( renderBlocks, shipWorld );
 			GL11.glEndList();
 		}
 		return id;
 	}
 	
-	private void renderShip( EntityShip ship, float partialTickTime )
+	private void renderShip( RenderBlocks renderBlocks, ShipWorld shipWorld )
 	{
+		renderBlocks.blockAccess = shipWorld;
 		Tessellator tessellator = Tessellator.instance;
 		tessellator.startDrawingQuads();
 		
 		// draw all the blocks (but defer special tile entities for later rendering)
-		ShipWorld shipWorld = ship.getShipWorld();
-		for( Coords coords : ship.getShipWorld().coords() )
+		for( Coords coords : shipWorld.coords() )
 		{
 			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
 			
@@ -179,11 +178,11 @@ public class RenderShip extends Render
 			{
 				if( m_blacklistedBlocks.contains( block.blockID ) )
 				{
-					renderBlockFailsafe( block, coords );
+					renderBlockFailsafe( renderBlocks, block, coords );
 				}
 				else
 				{
-					renderBlock( shipWorld, block, coords );
+					renderBlock( renderBlocks, shipWorld, block, coords );
 				}
 			}
 			catch( Throwable t )
@@ -198,7 +197,7 @@ public class RenderShip extends Render
 		tessellator.draw();
 	}
 	
-	private void renderBlock( ShipWorld shipWorld, Block block, Coords coords )
+	public static void renderBlock( RenderBlocks renderBlocks, ShipWorld shipWorld, Block block, Coords coords )
 	{
 		// get the block shape
 		block.setBlockBoundsBasedOnState( shipWorld, coords.x, coords.y, coords.z );
@@ -221,25 +220,25 @@ public class RenderShip extends Render
 	        float colorR = (float)( colorMultiplier >> 16 & 255 )/255.0F;
 	        float colorG = (float)( colorMultiplier >> 8 & 255 )/255.0F;
 	        float colorB = (float)( colorMultiplier & 255 )/255.0F;
-			m_renderBlocks.setRenderBoundsFromBlock( block );
-			m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.x, coords.y, coords.z, colorR, colorG, colorB );
+			renderBlocks.setRenderBoundsFromBlock( block );
+			renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.x, coords.y, coords.z, colorR, colorG, colorB );
 		}
 		else
 		{
 			// render using the usual functions
 			// they don't cause any issues with AO
-			m_renderBlocks.renderBlockByRenderType( block, coords.x, coords.y, coords.z );
+			renderBlocks.renderBlockByRenderType( block, coords.x, coords.y, coords.z );
 		}
 	}
 	
-	private void renderBlockFailsafe( Block block, Coords coords )
+	public static void renderBlockFailsafe( RenderBlocks renderBlocks, Block block, Coords coords )
 	{
 		// as a fallback, just try to render something
 		try
 		{
 			block.setBlockBounds( 0, 0, 0, 1, 1, 1 );
-			m_renderBlocks.setRenderBoundsFromBlock( block );
-			m_renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.x, coords.y, coords.z, 1, 1, 1 );
+			renderBlocks.setRenderBoundsFromBlock( block );
+			renderBlocks.renderStandardBlockWithColorMultiplier( block, coords.x, coords.y, coords.z, 1, 1, 1 );
 		}
 		catch( Throwable t )
 		{

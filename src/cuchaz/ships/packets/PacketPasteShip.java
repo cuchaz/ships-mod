@@ -16,8 +16,8 @@ import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.Ships;
-import cuchaz.ships.items.ItemShipClipboard;
 import cuchaz.ships.persistence.PersistenceException;
 
 public class PacketPasteShip extends Packet
@@ -75,7 +75,7 @@ public class PacketPasteShip extends Packet
 		// restore the ship blocks on the server
 		try
 		{
-			ItemShipClipboard.restoreShip( player.worldObj, m_encodedBlocks, new Coords( m_dx, m_dy, m_dz ) );
+			ShipClipboard.restoreShip( player.worldObj, m_encodedBlocks, new Coords( m_dx, m_dy, m_dz ) );
 		}
 		catch( PersistenceException ex )
 		{

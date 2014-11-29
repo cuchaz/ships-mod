@@ -536,19 +536,10 @@ public class ShipWorld extends DetachedWorld
 	@Override
 	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int blockBrightness )
 	{
-		if( m_ship == null )
-		{
-			return 0;
-		}
+		// keep the ship fully sky-lit by default
+		return 15 << 20 | 0 << 4;
 		
-		// convert the block position into a world block
-		Vec3 v = Vec3.createVectorHelper( x, y, z );
-		m_ship.blocksToShip( v );
-		m_ship.shipToWorld( v );
-		x = MathHelper.floor_double( v.xCoord );
-		y = MathHelper.floor_double( v.yCoord );
-		z = MathHelper.floor_double( v.zCoord );
-		return m_ship.worldObj.getLightBrightnessForSkyBlocks( x, y, z, blockBrightness );
+		// TODO: lighting on ships
 	}
 	
 	@Override

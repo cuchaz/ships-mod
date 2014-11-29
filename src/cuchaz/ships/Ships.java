@@ -57,6 +57,7 @@ import cuchaz.ships.blocks.BlockAirRoof;
 import cuchaz.ships.blocks.BlockAirWall;
 import cuchaz.ships.blocks.BlockBerth;
 import cuchaz.ships.blocks.BlockHelm;
+import cuchaz.ships.blocks.BlockProjector;
 import cuchaz.ships.blocks.BlockShip;
 import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.Gui;
@@ -66,6 +67,7 @@ import cuchaz.ships.items.ItemListOfSupporters;
 import cuchaz.ships.items.ItemMagicBucket;
 import cuchaz.ships.items.ItemMagicShipLevitator;
 import cuchaz.ships.items.ItemPaddle;
+import cuchaz.ships.items.ItemProjector;
 import cuchaz.ships.items.ItemShipClipboard;
 import cuchaz.ships.items.ItemShipEraser;
 import cuchaz.ships.items.ItemShipPlaque;
@@ -79,6 +81,7 @@ import cuchaz.ships.packets.PacketHandler;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.packets.PacketPasteShip;
 import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketPlaceProjector;
 import cuchaz.ships.packets.PacketPlayerSleepInBerth;
 import cuchaz.ships.packets.PacketRequestShipBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
@@ -90,6 +93,7 @@ import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.RenderShipPlaque;
 import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
+import cuchaz.ships.render.TileEntityProjectorRenderer;
 
 @NetworkMod(
 	// NOTE: 16-character limit for channel names
@@ -97,7 +101,7 @@ import cuchaz.ships.render.TileEntityHelmRenderer;
 		PacketRequestShipBlocks.Channel, PacketShipBlocks.Channel, PacketPilotShip.Channel,
 		PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel, PacketPasteShip.Channel,
 		PacketEraseShip.Channel, PacketShipPlaque.Channel, PacketPlayerSleepInBerth.Channel,
-		PacketBlockPropertiesOverrides.Channel },
+		PacketBlockPropertiesOverrides.Channel, PacketPlaceProjector.Channel },
 	packetHandler = PacketHandler.class,
 	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
 	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server
@@ -121,6 +125,7 @@ public class Ships extends DummyModContainer
 	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser( 7327 );
 	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque( 7328 );
 	public static final ItemBerth m_itemBerth = new ItemBerth( 7329 );
+	public static final ItemProjector m_itemProjector = new ItemProjector( 7330 );
 	
 	// block registration: use ids [3170-3190]
 	public static final BlockShip m_blockShip = new BlockShip( 3170 );
@@ -128,6 +133,7 @@ public class Ships extends DummyModContainer
 	public static final BlockHelm m_blockHelm = new BlockHelm( 3712 );
 	public static final BlockBerth m_blockBerth = new BlockBerth( 3713 );
 	public static final BlockAirWall m_blockAirRoof = new BlockAirRoof( 3174 );
+	public static final BlockProjector m_blockProjector = new BlockProjector( 3175 );
 	
 	// entity registration
 	public static final int EntityShipId = 174;
@@ -289,12 +295,14 @@ public class Ships extends DummyModContainer
 	private void loadClient( )
 	{
 		// set renderers
-		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, new RenderShip() );
+		RenderShip shipRenderer = new RenderShip();
+		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, shipRenderer );
 		RenderingRegistry.registerEntityRenderingHandler( EntitySupporterPlaque.class, new RenderSupporterPlaque() );
 		RenderingRegistry.registerEntityRenderingHandler( EntityShipPlaque.class, new RenderShipPlaque() );
 		
 		// set tile entity renderers
 		registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
+		registerTileEntityRenderer( TileEntityProjector.class, new TileEntityProjectorRenderer( shipRenderer ) );
 	}
 	
 	@SideOnly( Side.CLIENT )
@@ -314,6 +322,7 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );
 		GameRegistry.registerBlock( m_blockBerth, "blockBerth" );
 		GameRegistry.registerBlock( m_blockAirRoof, "blockAirRoof" );
+		GameRegistry.registerBlock( m_blockProjector, "blockProjector" );
 		
 		// items
 		GameRegistry.registerItem( m_itemPaddle, "paddle" );
@@ -325,6 +334,7 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemShipEraser, "shipEraser" );
 		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
 		GameRegistry.registerItem( m_itemBerth, "berth" );
+		GameRegistry.registerItem( m_itemProjector, "shipProjector" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
@@ -336,6 +346,7 @@ public class Ships extends DummyModContainer
 		
 		// tile entities
 		GameRegistry.registerTileEntity( TileEntityHelm.class, "helm" );
+		GameRegistry.registerTileEntity( TileEntityProjector.class, "projector" );
 	}
 	
 	private void loadLanguage( )
@@ -345,6 +356,7 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_blockHelm, "Helm" );
 		LanguageRegistry.addName( m_blockBerth, "Berth" );
 		LanguageRegistry.addName( m_blockAirRoof, "Air Roof" );
+		LanguageRegistry.addName( m_blockProjector, "Ship Projector" );
 		
 		// item names
 		LanguageRegistry.addName( m_itemPaddle, "Paddle" );
@@ -355,6 +367,7 @@ public class Ships extends DummyModContainer
 		LanguageRegistry.addName( m_itemShipEraser, "Ship Eraser" );
 		LanguageRegistry.addName( m_itemShipPlaque, "Ship Plaque" );
 		LanguageRegistry.addName( m_itemBerth, "Berth" );
+		LanguageRegistry.addName( m_itemProjector, "Ship Projector" );
 		
 		// gui strings
 		for( GuiString string : GuiString.values() )
@@ -373,6 +386,9 @@ public class Ships extends DummyModContainer
 		ItemStack goldStack = new ItemStack( Item.ingotGold );
 		ItemStack ironStack = new ItemStack( Item.ingotIron );
 		ItemStack paperStack = new ItemStack( Item.paper );
+		ItemStack glassStack = new ItemStack( Block.glass );
+		ItemStack lapisStack = new ItemStack( Item.dyePowder, 1, 4 );
+		ItemStack boatStack = new ItemStack( Item.boat );
 		
 		// paddle
 		GameRegistry.addRecipe(
@@ -426,6 +442,25 @@ public class Ships extends DummyModContainer
 				'z', goldStack
 			);
 		}
+		
+		// ship clipboard
+		GameRegistry.addRecipe(
+			new ItemStack( m_itemShipClipboard ),
+			"xxx", "xxx", "yzy",
+			'x', paperStack,
+			'y', stickStack,
+			'z', ShipType.Tiny.newItemStack()
+		);
+		
+		// ship projector
+		GameRegistry.addRecipe(
+			new ItemStack( m_itemProjector ),
+			" x ", "yzy", " w ",
+			'x', glassStack,
+			'y', ironStack,
+			'z', lapisStack,
+			'w', boatStack
+		);
 	}
 	
 	@ForgeSubscribe

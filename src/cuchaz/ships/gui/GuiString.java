@@ -37,6 +37,7 @@ public enum GuiString
 	ErrorCheckLogForDetails( "An Error has occured! Check the Minecraft log for details." ),
 	NoShipOnClipboard( "No ship was found on the clipboard!" ),
 	NoRoomToPasteShip( "There was no room here to paste the ship. Need room for a %d x %d x %d box." ),
+	PastedShip( "Pasted ship to the world." ),
 	OnlyCreative( "This only works in creative mode." ),
 	NoPropulsion( "No propulsion methods found!" ),
 	FoundPropulsion( "Found %s" ),
@@ -51,7 +52,8 @@ public enum GuiString
 	ShipFloatsCloseToSinkLine( "Ship is close to sinking!" ),
 	Sink( "Sink" ),
 	Slept( "Naps are nap-a-licious!" ),
-	BerthNotFound( "Berth was not found!" );
+	BerthNotFound( "Berth was not found!" ),
+	TryOnStillWater( "Try using this on top of still water" );
 	
 	private String m_unlocalizedText;
 	

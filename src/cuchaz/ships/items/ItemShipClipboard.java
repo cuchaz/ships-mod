@@ -10,22 +10,12 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
@@ -33,14 +23,12 @@ import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.Environment;
-import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
-import cuchaz.ships.BlockStorage;
-import cuchaz.ships.BlocksStorage;
+import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipType;
 import cuchaz.ships.ShipWorld;
@@ -48,9 +36,7 @@ import cuchaz.ships.Ships;
 import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPasteShip;
-import cuchaz.ships.persistence.BlockStoragePersistence;
 import cuchaz.ships.persistence.PersistenceException;
-import cuchaz.ships.persistence.ShipWorldPersistence;
 
 public class ItemShipClipboard extends Item
 {
@@ -152,14 +138,8 @@ public class ItemShipClipboard extends Item
 		Coords shipCoords = new Coords( blockX, blockY, blockZ );
 		blocks.add( shipCoords );
 		
-		// build the ship world
-		ShipWorld shipWorld = new ShipWorld( world, shipCoords, blocks );
-		String encodedBlocks = ShipWorldPersistence.writeNewestVersionToString( shipWorld );
-		
-		// save the string to the clipboard
-		StringSelection selection = new StringSelection( encodedBlocks );
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents( selection, selection );
+		// save the ship to the clipboard
+		ShipClipboard.saveShipWorld( new ShipWorld( world, shipCoords, blocks ) );
 		
 		message( player, GuiString.CopiedShip );
 		return true;
@@ -176,22 +156,16 @@ public class ItemShipClipboard extends Item
 		
 		try
 		{
-			// get the contents of the clipboard
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-			Transferable contents = clipboard.getContents( null );
-			String encodedBlocks = null;
-			if( contents.isDataFlavorSupported( DataFlavor.stringFlavor ) )
-			{
-				encodedBlocks = (String)contents.getTransferData( DataFlavor.stringFlavor );
-			}
+			// get the ship
+			String encodedBlocks = ShipClipboard.getBlocks();
 			if( encodedBlocks == null )
 			{
 				message( player, GuiString.NoShipOnClipboard );
 				return false;
 			}
+			ShipWorld shipWorld = ShipClipboard.createShipWorld( world, encodedBlocks );
 			
 			// how big is the ship?
-			ShipWorld shipWorld = decodeShip( world, encodedBlocks );
 			BoundingBoxInt shipBox = shipWorld.getBoundingBox();
 			BoundingBoxInt box = new BoundingBoxInt( shipBox );
 			int dx = box.getDx();
@@ -218,22 +192,13 @@ public class ItemShipClipboard extends Item
 						
 						// send the ship to the server for reconstruction
 						PacketDispatcher.sendPacketToServer( new PacketPasteShip( encodedBlocks, tx, ty, tz ).getCustomPacket() );
+						message( player, GuiString.PastedShip );
 						return true;
 					}
 				}
 			}
 			
 			message( player, GuiString.NoRoomToPasteShip, dx, dy, dz );
-			return false;
-		}
-		catch( IOException ex )
-		{
-			message( player, GuiString.NoShipOnClipboard );
-			return false;
-		}
-		catch( UnsupportedFlavorException ex )
-		{
-			message( player, GuiString.NoShipOnClipboard );
 			return false;
 		}
 		catch( PersistenceException ex )
@@ -243,71 +208,6 @@ public class ItemShipClipboard extends Item
 		}
 	}
 	
-	public static void restoreShip( World world, String encodedBlocks, Coords translation )
-	throws PersistenceException
-	{
-		// create the ship world
-		ShipWorld shipWorld = decodeShip( world, encodedBlocks );
-		
-		// compute the block correspondence
-		BlockMap<Coords> correspondence = new BlockMap<Coords>();
-		for( Coords coords : shipWorld.coords() )
-		{
-			// translate to the world
-			Coords worldCoords = new Coords( coords );
-			worldCoords.x += translation.x;
-			worldCoords.y += translation.y;
-			worldCoords.z += translation.z;
-			
-			correspondence.put( coords, worldCoords );
-		}
-		
-		// if there are unrecognized blocks, just replace them with wood planks
-		boolean foundUnknownBlocks = false;
-		for( Coords coords : shipWorld.coords() )
-		{
-			int blockId = shipWorld.getBlockId( coords );
-			if( Block.blocksList[blockId] == null )
-			{
-				foundUnknownBlocks = true;
-				BlockStorage storage = shipWorld.getBlockStorage( coords );
-				storage.id = Block.planks.blockID;
-				storage.meta = 0;
-			}
-		}
-		if( foundUnknownBlocks )
-		{
-			Ships.logger.warning( "Unknown blocks found in ship! They're probably mod blocks from an uninstalled mod. Replacing with wood planks." );
-		}
-		
-		// update the world
-		shipWorld.restoreToWorld( world, correspondence, shipWorld.getBoundingBox().minY - 1 );
-	}
-	
-	private static ShipWorld decodeShip( World world, String encodedBlocks )
-	throws PersistenceException
-	{
-		// decode the ship: older versions just save blocks, newer versions save the whole ship world
-		try
-		{
-			return ShipWorldPersistence.readAnyVersion( world, encodedBlocks );
-		}
-		catch( PersistenceException shipWorldException )
-		{
-			try
-			{
-				// it's probably not a ship world, try reading just the blocks
-				BlocksStorage storage = BlockStoragePersistence.readAnyVersion( encodedBlocks );
-				return new ShipWorld( world, storage, new BlockMap<TileEntity>(), new BlockMap<EntityHanging>(), 0 );
-			}
-			catch( PersistenceException blockStorageException )
-			{
-				// doesn't look like it's a ship world or a block storage... just re-throw the first exception
-				throw shipWorldException;
-			}
-		}
-	}
-
 	private boolean isBoxAndShellEmpty( World world, BoundingBoxInt box )
 	{
 		// check each block in the box, and also a shell of size 1 around the box

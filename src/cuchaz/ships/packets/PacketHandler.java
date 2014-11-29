@@ -40,6 +40,7 @@ public class PacketHandler implements IPacketHandler
 		m_packetTypes.put( PacketShipPlaque.Channel, new PacketShipPlaque() );
 		m_packetTypes.put( PacketPlayerSleepInBerth.Channel, new PacketPlayerSleepInBerth() );
 		m_packetTypes.put( PacketBlockPropertiesOverrides.Channel, new PacketBlockPropertiesOverrides() );
+		m_packetTypes.put( PacketPlaceProjector.Channel, new PacketPlaceProjector() );
 	}
 	
 	@Override
