@@ -10,8 +10,15 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import net.minecraft.block.Block;
 import cuchaz.modsShared.blocks.BlockMap;
@@ -82,6 +89,55 @@ public abstract class Displacer
 			restoreBlock( entry.getKey(), entry.getValue() );
 		}
 		m_displacedBlocks.clear();
+	}
+	
+	public byte[] write( )
+	{
+		try
+		{
+			ByteArrayOutputStream buf = new ByteArrayOutputStream();
+			GZIPOutputStream zipOut = new GZIPOutputStream( buf );
+			DataOutputStream out = new DataOutputStream( zipOut );
+			
+			out.writeInt( m_displacedBlocks.size() );
+			for( Map.Entry<Coords,Integer> entry : m_displacedBlocks.entrySet() )
+			{
+				Coords coords = entry.getKey();
+				int packed = entry.getValue();
+				out.writeInt( coords.x );
+				out.writeInt( coords.y );
+				out.writeInt( coords.z );
+				out.writeInt( packed );
+			}
+			
+			zipOut.finish();
+			out.close();
+			return buf.toByteArray();
+		}
+		catch( IOException ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	public void read( byte[] data )
+	{
+		try
+		{
+			DataInputStream in = new DataInputStream( new GZIPInputStream( new ByteArrayInputStream( data ) ) );
+			
+			int numEntries = in.readInt();
+			for( int i=0; i<numEntries; i++ )
+			{
+				m_displacedBlocks.put( new Coords( in.readInt(), in.readInt(), in.readInt() ), in.readInt() );
+			}
+			
+			in.close();
+		}
+		catch( IOException ex )
+		{
+			throw new Error( ex );
+		}
 	}
 	
 	private void restoreBlock( Coords coords, int packed )

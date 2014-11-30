@@ -31,6 +31,25 @@ public enum ShipPersistence
 		{
 			nbt.setByteArray( "blocks", ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() ) );
 		}
+	},
+	V2( 2 )
+	{
+		@Override
+		public void read( EntityShip ship, NBTTagCompound nbt )
+		throws PersistenceException
+		{
+			ship.setShipWorld( ShipWorldPersistence.readAnyVersion( ship.worldObj, nbt.getByteArray( "blocks" ) ) );
+			ship.getWaterDisplacer().read( nbt.getByteArray( "waterDisplacement" ) );
+			ship.getRainDisplacer().read( nbt.getByteArray( "rainDisplacement" ) );
+		}
+		
+		@Override
+		public void write( EntityShip ship, NBTTagCompound nbt )
+		{
+			nbt.setByteArray( "blocks", ShipWorldPersistence.writeNewestVersion( ship.getShipWorld() ) );
+			nbt.setByteArray( "waterDisplacement", ship.getWaterDisplacer().write() );
+			nbt.setByteArray( "rainDisplacement", ship.getRainDisplacer().write() );
+		}
 	};
 	
 	private static TreeMap<Integer,ShipPersistence> m_versions;

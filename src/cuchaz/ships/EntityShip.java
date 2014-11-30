@@ -231,6 +231,16 @@ public class EntityShip extends Entity
 		return m_collider;
 	}
 	
+	public WaterDisplacer getWaterDisplacer( )
+	{
+		return m_waterDisplacer;
+	}
+	
+	public RainDisplacer getRainDisplacer( )
+	{
+		return m_rainDisplacer;
+	}
+	
 	@Override
 	public boolean canBeCollidedWith()
     {
