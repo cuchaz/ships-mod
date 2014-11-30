@@ -25,6 +25,7 @@ import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.packet.Packet61DoorChange;
 import net.minecraft.network.packet.Packet62LevelSound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
@@ -696,7 +697,8 @@ public class ShipWorld extends DetachedWorld
 			m_ship.shipToWorld( v );
 			
 			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
-				v.xCoord, v.yCoord, v.zCoord, volume > 1.0F ? (double)(16.0F * volume) : 16.0D,
+				v.xCoord, v.yCoord, v.zCoord,
+				volume > 1.0F ? (double)(16.0F * volume) : 16.0D,
 				m_ship.worldObj.provider.dimensionId,
 				new Packet62LevelSound( sound, v.xCoord, v.yCoord, v.zCoord, volume, pitch )
 			);
@@ -704,6 +706,37 @@ public class ShipWorld extends DetachedWorld
 		
 		// on the client, just ignore. Sounds actually get played by the packet handler
     }
+	
+	// NOTE: don't have to override playSoundToNearExcept() or playSoundAtEntity(), not called by blocks/tileEntities
+	
+	@Override
+	public void playAuxSFXAtEntity( EntityPlayer player, int sfxID, int x, int y, int z, int auxData )
+	{
+		// on the server, send a packet to the clients
+		if( Environment.isServer() )
+		{
+			// get the pos in world space
+			Vec3 v = Vec3.createVectorHelper( x, y, z );
+			m_ship.blocksToShip( v );
+			m_ship.shipToWorld( v );
+			
+			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
+				v.xCoord, v.yCoord, v.zCoord,
+				64.0D,
+				m_ship.worldObj.provider.dimensionId,
+				new Packet61DoorChange(
+					sfxID,
+					MathHelper.floor_double(v.xCoord),
+					MathHelper.floor_double(v.yCoord),
+					MathHelper.floor_double(v.zCoord),
+					auxData,
+					false
+				)
+			);
+		}
+		
+		// on the client, just ignore. Sounds actually get played by the packet handler
+	}
 	
 	@Override
 	public void spawnParticle( String name, double x, double y, double z, double motionX, double motionY, double motionZ )
