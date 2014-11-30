@@ -104,7 +104,7 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 			};
 		}
 		else if( methodName.equals( "<init>" )
-			&& methodDesc.equals( String.format( "(L%s;L%s;III)V", InventoryPlayerClassName, WorldClassName ) )
+			&& methodDesc.startsWith( String.format( "(L%s;L%s;III", InventoryPlayerClassName, WorldClassName ) )
 			&& extendsClass( ContainerClassName ) )
 		{
 			return new MethodVisitor( api, cv.visitMethod( access, methodName, methodDesc, signature, exceptions ) )
