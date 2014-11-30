@@ -10,14 +10,15 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.BlockBed;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBed;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.Ships;
 
@@ -28,6 +29,8 @@ public class ItemBerth extends ItemBed
 		super( itemId );
 		
 		setMaxStackSize( 1 );
+		setCreativeTab( CreativeTabs.tabDecorations );
+		setUnlocalizedName( "berth" );
 	}
 	
 	@Override

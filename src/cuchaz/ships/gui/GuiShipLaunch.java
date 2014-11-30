@@ -27,8 +27,8 @@ public class GuiShipLaunch extends GuiShip
 	private ShipLauncher m_shipLauncher;
 	private GuiButton m_buttonLaunchShip;
 	private BlockSide m_shipSide;
-	private GuiButton m_buttonRotateCw;
-	private GuiButton m_buttonRotateCcw;
+	private GuiButton m_buttonRotateLeft;
+	private GuiButton m_buttonRotateRight;
 	
 	public GuiShipLaunch( Container container, ShipLauncher shipLauncher )
 	{
@@ -38,8 +38,8 @@ public class GuiShipLaunch extends GuiShip
 		
 		m_buttonLaunchShip = null;
 		m_shipSide = m_shipLauncher.getShipSide();
-		m_buttonRotateCw = null;
-		m_buttonRotateCcw = null;
+		m_buttonRotateLeft = null;
+		m_buttonRotateRight = null;
 	}
 	
 	@Override
@@ -61,7 +61,7 @@ public class GuiShipLaunch extends GuiShip
 		buttonList.add( m_buttonLaunchShip );
 		
 		// add the rotate buttons
-		m_buttonRotateCw = new GuiButton( 
+		m_buttonRotateLeft = new GuiButton( 
 			1,
 			guiLeft + xSize - LeftMargin - 20 - 20 - 10,
 			guiTop + ySize - TopMargin - 20,
@@ -69,8 +69,8 @@ public class GuiShipLaunch extends GuiShip
 			20,
 			"<"
 		);
-		buttonList.add( m_buttonRotateCw );
-		m_buttonRotateCcw = new GuiButton( 
+		buttonList.add( m_buttonRotateLeft );
+		m_buttonRotateRight = new GuiButton( 
 			2,
 			guiLeft + xSize - LeftMargin - 20,
 			guiTop + ySize - TopMargin - 20,
@@ -78,7 +78,7 @@ public class GuiShipLaunch extends GuiShip
 			20,
 			">"
 		);
-		buttonList.add( m_buttonRotateCcw );
+		buttonList.add( m_buttonRotateRight );
 	}
 	
 	@Override
@@ -91,13 +91,13 @@ public class GuiShipLaunch extends GuiShip
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}
-		else if( button.id == m_buttonRotateCw.id )
-		{
-			m_shipSide = m_shipSide.rotateXZCw( 1 );
-		}
-		else if( button.id == m_buttonRotateCcw.id )
+		else if( button.id == m_buttonRotateLeft.id )
 		{
 			m_shipSide = m_shipSide.rotateXZCcw( 1 );
+		}
+		else if( button.id == m_buttonRotateRight.id )
+		{
+			m_shipSide = m_shipSide.rotateXZCw( 1 );
 		}
 	}
 	

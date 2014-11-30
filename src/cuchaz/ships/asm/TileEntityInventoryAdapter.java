@@ -53,8 +53,11 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 	{
 		// should we transform this method?
 		// for performance, check method names first, class inheritance second, and finally interfaces third
-		final boolean isTileEntityInventoryIsUseableByPlayer = methodName.equals( getRuntimeMethodName( m_name, "isUseableByPlayer", "func_70300_a" ) )
-			&& extendsClass( TileEntityClassName );
+		// NOTE: for TileEntityEnderChest (and only on the server), it's func_70365_a instead of func_70300_a for some reason...
+		final boolean isTileEntityInventoryIsUseableByPlayer = (
+				methodName.equals( getRuntimeMethodName( m_name, "isUseableByPlayer", "func_70300_a" ) )
+				|| methodName.equals( getRuntimeMethodName( m_name, "isUseableByPlayer", "func_70365_a" ) )
+			) && extendsClass( TileEntityClassName );
 		final boolean isContainerCanInteractWith = methodName.equals( getRuntimeMethodName( m_name, "canInteractWith", "func_75145_c" ) )
 			&& extendsClass( ContainerClassName );
 		if( ( isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )

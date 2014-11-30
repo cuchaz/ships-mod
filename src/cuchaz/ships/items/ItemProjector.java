@@ -30,6 +30,7 @@ public class ItemProjector extends Item
 		
 		setMaxStackSize( 1 );
 		setCreativeTab( CreativeTabs.tabRedstone );
+		setUnlocalizedName( "shipProjector" );
 	}
 	
 	@Override

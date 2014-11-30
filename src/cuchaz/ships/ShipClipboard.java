@@ -29,12 +29,10 @@ import cuchaz.ships.persistence.ShipWorldPersistence;
 
 public class ShipClipboard
 {
-	private static Clipboard m_clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-	
 	public static void saveShipWorld( ShipWorld shipWorld )
 	{
 		StringSelection selection = new StringSelection( ShipWorldPersistence.writeNewestVersionToString( shipWorld ) );
-		m_clipboard.setContents( selection, selection );
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents( selection, selection );
 	}
 
 	public static String getBlocks( )
@@ -46,9 +44,10 @@ public class ShipClipboard
 			// getData() can take up to 1s to finish and there doesn't seem to be anything I can do about it...
 			// the game hangs, it looks stupid, and we're stuck with it for now
 			long startTime = System.currentTimeMillis();
-			if( m_clipboard.isDataFlavorAvailable( DataFlavor.stringFlavor ) )
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			if( clipboard.isDataFlavorAvailable( DataFlavor.stringFlavor ) )
 			{
-				encodedBlocks = (String)m_clipboard.getData( DataFlavor.stringFlavor );
+				encodedBlocks = (String)clipboard.getData( DataFlavor.stringFlavor );
 			}
 			Ships.logger.info("Clipboard access took %.2f s", (System.currentTimeMillis() - startTime)/1000.0f);
 			return encodedBlocks;
