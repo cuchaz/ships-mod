@@ -17,7 +17,6 @@ import org.objectweb.asm.Opcodes;
 
 public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 {
-	private final String InventoryInterfaceName;
 	private final String TileEntityClassName;
 	private final String ContainerClassName;
 	private final String PlayerClassName;
@@ -26,14 +25,12 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 	
 	private String m_name;
 	private String m_superName;
-	private String[] m_interfaces;
 	
 	public TileEntityInventoryAdapter( int api, ClassVisitor cv, boolean isObfuscatedEnvironment )
 	{
 		super( api, cv, isObfuscatedEnvironment );
 		
 		// cache the runtime class names
-		InventoryInterfaceName = getRuntimeClassName( "net/minecraft/inventory/IInventory" );
 		TileEntityClassName = getRuntimeClassName( "net/minecraft/tileentity/TileEntity" );
 		ContainerClassName = getRuntimeClassName( "net/minecraft/inventory/Container" );
 		PlayerClassName = getRuntimeClassName( "net/minecraft/entity/player/EntityPlayer" );
@@ -49,7 +46,6 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 		// save the class details for later visit methods
 		m_name = name;
 		m_superName = superName;
-		m_interfaces = interfaces;
 	}
 	
 	@Override
@@ -58,8 +54,7 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 		// should we transform this method?
 		// for performance, check method names first, class inheritance second, and finally interfaces third
 		final boolean isTileEntityInventoryIsUseableByPlayer = methodName.equals( getRuntimeMethodName( m_name, "isUseableByPlayer", "func_70300_a" ) )
-			&& extendsClass( TileEntityClassName )
-			&& implementsInterface( InventoryInterfaceName );
+			&& extendsClass( TileEntityClassName );
 		final boolean isContainerCanInteractWith = methodName.equals( getRuntimeMethodName( m_name, "canInteractWith", "func_75145_c" ) )
 			&& extendsClass( ContainerClassName );
 		if( ( isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith ) && methodDesc.equals( String.format( "(L%s;)Z", PlayerClassName ) ) )
@@ -149,17 +144,5 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter
 	private boolean extendsClass( String targetClassName )
 	{
 		return InheritanceUtils.extendsClass( m_superName, targetClassName );
-	}
-	
-	private boolean implementsInterface( String targetInterfaceName )
-	{
-		for( String i : m_interfaces )
-		{
-			if( InheritanceUtils.implementsInterface( i, targetInterfaceName ) )
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 }
