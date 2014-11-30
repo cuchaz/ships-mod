@@ -97,6 +97,17 @@ public class HitList
 		}
 		
 		m_entries.add( new Entry( Type.World, from.distanceTo( hit.hitVec ), hit ) );
+		
+		/* TODO: that was blocks, now check entities
+		AxisAlignedBB queryBox = AxisAlignedBB.getBoundingBox( from.xCoord, from.yCoord, from.zCoord, from.xCoord, from.yCoord, from.zCoord );
+		queryBox.expand( to.xCoord, to.yCoord, to.zCoord );
+		@SuppressWarnings( "unchecked" )
+		List<Entity> entities = (List<Entity>)world.getEntitiesWithinAABB( Entity.class, queryBox );
+        for( Entity entity : entities )
+        {
+        	// TODO: make a hit entry type for entities and check all these world entities
+        }
+        */
 	}
 	
 	public void addHits( EntityShip ship, Vec3 from, Vec3 to )
