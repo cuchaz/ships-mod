@@ -1,9 +1,13 @@
 
-v0.10 beta change log
+v1.0 change log
 
-Fixed issue with ships leaving holes in water after server restart
-Fixed issue with ship plaque and berth recipes on servers
-Fixed issue with hopper inventory on ship launch/dock
-Various crash fixes
-added block properties configuration file
-added proper collision handling between ships
+Mobs can now walk and ride on ships!
+Added Ship Projector block - shows a 3d blueprint of any ship on the clipboard!
+Clipboard is now craftable in survival mode
+Added view rotation buttons for the launch GUI
+Fixed issue with rain falling inside of ships
+Fixed issue with displaced water blocks not being cleaned up properly
+Fixed issue with lights on ships leaving bright spots on the water after launching
+Fixed issue with opening Ender chests on ships
+Fixed issue with using anvils on ships
+Fixed issue with door sounds on ships
