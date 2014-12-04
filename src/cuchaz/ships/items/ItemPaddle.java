@@ -10,18 +10,16 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class ItemPaddle extends Item
 {
-	public ItemPaddle( int itemId )
+	public ItemPaddle( )
 	{
-		super( itemId );
-		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
 		setUnlocalizedName( "paddle" );
@@ -29,7 +27,7 @@ public class ItemPaddle extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:paddle" );
 	}

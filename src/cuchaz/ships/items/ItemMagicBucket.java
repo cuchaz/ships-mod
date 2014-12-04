@@ -10,25 +10,22 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.ships.Ships;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.ships.Ships;
 
 public class ItemMagicBucket extends Item
 {
-	public ItemMagicBucket( int itemId )
+	public ItemMagicBucket( )
 	{
-		super( itemId );
-		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
 		setUnlocalizedName( "magicBucket" );
@@ -36,7 +33,7 @@ public class ItemMagicBucket extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:magicBucket" );
 	}

@@ -1,6 +1,7 @@
 package cuchaz.ships.items;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,10 +25,8 @@ import cuchaz.ships.persistence.PersistenceException;
 
 public class ItemProjector extends Item
 {
-	public ItemProjector( int itemId )
+	public ItemProjector( )
 	{
-		super( itemId );
-		
 		setMaxStackSize( 1 );
 		setCreativeTab( CreativeTabs.tabRedstone );
 		setUnlocalizedName( "shipProjector" );
@@ -35,7 +34,7 @@ public class ItemProjector extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:projector" );
 	}

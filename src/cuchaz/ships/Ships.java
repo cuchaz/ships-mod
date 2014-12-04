@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -26,7 +25,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 import com.google.common.eventbus.EventBus;
@@ -41,18 +39,15 @@ import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLConstructionEvent;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.common.network.FMLNetworkHandler;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
-import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.PacketDispatcher;
-import cpw.mods.fml.common.network.Player;
+import cpw.mods.fml.common.network.internal.FMLNetworkHandler;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.FMLHacker;
 import cuchaz.ships.blocks.BlockAirRoof;
 import cuchaz.ships.blocks.BlockAirWall;
 import cuchaz.ships.blocks.BlockBerth;
@@ -114,26 +109,24 @@ public class Ships extends DummyModContainer
 	// materials
 	public static final Material m_materialAirWall = new MaterialAirWall( MapColor.airColor );
 	
-	// (apparently the most robust id picking strategy is almost complete randomness)
-	// item registration: use ids [7321-7325]
-	public static final ItemPaddle m_itemPaddle = new ItemPaddle( 7321 );
-	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket( 7322 );
-	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator( 7323 );
-	public static final ItemShipClipboard m_itemShipClipboard = new ItemShipClipboard( 7324 );
-	public static final ItemListOfSupporters m_itemListOfSupporters = new ItemListOfSupporters( 7325 );
-	public static final ItemSupporterPlaque m_itemSupporterPlaque = new ItemSupporterPlaque( 7326 );
-	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser( 7327 );
-	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque( 7328 );
-	public static final ItemBerth m_itemBerth = new ItemBerth( 7329 );
-	public static final ItemProjector m_itemProjector = new ItemProjector( 7330 );
+	public static final ItemPaddle m_itemPaddle = new ItemPaddle();
+	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket();
+	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator();
+	public static final ItemShipClipboard m_itemShipClipboard = new ItemShipClipboard();
+	public static final ItemListOfSupporters m_itemListOfSupporters = new ItemListOfSupporters();
+	public static final ItemSupporterPlaque m_itemSupporterPlaque = new ItemSupporterPlaque();
+	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser();
+	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque();
+	public static final ItemBerth m_itemBerth = new ItemBerth();
+	public static final ItemProjector m_itemProjector = new ItemProjector();
 	
-	// block registration: use ids [3170-3190]
-	public static final BlockShip m_blockShip = new BlockShip( 3170 );
-	public static final BlockAirWall m_blockAirWall = new BlockAirWall( 3171 );
-	public static final BlockHelm m_blockHelm = new BlockHelm( 3712 );
-	public static final BlockBerth m_blockBerth = new BlockBerth( 3713 );
-	public static final BlockAirWall m_blockAirRoof = new BlockAirRoof( 3174 );
-	public static final BlockProjector m_blockProjector = new BlockProjector( 3175 );
+	// block registration
+	public static final BlockShip m_blockShip = new BlockShip();
+	public static final BlockAirWall m_blockAirWall = new BlockAirWall();
+	public static final BlockHelm m_blockHelm = new BlockHelm();
+	public static final BlockBerth m_blockBerth = new BlockBerth();
+	public static final BlockAirWall m_blockAirRoof = new BlockAirRoof();
+	public static final BlockProjector m_blockProjector = new BlockProjector();
 	
 	// entity registration
 	public static final int EntityShipId = 174;
@@ -178,12 +171,6 @@ public class Ships extends DummyModContainer
 	}
 	
 	@Override
-    public boolean isNetworkMod( )
-    {
-        return true;
-    }
-	
-	@Override
 	public boolean isImmutable( )
 	{
 		return false;
@@ -221,6 +208,7 @@ public class Ships extends DummyModContainer
 			event.getASMHarvestedData().addContainer( this );
 	        
 			// register for network support
+			FMLNetworkHandler.registerChannel( this, null );
 			FMLNetworkHandler.instance().registerNetworkMod( this, getClass(), event.getASMHarvestedData() );
 			
 			// register for forge events
@@ -463,7 +451,7 @@ public class Ships extends DummyModContainer
 		);
 	}
 	
-	@ForgeSubscribe
+	@SubscribeEvent
 	public void onEntityJoin( EntityJoinWorldEvent event )
 	{
 		if( event.world.isRemote )

@@ -23,10 +23,8 @@ import cuchaz.ships.gui.Gui;
 
 public class ItemListOfSupporters extends Item
 {
-	public ItemListOfSupporters( int itemId )
+	public ItemListOfSupporters()
 	{
-		super( itemId );
-		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabMisc );
 		setUnlocalizedName( "listOfSupporters" );
@@ -34,7 +32,7 @@ public class ItemListOfSupporters extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:listOfSupporters" );
 	}

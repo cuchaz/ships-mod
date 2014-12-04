@@ -14,10 +14,11 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.Icon;
+import net.minecraft.item.Item;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -29,9 +30,9 @@ import cuchaz.ships.gui.Gui;
 
 public class BlockShip extends Block
 {
-	public BlockShip( int blockId )
+	public BlockShip( )
 	{
-		super( blockId, Material.iron );
+		super( Material.iron );
 		
 		setHardness( 5.0F );
 		setResistance( 10.0F );
@@ -42,7 +43,7 @@ public class BlockShip extends Block
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public Icon getIcon( int side, int meta )
+	public IIcon getIcon( int side, int meta )
 	{
 		switch( BlockSide.getById( side ) )
 		{
@@ -59,7 +60,7 @@ public class BlockShip extends Block
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerBlockIcons( IIconRegister iconRegister )
 	{
 		blockIcon = iconRegister.registerIcon( "ships:shipTop" );
 		ShipType.registerIcons( iconRegister );
@@ -73,7 +74,7 @@ public class BlockShip extends Block
 		{
 			// can the player paddle this ship?
 			boolean isPaddleEquipped = player.getCurrentEquippedItem() != null
-				&& player.getCurrentEquippedItem().getItem().itemID == Ships.m_itemPaddle.itemID;
+				&& player.getCurrentEquippedItem().getItem() == Ships.m_itemPaddle;
 			ShipWorld shipWorld = (ShipWorld)world;
 			if( isPaddleEquipped && shipWorld.getShipType().isPaddleable() && shipWorld.getShip().getCollider().isEntityAboard( player ) )
 			{
@@ -105,7 +106,7 @@ public class BlockShip extends Block
 	@Override
 	@SideOnly( Side.CLIENT )
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public void getSubBlocks( int itemId, CreativeTabs tabs, List subItems )
+	public void getSubBlocks( Item item, CreativeTabs tabs, List subItems )
 	{
 		for( ShipType type : ShipType.values() )
 		{

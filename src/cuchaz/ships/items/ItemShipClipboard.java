@@ -40,10 +40,8 @@ import cuchaz.ships.persistence.PersistenceException;
 
 public class ItemShipClipboard extends Item
 {
-	public ItemShipClipboard( int itemId )
+	public ItemShipClipboard( )
 	{
-		super( itemId );
-		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
 		setUnlocalizedName( "shipClipboard" );
@@ -51,7 +49,7 @@ public class ItemShipClipboard extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:shipClipboard" );
 	}

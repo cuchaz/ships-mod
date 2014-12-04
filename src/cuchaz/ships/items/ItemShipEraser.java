@@ -11,6 +11,7 @@
 package cuchaz.ships.items;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -36,10 +37,8 @@ import cuchaz.ships.packets.PacketEraseShip;
 
 public class ItemShipEraser extends Item
 {
-	public ItemShipEraser( int itemId )
+	public ItemShipEraser( )
 	{
-		super( itemId );
-		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
 		setUnlocalizedName( "shipEraser" );
@@ -47,7 +46,7 @@ public class ItemShipEraser extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:shipEraser" );
 	}

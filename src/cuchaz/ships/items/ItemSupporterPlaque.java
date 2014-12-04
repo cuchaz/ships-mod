@@ -28,9 +28,9 @@ import cuchaz.ships.gui.GuiString;
 
 public class ItemSupporterPlaque extends ItemHangingEntity
 {
-	public ItemSupporterPlaque( int itemId )
+	public ItemSupporterPlaque( )
 	{
-		super( itemId, EntitySupporterPlaque.class );
+		super( EntitySupporterPlaque.class );
 		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabDecorations );
@@ -40,7 +40,7 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 	}
 	
 	@Override
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:supporterPlaque" );
 	}

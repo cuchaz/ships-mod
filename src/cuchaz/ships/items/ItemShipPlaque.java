@@ -12,6 +12,7 @@ package cuchaz.ships.items;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityHanging;
@@ -31,9 +32,9 @@ public class ItemShipPlaque extends ItemHangingEntity
 {
 	private static final int MinRank = 4;
 	
-	public ItemShipPlaque( int itemId )
+	public ItemShipPlaque( )
 	{
-		super( itemId, EntitySupporterPlaque.class );
+		super( EntitySupporterPlaque.class );
 		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabDecorations );
@@ -42,7 +43,7 @@ public class ItemShipPlaque extends ItemHangingEntity
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:shipPlaque" );
 	}

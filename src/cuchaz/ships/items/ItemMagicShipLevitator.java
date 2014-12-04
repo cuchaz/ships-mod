@@ -10,7 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,10 +22,8 @@ import cuchaz.ships.EntityShip;
 
 public class ItemMagicShipLevitator extends Item
 {
-	public ItemMagicShipLevitator( int itemId )
+	public ItemMagicShipLevitator()
 	{
-		super( itemId );
-		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
 		setUnlocalizedName( "magicShipLevitator" );
@@ -33,7 +31,7 @@ public class ItemMagicShipLevitator extends Item
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerIcons( IIconRegister iconRegister )
 	{
 		itemIcon = iconRegister.registerIcon( "ships:magicShipLevitator" );
 	}

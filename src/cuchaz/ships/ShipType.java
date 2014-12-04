@@ -10,10 +10,10 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import net.minecraft.client.renderer.texture.IconRegister;
-import net.minecraft.item.Item;
+import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Icon;
+import net.minecraft.util.IIcon;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
@@ -30,8 +30,8 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Item.ingotIron ),
-				'y', new ItemStack( Item.redstone )
+				'x', new ItemStack( Items.iron_ingot ),
+				'y', new ItemStack( Items.redstone )
 			);
 		}
 	},
@@ -44,9 +44,9 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xzx", "zyz", "xzx",
-				'x', new ItemStack( Item.ingotIron ),
-				'y', new ItemStack( Item.redstone ),
-				'z', new ItemStack( Item.ingotGold )
+				'x', new ItemStack( Items.iron_ingot ),
+				'y', new ItemStack( Items.redstone ),
+				'z', new ItemStack( Items.gold_ingot )
 			);
 		}
 	},
@@ -59,8 +59,8 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Item.ingotGold ),
-				'y', new ItemStack( Item.redstone )
+				'x', new ItemStack( Items.gold_ingot ),
+				'y', new ItemStack( Items.redstone )
 			);
 		}
 	},
@@ -73,9 +73,9 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xzx", "zyz", "xzx",
-				'x', new ItemStack( Item.ingotGold ),
-				'y', new ItemStack( Item.redstone ),
-				'z', new ItemStack( Item.dyePowder, 1, 4 ) // lapis lazuli
+				'x', new ItemStack( Items.gold_ingot ),
+				'y', new ItemStack( Items.redstone ),
+				'z', new ItemStack( Items.dye, 1, 4 ) // lapis lazuli
 			);
 		}
 	},
@@ -88,8 +88,8 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Item.dyePowder, 1, 4 ), // lapis lazuli
-				'y', new ItemStack( Item.redstone )
+				'x', new ItemStack( Items.dye, 1, 4 ), // lapis lazuli
+				'y', new ItemStack( Items.redstone )
 			);
 		}
 	},
@@ -102,9 +102,9 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xzx", "zyz", "xzx",
-				'x', new ItemStack( Item.dyePowder, 1, 4 ), // lapis lazuli
-				'y', new ItemStack( Item.redstone ),
-				'z', new ItemStack( Item.diamond )
+				'x', new ItemStack( Items.dye, 1, 4 ), // lapis lazuli
+				'y', new ItemStack( Items.redstone ),
+				'z', new ItemStack( Items.diamond )
 			);
 		}
 	},
@@ -117,8 +117,8 @@ public enum ShipType
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Item.diamond ),
-				'y', new ItemStack( Item.redstone )
+				'x', new ItemStack( Items.diamond ),
+				'y', new ItemStack( Items.redstone )
 			);
 		}
 	};
@@ -127,7 +127,7 @@ public enum ShipType
 	private boolean m_isPaddleable;
 	
 	@SideOnly( Side.CLIENT )
-	private Icon m_icon;
+	private IIcon m_icon;
 	
 	private ShipType( int maxNumBlocks, boolean isPaddleable )
 	{
@@ -146,7 +146,7 @@ public enum ShipType
 	}
 	
 	@SideOnly( Side.CLIENT )
-	public static void registerIcons( IconRegister iconRegister )
+	public static void registerIcons( IIconRegister iconRegister )
 	{
 		for( ShipType type : values() )
 		{
@@ -154,7 +154,7 @@ public enum ShipType
 		}
 	}
 	
-	public Icon getIcon( )
+	public IIcon getIcon( )
 	{
 		return m_icon;
 	}
