@@ -12,15 +12,16 @@ package cuchaz.ships.blocks;
 
 import java.util.Random;
 
-import javax.swing.Icon;
-
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -48,8 +49,8 @@ public class BlockBerth extends BlockBed
 	{
 	    setHardness( 0.2F );
 	    disableStats();
-	    setUnlocalizedName( "berth" );
-	    setTextureName( "berth" );
+	    setBlockName( "berth" );
+	    setBlockTextureName( "berth" );
 	}
 	
 	@Override
@@ -73,7 +74,7 @@ public class BlockBerth extends BlockBed
 		BlockSide side = BlockSide.getById( sideId );
 		if( side == BlockSide.Bottom )
 		{
-			return Block.planks.getBlockTextureFromSide( sideId );
+			return Blocks.planks.getBlockTextureFromSide( sideId );
 		}
 		
 		// the other sides are trickier...
@@ -111,16 +112,16 @@ public class BlockBerth extends BlockBed
 	}
 	
 	@Override
-	public int idDropped( int meta, Random rand, int fortune )
+	public Item getItemDropped( int meta, Random random, int fortune )
     {
-        return isBlockHeadOfBed( meta ) ? 0 : Ships.m_itemBerth.itemID;
+        return isBlockHeadOfBed( meta ) ? null : Ships.m_itemBerth;
     }
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public int idPicked( World world, int x, int y, int z )
+	public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z)
     {
-        return Ships.m_itemBerth.itemID;
+        return new ItemStack( Ships.m_itemBerth );
     }
 	
 	@Override

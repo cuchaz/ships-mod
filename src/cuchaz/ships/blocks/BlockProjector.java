@@ -16,7 +16,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -32,9 +35,9 @@ public class BlockProjector extends Block
 		setHardness( 2.0F );
 		disableStats();
 		setResistance( 5.0F );
-		setStepSound( soundMetalFootstep );
-	    setUnlocalizedName( "shipProjector" );
-	    setTextureName( "projector" );
+		setStepSound( soundTypeMetal );
+	    setBlockName( "shipProjector" );
+	    setBlockTextureName( "projector" );
 	}
 	
 	@Override
@@ -75,16 +78,16 @@ public class BlockProjector extends Block
     }
 	
 	@Override
-	public int idDropped( int meta, Random rand, int fortune )
-    {
-        return Ships.m_itemProjector.itemID;
+	public Item getItemDropped( int meta, Random random, int fortune )
+	{
+        return Ships.m_itemProjector;
     }
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public int idPicked( World world, int x, int y, int z )
+	public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z)
     {
-        return Ships.m_itemProjector.itemID;
+        return new ItemStack( Ships.m_itemProjector );
     }
 	
 	@Override

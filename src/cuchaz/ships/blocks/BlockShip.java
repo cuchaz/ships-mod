@@ -36,8 +36,8 @@ public class BlockShip extends Block
 		
 		setHardness( 5.0F );
 		setResistance( 10.0F );
-		setStepSound( soundMetalFootstep );
-		setUnlocalizedName( "blockShip" );
+		setStepSound( soundTypeMetal );
+		setBlockName( "blockShip" );
 		setCreativeTab( CreativeTabs.tabTransport );
 	}
 	

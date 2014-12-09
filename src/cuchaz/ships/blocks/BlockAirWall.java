@@ -16,6 +16,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -30,7 +31,7 @@ public class BlockAirWall extends Block
 		// an air block that stops flowing water
 		super( Ships.m_materialAirWall );
 		
-		setUnlocalizedName( "blockAirWall" );
+		setBlockName( "blockAirWall" );
 		setBlockBounds( 0, 0, 0, 1, 1, 1 );
 	}
 	
@@ -79,9 +80,9 @@ public class BlockAirWall extends Block
 	}
 	
 	@Override
-	public int idDropped( int meta, Random random, int fortune )
+	public Item getItemDropped( int meta, Random random, int fortune )
 	{
-		return 0;
+		return null;
 	}
 	
 	@Override
