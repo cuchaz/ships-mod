@@ -12,7 +12,7 @@ package cuchaz.ships.blocks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,9 +28,9 @@ import cuchaz.ships.gui.Gui;
 
 public class BlockHelm extends Block
 {
-	public BlockHelm( int blockId )
+	public BlockHelm( )
 	{
-		super( blockId, Material.wood );
+		super( Material.wood );
 		
 		setHardness( 2.0F );
 		setResistance( 5.0F );
@@ -71,7 +71,7 @@ public class BlockHelm extends Block
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-    public void registerIcons( IconRegister iconRegister )
+    public void registerBlockIcons( IIconRegister iconRegister )
     {
         this.blockIcon = iconRegister.registerIcon( "ships:helm" );
     }

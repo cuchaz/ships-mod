@@ -12,23 +12,23 @@ package cuchaz.ships.blocks;
 
 import java.util.Random;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.ships.Ships;
 import net.minecraft.block.Block;
 import net.minecraft.client.particle.EffectRenderer;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.ships.Ships;
 
 public class BlockAirWall extends Block
 {
-	public BlockAirWall( int blockId )
+	public BlockAirWall( )
 	{
 		// an air block that stops flowing water
-		super( blockId, Ships.m_materialAirWall );
+		super( Ships.m_materialAirWall );
 		
 		setUnlocalizedName( "blockAirWall" );
 		setBlockBounds( 0, 0, 0, 1, 1, 1 );
@@ -67,7 +67,7 @@ public class BlockAirWall extends Block
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerBlockIcons( IIconRegister iconRegister )
 	{
 		// do nothing
 	}

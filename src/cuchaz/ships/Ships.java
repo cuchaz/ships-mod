@@ -10,17 +10,20 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import ibxm.Player;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -46,8 +49,10 @@ import cpw.mods.fml.common.network.internal.FMLNetworkHandler;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.FMLHacker;
 import cuchaz.ships.blocks.BlockAirRoof;
 import cuchaz.ships.blocks.BlockAirWall;
 import cuchaz.ships.blocks.BlockBerth;
@@ -90,6 +95,7 @@ import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 import cuchaz.ships.render.TileEntityProjectorRenderer;
 
+// TODO: figure out new network system
 @NetworkMod(
 	// NOTE: 16-character limit for channel names
 	channels = { PacketLaunchShip.Channel, PacketShipLaunched.Channel, PacketUnlaunchShip.Channel,
@@ -207,9 +213,10 @@ public class Ships extends DummyModContainer
 			// add our container to the ASM data table
 			event.getASMHarvestedData().addContainer( this );
 	        
-			// register for network support
+			// TODO: register for network support
 			FMLNetworkHandler.registerChannel( this, null );
-			FMLNetworkHandler.instance().registerNetworkMod( this, getClass(), event.getASMHarvestedData() );
+			String remoteVersionRange = ""; // TODO: ???
+			NetworkRegistry.INSTANCE.register( this, getClass(), remoteVersionRange, event.getASMHarvestedData() );
 			
 			// register for forge events
 			MinecraftForge.EVENT_BUS.register( this );
@@ -241,7 +248,7 @@ public class Ships extends DummyModContainer
 			}
 			
 			// GUI hooks
-			NetworkRegistry.instance().registerGuiHandler( this, new IGuiHandler( )
+			NetworkRegistry.INSTANCE.registerGuiHandler( this, new IGuiHandler( )
 			{
 				@Override
 				public Object getServerGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
@@ -297,8 +304,8 @@ public class Ships extends DummyModContainer
 	@SuppressWarnings( "unchecked" )
 	private void registerTileEntityRenderer( Class<? extends TileEntity> c, TileEntitySpecialRenderer renderer )
 	{
-		TileEntityRenderer.instance.specialRendererMap.put( c, renderer );
-		renderer.setTileEntityRenderer( TileEntityRenderer.instance );
+		TileEntityRendererDispatcher.instance.mapSpecialRenderers.put( c, renderer );
+		renderer.func_147497_a( TileEntityRendererDispatcher.instance );
 	}
 	
 	private void loadThings( )
@@ -339,6 +346,7 @@ public class Ships extends DummyModContainer
 	
 	private void loadLanguage( )
 	{
+		// TODO: move these to language file
 		// block names
 		LanguageRegistry.addName( m_blockAirWall, "Air Wall" );
 		LanguageRegistry.addName( m_blockHelm, "Helm" );
@@ -370,13 +378,13 @@ public class Ships extends DummyModContainer
 		
 		SupporterPlaqueType.registerRecipes();
 		
-		ItemStack stickStack = new ItemStack( Item.stick );
-		ItemStack goldStack = new ItemStack( Item.ingotGold );
-		ItemStack ironStack = new ItemStack( Item.ingotIron );
-		ItemStack paperStack = new ItemStack( Item.paper );
-		ItemStack glassStack = new ItemStack( Block.glass );
-		ItemStack lapisStack = new ItemStack( Item.dyePowder, 1, 4 );
-		ItemStack boatStack = new ItemStack( Item.boat );
+		ItemStack stickStack = new ItemStack( Items.stick );
+		ItemStack goldStack = new ItemStack( Items.gold_ingot );
+		ItemStack ironStack = new ItemStack( Items.iron_ingot );
+		ItemStack paperStack = new ItemStack( Items.paper );
+		ItemStack glassStack = new ItemStack( Blocks.glass );
+		ItemStack lapisStack = new ItemStack( Items.dye, 1, 4 );
+		ItemStack boatStack = new ItemStack( Items.boat );
 		
 		// paddle
 		GameRegistry.addRecipe(
@@ -415,7 +423,7 @@ public class Ships extends DummyModContainer
 				new ItemStack( m_itemShipPlaque ),
 				"   ", " x ", "yyy",
 				'x', ironStack,
-				'y', new ItemStack( Block.planks, 1, i )
+				'y', new ItemStack( Blocks.planks, 1, i )
 			);
 		}
 		
@@ -425,7 +433,7 @@ public class Ships extends DummyModContainer
 			GameRegistry.addRecipe(
 				new ItemStack( m_itemBerth ),
 				"   ", "xxx", "yzy",
-				'x', new ItemStack( Block.cloth, 1, i ),
+				'x', new ItemStack( Blocks.wool, 1, i ),
 				'y', stickStack,
 				'z', goldStack
 			);
@@ -473,6 +481,7 @@ public class Ships extends DummyModContainer
 		
 		// send block overrides to the client
 		Packet packet = new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() );
+		// TODO: figure out how to send packets
 		PacketDispatcher.sendPacketToPlayer( packet.getCustomPacket(), (Player)player );
 	}
 }

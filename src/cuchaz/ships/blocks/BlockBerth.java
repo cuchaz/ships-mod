@@ -12,13 +12,15 @@ package cuchaz.ships.blocks;
 
 import java.util.Random;
 
+import javax.swing.Icon;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.Direction;
-import net.minecraft.util.Icon;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -29,23 +31,21 @@ import cuchaz.ships.Ships;
 public class BlockBerth extends BlockBed
 {
 	@SideOnly( Side.CLIENT )
-	private Icon m_iconFeetTop;
+	private IIcon m_iconFeetTop;
 	@SideOnly( Side.CLIENT )
-	private Icon m_iconFeetEnd;
+	private IIcon m_iconFeetEnd;
 	@SideOnly( Side.CLIENT )
-	private Icon m_iconFeetSide;
+	private IIcon m_iconFeetSide;
 	
 	@SideOnly( Side.CLIENT )
-	private Icon m_iconHeadTop;
+	private IIcon m_iconHeadTop;
 	@SideOnly( Side.CLIENT )
-	private Icon m_iconHeadEnd;
+	private IIcon m_iconHeadEnd;
 	@SideOnly( Side.CLIENT )
-	private Icon m_iconHeadSide;
+	private IIcon m_iconHeadSide;
 	
-	public BlockBerth( int blockId )
+	public BlockBerth( )
 	{
-		super( blockId );
-		
 	    setHardness( 0.2F );
 	    disableStats();
 	    setUnlocalizedName( "berth" );
@@ -54,7 +54,7 @@ public class BlockBerth extends BlockBed
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public void registerIcons( IconRegister iconRegister )
+	public void registerBlockIcons( IIconRegister iconRegister )
 	{
 		m_iconFeetTop = iconRegister.registerIcon( "ships:berthFeetTop" );
 		m_iconFeetEnd = iconRegister.registerIcon( "ships:berthFeetEnd" );
@@ -67,7 +67,7 @@ public class BlockBerth extends BlockBed
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-	public Icon getIcon( int sideId, int meta )
+	public IIcon getIcon( int sideId, int meta )
 	{
 		// bottom side is easy
 		BlockSide side = BlockSide.getById( sideId );

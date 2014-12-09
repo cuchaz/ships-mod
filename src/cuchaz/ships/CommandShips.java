@@ -88,7 +88,7 @@ public class CommandShips extends CommandBase
 				{
 					buf.append( String.format(
 						" id: %8d,   blocks: %5d,   pos: ( %.1f, %.1f, %.1f )\n",
-						ship.entityId,
+						ship.getEntityId(),
 						ship.getShipWorld().coords().size(),
 						ship.posX, ship.posY, ship.posZ
 					) );

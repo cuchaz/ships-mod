@@ -13,11 +13,9 @@ package cuchaz.ships.blocks;
 
 public class BlockAirRoof extends BlockAirWall
 {
-	public BlockAirRoof( int blockId )
+	public BlockAirRoof( )
 	{
 		// an air block that stops rain
-		super( blockId );
-		
 		setUnlocalizedName( "blockAirRoof" );
 	}
 }

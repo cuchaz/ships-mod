@@ -14,7 +14,7 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -25,9 +25,9 @@ import cuchaz.ships.TileEntityProjector;
 
 public class BlockProjector extends Block
 {
-	public BlockProjector( int blockId )
+	public BlockProjector( )
 	{
-		super( blockId, Material.circuits );
+		super( Material.circuits );
 		
 		setHardness( 2.0F );
 		disableStats();
@@ -69,7 +69,7 @@ public class BlockProjector extends Block
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-    public void registerIcons( IconRegister iconRegister )
+    public void registerBlockIcons( IIconRegister iconRegister )
     {
         this.blockIcon = iconRegister.registerIcon( "ships:projector" );
     }
