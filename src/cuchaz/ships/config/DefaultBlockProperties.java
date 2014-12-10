@@ -53,7 +53,7 @@ public class DefaultBlockProperties
 	    
 	    // porous
 		m_properties.put( Material.cloth, new BlockEntry( 0.2, 1.0, false, false, false ) );
-		m_properties.put( Material.materialCarpet, new BlockEntry( 0.2, 1.0, false, false, false ) );
+		m_properties.put( Material.carpet, new BlockEntry( 0.2, 1.0, false, false, false ) );
 	    m_properties.put( Material.web, new BlockEntry( 0.1, 1.0, false, false, false ) );
 	    m_properties.put( Material.coral, new BlockEntry( 2.0, 1.0, false, false, false ) );
 	    m_properties.put( Material.sponge, new BlockEntry( 0.2, 1.0, false, false, false ) );
@@ -63,7 +63,6 @@ public class DefaultBlockProperties
 	    m_properties.put( Material.plants, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.vine, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.cactus, new BlockEntry( 0.5, 1.0, false, false, false ) );
-	    m_properties.put( Material.pumpkin, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.cake, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.dragonEgg, new BlockEntry( 1.2, 1.0, false, false, false ) );
 	    
@@ -107,7 +106,7 @@ public class DefaultBlockProperties
 		BlockEntry entry = null;
 		if( block != null )
 		{
-			entry = m_properties.get( block.blockMaterial );
+			entry = m_properties.get( block.getMaterial() );
 		}
 		if( entry == null )
 		{

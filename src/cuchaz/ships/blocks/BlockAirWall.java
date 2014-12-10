@@ -93,7 +93,7 @@ public class BlockAirWall extends Block
 	
 	@Override
 	@SideOnly( Side.CLIENT )
-    public boolean addBlockDestroyEffects( World world, int x, int y, int z, int meta, EffectRenderer effectRenderer )
+    public boolean addDestroyEffects( World world, int x, int y, int z, int meta, EffectRenderer effectRenderer )
 	{
 		// don't show block break effects
 		return true;

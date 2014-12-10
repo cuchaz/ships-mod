@@ -19,9 +19,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -125,7 +127,7 @@ public class BlockBerth extends BlockBed
     }
 	
 	@Override
-	public boolean isBed( World world, int x, int y, int z, EntityLivingBase player )
+	public boolean isBed( IBlockAccess world, int x, int y, int z, EntityLivingBase player )
 	{
 		return true;
 	}
@@ -143,10 +145,10 @@ public class BlockBerth extends BlockBed
 		if( !isBlockHeadOfBed( meta ) )
 		{
 			int direction = getDirection( meta );
-			x += footBlockToHeadBlockMap[direction][0];
-			z += footBlockToHeadBlockMap[direction][1];
+			x += field_149981_a[direction][0]; // footBlockToHeadBlockMap
+			z += field_149981_a[direction][1];
 			
-			if( world.getBlockId( x, y, z ) != blockID )
+			if( world.getBlock( x, y, z ) != this )
 			{
 				return true;
 			}
@@ -164,16 +166,16 @@ public class BlockBerth extends BlockBed
 		}
 		
 		// handle berth occupancy
-		if( isBedOccupied( meta ) )
+		if( func_149976_c( meta ) ) // isBedOccupied()
 		{
 			if( PlayerRespawner.isPlayerInBerth( world, x, y, z ) )
 			{
-				player.addChatMessage( "tile.bed.occupied" );
+				player.addChatMessage( new ChatComponentTranslation( "tile.bed.occupied" ) );
 				return true;
 			}
 			else
 			{
-				setBedOccupied( world, x, y, z, false );
+				func_149979_a( world, x, y, z, false ); // setBedOccupied()
 			}
 		}
 		
@@ -181,21 +183,21 @@ public class BlockBerth extends BlockBed
 		switch( PlayerRespawner.sleepInBerthAt( world, x, y, z, player ) )
 		{
 			case OK:
-				setBedOccupied( world, x, y, z, true );
+				func_149979_a( world, x, y, z, true ); // setBedOccupied()
 			break;
 			
 			case NOT_POSSIBLE_NOW:
-				player.addChatMessage( "tile.bed.noSleep" );
+				player.addChatMessage( new ChatComponentTranslation( "tile.bed.noSleep" ) );
 			break;
 			
 			case NOT_SAFE:
-				player.addChatMessage( "tile.bed.notSafe" );
+				player.addChatMessage( new ChatComponentTranslation( "tile.bed.notSafe" ) );
 			break;
 			
 			case NOT_POSSIBLE_HERE:
 			case OTHER_PROBLEM:
 			case TOO_FAR_AWAY:
-				player.addChatMessage( "Something bad happened with this berth..." );
+				player.addChatMessage( new ChatComponentTranslation( "Something bad happened with this berth..." ) );
 		}
 		
 		return true;

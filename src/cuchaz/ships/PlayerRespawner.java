@@ -28,10 +28,11 @@ import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerAccessor;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.EnumStatus;
+import net.minecraft.entity.player.EntityPlayer.EnumStatus;
+import net.minecraft.init.Blocks;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatMessageComponent;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -163,7 +164,7 @@ public class PlayerRespawner
 	
 	private static void checkServerInstance( WorldServer worldServer )
 	{
-		int currentServerInstanceId = System.identityHashCode( worldServer.getMinecraftServer() );
+		int currentServerInstanceId = System.identityHashCode( worldServer.func_73046_m() /* getMinecraftServer() */ );
 		if( m_serverInstanceId == null || m_serverInstanceId != currentServerInstanceId )
 		{
 			m_sleepingBerths.clear();
@@ -214,7 +215,7 @@ public class PlayerRespawner
 			@SuppressWarnings( "unchecked" )
 			List<EntityMob> mobs = (List<EntityMob>)realWorld.getEntitiesWithinAABB(
 				EntityMob.class,
-				AxisAlignedBB.getAABBPool().getAABB(
+				AxisAlignedBB.getBoundingBox(
 					bedPos.xCoord - dXZ, bedPos.yCoord - dY, bedPos.zCoord - dXZ,
 					bedPos.xCoord + dXZ, bedPos.yCoord + dY, bedPos.zCoord + dXZ
 				)
@@ -243,8 +244,8 @@ public class PlayerRespawner
 			
 			int meta = world.getBlockMetadata( x, y, z );
 			int direction = BlockBed.getDirection( meta );
-			Block block = Block.blocksList[world.getBlockId( x, y, z )];
-			if( block != null )
+			Block block = world.getBlock( x, y, z );
+			if( block != Blocks.air )
 			{
 				direction = block.getBedDirection( world, x, y, z );
 			}
@@ -280,7 +281,7 @@ public class PlayerRespawner
 		
 		// set sleeping flags
 		EntityPlayerAccessor.setSleeping( player, true );
-		player.sleepTimer = 0;
+		player.sleepTimer = 0; // TODO: need access to this field
 		
 		// stop all motion
 		player.motionX = 0;
@@ -292,7 +293,7 @@ public class PlayerRespawner
 			realWorld.updateAllPlayersSleepingFlag();
 			
 			// save this player and berth so we can find it again when the player wakes up
-			m_sleepingBerths.put( player.entityId, new BerthCoords( world, x, y, z ) );
+			m_sleepingBerths.put( player.getEntityId(), new BerthCoords( world, x, y, z ) );
 			
 			// tell all interested clients that the player started sleeping
 			EntityPlayerMP playerServer = (EntityPlayerMP)player;
@@ -310,7 +311,7 @@ public class PlayerRespawner
 	
 	public static boolean isPlayerInBerth( EntityPlayer player )
 	{
-		return m_sleepingBerths.get( player.entityId ) != null;
+		return m_sleepingBerths.get( player.getEntityId() ) != null;
 	}
 	
 	public static boolean isPlayerInBerth( World world, int x, int y, int z )
@@ -341,29 +342,29 @@ public class PlayerRespawner
 		}
 		
 		// what was the last berth the player slept in?
-		BerthCoords coords = m_sleepingBerths.get( player.entityId );
+		BerthCoords coords = m_sleepingBerths.get( player.getEntityId() );
 		if( coords == null )
 		{
 			return;
 		}
-		m_sleepingBerths.remove( player.entityId );
+		m_sleepingBerths.remove( player.getEntityId() );
 		
 		// is there a berth there?
 		World berthWorld = coords.getWorldOnServer();
-		if( berthWorld == null || berthWorld.getBlockId( coords.x, coords.y, coords.z ) != Ships.m_blockBerth.blockID )
+		if( berthWorld == null || berthWorld.getBlock( coords.x, coords.y, coords.z ) != Ships.m_blockBerth )
 		{
 			return;
 		}
 		
 		// save the berth coords
-		getSavedBerths( worldServer ).put( player.username, coords );
+		getSavedBerths( worldServer ).put( player.getCommandSenderName(), coords );
 		saveBerths();
 		
 		// remove old spawn location
 		player.setSpawnChunk( null, false );
 		
 		// let the player know the sleeping worked
-		player.sendChatToPlayer( ChatMessageComponent.createFromTranslationKey( GuiString.Slept.getKey() ) );
+		player.addChatMessage( new ChatComponentTranslation( GuiString.Slept.getKey() ) );
 	}
 	
 	public static void onPlayerRespawn( EntityPlayerMP oldPlayer, EntityPlayerMP newPlayer, int dimension )
@@ -385,7 +386,7 @@ public class PlayerRespawner
 			return;
 		}
 		
-		BerthCoords coords = getSavedBerths( worldServer ).get( newPlayer.username );
+		BerthCoords coords = getSavedBerths( worldServer ).get( newPlayer.getCommandSenderName() );
 		if( coords == null )
 		{
 			return;
@@ -410,7 +411,7 @@ public class PlayerRespawner
 			else
 			{
 				// the ship wasn't found =(
-				newPlayer.sendChatToPlayer( ChatMessageComponent.createFromTranslationKey( GuiString.BerthNotFound.getKey() ) );
+				newPlayer.addChatMessage( new ChatComponentTranslation( GuiString.BerthNotFound.getKey() ) );
 			}
 		}
 	}
@@ -418,7 +419,6 @@ public class PlayerRespawner
 	public static void onShipLaunch( WorldServer worldServer, ShipWorld shipWorld, Coords shipBlock )
 	{
 		// this is only called on the server
-		assert( Environment.isServer() );
 		Map<String,BerthCoords> berths = getSavedBerths( worldServer );
 		
 		boolean changed = false;
@@ -456,7 +456,6 @@ public class PlayerRespawner
 	public static void onShipDock( WorldServer worldServer, ShipWorld shipWorld, BlockMap<Coords> correspondence )
 	{
 		// this is only called on the server
-		assert( Environment.isServer() );
 		Map<String,BerthCoords> berths = getSavedBerths( worldServer );
 		
 		boolean changed = false;
