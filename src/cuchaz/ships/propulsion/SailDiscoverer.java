@@ -36,7 +36,7 @@ public class SailDiscoverer implements PropulsionDiscoverer
 			}
 		}
 		List<BlockSet> clothComponents = BlockUtils.getConnectedComponents( clothCoords, Neighbors.Edges );
-		 
+		
 		// build the sails
 		List<PropulsionMethod> sails = new ArrayList<PropulsionMethod>();
 		for( BlockSet component : clothComponents )

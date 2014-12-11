@@ -18,8 +18,9 @@ import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ChatMessageComponent;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MathHelper;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockCallback;
@@ -200,8 +201,8 @@ public class CommandShips extends CommandBase
 							@Override
 							public SearchAction foundBlock( Coords coords )
 							{
-								int blockId = sender.getEntityWorld().getBlockId( coords.x, coords.y, coords.z );
-								if( blockId == Ships.m_blockAirWall.blockID || blockId == Ships.m_blockAirRoof.blockID )
+								Block block = sender.getEntityWorld().getBlock( coords.x, coords.y, coords.z );
+								if( block == Ships.m_blockAirWall || block == Ships.m_blockAirRoof )
 								{
 									airWallBlocks.add( coords );
 								}
@@ -223,14 +224,14 @@ public class CommandShips extends CommandBase
 				// replace all the air wall blocks with water, and the air roof blocks with air
 				for( Coords coords : airWallBlocks )
 				{
-					int blockId = sender.getEntityWorld().getBlockId( coords.x, coords.y, coords.z );
-					if( blockId == Ships.m_blockAirWall.blockID )
+					Block block = sender.getEntityWorld().getBlock( coords.x, coords.y, coords.z );
+					if( block == Ships.m_blockAirWall )
 					{
-						sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, Block.waterStill.blockID );
+						sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, Blocks.water );
 					}
-					else if( blockId == Ships.m_blockAirRoof.blockID )
+					else if( block == Ships.m_blockAirRoof )
 					{
-						sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, 0 );
+						sender.getEntityWorld().setBlock( coords.x, coords.y, coords.z, Blocks.air );
 					}
 				}
 				replyAllAdmins( sender, String.format( "Removed %d air wall blocks.", airWallBlocks.size() ) );
@@ -325,7 +326,7 @@ public class CommandShips extends CommandBase
 	
 	private static void reply( ICommandSender sender, String msg )
 	{
-		sender.sendChatToPlayer( ChatMessageComponent.createFromText( msg ) );
+		sender.addChatMessage( new ChatComponentTranslation( msg ) );
 	}
 	
 	@SuppressWarnings( "unchecked" )
@@ -333,9 +334,10 @@ public class CommandShips extends CommandBase
 	{
 		for( EntityPlayerMP player : (List<EntityPlayerMP>)MinecraftServer.getServer().getConfigurationManager().playerEntityList )
 		{
-			if( MinecraftServer.getServer().getConfigurationManager().isPlayerOpped( player.getCommandSenderName() ) )
+			boolean isPlayerOpped = MinecraftServer.getServer().getConfigurationManager().func_152603_m().func_152700_a( player.getCommandSenderName() ) != null;
+			if( isPlayerOpped )
 			{
-				player.sendChatToPlayer( ChatMessageComponent.createFromText( msg ) );
+				player.addChatMessage( new ChatComponentTranslation( msg ) );
 			}
 		}
 	}

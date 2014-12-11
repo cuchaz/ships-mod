@@ -13,6 +13,8 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.List;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
@@ -195,7 +197,7 @@ public class ShipUnlauncher
 	public void unlaunch( )
 	{
 		// server only
-		if( Environment.isClient() )
+		if( FMLLaunchHandler.side() == Side.CLIENT )
 		{
 			return;
 		}

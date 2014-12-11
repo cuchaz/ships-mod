@@ -44,13 +44,13 @@ public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 		bindTexture( Texture );
 		
 		// get the rotation angle from the block
-		int rotation = tileEntity.worldObj.getBlockMetadata( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
+		int rotation = tileEntity.getWorldObj().getBlockMetadata( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 		float angle = rotation*360.f/4.0f;
 		
-		if( tileEntity.worldObj instanceof ShipWorld )
+		if( tileEntity.getWorldObj() instanceof ShipWorld )
 		{
 			// set the rotation of the ship wheel
-			ShipWorld world = (ShipWorld)tileEntity.worldObj;
+			ShipWorld world = (ShipWorld)tileEntity.getWorldObj();
 			m_model.setWheelAngle( -world.getShip().motionYaw * 20 );
 		}
 		else

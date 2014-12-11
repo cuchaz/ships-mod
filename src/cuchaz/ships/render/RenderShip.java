@@ -26,7 +26,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
@@ -102,7 +102,7 @@ public class RenderShip extends Render
 		for( Coords coords : shipWorld.coords() )
 		{
 			TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
-			if( tileEntity != null && TileEntityRenderer.instance.hasSpecialRenderer( tileEntity ) )
+			if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
 			{
 				m_tileEntitiesToRender.add( tileEntity );
 			}
@@ -111,13 +111,13 @@ public class RenderShip extends Render
 		// draw all the hanging entities
 		for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
 		{
-			RenderManager.instance.renderEntity( hangingEntity, partialTickTime );
+			RenderManager.instance.renderEntitySimple( hangingEntity, partialTickTime );
 		}
 		
 		// now render all the special tile entities
 		for( TileEntity tileEntity : m_tileEntitiesToRender )
 		{
-			TileEntityRenderer.instance.renderTileEntityAt(
+			TileEntityRendererDispatcher.instance.renderTileEntityAt(
 				tileEntity,
 				tileEntity.xCoord,
 				tileEntity.yCoord,
@@ -204,7 +204,7 @@ public class RenderShip extends Render
 		
 		// do we have a tile entity that needs special rendering?
 		TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
-		if( tileEntity != null && TileEntityRenderer.instance.hasSpecialRenderer( tileEntity ) )
+		if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
 		{
 			// skip this block
 			return;

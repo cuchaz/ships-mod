@@ -51,11 +51,11 @@ public abstract class GuiShip extends GuiCloseable
 		int x1 = LeftMargin;
 		int x2 = xSize - LeftMargin;
 		int y1 = getLineY( lineNum );
-		int y2 = y1 + fontRenderer.FONT_HEIGHT;
+		int y2 = y1 + this.mc.fontRenderer.FONT_HEIGHT;
 		drawHorizontalLine( x1 - 1, x2 - 1, y2 - 2, HeaderBevelColor );
-		fontRenderer.drawString( text, x1 - 1, y1 - 1, HeaderBevelColor );
+		this.mc.fontRenderer.drawString( text, x1 - 1, y1 - 1, HeaderBevelColor );
 		drawHorizontalLine( x1, x2, y2 - 1, HeaderColor );
-		fontRenderer.drawString( text, x1, y1, HeaderColor );
+		this.mc.fontRenderer.drawString( text, x1, y1, HeaderColor );
 	}
 	
 	protected void drawText( String text, int lineNum )
@@ -65,22 +65,22 @@ public abstract class GuiShip extends GuiCloseable
 	
 	protected void drawText( String text, int lineNum, int color )
 	{
-		fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), color );
+		this.mc.fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), color );
 	}
 	
 	protected void drawWrappedText( String text, int lineNum, int width )
 	{
-		fontRenderer.drawSplitString( text, LeftMargin, getLineY( lineNum ), width, TextColor );
+		this.mc.fontRenderer.drawSplitString( text, LeftMargin, getLineY( lineNum ), width, TextColor );
 	}
 	
 	protected void drawLabelValueText( String labelText, String valueText, int lineNum )
 	{
 		// draw the label
-		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		this.mc.fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
 		
 		// draw the value
-		int valueWidth = fontRenderer.getStringWidth( valueText );
-		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), TextColor );
+		int valueWidth = this.mc.fontRenderer.getStringWidth( valueText );
+		this.mc.fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), TextColor );
 	}
 	
 	protected String getYesNoText( boolean flag )
@@ -101,16 +101,16 @@ public abstract class GuiShip extends GuiCloseable
 	protected void drawYesNoText( String labelText, String valueText, boolean isYes, int lineNum )
 	{
 		// draw the label
-		fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		this.mc.fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
 		
 		// draw the value
 		int valueColor = isYes ? YesColor : NoColor;
-		int valueWidth = fontRenderer.getStringWidth( valueText );
-		fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );
+		int valueWidth = this.mc.fontRenderer.getStringWidth( valueText );
+		this.mc.fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );
 	}
 	
 	protected int getLineY( int lineNum )
 	{
-		return TopMargin + ( fontRenderer.FONT_HEIGHT + LineSpacing )*lineNum;
+		return TopMargin + ( this.mc.fontRenderer.FONT_HEIGHT + LineSpacing )*lineNum;
 	}
 }

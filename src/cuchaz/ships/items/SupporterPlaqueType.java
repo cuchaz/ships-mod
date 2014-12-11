@@ -10,9 +10,9 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -31,8 +31,8 @@ public enum SupporterPlaqueType
 				newItemStack(),
 				" y ", " x ", "zzz",
 				'x', ShipType.Tiny.newItemStack(),
-				'y', new ItemStack( Item.ingotIron ),
-				'z', new ItemStack( Block.planks )
+				'y', new ItemStack( Items.iron_ingot ),
+				'z', new ItemStack( Blocks.planks )
 			);
 		}
 	},
@@ -45,8 +45,8 @@ public enum SupporterPlaqueType
 				newItemStack(),
 				"yyy", "zxz", "zzz",
 				'x', ShipType.Tiny.newItemStack(),
-				'y', new ItemStack( Item.ingotIron ),
-				'z', new ItemStack( Block.planks )
+				'y', new ItemStack( Items.iron_ingot ),
+				'z', new ItemStack( Blocks.planks )
 			);
 		}
 	};
@@ -110,7 +110,7 @@ public enum SupporterPlaqueType
 	public boolean canUse( EntityPlayer player )
 	{
 		// is this player a supporter?
-		int supporterId = Supporters.getId( player.username );
+		int supporterId = Supporters.getId( player.getCommandSenderName() );
 		if( supporterId != Supporters.InvalidSupporterId )
 		{
 			// does the player meet the min rank?

@@ -12,15 +12,17 @@ package cuchaz.ships.items;
 
 import java.util.List;
 
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemHangingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
-import cuchaz.modsShared.Environment;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntitySupporterPlaque;
 import cuchaz.ships.Supporters;
@@ -76,13 +78,13 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 		// is the player a supporter?
 		if( !type.canUse( player ) )
 		{
-			if( Environment.isClient() )
+			if( FMLLaunchHandler.side() == Side.CLIENT )
 			{
-				player.addChatMessage( String.format( GuiString.NotASupporter.getLocalizedText() ) );
+				player.addChatMessage( new ChatComponentTranslation( GuiString.NotASupporter.getLocalizedText() ) );
 			}
 			return false;
 		}
-		int supporterId = Supporters.getId( player.username );
+		int supporterId = Supporters.getId( player.getCommandSenderName() );
 		
 		// was the plaque placed on the top or bottom of a block?
 		BlockSide side = BlockSide.getById( sideId );

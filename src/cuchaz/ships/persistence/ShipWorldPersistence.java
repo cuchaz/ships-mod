@@ -21,15 +21,16 @@ import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.codec.binary.Base64InputStream;
-import org.apache.commons.codec.binary.Base64OutputStream;
-
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.EntityList;
-import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+
+import org.apache.commons.codec.binary.Base64InputStream;
+import org.apache.commons.codec.binary.Base64OutputStream;
+
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
@@ -53,7 +54,7 @@ public enum ShipWorldPersistence
 			for( int i = 0; i < numTileEntities; i++ )
 			{
 				// create the tile entity
-				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				NBTTagCompound nbt = CompressedStreamTools.read( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
 				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 				tileEntities.put( coords, tileEntity );
@@ -75,7 +76,7 @@ public enum ShipWorldPersistence
 			{
 				NBTTagCompound nbt = new NBTTagCompound();
 				tileEntity.writeToNBT( nbt );
-				NBTBase.writeNamedTag( nbt, out );
+				CompressedStreamTools.write( nbt, out );
 			}
 		}
 	},
@@ -94,7 +95,7 @@ public enum ShipWorldPersistence
 			for( int i = 0; i < numTileEntities; i++ )
 			{
 				// create the tile entity
-				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				NBTTagCompound nbt = CompressedStreamTools.read( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
 				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 				tileEntities.put( coords, tileEntity );
@@ -106,9 +107,9 @@ public enum ShipWorldPersistence
 			for( int i = 0; i < numHangingEntities; i++ )
 			{
 				// create the hanging entity
-				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				NBTTagCompound nbt = CompressedStreamTools.read( in );
 				EntityHanging hangingEntity = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
-				Coords coords = new Coords( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
+				Coords coords = new Coords( hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d );
 				hangingEntities.put( coords, hangingEntity );
 			}
 			
@@ -138,7 +139,7 @@ public enum ShipWorldPersistence
 						tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord
 					);
 				}
-				NBTBase.writeNamedTag( nbt, out );
+				CompressedStreamTools.write( nbt, out );
 			}
 			
 			// write out the hanging entities
@@ -154,10 +155,10 @@ public enum ShipWorldPersistence
 				{
 					Ships.logger.warning( t, "Hanging entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
 						hangingEntity.getClass().getName(),
-						hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition
+						hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d
 					);
 				}
-				NBTBase.writeNamedTag( nbt, out );
+				CompressedStreamTools.write( nbt, out );
 			}
 		}
 	},
@@ -176,7 +177,7 @@ public enum ShipWorldPersistence
 			for( int i = 0; i < numTileEntities; i++ )
 			{
 				// create the tile entity
-				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				NBTTagCompound nbt = CompressedStreamTools.read( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
 				if( tileEntity == null )
 				{
@@ -193,14 +194,14 @@ public enum ShipWorldPersistence
 			for( int i = 0; i < numHangingEntities; i++ )
 			{
 				// create the hanging entity
-				NBTTagCompound nbt = (NBTTagCompound)NBTBase.readNamedTag( in );
+				NBTTagCompound nbt = CompressedStreamTools.read( in );
 				EntityHanging hangingEntity = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
 				if( hangingEntity == null )
 				{
 					Ships.logger.warning( "Unable to restore hanging entity: " + nbt.getString( "id" ) );
 					continue;
 				}
-				Coords coords = new Coords( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
+				Coords coords = new Coords( hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d );
 				hangingEntities.put( coords, hangingEntity );
 			}
 			
@@ -233,7 +234,7 @@ public enum ShipWorldPersistence
 						tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord
 					);
 				}
-				NBTBase.writeNamedTag( nbt, out );
+				CompressedStreamTools.write( nbt, out );
 			}
 			
 			// write out the hanging entities
@@ -249,10 +250,10 @@ public enum ShipWorldPersistence
 				{
 					Ships.logger.warning( t, "Hanging entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
 						hangingEntity.getClass().getName(),
-						hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition
+						hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d
 					);
 				}
-				NBTBase.writeNamedTag( nbt, out );
+				CompressedStreamTools.write( nbt, out );
 			}
 			
 			// write out the biome

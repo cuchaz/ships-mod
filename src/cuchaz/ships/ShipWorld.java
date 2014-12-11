@@ -35,6 +35,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.ForgeDirection;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.Environment;
@@ -433,7 +434,7 @@ public class ShipWorld extends DetachedWorld
 		{
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
-			if( Environment.isServer() )
+			if( FMLLaunchHandler.side() == Side.SERVER )
 			{
 				m_changedBlocks.add( new Coords( x, y, z ) );
 			}
@@ -455,7 +456,7 @@ public class ShipWorld extends DetachedWorld
 		{
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
-			if( Environment.isServer() )
+			if( FMLLaunchHandler.side() == Side.SERVER )
 			{
 				m_changedBlocks.add( new Coords( x, y, z ) );
 			}
@@ -600,13 +601,13 @@ public class ShipWorld extends DetachedWorld
 		}
 		
 		// on the client, do random update ticks
-		if( Environment.isClient() && m_ship != null )
+		if( FMLLaunchHandler.side() == Side.CLIENT && m_ship != null )
 		{
 			updateEntitiesClient();
 		}
 		
 		// on the server, push any accumulated changes to the client
-		if( Environment.isServer() && !m_changedBlocks.isEmpty() )
+		if( FMLLaunchHandler.side() == Side.SERVER && !m_changedBlocks.isEmpty() )
 		{
 			pushBlockChangesToClients();
 			m_changedBlocks.clear();
@@ -665,7 +666,7 @@ public class ShipWorld extends DetachedWorld
 		boolean eventWasAccepted = Block.blocksList[blockId].onBlockEventReceived( this, x, y, z, eventId, eventParam );
 		
 		// on the server, also send a packet to the client
-		if( Environment.isServer() && eventWasAccepted )
+		if( FMLLaunchHandler.side() == Side.SERVER && eventWasAccepted )
 		{
 			// get the pos in world space
 			Vec3 v = Vec3.createVectorHelper( x, y, z );
@@ -689,7 +690,7 @@ public class ShipWorld extends DetachedWorld
 		}
 		
 		// on the server, send a packet to the clients
-		if( Environment.isServer() )
+		if( FMLLaunchHandler.side() == Side.SERVER )
 		{
 			// get the pos in world space
 			Vec3 v = Vec3.createVectorHelper( x, y, z );
@@ -713,7 +714,7 @@ public class ShipWorld extends DetachedWorld
 	public void playAuxSFXAtEntity( EntityPlayer player, int sfxID, int x, int y, int z, int auxData )
 	{
 		// on the server, send a packet to the clients
-		if( Environment.isServer() )
+		if( FMLLaunchHandler.side() == Side.SERVER )
 		{
 			// get the pos in world space
 			Vec3 v = Vec3.createVectorHelper( x, y, z );

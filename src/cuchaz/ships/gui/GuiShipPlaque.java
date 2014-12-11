@@ -43,7 +43,7 @@ public class GuiShipPlaque extends GuiShip
 		super.initGui();
 		
 		// add the text box
-		m_textName = new GuiTextField( fontRenderer,
+		m_textName = new GuiTextField( this.mc.fontRenderer,
 			LeftMargin,
 			60,
 			120,

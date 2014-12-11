@@ -15,7 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.util.Icon;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -88,8 +88,8 @@ public class RenderShip2D
 				}
 				
 				// get the block texture
-				Block block = Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )];
-				Icon icon = block.getBlockTexture( world, coords.x, coords.y, coords.z, side.getId() );
+				Block block = world.getBlock( coords.x, coords.y, coords.z );
+				IIcon icon = block.getIcon( world, coords.x, coords.y, coords.z, side.getId() );
 				if( icon != null )
 				{
 					int blockX = envelope.toZeroBasedU( u );
@@ -178,7 +178,7 @@ public class RenderShip2D
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 	}
 	
-	public static void drawTexturedBlock( double x, double y, double z, double width, double height, Icon icon )
+	public static void drawTexturedBlock( double x, double y, double z, double width, double height, IIcon icon )
 	{
 		if( icon == null )
 		{

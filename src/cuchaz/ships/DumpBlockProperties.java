@@ -34,8 +34,9 @@ public class DumpBlockProperties
 			{
 				// gather all the blocks we care about
 				final Map<String,Block> blocksToCheck = Maps.newLinkedHashMap();
-				for( Block block : Block.blocksList )
+				for( String blockId : (Iterable<String>)Block.blockRegistry.getKeys() )
 				{
+		            Block block = (Block)Block.blockRegistry.getObject( blockId );
 					if( block != null )
 					{
 						blocksToCheck.put( block.getUnlocalizedName(), block );
@@ -48,7 +49,9 @@ public class DumpBlockProperties
 					@Override
 					public int compare( String a, String b )
 					{
-						return blocksToCheck.get( a ).blockID - blocksToCheck.get( b ).blockID;
+						int idA = Block.getIdFromBlock( blocksToCheck.get( a ) );
+						int idB = Block.getIdFromBlock( blocksToCheck.get( b ) );
+						return idA - idB;
 					}
 				} );
 				

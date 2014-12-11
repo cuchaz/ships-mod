@@ -10,18 +10,16 @@
  ******************************************************************************/
 package cuchaz.ships.items;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
-import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
@@ -56,8 +54,7 @@ public class ItemShipEraser extends Item
     {
 		// NOTE: this only happens on the client
 		
-		int blockId = world.getBlockId( blockX, blockY, blockZ );
-		if( blockId == Ships.m_blockShip.blockID )
+		if( world.getBlock( blockX, blockY, blockZ ) == Ships.m_blockShip )
 		{
 			return eraseShip( world, player, blockX, blockY, blockZ );
 		}
@@ -89,7 +86,7 @@ public class ItemShipEraser extends Item
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( world.getBlock( coords.x, coords.y, coords.z ) );
 				}
 			},
 			ShipLauncher.ShipBlockNeighbors
@@ -102,7 +99,7 @@ public class ItemShipEraser extends Item
 			return false;
 		}
 		
-		if( Environment.isClient() )
+		if( FMLLaunchHandler.side() == Side.CLIENT )
 		{
 			PacketDispatcher.sendPacketToServer( new PacketEraseShip( blockX, blockY, blockZ ).getCustomPacket() );
 		}
@@ -120,9 +117,9 @@ public class ItemShipEraser extends Item
 	
 	private static void message( EntityPlayer player, GuiString text, Object ... args )
 	{
-		if( Environment.isClient() )
+		if( FMLLaunchHandler.side() == Side.CLIENT )
 		{
-			player.addChatMessage( String.format( text.getLocalizedText(), args ) );
+			player.addChatMessage( new ChatComponentTranslation( text.getLocalizedText(), args ) );
 		}
 	}
 }

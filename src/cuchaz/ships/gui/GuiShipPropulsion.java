@@ -14,7 +14,6 @@ import static cuchaz.ships.gui.GuiSettings.LeftMargin;
 
 import java.io.IOException;
 
-import net.minecraft.block.Block;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -65,7 +64,7 @@ public class GuiShipPropulsion extends GuiShip
 		m_desaturationProgramId = 0;
 		
 		// this should be the helm
-		assert( world.getBlockId( helmX, helmY, helmZ ) == Ships.m_blockHelm.blockID );
+		assert( world.getBlock( helmX, helmY, helmZ ) == Ships.m_blockHelm );
 		Coords helmCoords = new Coords( helmX, helmY, helmZ );
 		
 		// find the ship block
@@ -77,7 +76,7 @@ public class GuiShipPropulsion extends GuiShip
 				@Override
 				public boolean isConditionMet( Coords coords )
 				{
-					return world.getBlockId( coords.x, coords.y, coords.z ) == Ships.m_blockShip.blockID;
+					return world.getBlock( coords.x, coords.y, coords.z ) == Ships.m_blockShip;
 				}
 			},
 			new BlockExplorer( )
@@ -85,7 +84,7 @@ public class GuiShipPropulsion extends GuiShip
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( world.getBlock( coords.x, coords.y, coords.z ) );
 				}
 			},
 			Neighbors.Edges

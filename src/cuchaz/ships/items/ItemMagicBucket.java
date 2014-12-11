@@ -17,6 +17,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -44,7 +45,7 @@ public class ItemMagicBucket extends Item
 		// find out where we're aiming
 		final boolean IntersectWater = true;
 		MovingObjectPosition movingobjectposition = getMovingObjectPositionFromPlayer( world, player, IntersectWater );
-		if( movingobjectposition == null || movingobjectposition.typeOfHit != EnumMovingObjectType.TILE )
+		if( movingobjectposition == null || movingobjectposition.typeOfHit != MovingObjectType.BLOCK )
 		{
 			return itemStack;
 		}
@@ -63,11 +64,11 @@ public class ItemMagicBucket extends Item
 		}
 		
 		// is it a liquid block?
-		Material material = world.getBlockMaterial( x, y, z );
+		Material material = world.getBlock( x, y, z ).getMaterial();
 		if( ( material == Material.water || material == Material.lava ) && world.getBlockMetadata( x, y, z ) == 0 )
 		{
 			// make it an air wall!
-			world.setBlock( x, y, z, Ships.m_blockAirWall.blockID );
+			world.setBlock( x, y, z, Ships.m_blockAirWall );
 		}
 		// is it an air wall?
 		else if( material == Ships.m_materialAirWall )

@@ -16,6 +16,8 @@ import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
 import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShip;
@@ -84,7 +86,7 @@ public class PacketPilotShip extends Packet
 		ship.linearThrottle = m_linearThrottle;
 		ship.angularThrottle = m_angularThrottle;
 		
-		if( Environment.isServer() )
+		if( FMLLaunchHandler.side() == Side.SERVER )
 		{
 			// broadcast the actions to the rest of the clients
 			final double BroadcastRange = 100;

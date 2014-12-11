@@ -21,6 +21,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSet;
@@ -257,7 +259,7 @@ public class ShipLauncher
 	public EntityShip launch( )
 	{
 		// currently, this is only called on the server
-		assert( Environment.isServer() );
+		assert( FMLLaunchHandler.side() == Side.SERVER );
 		
 		// spawn the ship
 		EntityShip ship = new EntityShip( m_world );

@@ -15,9 +15,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 
-import net.minecraft.block.Block;
-import net.minecraft.crash.CallableMinecraftVersion;
-import net.minecraft.item.Item;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import cpw.mods.fml.common.Loader;
 
@@ -30,13 +29,13 @@ public abstract class MinecraftRunner
 		if( isMinecraftEnvironment() )
 		{
 			// init the FML loader
-			Loader.injectData( null, null, null, null, new CallableMinecraftVersion( null ).minecraftVersion(), null, null, null );
+			Loader.injectData( null, null, null, null, Loader.MC_VERSION, null, null, null );
 			
 			// force some Minecraft classes to run their static initializers
 			@SuppressWarnings( "unused" )
 			Object o;
-			o = Block.blocksList;
-			o = Item.arrow;
+			o = Blocks.air;
+			o = Items.apple;
 			
 			// init the mod
 			o = Ships.instance;
@@ -77,8 +76,6 @@ public abstract class MinecraftRunner
 		Method method = classRunnable.getDeclaredMethod( "onRun" );
 		method.setAccessible( true );
 		method.invoke( runnableInstance );
-		
-		cl.close();
 	}
 	
 	public abstract void onRun( ) throws Exception;

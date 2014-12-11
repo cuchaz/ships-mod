@@ -12,7 +12,6 @@ package cuchaz.ships.items;
 
 import net.minecraft.block.BlockBed;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBed;
@@ -57,15 +56,15 @@ public class ItemBerth extends ItemBed
 		// decide where to place the two berth blocks
 		BlockSide placementSide = BlockSide.getByYaw( player.rotationYaw ).getOppositeSide();
 		int meta = placementSide.getXZOffset();
-		int dx = BlockBed.footBlockToHeadBlockMap[meta][0];
-		int dz = BlockBed.footBlockToHeadBlockMap[meta][1];
+		int dx = BlockBed.field_149981_a[meta][0]; // footBlockToHeadBlockMap
+		int dz = BlockBed.field_149981_a[meta][1];
 		
 		if( isValidForBerthBlock( world, x, y + 1, z, player, side, itemStack )
 			&& isValidForBerthBlock( world, x + dx, y + 1, z + dz, player, side, itemStack ) )
 		{
 			// set the two berth blocks
-			world.setBlock( x, y + 1, z, Ships.m_blockBerth.blockID, meta, 3 );
-			world.setBlock( x + dx, y + 1, z + dz, Ships.m_blockBerth.blockID, meta + 8, 3 );
+			world.setBlock( x, y + 1, z, Ships.m_blockBerth, meta, 3 );
+			world.setBlock( x + dx, y + 1, z + dz, Ships.m_blockBerth, meta + 8, 3 );
 			
 			// use the item
 			itemStack.stackSize--;
@@ -82,6 +81,6 @@ public class ItemBerth extends ItemBed
 	{
 		return player.canPlayerEdit( x, y, z, side, itemStack )
 			&& world.isAirBlock( x, y, z )
-			&& world.doesBlockHaveSolidTopSurface( x, y - 1, z );
+			&& World.doesBlockHaveSolidTopSurface( world, x, y - 1, z );
 	}
 }

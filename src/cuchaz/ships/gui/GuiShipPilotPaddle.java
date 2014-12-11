@@ -47,17 +47,17 @@ public class GuiShipPilotPaddle extends GuiShipPilot
 	@Override
 	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
 	{
-		int keyForward = mc.gameSettings.keyBindForward.keyCode;
-		int keyBack = mc.gameSettings.keyBindBack.keyCode;
-		int keyLeft = mc.gameSettings.keyBindLeft.keyCode;
-		int keyRight = mc.gameSettings.keyBindRight.keyCode;
+		int keyForward = mc.gameSettings.keyBindForward.getKeyCode();
+		int keyBack = mc.gameSettings.keyBindBack.getKeyCode();
+		int keyLeft = mc.gameSettings.keyBindLeft.getKeyCode();
+		int keyRight = mc.gameSettings.keyBindRight.getKeyCode();
 		
 		// draw the key binds
 		int textColor = ColorUtils.getGrey( 64 );
-		fontRenderer.drawString( Keyboard.getKeyName( keyForward ), 11, 8, textColor );
-		fontRenderer.drawString( Keyboard.getKeyName( keyBack ), 46, 8, textColor );
-		fontRenderer.drawString( Keyboard.getKeyName( keyLeft ), 61, 8, textColor );
-		fontRenderer.drawString( Keyboard.getKeyName( keyRight ), 95, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyForward ), 11, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyBack ), 46, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyLeft ), 61, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyRight ), 95, 8, textColor );
 	}
 	
 	@Override

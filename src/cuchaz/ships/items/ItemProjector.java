@@ -2,15 +2,16 @@ package cuchaz.ships.items;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumMovingObjectType;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
-import cpw.mods.fml.common.network.PacketDispatcher;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.Environment;
@@ -43,7 +44,7 @@ public class ItemProjector extends Item
 	public ItemStack onItemRightClick( ItemStack itemStack, World world, EntityPlayer player )
     {
 		// client only
-		if( Environment.isServer() )
+		if( FMLLaunchHandler.side() == Side.SERVER )
 		{
 			return itemStack;
 		}
@@ -53,7 +54,7 @@ public class ItemProjector extends Item
 			// find out where we're aiming
 			final boolean IntersectWater = true;
 			MovingObjectPosition movingobjectposition = getMovingObjectPositionFromPlayer( world, player, IntersectWater );
-			if( movingobjectposition == null || movingobjectposition.typeOfHit != EnumMovingObjectType.TILE )
+			if( movingobjectposition == null || movingobjectposition.typeOfHit != MovingObjectType.BLOCK )
 			{
 				return itemStack;
 			}
@@ -62,9 +63,8 @@ public class ItemProjector extends Item
 			int z = movingobjectposition.blockZ;
 			
 			// only place on top of water
-			int blockId = world.getBlockId( x, y, z );
 			BlockSide side = BlockSide.getById(movingobjectposition.sideHit);
-			if( blockId != Block.waterStill.blockID || side != BlockSide.Top )
+			if( world.getBlock( x, y, z ) != Blocks.water || side != BlockSide.Top )
 			{
 				clientMessage( player, GuiString.TryOnStillWater );
 				return itemStack;
@@ -100,10 +100,10 @@ public class ItemProjector extends Item
 	public static void placeProjector( World world, int x, int y, int z, ShipWorld shipWorld )
 	{
 		// place the block
-		world.setBlock( x, y, z, Ships.m_blockProjector.blockID );
+		world.setBlock( x, y, z, Ships.m_blockProjector );
 		
 		// tell the block about the ship
-		TileEntityProjector tileEntity = (TileEntityProjector)world.getBlockTileEntity( x, y, z );
+		TileEntityProjector tileEntity = (TileEntityProjector)world.getTileEntity( x, y, z );
 		tileEntity.setShipWorld( shipWorld );
 	}
 	
@@ -115,9 +115,9 @@ public class ItemProjector extends Item
 	
 	private void clientMessage( EntityPlayer player, GuiString text, Object ... args )
 	{
-		if( Environment.isClient() )
+		if( FMLLaunchHandler.side() == Side.CLIENT )
 		{
-			player.addChatMessage( String.format( text.getLocalizedText(), args ) );
+			player.addChatMessage( new ChatComponentTranslation( text.getLocalizedText(), args ) );
 		}
 	}
 }

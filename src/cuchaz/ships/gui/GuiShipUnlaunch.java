@@ -87,7 +87,7 @@ public class GuiShipUnlaunch extends GuiShip
 		if( button.id == m_buttonUnlaunchShip.id )
 		{
 			// tell the server to unlaunch the ship
-			PacketUnlaunchShip packet = new PacketUnlaunchShip( m_ship.entityId );
+			PacketUnlaunchShip packet = new PacketUnlaunchShip( m_ship.getEntityId() );
 			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 			close();
 		}

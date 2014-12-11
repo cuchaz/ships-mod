@@ -74,22 +74,22 @@ public class GuiShipPilotSurface extends GuiShipPilot
 		BlockSide forwardSide = getForwardSide();
 		if( forwardSide == null )
 		{
-			fontRenderer.drawString( "Ship is corrupt! Can't pilot!", 48, 8, ColorUtils.getColor( 255, 0, 0 ) );
+			this.mc.fontRenderer.drawString( "Ship is corrupt! Can't pilot!", 48, 8, ColorUtils.getColor( 255, 0, 0 ) );
 			return;
 		}
 		
-		int keyForward = mc.gameSettings.keyBindForward.keyCode;
-		int keyBack = mc.gameSettings.keyBindBack.keyCode;
-		int keyLeft = mc.gameSettings.keyBindLeft.keyCode;
-		int keyRight = mc.gameSettings.keyBindRight.keyCode;
+		int keyForward = mc.gameSettings.keyBindForward.getKeyCode();
+		int keyBack = mc.gameSettings.keyBindBack.getKeyCode();
+		int keyLeft = mc.gameSettings.keyBindLeft.getKeyCode();
+		int keyRight = mc.gameSettings.keyBindRight.getKeyCode();
 		
 		// draw the key binds
 		int textColor = ColorUtils.getGrey( 64 );
 		final int TextOffset = 44;
-		fontRenderer.drawString( Keyboard.getKeyName( keyForward ), TextOffset + 11, 8, textColor );
-		fontRenderer.drawString( Keyboard.getKeyName( keyBack ), TextOffset + 46, 8, textColor );
-		fontRenderer.drawString( Keyboard.getKeyName( keyLeft ), TextOffset + 61, 8, textColor );
-		fontRenderer.drawString( Keyboard.getKeyName( keyRight ), TextOffset + 95, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyForward ), TextOffset + 11, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyBack ), TextOffset + 46, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyLeft ), TextOffset + 61, 8, textColor );
+		this.mc.fontRenderer.drawString( Keyboard.getKeyName( keyRight ), TextOffset + 95, 8, textColor );
 		
 		loadTexture();
 		
