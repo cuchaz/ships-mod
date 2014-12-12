@@ -10,16 +10,14 @@
  ******************************************************************************/
 package cuchaz.ships;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import cuchaz.ships.gui.Gui;
 
@@ -80,35 +78,6 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 		initPlaque();
 	}
 	
-	@Override
-	public void writeSpawnData( ByteArrayDataOutput data )
-	{
-		// need to write HangingEntity data too
-		// since we're not using the usual HangingEntity spawn packet
-		data.writeInt( xPosition );
-		data.writeInt( yPosition );
-		data.writeInt( zPosition );
-		data.writeInt( hangingDirection );
-		
-		data.writeUTF( m_name );
-		data.writeInt( m_supporterId );
-	}
-
-	@Override
-	public void readSpawnData( ByteArrayDataInput data )
-	{
-		// need to read HangingEntity data too
-		// since we're not using the usual HangingEntity spawn packet
-		xPosition = data.readInt();
-		yPosition = data.readInt();
-		zPosition = data.readInt();
-		hangingDirection = data.readInt();
-		
-		m_name = data.readUTF();
-		m_supporterId = data.readInt();
-		initPlaque();
-	}
-	
 	private void initPlaque()
 	{
 		// set the bounding box
@@ -161,15 +130,44 @@ public class EntityShipPlaque extends EntityHanging implements IEntityAdditional
 	public boolean interactFirst( EntityPlayer player )
     {
 		// is this the player that placed the plaque?
-		int supporterId = Supporters.getId( player.username );
+		int supporterId = Supporters.getId( player.getCommandSenderName() );
 		if( m_supporterId != supporterId )
 		{
 			return false;
 		}
 		
 		// show the edit GUI
-		Gui.ShipPlaque.open( player, player.worldObj, entityId, 0, 0 );
+		Gui.ShipPlaque.open( player, player.worldObj, getEntityId(), 0, 0 );
 		
 		return true;
     }
+
+	@Override
+	public void writeSpawnData( ByteBuf buf )
+	{
+		// need to write HangingEntity data too
+		// since we're not using the usual HangingEntity spawn packet
+		buf.writeInt( field_146063_b ); // x
+		buf.writeInt( field_146064_c ); // y
+		buf.writeInt( field_146062_d ); // z
+		buf.writeInt( hangingDirection );
+		
+		ByteBufUtils.writeUTF8String( buf, m_name );
+		buf.writeInt( m_supporterId );
+	}
+
+	@Override
+	public void readSpawnData( ByteBuf buf )
+	{
+		// need to read HangingEntity data too
+		// since we're not using the usual HangingEntity spawn packet
+		field_146063_b = buf.readInt(); // x
+		field_146064_c = buf.readInt(); // y
+		field_146062_d = buf.readInt(); // z
+		hangingDirection = buf.readInt();
+		
+		m_name = ByteBufUtils.readUTF8String( buf );
+		m_supporterId = buf.readInt();
+		initPlaque();
+	}
 }

@@ -87,7 +87,7 @@ public class HitList
 	public void addHits( World world, Vec3 from, Vec3 to )
 	{
 		// NOTE: World.clip() changes its input vectors! Need to protect them since we use them later
-		MovingObjectPosition hit = world.clip(
+		MovingObjectPosition hit = world.rayTraceBlocks(
 			Vec3.createVectorHelper( from.xCoord, from.yCoord, from.zCoord ),
 			Vec3.createVectorHelper( to.xCoord, to.yCoord, to.zCoord )
 		);

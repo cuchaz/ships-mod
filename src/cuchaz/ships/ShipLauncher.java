@@ -17,13 +17,12 @@ import java.util.Map;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityHanging;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
@@ -101,7 +100,7 @@ public class ShipLauncher
 				@Override
 				public boolean shouldExploreBlock( Coords coords )
 				{
-					return !BlockProperties.isSeparator( Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )] );
+					return !BlockProperties.isSeparator( world.getBlock( coords.x, coords.y, coords.z ) );
 				}
 			},
 			ShipBlockNeighbors
@@ -317,7 +316,7 @@ public class ShipLauncher
 		{
 			if( cords.y < waterHeight )
 			{
-				BlockUtils.changeBlockWithoutNotifyingIt( world, cords.x, cords.y, cords.z, Block.waterStill.blockID, 0, updateRules );
+				BlockUtils.changeBlockWithoutNotifyingIt( world, cords.x, cords.y, cords.z, Blocks.water, 0, updateRules );
 			}
 			else
 			{
@@ -332,7 +331,7 @@ public class ShipLauncher
 			worldCoords.x = blockCoords.x + shipBlock.x;
 			worldCoords.y = blockCoords.y + shipBlock.y;
 			worldCoords.z = blockCoords.z + shipBlock.z;
-			BlockUtils.changeBlockWithoutNotifyingIt( world, worldCoords.x, worldCoords.y, worldCoords.z, Block.waterStill.blockID, 0, updateRules );
+			BlockUtils.changeBlockWithoutNotifyingIt( world, worldCoords.x, worldCoords.y, worldCoords.z, Blocks.water, 0, updateRules );
 		}
 		
 		// remove any hanging entities
@@ -378,7 +377,7 @@ public class ShipLauncher
 		boolean foundAir = false;
 		for( ; y>=0; y-- )
 		{
-			if( world.getBlockMaterial( x, y, z ) == Material.air )
+			if( world.getBlock( x, y, z ).getMaterial() == Material.air )
 			{
 				foundAir = true;
 				break;
@@ -393,7 +392,7 @@ public class ShipLauncher
 		// keep dropping until we hit water
 		for( ; y>=0; y-- )
 		{
-			if( world.getBlockMaterial( x, y, z ).isLiquid() )
+			if( world.getBlock( x, y, z ).getMaterial().isLiquid() )
 			{
 				// add 1 to return the entityY sense instead of the blockY sense
 				return y + 1;

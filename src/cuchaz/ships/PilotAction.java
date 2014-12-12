@@ -150,12 +150,12 @@ public enum PilotAction
 	
 	public static void setActionCodes( GameSettings settings )
 	{
-		Forward.m_keyCode = settings.keyBindForward.keyCode;
-		Backward.m_keyCode = settings.keyBindBack.keyCode;
-		Left.m_keyCode = settings.keyBindLeft.keyCode;
-		Right.m_keyCode = settings.keyBindRight.keyCode;
-		ThrottleUp.m_keyCode = settings.keyBindForward.keyCode;
-		ThrottleDown.m_keyCode = settings.keyBindBack.keyCode;
+		Forward.m_keyCode = settings.keyBindForward.getKeyCode();
+		Backward.m_keyCode = settings.keyBindBack.getKeyCode();
+		Left.m_keyCode = settings.keyBindLeft.getKeyCode();
+		Right.m_keyCode = settings.keyBindRight.getKeyCode();
+		ThrottleUp.m_keyCode = settings.keyBindForward.getKeyCode();
+		ThrottleDown.m_keyCode = settings.keyBindBack.getKeyCode();
 	}
 	
 	public static int getActiveActions( GameSettings settings, List<PilotAction> allowedActions )

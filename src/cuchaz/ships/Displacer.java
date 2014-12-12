@@ -60,15 +60,15 @@ public abstract class Displacer
 		// make sure that all the blocks that should be displaced are actually displaced
 		for( Coords coords : m_shouldBeDisplaced )
 		{
-			int blockId = m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z );
+			Block block = m_ship.worldObj.getBlock( coords.x, coords.y, coords.z );
 			int blockMeta = m_ship.worldObj.getBlockMetadata( coords.x, coords.y, coords.z );
-			if( blockId != m_block.blockID )
+			if( block != m_block )
 			{
 				// displace the block
-				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, m_block.blockID, 0, UpdateRules.UpdateClients );
+				BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, m_block, 0, UpdateRules.UpdateClients );
 				
 				// remember that we displaced it
-				m_displacedBlocks.put( coords, pack( blockId, blockMeta ) );
+				m_displacedBlocks.put( coords, pack( block, blockMeta ) );
 			}
 			else
 			{
@@ -142,7 +142,7 @@ public abstract class Displacer
 	
 	private void restoreBlock( Coords coords, int packed )
 	{
-		if( m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z ) == m_block.blockID )
+		if( m_ship.worldObj.getBlock( coords.x, coords.y, coords.z ) == m_block )
 		{
 			int blockId = unpackId( packed );
 			int blockMeta = unpackMeta( packed );

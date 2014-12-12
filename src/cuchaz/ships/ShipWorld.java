@@ -24,9 +24,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.packet.Packet61DoorChange;
-import net.minecraft.network.packet.Packet62LevelSound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
@@ -34,11 +33,10 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraftforge.common.ForgeDirection;
+import net.minecraftforge.common.util.ForgeDirection;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -109,7 +107,7 @@ public class ShipWorld extends DetachedWorld
 		for( Coords worldCoords : blocks )
 		{
 			// does this block have a tile entity?
-			TileEntity tileEntity = world.getBlockTileEntity( worldCoords.x, worldCoords.y, worldCoords.z );
+			TileEntity tileEntity = world.getTileEntity( worldCoords.x, worldCoords.y, worldCoords.z );
 			if( tileEntity == null )
 			{
 				continue;
@@ -161,9 +159,9 @@ public class ShipWorld extends DetachedWorld
 				EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, this );
 				
 				// save it to the ship world
-				hangingEntityCopy.xPosition = relativeCoords.x;
-				hangingEntityCopy.yPosition = relativeCoords.y;
-				hangingEntityCopy.zPosition = relativeCoords.z;
+				hangingEntityCopy.field_146063_b = relativeCoords.x;
+				hangingEntityCopy.field_146064_c = relativeCoords.y;
+				hangingEntityCopy.field_146062_d = relativeCoords.z;
 				hangingEntityCopy.posX -= originCoords.x;
 				hangingEntityCopy.posY -= originCoords.y;
 				hangingEntityCopy.posZ -= originCoords.z;
@@ -198,8 +196,8 @@ public class ShipWorld extends DetachedWorld
 			Coords coordsWorld = correspondence.get( coordsShip );
 			
 			// is this block actually water?
-			int blockId = world.getBlockId( coordsWorld.x, coordsWorld.y, coordsWorld.z );
-			if( blockId == Block.waterStill.blockID || blockId == Ships.m_blockAirWall.blockID )
+			Block block = world.getBlock( coordsWorld.x, coordsWorld.y, coordsWorld.z );
+			if( block == Blocks.water || block == Ships.m_blockAirWall )
 			{
 				BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients );
 			}
@@ -223,12 +221,12 @@ public class ShipWorld extends DetachedWorld
 				tileEntityCopy.zCoord = coordsWorld.z;
 				tileEntityCopy.validate();
 				
-				world.setBlockTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z, tileEntityCopy );
+				world.setTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z, tileEntityCopy );
 			}
 			catch( Exception ex )
 			{
 				// remove the tile entity
-				world.removeBlockTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z );
+				world.removeTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z );
 				
 				Ships.logger.warning(
 					ex,
@@ -259,9 +257,9 @@ public class ShipWorld extends DetachedWorld
 					EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
 					
 					// save it to the ship world
-					hangingEntityCopy.xPosition = coordsWorld.x;
-					hangingEntityCopy.yPosition = coordsWorld.y;
-					hangingEntityCopy.zPosition = coordsWorld.z;
+					hangingEntityCopy.field_146063_b = coordsWorld.x;
+					hangingEntityCopy.field_146064_c = coordsWorld.y;
+					hangingEntityCopy.field_146062_d = coordsWorld.z;
 					hangingEntityCopy.posX += translation.x;
 					hangingEntityCopy.posY += translation.y;
 					hangingEntityCopy.posZ += translation.z;
@@ -299,7 +297,7 @@ public class ShipWorld extends DetachedWorld
 		for( EntityHanging hangingEntity : hangingEntities )
 		{
 			// is this hanging entity actually on a ship block?
-			entityBlock.set( hangingEntity.xPosition, hangingEntity.yPosition, hangingEntity.zPosition );
+			entityBlock.set( hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d );
 			if( blocks.contains( entityBlock ) )
 			{
 				out.put( new Coords( entityBlock ), hangingEntity );
@@ -385,13 +383,13 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public int getBlockId( int x, int y, int z )
+	public Block getBlock( int x, int y, int z )
 	{
 		m_lookupCoords.set( x, y, z );
-		return getBlockId( m_lookupCoords );
+		return getBlock( m_lookupCoords );
 	}
 	
-	public int getBlockId( Coords coords )
+	public Block getBlock( Coords coords )
 	{
 		return getBlockStorage( coords ).id;
 	}
@@ -404,13 +402,13 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public TileEntity getBlockTileEntity( int x, int y, int z )
+	public TileEntity getTileEntity( int x, int y, int z )
 	{
 		m_lookupCoords.set( x, y, z );
-		return getBlockTileEntity( m_lookupCoords );
+		return getTileEntity( m_lookupCoords );
 	}
 	
-	public TileEntity getBlockTileEntity( Coords coords )
+	public TileEntity getTileEntity( Coords coords )
 	{
 		return m_tileEntities.get( coords );
 	}
@@ -428,9 +426,9 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public boolean setBlock( int x, int y, int z, int newBlockId, int newMeta, int ignored )
+	public boolean setBlock( int x, int y, int z, Block newBlock, int newMeta, int ignored )
 	{
-		if( applyBlockChange( x, y, z, newBlockId, newMeta ) )
+		if( applyBlockChange( x, y, z, newBlock, newMeta ) )
 		{
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
@@ -444,7 +442,7 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public void setBlockTileEntity( int x, int y, int z, TileEntity tileEntity )
+	public void setTileEntity( int x, int y, int z, TileEntity tileEntity )
 	{
 		// do nothing. tile entities are handled differently
 	}
@@ -452,7 +450,7 @@ public class ShipWorld extends DetachedWorld
 	@Override
 	public boolean setBlockMetadataWithNotify( int x, int y, int z, int meta, int ignored )
 	{
-		if( applyBlockChange( x, y, z, getBlockId( x, y, z ), meta ) )
+		if( applyBlockChange( x, y, z, getBlock( x, y, z ), meta ) )
 		{
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
@@ -472,13 +470,13 @@ public class ShipWorld extends DetachedWorld
 		return val;
 	}
 	
-	public boolean applyBlockChange( int x, int y, int z, int newBlockId, int newMeta )
+	public boolean applyBlockChange( int x, int y, int z, Block newBlock, int newMeta )
 	{
 		m_lookupCoords.set( x, y, z );
-		return applyBlockChange( m_lookupCoords, newBlockId, newMeta );
+		return applyBlockChange( m_lookupCoords, newBlock, newMeta );
 	}
 	
-	public boolean applyBlockChange( Coords coords, int newBlockId, int newMeta )
+	public boolean applyBlockChange( Coords coords, Block newBlock, int newMeta )
 	{
 		// lookup the affected block
 		BlockStorage storage = getBlockStorage( coords );
@@ -489,8 +487,8 @@ public class ShipWorld extends DetachedWorld
 			// allow metadata changes
 			|| ( oldBlockId == newBlockId )
 			// allow furnace block changes
-			|| ( oldBlockId == Block.furnaceBurning.blockID && newBlockId == Block.furnaceIdle.blockID )
-			|| ( oldBlockId == Block.furnaceIdle.blockID && newBlockId == Block.furnaceBurning.blockID );
+			|| ( oldBlockId == Blocks.lit_furnace && newBlockId == Blocks.furnace )
+			|| ( oldBlockId == Blocks.furnace && newBlockId == Blocks.lit_furnace );
 		
 		if( isAllowed )
 		{
@@ -499,7 +497,7 @@ public class ShipWorld extends DetachedWorld
 			storage.meta = newMeta;
 			
 			// notify the tile entity if needed
-			TileEntity tileEntity = getBlockTileEntity( coords );
+			TileEntity tileEntity = getTileEntity( coords );
 			if( tileEntity != null )
 			{
 				tileEntity.updateContainingBlockInfo();
@@ -512,27 +510,27 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public boolean isBlockSolidOnSide( int x, int y, int z, ForgeDirection side, boolean defaultValue )
+	public boolean isSideSolid( int x, int y, int z, ForgeDirection side, boolean defaultValue )
 	{
 		m_lookupCoords.set( x, y, z );
-		Block block = Block.blocksList[getBlockId( m_lookupCoords )];
-		if( block == null )
+		Block block = getBlock( m_lookupCoords );
+		if( block == Blocks.air )
 		{
 			return defaultValue;
 		}
-		return block.isBlockSolidOnSide( this, x, y, z, side );
+		return block.isSideSolid( this, x, y, z, side );
 	}
 	
 	@Override
 	public boolean isBlockNormalCubeDefault( int x, int y, int z, boolean defaultValue )
 	{
 		m_lookupCoords.set( x, y, z );
-		Block block = Block.blocksList[getBlockId( m_lookupCoords )];
-		if( block == null )
+		Block block = getBlock( m_lookupCoords );
+		if( block == Blocks.air )
 		{
 			return defaultValue;
 		}
-		return block.isBlockNormalCube( this, x, y, z );
+		return block.isNormalCube( this, x, y, z );
 	}
 	
 	@Override
@@ -632,10 +630,10 @@ public class ShipWorld extends DetachedWorld
 			int x = playerX + random.nextInt( 16 ) - random.nextInt( 16 );
 			int y = playerY + random.nextInt( 16 ) - random.nextInt( 16 );
 			int z = playerZ + random.nextInt( 16 ) - random.nextInt( 16 );
-			int blockId = getBlockId( x, y, z );
-			if( blockId > 0 )
+			Block block = getBlock( x, y, z );
+			if( block != Blocks.air )
 			{
-				Block.blocksList[blockId].randomDisplayTick( this, x, y, z, random );
+				block.randomDisplayTick( this, x, y, z, random );
 			}
 		}
 	}
@@ -655,15 +653,15 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public void addBlockEvent( int x, int y, int z, int blockId, int eventId, int eventParam )
+	public void addBlockEvent( int x, int y, int z, Block block, int eventId, int eventParam )
 	{
-		if( m_ship == null || blockId == 0 || getBlockId( x, y, z ) != blockId )
+		if( m_ship == null || block == Blocks.air || getBlock( x, y, z ) != block )
 		{
 			return;
 		}
 		
 		// on the client, just deliver to the block
-		boolean eventWasAccepted = Block.blocksList[blockId].onBlockEventReceived( this, x, y, z, eventId, eventParam );
+		boolean eventWasAccepted = block.onBlockEventReceived( this, x, y, z, eventId, eventParam );
 		
 		// on the server, also send a packet to the client
 		if( FMLLaunchHandler.side() == Side.SERVER && eventWasAccepted )
@@ -676,7 +674,7 @@ public class ShipWorld extends DetachedWorld
 			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
 				v.xCoord, v.yCoord, v.zCoord, 64,
 				m_ship.worldObj.provider.dimensionId,
-				new PacketShipBlockEvent( m_ship.entityId, x, y, z, blockId, eventId, eventParam ).getCustomPacket()
+				new PacketShipBlockEvent( m_ship.getEntityId(), x, y, z, blockId, eventId, eventParam ).getCustomPacket()
 			);
 		}
 	}

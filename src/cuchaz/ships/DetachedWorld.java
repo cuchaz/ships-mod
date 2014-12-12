@@ -26,7 +26,6 @@ import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
-import net.minecraftforge.common.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -84,6 +83,12 @@ public class DetachedWorld extends World
 		{
 			return null;
 		}
+
+		@Override
+		public File getWorldDirectory( )
+		{
+			return null;
+		}
 	}
 	
 	public DetachedWorld( World realWorld, String worldName )
@@ -94,8 +99,7 @@ public class DetachedWorld extends World
         	worldName,
         	new WorldSettings( realWorld.getWorldInfo() ),
         	realWorld.provider,
-        	new Profiler(),
-        	realWorld.getWorldLogAgent()
+        	new Profiler()
 		);
 		
 		// world constructors try to take over the existing world
@@ -121,14 +125,6 @@ public class DetachedWorld extends World
 	@SideOnly( Side.CLIENT )
 	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int minBlockBrightness )
 	{
-		return 0;
-	}
-	
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getBrightness( int x, int y, int z, int minLight )
-	{
-		// apparently only used for tripwires and piston extensions. ie, we don't care
 		return 0;
 	}
 	
@@ -186,10 +182,11 @@ public class DetachedWorld extends World
 	{
 		return false;
 	}
-	
+
 	@Override
-	public boolean isBlockSolidOnSide(int x, int y, int z, ForgeDirection side, boolean _default)
-    {
-		return false;
-    }
+	protected int func_152379_p( )
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

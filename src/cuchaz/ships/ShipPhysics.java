@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import cuchaz.modsShared.Util;
@@ -419,6 +420,6 @@ public class ShipPhysics
 	private double getWaterBlockMass( )
 	{
 		// UNDONE: use block y make the mass increase with depth
-		return BlockProperties.getMass( Block.waterStill );
+		return BlockProperties.getMass( Blocks.water );
 	}
 }

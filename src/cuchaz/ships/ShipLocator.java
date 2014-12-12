@@ -16,11 +16,11 @@ import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemInWorldManager;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import cuchaz.modsShared.EntityUtils;
 
 public class ShipLocator
 {
@@ -51,7 +51,7 @@ public class ShipLocator
 	{
 		for( EntityShip ship : ships )
 		{
-			if( ship.entityId == entityId )
+			if( ship.getEntityId() == entityId )
 			{
 				return ship;
 			}
@@ -74,7 +74,7 @@ public class ShipLocator
 	public static EntityShip getFromPlayerLook( EntityPlayer player )
 	{
 		// find out what entity the player is looking at
-		Vec3 eyePos = player.worldObj.getWorldVec3Pool().getVecFromPool(
+		Vec3 eyePos = Vec3.createVectorHelper(
 			player.posX,
 			player.posY + player.getEyeHeight(),
 			player.posZ
@@ -88,7 +88,7 @@ public class ShipLocator
 		float cosPitch = MathHelper.cos( -pitch );
 		float sinPitch = MathHelper.sin( -pitch );
 		
-		double reachDistance = new ItemInWorldManager( player.worldObj ).getBlockReachDistance();
+		double reachDistance = EntityUtils.getPlayerReachDistance( player );
 		Vec3 targetPos = eyePos.addVector(
 			sinYaw * -cosPitch * reachDistance,
 			sinPitch * reachDistance,

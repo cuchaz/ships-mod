@@ -13,15 +13,14 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.List;
 
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
-import cpw.mods.fml.relauncher.Side;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.WorldServer;
-import cuchaz.modsShared.Environment;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.Side;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
@@ -98,7 +97,7 @@ public class ShipUnlauncher
 
 		protected Block getBlock( IBlockAccess world, Coords coords )
 		{
-			return Block.blocksList[world.getBlockId( coords.x, coords.y, coords.z )];
+			return world.getBlock( coords.x, coords.y, coords.z );
 		}
 	}
 	

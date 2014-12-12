@@ -13,6 +13,7 @@ package cuchaz.ships;
 import java.util.Iterator;
 
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
@@ -36,8 +37,8 @@ public class RainDisplacer extends Displacer
 		while( iter.hasNext() )
 		{
 			Coords coords = iter.next();
-			int blockId = m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z );
-			if( Block.blocksList[blockId] != null && blockId != m_block.blockID )
+			Block block = m_ship.worldObj.getBlock( coords.x, coords.y, coords.z );
+			if( block != Blocks.air && block != m_block )
 			{
 				iter.remove();
 			}

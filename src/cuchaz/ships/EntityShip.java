@@ -23,19 +23,17 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
-import cpw.mods.fml.common.network.PacketDispatcher;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.EntityUtils;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -159,7 +157,7 @@ public class EntityShip extends Entity
 		// LOGGING
 		Ships.logger.info( String.format(
 			"EntityShip %d initialized at (%.2f,%.2f,%.2f) + (%.4f,%.4f,%.4f)",
-			entityId,
+			this.getEntityId(),
 			posX, posY, posZ,
 			motionX, motionY, motionZ
 		) );
@@ -171,7 +169,7 @@ public class EntityShip extends Entity
 		super.setDead();
 		
 		// LOGGING
-		Ships.logger.info( "EntityShip %d died!", entityId );
+		Ships.logger.info( "EntityShip %d died!", getEntityId() );
 		
 		// only restore blocks on the server
 		if( FMLLaunchHandler.side() == Side.SERVER )
@@ -311,7 +309,7 @@ public class EntityShip extends Entity
 			else
 			{
 				// ask for blocks
-				PacketDispatcher.sendPacketToServer( new PacketRequestShipBlocks( entityId ).getCustomPacket() );
+				PacketDispatcher.sendPacketToServer( new PacketRequestShipBlocks( getEntityId() ).getCustomPacket() );
 			}
 		}
 		
@@ -421,7 +419,7 @@ public class EntityShip extends Entity
 		while( iter.hasNext() )
 		{
 			Coords coords = iter.next();
-			Block block = Block.blocksList[worldObj.getBlockId( coords.x, coords.y, coords.z )];
+			Block block = worldObj.getBlock( coords.x, coords.y, coords.z );
 			if( !BlockProperties.isWater( block ) )
 			{
 				iter.remove();
@@ -724,7 +722,7 @@ public class EntityShip extends Entity
 			if( m_sendPilotChangesToServer )
 			{
 				// send a packet to the server
-				PacketPilotShip packet = new PacketPilotShip( entityId, m_pilotActions, m_sideShipForward, linearThrottle, angularThrottle );
+				PacketPilotShip packet = new PacketPilotShip( getEntityId(), m_pilotActions, m_sideShipForward, linearThrottle, angularThrottle );
 				PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
 				m_sendPilotChangesToServer = false;
 			}
@@ -778,9 +776,9 @@ public class EntityShip extends Entity
 		// meaning, only lost riders will be left
 		for( Entity rider : riders )
 		{
-			if( m_ridersLastTick.containsKey( rider.entityId ) )
+			if( m_ridersLastTick.containsKey( rider.getEntityId() ) )
 			{
-				m_ridersLastTick.remove( rider.entityId );
+				m_ridersLastTick.remove( rider.getEntityId() );
 			}
 		}
 		for( Entity rider : m_ridersLastTick.values() )
@@ -805,7 +803,7 @@ public class EntityShip extends Entity
 		m_ridersLastTick.clear();
 		for( Entity rider : riders )
 		{
-			m_ridersLastTick.put( rider.entityId, rider );
+			m_ridersLastTick.put( rider.getEntityId(), rider );
 		}
 		
 		// first, move the riders
@@ -858,7 +856,7 @@ public class EntityShip extends Entity
 	private void clickWorldBlock( EntityPlayer player, MovingObjectPosition hit, boolean isLeftButton )
 	{
 		// is this even a block?
-		if( hit == null || hit.typeOfHit != EnumMovingObjectType.TILE )
+		if( hit == null || hit.typeOfHit != MovingObjectType.BLOCK )
 		{
 			return;
 		}

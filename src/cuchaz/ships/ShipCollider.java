@@ -20,6 +20,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -27,7 +28,6 @@ import net.minecraft.util.Vec3;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -340,7 +340,7 @@ public class ShipCollider
 		// if this is an air block, then use another block to get bounds
 		if( block == null )
 		{
-			block = Block.stone;
+			block = Blocks.stone;
 		}
 		
 		block.setBlockBoundsBasedOnState( m_ship.getShipWorld(), coords.x, coords.y, coords.z );
@@ -574,7 +574,7 @@ public class ShipCollider
 		for( Coords coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
 		{
 			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
-			if( block != null && block.isLadder( shipWorld, coords.x, coords.y, coords.z, entity ) )
+			if( block != Blocks.air && block.isLadder( shipWorld, coords.x, coords.y, coords.z, entity ) )
 			{
 				return true;
 			}
@@ -719,7 +719,8 @@ public class ShipCollider
         	// did this block impede us? and should we break it?
         	if( blockScaling < 1 && worldBlock instanceof BlockFlower )
         	{
-        		m_ship.worldObj.destroyBlock( worldCoords.x, worldCoords.y, worldCoords.z, false );
+        		// destroyBlock()
+        		m_ship.worldObj.func_147480_a( worldCoords.x, worldCoords.y, worldCoords.z, false );
         	}
         	else
         	{

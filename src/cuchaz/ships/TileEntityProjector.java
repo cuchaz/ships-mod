@@ -134,7 +134,8 @@ public class TileEntityProjector extends TileEntity
 		// re-render if we're on the client
 		if( worldObj.isRemote )
 		{
-			worldObj.markBlockForRenderUpdate( xCoord, yCoord, zCoord );
+			// markBlockForRenderUpdate()
+			worldObj.func_147479_m( xCoord, yCoord, zCoord );
 		}
 	}
 	

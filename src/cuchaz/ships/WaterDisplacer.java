@@ -43,8 +43,8 @@ public class WaterDisplacer extends Displacer
 		while( iter.hasNext() )
 		{
 			Coords coords = iter.next();
-			int blockId = m_ship.worldObj.getBlockId( coords.x, coords.y, coords.z );
-			if( !BlockProperties.isWater( Block.blocksList[blockId] ) )
+			Block block = m_ship.worldObj.getBlock( coords.x, coords.y, coords.z );
+			if( !BlockProperties.isWater( block ) )
 			{
 				iter.remove();
 			}

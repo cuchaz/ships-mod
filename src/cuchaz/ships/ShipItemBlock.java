@@ -15,9 +15,9 @@ import net.minecraft.item.ItemStack;
 
 public class ShipItemBlock extends ItemBlock
 {
-	public ShipItemBlock( int blockId )
+	public ShipItemBlock( )
 	{
-		super( blockId );
+		super( Ships.m_blockShip );
 		setHasSubtypes( true );
 		setUnlocalizedName( "shipBlock" );
 	}
