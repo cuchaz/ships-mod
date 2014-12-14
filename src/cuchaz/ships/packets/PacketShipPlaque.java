@@ -10,66 +10,61 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.EntityShipPlaque;
 import cuchaz.ships.items.ItemShipPlaque;
 
-public class PacketShipPlaque extends Packet
+public class PacketShipPlaque extends Packet<PacketShipPlaque>
 {
-	public static final String Channel = "shipPlaque";
-	
 	private int m_entityId;
 	private String m_name;
 	
 	public PacketShipPlaque( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketShipPlaque( EntityShipPlaque shipPlaque )
 	{
-		this();
-		
 		m_entityId = shipPlaque.getEntityId();
 		m_name = shipPlaque.getName();
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
-		out.writeUTF( m_name );
+		buf.writeInt( m_entityId );
+		ByteBufUtils.writeUTF8String( buf, m_name );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
-		m_name = in.readUTF();
+		m_entityId = buf.readInt();
+		m_name = ByteBufUtils.readUTF8String( buf );
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// can this player use the ship plaque?
-		if( !ItemShipPlaque.canUse( player ) )
+		if( !ItemShipPlaque.canUse( netServer.playerEntity ) )
 		{
-			return;
+			return null;
 		}
 		
 		// get the ship plaque
-		Entity entity = player.worldObj.getEntityByID( m_entityId );
+		Entity entity = netServer.playerEntity.worldObj.getEntityByID( m_entityId );
 		if( entity != null && entity instanceof EntityShipPlaque ) 
 		{
 			EntityShipPlaque shipPlaque = (EntityShipPlaque)entity;
 			shipPlaque.setName( m_name );
 		}
+		
+		return null;
 	}
 }

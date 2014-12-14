@@ -10,56 +10,50 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.items.ItemShipEraser;
 
-public class PacketEraseShip extends Packet
+public class PacketEraseShip extends Packet<PacketEraseShip>
 {
-	public static final String Channel = "eraseShip";
-	
 	private int m_x;
 	private int m_y;
 	private int m_z;
 	
 	public PacketEraseShip( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketEraseShip( int x, int y, int z )
 	{
-		this();
-		
 		m_x = x;
 		m_y = y;
 		m_z = z;
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_x );
-		out.writeInt( m_y );
-		out.writeInt( m_z );
+		buf.writeInt( m_x );
+		buf.writeInt( m_y );
+		buf.writeInt( m_z );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_x = in.readInt();
-		m_y = in.readInt();
-		m_z = in.readInt();
+		m_x = buf.readInt();
+		m_y = buf.readInt();
+		m_z = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
-		ItemShipEraser.eraseShip( player.worldObj, player, m_x, m_y, m_z );
+		ItemShipEraser.eraseShip( netServer.playerEntity.worldObj, netServer.playerEntity, m_x, m_y, m_z );
+		
+		return null;
 	}
 }

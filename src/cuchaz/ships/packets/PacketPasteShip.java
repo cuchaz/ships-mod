@@ -10,20 +10,17 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.Ships;
 import cuchaz.ships.persistence.PersistenceException;
 
-public class PacketPasteShip extends Packet
+public class PacketPasteShip extends Packet<PacketPasteShip>
 {
-	public static final String Channel = "pasteShip";
-	
 	private String m_encodedBlocks;
 	private int m_dx;
 	private int m_dy;
@@ -31,13 +28,11 @@ public class PacketPasteShip extends Packet
 	
 	public PacketPasteShip( )
 	{
-		super( Channel );
+		// for registation
 	}
 	
 	public PacketPasteShip( String encodedBlocks, int dx, int dy, int dz )
 	{
-		this();
-		
 		m_encodedBlocks = encodedBlocks;
 		m_dx = dx;
 		m_dy = dy;
@@ -45,41 +40,45 @@ public class PacketPasteShip extends Packet
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeUTF( m_encodedBlocks );
-		out.writeInt( m_dx );
-		out.writeInt( m_dy );
-		out.writeInt( m_dz );
+		ByteBufUtils.writeUTF8String( buf, m_encodedBlocks );
+		buf.writeInt( m_dx );
+		buf.writeInt( m_dy );
+		buf.writeInt( m_dz );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_encodedBlocks = in.readUTF();
-		m_dx = in.readInt();
-		m_dy = in.readInt();
-		m_dz = in.readInt();
+		m_encodedBlocks = ByteBufUtils.readUTF8String( buf );
+		m_dx = buf.readInt();
+		m_dy = buf.readInt();
+		m_dz = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		if( m_encodedBlocks == null )
 		{
-			return;
+			return null;
 		}
 		
 		// restore the ship blocks on the server
 		try
 		{
-			ShipClipboard.restoreShip( player.worldObj, m_encodedBlocks, new Coords( m_dx, m_dy, m_dz ) );
+			ShipClipboard.restoreShip(
+				netServer.playerEntity.worldObj,
+				m_encodedBlocks,
+				new Coords( m_dx, m_dy, m_dz )
+			);
 		}
 		catch( PersistenceException ex )
 		{
 			Ships.logger.warning( ex, "Unable to restore ship!" );
 		}
+		
+		return null;
 	}
 }

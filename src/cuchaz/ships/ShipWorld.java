@@ -34,6 +34,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.util.ForgeDirection;
+import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -645,10 +646,9 @@ public class ShipWorld extends DetachedWorld
 			return;
 		}
 		
-		MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
-			m_ship.posX, m_ship.posY, m_ship.posZ, 64,
-			m_ship.worldObj.provider.dimensionId,
-			new PacketChangedBlocks( m_ship, m_changedBlocks ).getCustomPacket()
+		Ships.net.getDispatch().sendToAllAround(
+			new PacketChangedBlocks( m_ship, m_changedBlocks ),
+			new TargetPoint( m_ship.worldObj.provider.dimensionId, m_ship.posX, m_ship.posY, m_ship.posZ, 64 )
 		);
 	}
 	
@@ -671,10 +671,9 @@ public class ShipWorld extends DetachedWorld
 			m_ship.blocksToShip( v );
 			m_ship.shipToWorld( v );
 			
-			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
-				v.xCoord, v.yCoord, v.zCoord, 64,
-				m_ship.worldObj.provider.dimensionId,
-				new PacketShipBlockEvent( m_ship.getEntityId(), x, y, z, block, eventId, eventParam ).getCustomPacket()
+			Ships.net.getDispatch().sendToAllAround(
+				new PacketShipBlockEvent( m_ship.getEntityId(), x, y, z, block, eventId, eventParam ),
+				new TargetPoint( m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, 64 )
 			);
 		}
 	}
@@ -695,11 +694,9 @@ public class ShipWorld extends DetachedWorld
 			m_ship.blocksToShip( v );
 			m_ship.shipToWorld( v );
 			
-			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
-				v.xCoord, v.yCoord, v.zCoord,
-				volume > 1.0F ? (double)(16.0F * volume) : 16.0D,
-				m_ship.worldObj.provider.dimensionId,
-				new Packet62LevelSound( sound, v.xCoord, v.yCoord, v.zCoord, volume, pitch )
+			Ships.net.getDispatch().sendToAllAround(
+				new Packet62LevelSound( sound, v.xCoord, v.yCoord, v.zCoord, volume, pitch ),
+				new TargetPoint( m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, volume > 1.0F ? (double)(16.0F * volume) : 16.0D )
 			);
 		}
 		
@@ -719,10 +716,7 @@ public class ShipWorld extends DetachedWorld
 			m_ship.blocksToShip( v );
 			m_ship.shipToWorld( v );
 			
-			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
-				v.xCoord, v.yCoord, v.zCoord,
-				64.0D,
-				m_ship.worldObj.provider.dimensionId,
+			Ships.net.getDispatch().sendToAllAround(
 				new Packet61DoorChange(
 					sfxID,
 					MathHelper.floor_double(v.xCoord),
@@ -730,7 +724,8 @@ public class ShipWorld extends DetachedWorld
 					MathHelper.floor_double(v.zCoord),
 					auxData,
 					false
-				)
+				),
+				new TargetPoint( m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, 64 )
 			);
 		}
 		

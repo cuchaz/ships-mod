@@ -10,55 +10,47 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipUnlauncher;
 
-public class PacketUnlaunchShip extends Packet
+public class PacketUnlaunchShip extends Packet<PacketUnlaunchShip>
 {
-	public static final String Channel = "unlaunchShip";
-	
 	private int m_entityId;
 	
 	public PacketUnlaunchShip( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketUnlaunchShip( int entityId )
 	{
-		this();
-		
 		m_entityId = entityId;
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
+		buf.writeInt( m_entityId );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
+		m_entityId = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );
 		if( ship == null )
 		{
-			return;
+			return null;
 		}
 		
 		// unlaunch the ship
@@ -67,5 +59,7 @@ public class PacketUnlaunchShip extends Packet
 		{
 			unlauncher.unlaunch();
 		}
+		
+		return null;
 	}
 }

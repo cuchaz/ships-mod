@@ -10,17 +10,15 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import static cuchaz.ships.gui.GuiSettings.LeftMargin;
-import static cuchaz.ships.gui.GuiSettings.TopMargin;
+import static cuchaz.ships.gui.GuiSettings.*;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 
 import org.lwjgl.input.Keyboard;
 
-import cpw.mods.fml.common.network.PacketDispatcher;
-
 import cuchaz.ships.ContainerShip;
 import cuchaz.ships.EntityShipPlaque;
+import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketShipPlaque;
 
 public class GuiShipPlaque extends GuiShip
@@ -101,7 +99,7 @@ public class GuiShipPlaque extends GuiShip
 		m_shipPlaque.setName( m_textName.getText() );
 		
 		// update the server too
-		PacketDispatcher.sendPacketToServer( new PacketShipPlaque( m_shipPlaque ).getCustomPacket() );
+		Ships.net.getDispatch().sendToServer( new PacketShipPlaque( m_shipPlaque ) );
 		
 		close();
 	}

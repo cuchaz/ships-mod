@@ -10,24 +10,21 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
 import cuchaz.ships.items.ItemProjector;
 import cuchaz.ships.persistence.PersistenceException;
 
-public class PacketPlaceProjector extends Packet
+public class PacketPlaceProjector extends Packet<PacketPlaceProjector>
 {
-	public static final String Channel = "placeProjector";
-	
 	private String m_encodedBlocks;
 	private int m_x;
 	private int m_y;
@@ -35,13 +32,11 @@ public class PacketPlaceProjector extends Packet
 	
 	public PacketPlaceProjector( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketPlaceProjector( String encodedBlocks, int x, int y, int z )
 	{
-		this();
-		
 		m_encodedBlocks = encodedBlocks;
 		m_x = x;
 		m_y = y;
@@ -49,50 +44,48 @@ public class PacketPlaceProjector extends Packet
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeUTF( m_encodedBlocks );
-		out.writeInt( m_x );
-		out.writeInt( m_y );
-		out.writeInt( m_z );
+		ByteBufUtils.writeUTF8String( buf, m_encodedBlocks );
+		buf.writeInt( m_x );
+		buf.writeInt( m_y );
+		buf.writeInt( m_z );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_encodedBlocks = in.readUTF();
-		m_x = in.readInt();
-		m_y = in.readInt();
-		m_z = in.readInt();
+		m_encodedBlocks = ByteBufUtils.readUTF8String( buf );
+		m_x = buf.readInt();
+		m_y = buf.readInt();
+		m_z = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		if( m_encodedBlocks == null )
 		{
-			return;
+			return null;
 		}
 		
 		// place the projector
 		try
 		{
-			ShipWorld shipWorld = ShipClipboard.createShipWorld( player.worldObj, m_encodedBlocks );
-			ItemProjector.placeProjector( player.worldObj, m_x, m_y, m_z, shipWorld );
+			ShipWorld shipWorld = ShipClipboard.createShipWorld( netServer.playerEntity.worldObj, m_encodedBlocks );
+			ItemProjector.placeProjector( netServer.playerEntity.worldObj, m_x, m_y, m_z, shipWorld );
 			
 			// if the player is holding a projector and we're not in creative mode, use it
-			if( !player.capabilities.isCreativeMode )
+			if( !netServer.playerEntity.capabilities.isCreativeMode )
 			{
-				ItemStack heldItem = player.getHeldItem();
+				ItemStack heldItem = netServer.playerEntity.getHeldItem();
 				if( heldItem.getItem() == Ships.m_itemProjector )
 				{
 					heldItem.stackSize--;
 					if( heldItem.stackSize <= 0 )
 					{
-						player.inventory.mainInventory[player.inventory.currentItem] = null;
-						MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, heldItem));
+						netServer.playerEntity.inventory.mainInventory[netServer.playerEntity.inventory.currentItem] = null;
+						MinecraftForge.EVENT_BUS.post( new PlayerDestroyItemEvent( netServer.playerEntity, heldItem ) );
 					}
 				}
 			}
@@ -101,5 +94,7 @@ public class PacketPlaceProjector extends Packet
 		{
 			Ships.logger.error( ex, "Unable to place ship projector!" );
 		}
+		
+		return null;
 	}
 }

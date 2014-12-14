@@ -301,7 +301,7 @@ public class EntityShip extends Entity
 		// do we have any packets waiting?
 		if( m_shipWorld == null )
 		{
-			PacketShipLaunched packet = PacketShipLaunched.getPacket( this );
+			PacketShipLaunched packet = PacketShipLaunched.instance.getPacket( this );
 			if( packet != null )
 			{
 				packet.process( this );
@@ -309,7 +309,7 @@ public class EntityShip extends Entity
 			else
 			{
 				// ask for blocks
-				PacketDispatcher.sendPacketToServer( new PacketRequestShipBlocks( getEntityId() ).getCustomPacket() );
+				Ships.net.getDispatch().sendToServer( new PacketRequestShipBlocks( getEntityId() ) );
 			}
 		}
 		
@@ -723,7 +723,7 @@ public class EntityShip extends Entity
 			{
 				// send a packet to the server
 				PacketPilotShip packet = new PacketPilotShip( getEntityId(), m_pilotActions, m_sideShipForward, linearThrottle, angularThrottle );
-				PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+				Ships.net.getDispatch().sendToServer( packet );
 				m_sendPilotChangesToServer = false;
 			}
 			

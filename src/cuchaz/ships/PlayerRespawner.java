@@ -26,18 +26,16 @@ import net.minecraft.block.BlockBed;
 import net.minecraft.entity.EntityAccessor;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayer.EnumStatus;
 import net.minecraft.entity.player.EntityPlayerAccessor;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.EntityPlayer.EnumStatus;
 import net.minecraft.init.Blocks;
-import net.minecraft.network.packet.Packet;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.Coords;
@@ -297,13 +295,13 @@ public class PlayerRespawner
 			
 			// tell all interested clients that the player started sleeping
 			EntityPlayerMP playerServer = (EntityPlayerMP)player;
-			Packet packet = new PacketPlayerSleepInBerth( player, world, x, y, z ).getCustomPacket();
+			PacketPlayerSleepInBerth packet = new PacketPlayerSleepInBerth( player, world, x, y, z );
             playerServer.getServerForPlayer().getEntityTracker().sendPacketToAllPlayersTrackingEntity( player, packet );
             playerServer.playerNetServerHandler.setPlayerLocation(
         		player.posX, player.posY, player.posZ,
         		player.rotationYaw, player.rotationPitch
             );
-            playerServer.playerNetServerHandler.sendPacketToPlayer( packet );
+            Ships.net.getDispatch().sendTo( packet, playerServer );
 		}
 		
 		return EnumStatus.OK;

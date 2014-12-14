@@ -10,8 +10,6 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import ibxm.Player;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -22,6 +20,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -45,11 +44,9 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.internal.FMLNetworkHandler;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.FMLHacker;
@@ -75,42 +72,18 @@ import cuchaz.ships.items.ItemSupporterPlaque;
 import cuchaz.ships.items.SupporterPlaqueType;
 import cuchaz.ships.packets.Packet;
 import cuchaz.ships.packets.PacketBlockPropertiesOverrides;
-import cuchaz.ships.packets.PacketChangedBlocks;
-import cuchaz.ships.packets.PacketEraseShip;
-import cuchaz.ships.packets.PacketHandler;
-import cuchaz.ships.packets.PacketLaunchShip;
-import cuchaz.ships.packets.PacketPasteShip;
-import cuchaz.ships.packets.PacketPilotShip;
-import cuchaz.ships.packets.PacketPlaceProjector;
-import cuchaz.ships.packets.PacketPlayerSleepInBerth;
-import cuchaz.ships.packets.PacketRequestShipBlocks;
-import cuchaz.ships.packets.PacketShipBlockEvent;
-import cuchaz.ships.packets.PacketShipBlocks;
-import cuchaz.ships.packets.PacketShipLaunched;
-import cuchaz.ships.packets.PacketShipPlaque;
-import cuchaz.ships.packets.PacketUnlaunchShip;
+import cuchaz.ships.packets.PacketRegistry;
 import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.RenderShipPlaque;
 import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 import cuchaz.ships.render.TileEntityProjectorRenderer;
 
-// TODO: figure out new network system
-@NetworkMod(
-	// NOTE: 16-character limit for channel names
-	channels = { PacketLaunchShip.Channel, PacketShipLaunched.Channel, PacketUnlaunchShip.Channel,
-		PacketRequestShipBlocks.Channel, PacketShipBlocks.Channel, PacketPilotShip.Channel,
-		PacketShipBlockEvent.Channel, PacketChangedBlocks.Channel, PacketPasteShip.Channel,
-		PacketEraseShip.Channel, PacketShipPlaque.Channel, PacketPlayerSleepInBerth.Channel,
-		PacketBlockPropertiesOverrides.Channel, PacketPlaceProjector.Channel },
-	packetHandler = PacketHandler.class,
-	clientSideRequired = true, // clients without ship mod should not connect to a ships mod server
-	serverSideRequired = false // clients with ships mod should connect to a non-ships mod server
-)
 public class Ships extends DummyModContainer
 {
 	public static Ships instance = null;
 	public static EnhancedLogger logger = new EnhancedLogger( Logger.getLogger( "cuchaz.ships" ) );
+	public static PacketRegistry net = null;
 	
 	// materials
 	public static final Material m_materialAirWall = new MaterialAirWall( MapColor.airColor );
@@ -213,10 +186,8 @@ public class Ships extends DummyModContainer
 			// add our container to the ASM data table
 			event.getASMHarvestedData().addContainer( this );
 	        
-			// TODO: register for network support
-			FMLNetworkHandler.registerChannel( this, null );
-			String remoteVersionRange = ""; // TODO: ???
-			NetworkRegistry.INSTANCE.register( this, getClass(), remoteVersionRange, event.getASMHarvestedData() );
+			// register for network support
+			net = new PacketRegistry( getModId() );
 			
 			// register for forge events
 			MinecraftForge.EVENT_BUS.register( this );
@@ -469,10 +440,10 @@ public class Ships extends DummyModContainer
 		}
 		
 		// is this a player?
-		EntityPlayer player = null;
-		if( event.entity instanceof EntityPlayer )
+		EntityPlayerMP player = null;
+		if( event.entity instanceof EntityPlayerMP )
 		{
-			player = (EntityPlayer)event.entity;
+			player = (EntityPlayerMP)event.entity;
 		}
 		if( player == null )
 		{
@@ -480,8 +451,6 @@ public class Ships extends DummyModContainer
 		}
 		
 		// send block overrides to the client
-		Packet packet = new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() );
-		// TODO: figure out how to send packets
-		PacketDispatcher.sendPacketToPlayer( packet.getCustomPacket(), (Player)player );
+		net.getDispatch().sendTo( new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() ), player );
 	}
 }

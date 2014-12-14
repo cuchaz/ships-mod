@@ -10,23 +10,19 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
-import cpw.mods.fml.common.network.PacketDispatcher;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
-import cpw.mods.fml.relauncher.Side;
-import cuchaz.modsShared.Environment;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
+import cuchaz.ships.Ships;
 
-public class PacketPilotShip extends Packet
+public class PacketPilotShip extends Packet<PacketPilotShip>
 {
-	public static final String Channel = "pilotShip";
-	
 	private int m_entityId;
 	private int m_actions;
 	private BlockSide m_sideShipForward;
@@ -35,13 +31,11 @@ public class PacketPilotShip extends Packet
 	
 	public PacketPilotShip( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketPilotShip( int entityId, int actions, BlockSide sideFacingPlayer, int linearThrottle, int angularThrottle )
 	{
-		this();
-		
 		m_entityId = entityId;
 		m_actions = actions;
 		m_sideShipForward = sideFacingPlayer;
@@ -50,47 +44,66 @@ public class PacketPilotShip extends Packet
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
-		out.writeInt( m_actions );
-		out.writeByte( m_sideShipForward.ordinal() );
-		out.writeByte( m_linearThrottle );
-		out.writeByte( m_angularThrottle );
+		buf.writeInt( m_entityId );
+		buf.writeInt( m_actions );
+		buf.writeByte( m_sideShipForward.ordinal() );
+		buf.writeByte( m_linearThrottle );
+		buf.writeByte( m_angularThrottle );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
-		m_actions = in.readInt();
-		m_sideShipForward = BlockSide.values()[in.readByte()];
-		m_linearThrottle = in.readByte();
-		m_angularThrottle = in.readByte();
+		m_entityId = buf.readInt();
+		m_actions = buf.readInt();
+		m_sideShipForward = BlockSide.values()[buf.readByte()];
+		m_linearThrottle = buf.readByte();
+		m_angularThrottle = buf.readByte();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );
 		if( ship == null )
 		{
-			return;
+			return null;
 		}
 		
-		// handle ship movement
+		applyActions( ship );
+		
+		// relay the actions to the clients
+		Ships.net.getDispatch().sendToAllAround( this, new TargetPoint(
+			netServer.playerEntity.worldObj.provider.dimensionId,
+			ship.posX, ship.posY, ship.posZ,
+			100
+		) );
+		
+		return null;
+	}
+	
+	@Override
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	{
+		// get the ship
+		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );
+		if( ship == null )
+		{
+			return null;
+		}
+		
+		applyActions( ship );
+		
+		return null;
+	}
+	
+	private void applyActions( EntityShip ship )
+	{
 		ship.setPilotActions( m_actions, m_sideShipForward, false );
 		ship.linearThrottle = m_linearThrottle;
 		ship.angularThrottle = m_angularThrottle;
-		
-		if( FMLLaunchHandler.side() == Side.SERVER )
-		{
-			// broadcast the actions to the rest of the clients
-			final double BroadcastRange = 100;
-			PacketDispatcher.sendPacketToAllAround( ship.posX, ship.posY, ship.posZ, BroadcastRange, player.worldObj.provider.dimensionId, getCustomPacket() );
-		}
 	}
 }

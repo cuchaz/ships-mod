@@ -101,7 +101,7 @@ public class ItemShipEraser extends Item
 		
 		if( FMLLaunchHandler.side() == Side.CLIENT )
 		{
-			PacketDispatcher.sendPacketToServer( new PacketEraseShip( blockX, blockY, blockZ ).getCustomPacket() );
+			Ships.net.getDispatch().sendToServer( new PacketEraseShip( blockX, blockY, blockZ ) );
 		}
 		else
 		{

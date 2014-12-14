@@ -10,57 +10,49 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
-import cpw.mods.fml.common.network.PacketDispatcher;
-import cpw.mods.fml.common.network.Player;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 
-public class PacketRequestShipBlocks extends Packet
+public class PacketRequestShipBlocks extends Packet<PacketRequestShipBlocks>
 {
-	public static final String Channel = "requestBlocks";
-	
 	private int m_entityId;
 	
 	public PacketRequestShipBlocks( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketRequestShipBlocks( int entityId )
 	{
-		this();
-		
 		m_entityId = entityId;
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out ) throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
+		buf.writeInt( m_entityId );
 	}
 	
 	@Override
-	public void readData( DataInputStream in ) throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
+		m_entityId = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );
 		if( ship == null )
 		{
-			return;
+			return null;
 		}
 		
 		// respond with the blocks
-		PacketDispatcher.sendPacketToPlayer( new PacketShipBlocks( ship ).getCustomPacket(), (Player)player );
+		return new PacketShipBlocks( ship );
 	}
 }

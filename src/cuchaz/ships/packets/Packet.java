@@ -10,70 +10,45 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.network.NetHandlerPlayServer;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
-import cuchaz.ships.Ships;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.packet.Packet250CustomPayload;
-
-public abstract class Packet
+public abstract class Packet<T extends Packet<T>> implements IMessage
 {
-	protected static final int MaxPacketSize = 32767;
-	
-	private String m_channel;
-	
-	protected Packet( String channel )
+	public IMessageHandler<T,IMessage> getClientHandler( )
 	{
-		m_channel = channel;
-	}
-	
-	public Packet250CustomPayload getCustomPacket( )
-	{
-		Packet250CustomPayload customPacket = new Packet250CustomPayload();
-		customPacket.channel = m_channel;
-		
-		// get the payload
-		try
+		return new IMessageHandler<T,IMessage>( )
 		{
-			ByteArrayOutputStream data = new ByteArrayOutputStream( 8 );
-			DataOutputStream out = new DataOutputStream( data );
-			writeData( out );
-			customPacket.data = data.toByteArray();
-			
-			if( customPacket.data.length > MaxPacketSize )
+			@Override
+			public IMessage onMessage( T message, MessageContext ctx )
 			{
-				Ships.logger.warning( "Packet payload on channel %s too large! %dk Packet payload will be dropped.", m_channel, customPacket.data.length/1024 );
+				return message.onReceivedClient( ctx.getClientHandler() );
 			}
-		}
-		catch( IOException ex )
-		{
-			throw new Error( "Unable to get packet data!", ex );
-		}
-		customPacket.length = customPacket.data.length;
-		
-		return customPacket;
+		};
 	}
 	
-	public void readCustomPacket( Packet250CustomPayload customPacket )
+	public IMessageHandler<T,IMessage> getServerHandler( )
 	{
-		try
+		return new IMessageHandler<T,IMessage>( )
 		{
-			DataInputStream in = new DataInputStream( new ByteArrayInputStream( customPacket.data ) );
-			readData( in );
-			in.close();
-		}
-		catch( IOException ex )
-		{
-			throw new Error( "Unable to read data from packet!", ex );
-		}
+			@Override
+			public IMessage onMessage( T message, MessageContext ctx )
+			{
+				return message.onReceivedServer( ctx.getServerHandler() );
+			}
+		};
 	}
 	
-	public abstract void writeData( DataOutputStream out ) throws IOException;
-	public abstract void readData( DataInputStream in ) throws IOException;
-	public abstract void onPacketReceived( EntityPlayer player );
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	{
+		return null;
+	}
+	
+	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
+	{
+		return null;
+	}
 }

@@ -10,19 +10,16 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 
-public class PacketShipBlockEvent extends Packet
+public class PacketShipBlockEvent extends Packet<PacketShipBlockEvent>
 {
-	public static final String Channel = "shipBlockEvent";
-	
 	private int m_entityId;
 	private int m_x;
 	private int m_y;
@@ -33,13 +30,11 @@ public class PacketShipBlockEvent extends Packet
 	
 	public PacketShipBlockEvent( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketShipBlockEvent( int entityId, int x, int y, int z, Block block, int eventId, int eventParam )
 	{
-		this();
-		
 		m_entityId = entityId;
 		m_x = x;
 		m_y = y;
@@ -50,39 +45,37 @@ public class PacketShipBlockEvent extends Packet
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
-		out.writeInt( m_x );
-		out.writeInt( m_y );
-		out.writeInt( m_z );
-		out.writeInt( m_blockId );
-		out.writeInt( m_eventId );
-		out.writeInt( m_eventParam );
+		buf.writeInt( m_entityId );
+		buf.writeInt( m_x );
+		buf.writeInt( m_y );
+		buf.writeInt( m_z );
+		buf.writeInt( m_blockId );
+		buf.writeInt( m_eventId );
+		buf.writeInt( m_eventParam );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
-		m_x = in.readInt();
-		m_y = in.readInt();
-		m_z = in.readInt();
-		m_blockId = in.readInt();
-		m_eventId = in.readInt();
-		m_eventParam = in.readInt();
+		m_entityId = buf.readInt();
+		m_x = buf.readInt();
+		m_y = buf.readInt();
+		m_z = buf.readInt();
+		m_blockId = buf.readInt();
+		m_eventId = buf.readInt();
+		m_eventParam = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );
 		if( ship == null || ship.getShipWorld() == null )
 		{
-			return;
+			return null;
 		}
 		
 		// deliver the event
@@ -91,5 +84,7 @@ public class PacketShipBlockEvent extends Packet
 		{
 			block.onBlockEventReceived( ship.getShipWorld(), m_x, m_y, m_z, m_eventId, m_eventParam );
 		}
+		
+		return null;
 	}
 }

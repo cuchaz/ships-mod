@@ -10,61 +10,56 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.entity.player.EntityPlayer;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.Ships;
 import cuchaz.ships.persistence.PersistenceException;
 import cuchaz.ships.persistence.ShipWorldPersistence;
 
-public class PacketShipBlocks extends Packet
+public class PacketShipBlocks extends Packet<PacketShipBlocks>
 {
-	public static final String Channel = "shipBlocks";
-	
 	private int m_entityId;
 	private byte[] m_shipData;
 	
 	public PacketShipBlocks( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketShipBlocks( EntityShip ship )
 	{
-		this();
-		
 		m_entityId = ship.getEntityId();
 		m_shipData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld(), true );
 	}
 
 	@Override
-	public void writeData( DataOutputStream out ) throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
-		out.writeInt( m_shipData.length );
-		out.write( m_shipData );
+		buf.writeInt( m_entityId );
+		buf.writeInt( m_shipData.length );
+		buf.writeBytes( m_shipData );
 	}
 	
 	@Override
-	public void readData( DataInputStream in ) throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
-		m_shipData = new byte[Math.min( in.readInt(), MaxPacketSize )];
-		in.read( m_shipData );
+		m_entityId = buf.readInt();
+		m_shipData = new byte[buf.readInt()];
+		buf.readBytes( m_shipData );
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );
 		if( ship == null )
 		{
-			return;
+			return null;
 		}
 		
 		// send the blocks to the ship
@@ -80,5 +75,7 @@ public class PacketShipBlocks extends Packet
 				ship.setDead();
 			}
 		}
+		
+		return null;
 	}
 }

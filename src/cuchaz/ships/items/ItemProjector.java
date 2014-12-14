@@ -1,6 +1,5 @@
 package cuchaz.ships.items;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,7 +13,6 @@ import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.ShipWorld;
@@ -81,7 +79,7 @@ public class ItemProjector extends Item
 			placeProjector( world, x, y + 1, z, shipWorld );
 			
 			// tell the server
-			PacketDispatcher.sendPacketToServer( new PacketPlaceProjector( encodedBlocks, x, y + 1, z ).getCustomPacket() );
+			Ships.net.getDispatch().sendToServer( new PacketPlaceProjector( encodedBlocks, x, y + 1, z ) );
 			
 			if( !player.capabilities.isCreativeMode )
 			{

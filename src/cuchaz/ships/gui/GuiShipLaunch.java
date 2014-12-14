@@ -10,15 +10,14 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import static cuchaz.ships.gui.GuiSettings.LeftMargin;
-import static cuchaz.ships.gui.GuiSettings.TopMargin;
+import static cuchaz.ships.gui.GuiSettings.*;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
-import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLauncher.LaunchFlag;
+import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.render.RenderShip2D;
 
@@ -87,8 +86,7 @@ public class GuiShipLaunch extends GuiShip
 		if( button.id == m_buttonLaunchShip.id )
 		{
 			// tell the server to spawn a ship
-			PacketLaunchShip packet = new PacketLaunchShip( m_shipLauncher.getShipBlock() );
-			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+			Ships.net.getDispatch().sendToServer( new PacketLaunchShip( m_shipLauncher.getShipBlock() ) );
 			close();
 		}
 		else if( button.id == m_buttonRotateLeft.id )

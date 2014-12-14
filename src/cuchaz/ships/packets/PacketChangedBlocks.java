@@ -10,22 +10,19 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
 
-public class PacketChangedBlocks extends Packet
+public class PacketChangedBlocks extends Packet<PacketChangedBlocks>
 {
-	public static final String Channel = "changedBlocks";
-	
 	private BlockSet m_changedBlocks;
 	private EntityShip m_ship;
 	private int m_entityId;
@@ -38,40 +35,38 @@ public class PacketChangedBlocks extends Packet
 	
 	public PacketChangedBlocks( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketChangedBlocks( EntityShip ship, BlockSet changedBlocks )
 	{
-		this();
-		
 		m_changedBlocks = changedBlocks;
 		m_ship = ship;
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out ) throws IOException
+	public void toBytes( ByteBuf buf )
 	{
 		ShipWorld world = m_ship.getShipWorld();
-		out.writeInt( m_ship.getEntityId() );
-		out.writeInt( m_changedBlocks.size() );
+		buf.writeInt( m_ship.getEntityId() );
+		buf.writeInt( m_changedBlocks.size() );
 		for( Coords coords : m_changedBlocks )
 		{
-			out.writeShort( coords.x );
-			out.writeShort( coords.y );
-			out.writeShort( coords.z );
+			buf.writeShort( coords.x );
+			buf.writeShort( coords.y );
+			buf.writeShort( coords.z );
 			// TODO: I think blockid and beta can both be compacted into a short
-			out.writeShort( Block.getIdFromBlock( world.getBlock( coords ) ) );
-			out.writeByte( world.getBlockMetadata( coords ) );
+			buf.writeShort( Block.getIdFromBlock( world.getBlock( coords ) ) );
+			buf.writeByte( world.getBlockMetadata( coords ) );
 		}
 	}
 	
 	@Override
-	public void readData( DataInputStream in ) throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
 		// read the header
-		m_entityId = in.readInt();
-		m_numChangedBlocks = in.readInt();
+		m_entityId = buf.readInt();
+		m_numChangedBlocks = buf.readInt();
 		
 		// allocate space for the rest
 		m_x = new int[m_numChangedBlocks];
@@ -83,22 +78,22 @@ public class PacketChangedBlocks extends Packet
 		// read the changes into a buffer
 		for( int i=0; i<m_numChangedBlocks; i++ )
 		{
-			m_x[i] = in.readShort();
-			m_y[i] = in.readShort();
-			m_z[i] = in.readShort();
-			m_blocks[i] = Block.getBlockById( in.readShort() );
-			m_meta[i] = in.readByte();
+			m_x[i] = buf.readShort();
+			m_y[i] = buf.readShort();
+			m_z[i] = buf.readShort();
+			m_blocks[i] = Block.getBlockById( buf.readShort() );
+			m_meta[i] = buf.readByte();
 		}
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( player.worldObj, m_entityId );
+		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );
 		if( ship == null )
 		{
-			return;
+			return null;
 		}
 		
 		// apply the block changes
@@ -107,5 +102,7 @@ public class PacketChangedBlocks extends Packet
 		{
 			world.applyBlockChange( m_x[i], m_y[i], m_z[i], m_blocks[i], m_meta[i] );
 		}
+		
+		return null;
 	}
 }

@@ -10,22 +10,20 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
+import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.PlayerRespawner;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
 
-public class PacketPlayerSleepInBerth extends Packet
+public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 {
-	public static final String Channel = "sleepBerth";
-	
 	private static final int NotAShip = -1;
 	
 	private int m_playerEntityId;
@@ -36,13 +34,11 @@ public class PacketPlayerSleepInBerth extends Packet
 	
 	protected PacketPlayerSleepInBerth( )
 	{
-		super( Channel );
+		// for registration
 	}
 	
 	public PacketPlayerSleepInBerth( EntityPlayer player, World world, int x, int y, int z )
 	{
-		this();
-		
 		m_playerEntityId = player.getEntityId();
 		m_shipEntityId = NotAShip;
 		m_x = x;
@@ -58,39 +54,37 @@ public class PacketPlayerSleepInBerth extends Packet
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out )
-	throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_playerEntityId );
-		out.writeInt( m_shipEntityId );
-		out.writeInt( m_x );
-		out.writeInt( m_y );
-		out.writeInt( m_z );
+		buf.writeInt( m_playerEntityId );
+		buf.writeInt( m_shipEntityId );
+		buf.writeInt( m_x );
+		buf.writeInt( m_y );
+		buf.writeInt( m_z );
 	}
 	
 	@Override
-	public void readData( DataInputStream in )
-	throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_playerEntityId = in.readInt();
-		m_shipEntityId = in.readInt();
-		m_x = in.readInt();
-		m_y = in.readInt();
-		m_z = in.readInt();
+		m_playerEntityId = buf.readInt();
+		m_shipEntityId = buf.readInt();
+		m_x = buf.readInt();
+		m_y = buf.readInt();
+		m_z = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// NOTE: the sleeping player isn't necessarily the player that received the packet
 		// but they are in the same world
-		World world = player.worldObj;
+		World world = Minecraft.getMinecraft().theWorld;
 		
 		// get the sleeping player
 		Entity entity = world.getEntityByID( m_playerEntityId );
 		if( entity == null || !( entity instanceof EntityPlayer ) )
 		{
-			return;
+			return null;
 		}
 		EntityPlayer sleepingPlayer = (EntityPlayer)entity;
 		
@@ -102,14 +96,16 @@ public class PacketPlayerSleepInBerth extends Packet
 		else
 		{
 			// get the ship
-			EntityShip ship = ShipLocator.getShip( player.worldObj, m_shipEntityId );
+			EntityShip ship = ShipLocator.getShip( world, m_shipEntityId );
 			if( ship == null )
 			{
-				return;
+				return null;
 			}
 			
 			// sleep in the berth on the ship
 			PlayerRespawner.sleepInBerthAt( ship.getShipWorld(), m_x, m_y, m_z, sleepingPlayer );
 		}
+		
+		return null;
 	}
 }

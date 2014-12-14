@@ -10,12 +10,12 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import io.netty.buffer.ByteBuf;
+
 import java.util.TreeMap;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
@@ -24,32 +24,27 @@ import cuchaz.ships.Ships;
 import cuchaz.ships.persistence.PersistenceException;
 import cuchaz.ships.persistence.ShipWorldPersistence;
 
-public class PacketShipLaunched extends Packet
+public class PacketShipLaunched extends Packet<PacketShipLaunched>
 {
-	public static final String Channel = "shipLaunched";
-	
 	private int m_entityId;
 	private byte[] m_shipData;
 	private int m_launchX;
 	private int m_launchY;
 	private int m_launchZ;
 	
-	private static TreeMap<Integer,PacketShipLaunched> m_packets;
+	public static PacketShipLaunched instance = null;
 	
-	static
-	{
-		m_packets = new TreeMap<Integer,PacketShipLaunched>();
-	}
-	
+	private TreeMap<Integer,PacketShipLaunched> m_packets;
+
 	public PacketShipLaunched( )
 	{
-		super( Channel );
+		// for registration
+		m_packets = new TreeMap<Integer,PacketShipLaunched>();
+		instance = this;
 	}
 	
 	public PacketShipLaunched( EntityShip ship, Coords shipBlock )
 	{
-		this();
-		
 		m_entityId = ship.getEntityId();
 		m_shipData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld(), true );
 		m_launchX = shipBlock.x;
@@ -58,35 +53,37 @@ public class PacketShipLaunched extends Packet
 	}
 	
 	@Override
-	public void writeData( DataOutputStream out ) throws IOException
+	public void toBytes( ByteBuf buf )
 	{
-		out.writeInt( m_entityId );
-		out.writeInt( m_shipData.length );
-		out.write( m_shipData );
-		out.writeInt( m_launchX );
-		out.writeInt( m_launchY );
-		out.writeInt( m_launchZ );
+		buf.writeInt( m_entityId );
+		buf.writeInt( m_shipData.length );
+		buf.writeBytes( m_shipData );
+		buf.writeInt( m_launchX );
+		buf.writeInt( m_launchY );
+		buf.writeInt( m_launchZ );
 	}
 
 	@Override
-	public void readData( DataInputStream in ) throws IOException
+	public void fromBytes( ByteBuf buf )
 	{
-		m_entityId = in.readInt();
-		m_shipData = new byte[Math.min( in.readInt(), MaxPacketSize )];
-		in.read( m_shipData );
-		m_launchX = in.readInt();
-		m_launchY = in.readInt();
-		m_launchZ = in.readInt();
+		m_entityId = buf.readInt();
+		m_shipData = new byte[buf.readInt()];
+		buf.readBytes( m_shipData );
+		m_launchX = buf.readInt();
+		m_launchY = buf.readInt();
+		m_launchZ = buf.readInt();
 	}
 	
 	@Override
-	public void onPacketReceived( EntityPlayer player )
+	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// save the packet for later
 		m_packets.put( m_entityId, this );
+		
+		return null;
 	}
 	
-	public static PacketShipLaunched getPacket( EntityShip ship )
+	public PacketShipLaunched getPacket( EntityShip ship )
 	{
 		PacketShipLaunched packet = m_packets.get( ship.getEntityId() );
 		if( packet != null )

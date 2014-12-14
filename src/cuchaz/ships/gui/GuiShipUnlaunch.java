@@ -10,14 +10,13 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import static cuchaz.ships.gui.GuiSettings.LeftMargin;
-import static cuchaz.ships.gui.GuiSettings.TopMargin;
+import static cuchaz.ships.gui.GuiSettings.*;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
-import cpw.mods.fml.common.network.PacketDispatcher;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipUnlauncher;
 import cuchaz.ships.ShipUnlauncher.UnlaunchFlag;
+import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketUnlaunchShip;
 
 public class GuiShipUnlaunch extends GuiShip
@@ -87,8 +86,7 @@ public class GuiShipUnlaunch extends GuiShip
 		if( button.id == m_buttonUnlaunchShip.id )
 		{
 			// tell the server to unlaunch the ship
-			PacketUnlaunchShip packet = new PacketUnlaunchShip( m_ship.getEntityId() );
-			PacketDispatcher.sendPacketToServer( packet.getCustomPacket() );
+			Ships.net.getDispatch().sendToServer( new PacketUnlaunchShip( m_ship.getEntityId() ) );
 			close();
 		}
 		else if( button.id == m_buttonOverride.id )

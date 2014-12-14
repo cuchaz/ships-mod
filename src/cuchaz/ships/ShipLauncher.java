@@ -14,13 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cuchaz.modsShared.blocks.BlockArray;
@@ -274,7 +274,10 @@ public class ShipLauncher
 		PlayerRespawner.onShipLaunch( (WorldServer)m_world, m_shipWorld, m_shipBlock );
 		
 		// tell clients the ship launched
-		PacketDispatcher.sendPacketToAllPlayers( new PacketShipLaunched( ship, m_shipBlock ).getCustomPacket() );
+		Ships.net.getDispatch().sendToAllAround(
+			new PacketShipLaunched( ship, m_shipBlock ),
+			new TargetPoint( ship.worldObj.provider.dimensionId, ship.posX, ship.posY, ship.posZ, 100 )
+		);
 		
 		return ship;
 	}

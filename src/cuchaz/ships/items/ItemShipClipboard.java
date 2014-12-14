@@ -188,7 +188,7 @@ public class ItemShipClipboard extends Item
 						int tz = box.minZ - shipBox.minZ;
 						
 						// send the ship to the server for reconstruction
-						PacketDispatcher.sendPacketToServer( new PacketPasteShip( encodedBlocks, tx, ty, tz ).getCustomPacket() );
+						Ships.net.getDispatch().sendToServer( new PacketPasteShip( encodedBlocks, tx, ty, tz ) );
 						message( player, GuiString.PastedShip );
 						return true;
 					}
