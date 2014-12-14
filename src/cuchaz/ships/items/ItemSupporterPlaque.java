@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemHangingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
@@ -23,6 +24,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntitySupporterPlaque;
 import cuchaz.ships.Supporters;
@@ -48,8 +50,9 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 	}
 	
 	@Override
+	@SideOnly( Side.CLIENT )
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
-	public void getSubItems( int itemId, CreativeTabs tabs, List items )
+	public void getSubItems( Item item, CreativeTabs tabs, List items )
 	{
 		for( SupporterPlaqueType type : SupporterPlaqueType.values() )
 		{
@@ -59,12 +62,6 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 	
 	@Override
 	public String getItemStackDisplayName( ItemStack itemStack )
-	{
-		return getItemDisplayName( itemStack );
-	}
-	
-	@Override
-	public String getItemDisplayName( ItemStack itemStack )
 	{
 		return SupporterPlaqueType.getByMeta( itemStack.getItemDamage() ).getItemName();
 	}

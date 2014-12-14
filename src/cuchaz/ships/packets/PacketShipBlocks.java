@@ -37,7 +37,7 @@ public class PacketShipBlocks extends Packet
 	{
 		this();
 		
-		m_entityId = ship.entityId;
+		m_entityId = ship.getEntityId();
 		m_shipData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld(), true );
 	}
 

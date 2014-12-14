@@ -313,7 +313,7 @@ public class ShipPhysics
 		for( Coords coords : m_blocks.coords() )
 		{
 			double mass = BlockProperties.getMass( getBlock( coords ) );
-			buf.append( String.format( "%3d,%3d,%3d %4d %4.1f\n", coords.x, coords.y, coords.z, m_blocks.getBlock( coords ).id, mass ) );
+			buf.append( String.format( "%3d,%3d,%3d %4d %4.1f\n", coords.x, coords.y, coords.z, m_blocks.getBlock( coords ).block, mass ) );
 		}
 		return buf.toString();
 	}
@@ -414,7 +414,7 @@ public class ShipPhysics
 	
 	private Block getBlock( Coords coords )
 	{
-		return Block.blocksList[m_blocks.getBlock( coords ).id];
+		return m_blocks.getBlock( coords ).block;
 	}
 	
 	private double getWaterBlockMass( )

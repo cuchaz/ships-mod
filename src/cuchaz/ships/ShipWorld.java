@@ -391,7 +391,7 @@ public class ShipWorld extends DetachedWorld
 	
 	public Block getBlock( Coords coords )
 	{
-		return getBlockStorage( coords ).id;
+		return getBlockStorage( coords ).block;
 	}
 	
 	@Override
@@ -480,20 +480,20 @@ public class ShipWorld extends DetachedWorld
 	{
 		// lookup the affected block
 		BlockStorage storage = getBlockStorage( coords );
-		int oldBlockId = storage.id;
+		Block oldBlock = storage.block;
 		
 		// only allow benign changes to blocks
 		boolean isAllowed = false
 			// allow metadata changes
-			|| ( oldBlockId == newBlockId )
+			|| ( oldBlock == newBlock )
 			// allow furnace block changes
-			|| ( oldBlockId == Blocks.lit_furnace && newBlockId == Blocks.furnace )
-			|| ( oldBlockId == Blocks.furnace && newBlockId == Blocks.lit_furnace );
+			|| ( oldBlock == Blocks.lit_furnace && newBlock == Blocks.furnace )
+			|| ( oldBlock == Blocks.furnace && newBlock == Blocks.lit_furnace );
 		
 		if( isAllowed )
 		{
 			// apply the change
-			storage.id = newBlockId;
+			storage.block = newBlock;
 			storage.meta = newMeta;
 			
 			// notify the tile entity if needed
@@ -674,7 +674,7 @@ public class ShipWorld extends DetachedWorld
 			MinecraftServer.getServer().getConfigurationManager().sendToAllNear(
 				v.xCoord, v.yCoord, v.zCoord, 64,
 				m_ship.worldObj.provider.dimensionId,
-				new PacketShipBlockEvent( m_ship.getEntityId(), x, y, z, blockId, eventId, eventParam ).getCustomPacket()
+				new PacketShipBlockEvent( m_ship.getEntityId(), x, y, z, block, eventId, eventParam ).getCustomPacket()
 			);
 		}
 	}
@@ -798,23 +798,6 @@ public class ShipWorld extends DetachedWorld
 	@Override
 	public BiomeGenBase getBiomeGenForCoords( int x, int z )
 	{
-		// sanity checking on the biome id
-		int biomeId = m_biomeId;
-		if( m_biomeId < 0 )
-		{
-			biomeId = 0;
-		}
-		else if( biomeId > BiomeGenBase.biomeList.length )
-		{
-			biomeId = BiomeGenBase.biomeList.length - 1;
-		}
-		
-		// get the biome
-		BiomeGenBase biome = BiomeGenBase.biomeList[m_biomeId];
-		if( biome == null )
-		{
-			biome = BiomeGenBase.biomeList[0];
-		}
-		return biome;
+		return BiomeGenBase.getBiome( m_biomeId );
 	}
 }

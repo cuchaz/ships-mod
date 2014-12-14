@@ -425,8 +425,7 @@ public class PlayerRespawner
 		for( Coords coords : shipWorld.coords() )
 		{
 			// is this block a berth head?
-			int blockId = shipWorld.getBlockId( coords );
-			if( blockId == Ships.m_blockBerth.blockID && BlockBerth.isBlockHeadOfBed( shipWorld.getBlockMetadata( coords ) ) )
+			if( shipWorld.getBlock( coords ) == Ships.m_blockBerth && BlockBerth.isBlockHeadOfBed( shipWorld.getBlockMetadata( coords ) ) )
 			{
 				// this berth just launched into a ship
 				
@@ -462,8 +461,7 @@ public class PlayerRespawner
 		for( Coords coords : shipWorld.coords() )
 		{
 			// is this block a berth head?
-			int blockId = shipWorld.getBlockId( coords );
-			if( blockId == Ships.m_blockBerth.blockID && BlockBerth.isBlockHeadOfBed( shipWorld.getBlockMetadata( coords ) ) )
+			if( shipWorld.getBlock( coords ) == Ships.m_blockBerth && BlockBerth.isBlockHeadOfBed( shipWorld.getBlockMetadata( coords ) ) )
 			{
 				// this berth just docked to the world
 				

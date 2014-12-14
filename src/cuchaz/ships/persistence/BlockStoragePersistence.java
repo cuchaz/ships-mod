@@ -17,71 +17,93 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
+
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.Bits;
 import cuchaz.ships.BlockStorage;
 import cuchaz.ships.BlocksStorage;
+import cuchaz.ships.Ships;
 
 public enum BlockStoragePersistence
 {
 	V1( 1 )
 	{
 		@Override
-		protected BlocksStorage onRead( DataInputStream in, int numBlocks ) throws IOException
+		protected BlocksStorage onRead( DataInputStream in )
+		throws IOException
 		{
-			BlocksStorage blocks = new BlocksStorage();
-			for( int i=0; i<numBlocks; i++ )
+			// read the block name/id mappings
+			Map<Integer,String> map = Maps.newTreeMap();
+			int numMappings = in.readUnsignedShort();
+			for( int i=0; i<numMappings; i++ )
 			{
-				Coords coords = new Coords( in.readInt(), in.readInt(), in.readInt() );
-				BlockStorage block = new BlockStorage( in.readInt(), in.readInt() );
-				blocks.setBlock( coords, block );
+				map.put( in.readUnsignedShort(), in.readUTF() );
 			}
-			return blocks;
-		}
-		
-		@Override
-		protected void onWrite( BlocksStorage blocks, DataOutputStream out ) throws IOException
-		{
-			out.writeInt( blocks.getNumBlocks() );
-			for( Coords coords : blocks.coords() )
-			{
-				out.writeInt( coords.x );
-				out.writeInt( coords.y );
-				out.writeInt( coords.z );
-				BlockStorage block = blocks.getBlock( coords );
-				out.writeInt( block.id );
-				out.writeInt( block.meta );
-			}
-		}
-	},
-	V2( 2 )
-	{
-		@Override
-		protected BlocksStorage onRead( DataInputStream in, int numBlocks ) throws IOException
-		{
+			
+			// read the block data
+			Set<String> warnedBlocks = Sets.newHashSet();
+			int numBlocks = in.readInt();
 			BlocksStorage blocks = new BlocksStorage();
 			for( int i=0; i<numBlocks; i++ )
 			{
 				Coords coords = new Coords( in.readShort(), in.readShort(), in.readShort() );
-				int n = in.readShort();
-				BlockStorage block = new BlockStorage();
-				block.id = Bits.unpackUnsigned( n, 12, 0 );
-				block.meta = Bits.unpackUnsigned( n, 4, 12 );
-				blocks.setBlock( coords, block );
+				int packed = in.readUnsignedShort();
+				
+				BlockStorage storage = new BlockStorage();
+				storage.meta = Bits.unpackUnsigned( packed, 4, 12 );
+				
+				// do block id mapping to get the block
+				String blockName = map.get( Bits.unpackUnsigned( packed, 12, 0 ) );
+				storage.block = (Block)Block.blockRegistry.getObject( blockName );
+				if( storage.block == null )
+				{
+					// this block must not be present on the server, warn someone
+					if( !warnedBlocks.contains( blockName ) )
+					{
+						Ships.logger.warning( "Can't find block %s on this server! Block has been replaced with wood planks", blockName );
+						warnedBlocks.add( blockName );
+					}
+					storage.block = Blocks.planks;
+				}
+				
+				blocks.setBlock( coords, storage );
 			}
 			return blocks;
 		}
 		
 		@Override
-		protected void onWrite( BlocksStorage blocks, DataOutputStream out ) throws IOException
+		protected void onWrite( BlocksStorage blocks, DataOutputStream out )
+		throws IOException
 		{
+			// write out block name/id mappings
+			Map<Integer,String> map = Maps.newTreeMap();
+			for( Coords coords : blocks.coords() )
+			{
+				Block block = blocks.getBlock( coords ).block;
+				map.put( Block.getIdFromBlock( block ), Block.blockRegistry.getNameForObject( block ) );
+			}
+			out.writeShort( map.size() );
+			for( Map.Entry<Integer,String> entry : map.entrySet() )
+			{
+				out.writeShort( entry.getKey() );
+				out.writeUTF( entry.getValue() );
+			}
+			
+			// write the block data
 			out.writeInt( blocks.getNumBlocks() );
 			for( Coords coords : blocks.coords() )
 			{
@@ -89,7 +111,7 @@ public enum BlockStoragePersistence
 				out.writeShort( coords.y );
 				out.writeShort( coords.z );
 				BlockStorage block = blocks.getBlock( coords );
-				out.writeShort( Bits.packUnsigned( block.id, 12, 0 ) | Bits.packUnsigned( block.meta, 4, 12 ) );
+				out.writeShort( Bits.packUnsigned( Block.getIdFromBlock( block.block ), 12, 0 ) | Bits.packUnsigned( block.meta, 4, 12 ) );
 			}
 		}
 	};
@@ -114,7 +136,7 @@ public enum BlockStoragePersistence
 		m_version = version;
 	}
 	
-	protected abstract BlocksStorage onRead( DataInputStream in, int numBlocks ) throws IOException;
+	protected abstract BlocksStorage onRead( DataInputStream in ) throws IOException;
 	protected abstract void onWrite( BlocksStorage blocks, DataOutputStream out ) throws IOException;
 	
 	private static BlockStoragePersistence get( int version )
@@ -161,30 +183,13 @@ public enum BlockStoragePersistence
 	throws IOException, UnrecognizedPersistenceVersion
 	{
 		DataInputStream din = new DataInputStream( in );
-		
-		// get the version and number of blocks
-		int firstInt = din.readInt();
-		
-		int version = 1;
-		int numBlocks = 0;
-		if( firstInt < 0 )
-		{
-			// if the first int is negative, it's a version number
-			version = -firstInt;
-			numBlocks = din.readInt();
-		}
-		else
-		{
-			// if it's positive, it's a number of blocks and we'll assume V1
-			numBlocks = firstInt;
-		}
-		
+		int version = din.readByte();
 		BlockStoragePersistence persistence = get( version );
 		if( persistence == null )
 		{
 			throw new UnrecognizedPersistenceVersion( version );
 		}
-		return persistence.onRead( din, numBlocks );
+		return persistence.onRead( din );
 	}
 	
 	public static String writeNewestVersionToString( BlocksStorage blocks )
@@ -229,12 +234,7 @@ public enum BlockStoragePersistence
 	throws IOException
 	{
 		DataOutputStream dout = new DataOutputStream( out );
-		
-		// NOTE: the original V1 didn't write out a version number
-		// the first int is the number of blocks, which must be positive
-		// so let's write a negative version number, so we can tell the difference
-		// between it and a number of blocks
-		dout.writeInt( -m_version );
+		dout.writeByte( m_version );
 		onWrite( blocks, dout );
 	}
 }

@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.propulsion;
 
+import net.minecraft.init.Blocks;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
@@ -59,7 +60,7 @@ public class Sail extends PropulsionMethod
 				coords.y + checkDirection.getDy(),
 				coords.z + checkDirection.getDz()
 			);
-			if( shipBlocks.getBlock( checkCoords ).id == 0 )
+			if( shipBlocks.getBlock( checkCoords ).block == Blocks.air )
 			{
 				numExposedBlocks++;
 			}

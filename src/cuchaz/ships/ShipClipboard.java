@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityHanging;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import cuchaz.modsShared.blocks.BlockMap;
@@ -105,16 +106,17 @@ public class ShipClipboard
 			correspondence.put( coords, worldCoords );
 		}
 		
+		// TODO: move into persistence/loading
 		// if there are unrecognized blocks, just replace them with wood planks
 		boolean foundUnknownBlocks = false;
 		for( Coords coords : shipWorld.coords() )
 		{
-			int blockId = shipWorld.getBlockId( coords );
-			if( Block.blocksList[blockId] == null )
+			Block block = shipWorld.getBlock( coords );
+			if( block == null )
 			{
 				foundUnknownBlocks = true;
 				BlockStorage storage = shipWorld.getBlockStorage( coords );
-				storage.id = Block.planks.blockID;
+				storage.block = Blocks.planks;
 				storage.meta = 0;
 			}
 		}

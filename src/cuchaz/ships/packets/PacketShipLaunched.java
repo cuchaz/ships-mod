@@ -50,7 +50,7 @@ public class PacketShipLaunched extends Packet
 	{
 		this();
 		
-		m_entityId = ship.entityId;
+		m_entityId = ship.getEntityId();
 		m_shipData = ShipWorldPersistence.writeNewestVersion( ship.getShipWorld(), true );
 		m_launchX = shipBlock.x;
 		m_launchY = shipBlock.y;
@@ -88,10 +88,10 @@ public class PacketShipLaunched extends Packet
 	
 	public static PacketShipLaunched getPacket( EntityShip ship )
 	{
-		PacketShipLaunched packet = m_packets.get( ship.entityId );
+		PacketShipLaunched packet = m_packets.get( ship.getEntityId() );
 		if( packet != null )
 		{
-			m_packets.remove( ship.entityId );
+			m_packets.remove( ship.getEntityId() );
 		}
 		return packet;
 	}

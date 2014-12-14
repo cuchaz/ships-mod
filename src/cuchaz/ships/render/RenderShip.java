@@ -101,7 +101,7 @@ public class RenderShip extends Render
 		m_tileEntitiesToRender.clear();
 		for( Coords coords : shipWorld.coords() )
 		{
-			TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
+			TileEntity tileEntity = shipWorld.getTileEntity( coords );
 			if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
 			{
 				m_tileEntitiesToRender.add( tileEntity );
@@ -171,12 +171,12 @@ public class RenderShip extends Render
 		// draw all the blocks (but defer special tile entities for later rendering)
 		for( Coords coords : shipWorld.coords() )
 		{
-			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
+			Block block = shipWorld.getBlock( coords );
 			
 			// mod blocks can do weird things and crash. We need to be careful here
 			try
 			{
-				if( m_blacklistedBlocks.contains( block.blockID ) )
+				if( m_blacklistedBlocks.contains( Block.getIdFromBlock( block ) ) )
 				{
 					renderBlockFailsafe( renderBlocks, block, coords );
 				}
@@ -188,7 +188,7 @@ public class RenderShip extends Render
 			catch( Throwable t )
 			{
 				// blacklist the block
-				m_blacklistedBlocks.add( block.blockID );
+				m_blacklistedBlocks.add( Block.getIdFromBlock( block ) );
 				
 				Ships.logger.warning( t, "Block: %s couldn't render properly! Blocks of this type will not be rendered again.", block.getUnlocalizedName() );
 			}
@@ -203,7 +203,7 @@ public class RenderShip extends Render
 		block.setBlockBoundsBasedOnState( shipWorld, coords.x, coords.y, coords.z );
 		
 		// do we have a tile entity that needs special rendering?
-		TileEntity tileEntity = shipWorld.getBlockTileEntity( coords );
+		TileEntity tileEntity = shipWorld.getTileEntity( coords );
 		if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
 		{
 			// skip this block

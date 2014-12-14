@@ -35,7 +35,7 @@ public class PacketShipPlaque extends Packet
 	{
 		this();
 		
-		m_entityId = shipPlaque.entityId;
+		m_entityId = shipPlaque.getEntityId();
 		m_name = shipPlaque.getName();
 	}
 	

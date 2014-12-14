@@ -13,7 +13,7 @@ package cuchaz.ships.propulsion;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -30,7 +30,7 @@ public class SailDiscoverer implements PropulsionDiscoverer
 		BlockSet clothCoords = new BlockSet();
 		for( Coords coords : shipBlocks.coords() )
 		{
-			if( shipBlocks.getBlock( coords ).id == Block.cloth.blockID )
+			if( shipBlocks.getBlock( coords ).block == Blocks.wool )
 			{
 				clothCoords.add( coords );
 			}

@@ -85,7 +85,7 @@ public class TestDisplacementComponents
 			for( Coords coords : trappedAir )
 			{
 				// make sure the block is not watertight
-				Block block = Block.blocksList[shipBlocks.getBlock( coords ).id];
+				Block block = shipBlocks.getBlock( coords ).block;
 				assertFalse( BlockProperties.isWatertight( block ) );
 				
 				// this block should not be connected to the shell below this y
@@ -102,7 +102,7 @@ public class TestDisplacementComponents
 				}
 				
 				// this block should be a watertight block
-				Block block = Block.blocksList[shipBlocks.getBlock( coords ).id];
+				Block block = shipBlocks.getBlock( coords ).block;
 				assertTrue(
 					String.format(
 						"Expected a watertight block, but got %s at (%d,%d,%d) at maxY=%d instead!\nTrapped air %s:\n%s\n",

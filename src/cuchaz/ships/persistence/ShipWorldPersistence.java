@@ -56,129 +56,6 @@ public enum ShipWorldPersistence
 				// create the tile entity
 				NBTTagCompound nbt = CompressedStreamTools.read( in );
 				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
-				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
-				tileEntities.put( coords, tileEntity );
-			}
-			
-			return new ShipWorld( world, storage, tileEntities, new BlockMap<EntityHanging>(), 0 );
-		}
-		
-		@Override
-		public void onWrite( ShipWorld shipWorld, DataOutputStream out )
-		throws IOException
-		{
-			// write out the blocks
-			BlockStoragePersistence.V1.write( shipWorld.getBlocksStorage(), out );
-			
-			// write out the tile entities
-			out.writeInt( shipWorld.tileEntities().size() );
-			for( TileEntity tileEntity : shipWorld.tileEntities().values() )
-			{
-				NBTTagCompound nbt = new NBTTagCompound();
-				tileEntity.writeToNBT( nbt );
-				CompressedStreamTools.write( nbt, out );
-			}
-		}
-	},
-	V2( 2 )
-	{
-		@Override
-		public ShipWorld onRead( World world, DataInputStream in )
-		throws IOException, UnrecognizedPersistenceVersion
-		{
-			// read the blocks
-			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( in );
-			
-			// read the tile entities
-			BlockMap<TileEntity> tileEntities = new BlockMap<TileEntity>();
-			int numTileEntities = in.readInt();
-			for( int i = 0; i < numTileEntities; i++ )
-			{
-				// create the tile entity
-				NBTTagCompound nbt = CompressedStreamTools.read( in );
-				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
-				Coords coords = new Coords( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
-				tileEntities.put( coords, tileEntity );
-			}
-			
-			// read the hanging entities
-			BlockMap<EntityHanging> hangingEntities = new BlockMap<EntityHanging>();
-			int numHangingEntities = in.readInt();
-			for( int i = 0; i < numHangingEntities; i++ )
-			{
-				// create the hanging entity
-				NBTTagCompound nbt = CompressedStreamTools.read( in );
-				EntityHanging hangingEntity = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
-				Coords coords = new Coords( hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d );
-				hangingEntities.put( coords, hangingEntity );
-			}
-			
-			return new ShipWorld( world, storage, tileEntities, hangingEntities, 0 );
-		}
-		
-		@Override
-		public void onWrite( ShipWorld shipWorld, DataOutputStream out )
-		throws IOException
-		{
-			// write out the blocks
-			BlockStoragePersistence.V2.write( shipWorld.getBlocksStorage(), out );
-			
-			// write out the tile entities
-			out.writeInt( shipWorld.tileEntities().size() );
-			for( TileEntity tileEntity : shipWorld.tileEntities().values() )
-			{
-				NBTTagCompound nbt = new NBTTagCompound();
-				try
-				{
-					tileEntity.writeToNBT( nbt );
-				}
-				catch( Throwable t )
-				{
-					Ships.logger.warning( t, "Tile entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
-						tileEntity.getClass().getName(),
-						tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord
-					);
-				}
-				CompressedStreamTools.write( nbt, out );
-			}
-			
-			// write out the hanging entities
-			out.writeInt( shipWorld.hangingEntities().size() );
-			for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
-			{
-				NBTTagCompound nbt = new NBTTagCompound();
-				try
-				{
-					hangingEntity.writeToNBTOptional( nbt );
-				}
-				catch( Throwable t )
-				{
-					Ships.logger.warning( t, "Hanging entity %s on a ship at (%d,%d,%d) did not behave during a save operation!",
-						hangingEntity.getClass().getName(),
-						hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d
-					);
-				}
-				CompressedStreamTools.write( nbt, out );
-			}
-		}
-	},
-	V3( 3 )
-	{
-		@Override
-		public ShipWorld onRead( World world, DataInputStream in )
-		throws IOException, UnrecognizedPersistenceVersion
-		{
-			// read the blocks
-			BlocksStorage storage = BlockStoragePersistence.readAnyVersion( in );
-			
-			// read the tile entities
-			BlockMap<TileEntity> tileEntities = new BlockMap<TileEntity>();
-			int numTileEntities = in.readInt();
-			for( int i = 0; i < numTileEntities; i++ )
-			{
-				// create the tile entity
-				NBTTagCompound nbt = CompressedStreamTools.read( in );
-				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbt );
 				if( tileEntity == null )
 				{
 					Ships.logger.warning( "Unable to restore tile entity: " + nbt.getString( "id" ) );
@@ -216,7 +93,7 @@ public enum ShipWorldPersistence
 		throws IOException
 		{
 			// write out the blocks
-			BlockStoragePersistence.V2.write( shipWorld.getBlocksStorage(), out );
+			BlockStoragePersistence.V1.write( shipWorld.getBlocksStorage(), out );
 			
 			// write out the tile entities
 			out.writeInt( shipWorld.tileEntities().size() );
@@ -340,7 +217,7 @@ public enum ShipWorldPersistence
 		try
 		{
 			DataInputStream din = new DataInputStream( in );
-			int version = din.readInt();
+			int version = din.readByte();
 			ShipWorldPersistence persistence = get( version );
 			if( persistence == null )
 			{
@@ -405,7 +282,7 @@ public enum ShipWorldPersistence
 	{
 		DataOutputStream dout = new DataOutputStream( out );
 		ShipWorldPersistence persistence = getNewestVersion();
-		dout.writeInt( persistence.m_version );
+		dout.writeByte( persistence.m_version );
 		persistence.onWrite( shipWorld, dout );
 	}
 }

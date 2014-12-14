@@ -86,7 +86,7 @@ public class PacketPlaceProjector extends Packet
 			if( !player.capabilities.isCreativeMode )
 			{
 				ItemStack heldItem = player.getHeldItem();
-				if( heldItem.itemID == Ships.m_itemProjector.itemID )
+				if( heldItem.getItem() == Ships.m_itemProjector )
 				{
 					heldItem.stackSize--;
 					if( heldItem.stackSize <= 0 )

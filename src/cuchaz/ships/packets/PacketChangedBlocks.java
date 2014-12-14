@@ -14,6 +14,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
@@ -32,7 +33,7 @@ public class PacketChangedBlocks extends Packet
 	private int[] m_x;
 	private int[] m_y;
 	private int[] m_z;
-	private int[] m_blockId;
+	private Block[] m_blocks;
 	private int[] m_meta;
 	
 	public PacketChangedBlocks( )
@@ -52,14 +53,15 @@ public class PacketChangedBlocks extends Packet
 	public void writeData( DataOutputStream out ) throws IOException
 	{
 		ShipWorld world = m_ship.getShipWorld();
-		out.writeInt( m_ship.entityId );
+		out.writeInt( m_ship.getEntityId() );
 		out.writeInt( m_changedBlocks.size() );
 		for( Coords coords : m_changedBlocks )
 		{
 			out.writeShort( coords.x );
 			out.writeShort( coords.y );
 			out.writeShort( coords.z );
-			out.writeShort( world.getBlockId( coords ) );
+			// TODO: I think blockid and beta can both be compacted into a short
+			out.writeShort( Block.getIdFromBlock( world.getBlock( coords ) ) );
 			out.writeByte( world.getBlockMetadata( coords ) );
 		}
 	}
@@ -75,7 +77,7 @@ public class PacketChangedBlocks extends Packet
 		m_x = new int[m_numChangedBlocks];
 		m_y = new int[m_numChangedBlocks];
 		m_z = new int[m_numChangedBlocks];
-		m_blockId = new int[m_numChangedBlocks];
+		m_blocks = new Block[m_numChangedBlocks];
 		m_meta = new int[m_numChangedBlocks];
 		
 		// read the changes into a buffer
@@ -84,7 +86,7 @@ public class PacketChangedBlocks extends Packet
 			m_x[i] = in.readShort();
 			m_y[i] = in.readShort();
 			m_z[i] = in.readShort();
-			m_blockId[i] = in.readShort();
+			m_blocks[i] = Block.getBlockById( in.readShort() );
 			m_meta[i] = in.readByte();
 		}
 	}
@@ -103,7 +105,7 @@ public class PacketChangedBlocks extends Packet
 		ShipWorld world = ship.getShipWorld();
 		for( int i=0; i<m_numChangedBlocks; i++ )
 		{
-			world.applyBlockChange( m_x[i], m_y[i], m_z[i], m_blockId[i], m_meta[i] );
+			world.applyBlockChange( m_x[i], m_y[i], m_z[i], m_blocks[i], m_meta[i] );
 		}
 	}
 }

@@ -12,7 +12,6 @@ package cuchaz.ships;
 
 import java.util.Map;
 
-import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
@@ -80,7 +79,7 @@ public class BlocksStorage
 			Coords coords = entry.getKey();
 			BlockStorage storage = entry.getValue();
 			
-			buf.append( String.format( "%3d,%3d,%3d %4d %4d\n", coords.x, coords.y, coords.z, storage.id, storage.meta ) );
+			buf.append( String.format( "%3d,%3d,%3d %s %4d\n", coords.x, coords.y, coords.z, storage.block.getUnlocalizedName(), storage.meta ) );
 		}
 		return buf.toString();
 	}
@@ -101,8 +100,7 @@ public class BlocksStorage
 			BlockSet watertightBlocks = new BlockSet();
 			for( Coords coords : m_blocks.keySet() )
 			{
-				Block block = Block.blocksList[getBlock( coords ).id];
-				if( BlockProperties.isWatertight( block ) )
+				if( BlockProperties.isWatertight( getBlock( coords ).block ) )
 				{
 					watertightBlocks.add( coords );
 				}
@@ -154,7 +152,7 @@ public class BlocksStorage
 		{
 			throw new ShipConfigurationException( "Ship does not have a ship block!" );
 		}
-		if( block.id != Ships.m_blockShip.blockID )
+		if( block.block != Ships.m_blockShip )
 		{
 			throw new ShipConfigurationException( "Ship origin block is not a ship block!" );
 		}

@@ -76,7 +76,7 @@ public abstract class Displacer
 				// make sure we remember it, but don't erase the displaced block info
 				if( !m_displacedBlocks.containsKey( coords ) )
 				{
-					m_displacedBlocks.put( coords, pack( blockId, blockMeta ) );
+					m_displacedBlocks.put( coords, pack( block, blockMeta ) );
 				}
 			}
 		}
@@ -144,20 +144,20 @@ public abstract class Displacer
 	{
 		if( m_ship.worldObj.getBlock( coords.x, coords.y, coords.z ) == m_block )
 		{
-			int blockId = unpackId( packed );
+			Block block = unpackId( packed );
 			int blockMeta = unpackMeta( packed );
-			BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, blockId, blockMeta, UpdateRules.UpdateClients );
+			BlockUtils.changeBlockWithoutNotifyingIt( m_ship.worldObj, coords.x, coords.y, coords.z, block, blockMeta, UpdateRules.UpdateClients );
 		}
 	}
 	
-	private int pack( int id, int meta )
+	private int pack( Block block, int meta )
 	{
-		return id | ( (meta & 0xf) << 16 );
+		return Block.getIdFromBlock( block ) | ( (meta & 0xf) << 16 );
 	}
 	
-	private int unpackId( int packed )
+	private Block unpackId( int packed )
 	{
-		return packed & 0xfff;
+		return Block.getBlockById( packed & 0xfff );
 	}
 	
 	private int unpackMeta( int packed )

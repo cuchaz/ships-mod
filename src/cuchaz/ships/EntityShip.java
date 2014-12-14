@@ -457,7 +457,7 @@ public class EntityShip extends Entity
 		}
 		
 		// activate the block
-		Block block = Block.blocksList[m_shipWorld.getBlockId( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ )];
+		Block block = m_shipWorld.getBlock( hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ );
 		return block.onBlockActivated(
 			m_shipWorld,
 			hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ,

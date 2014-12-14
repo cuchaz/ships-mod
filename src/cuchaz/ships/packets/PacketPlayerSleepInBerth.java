@@ -43,7 +43,7 @@ public class PacketPlayerSleepInBerth extends Packet
 	{
 		this();
 		
-		m_playerEntityId = player.entityId;
+		m_playerEntityId = player.getEntityId();
 		m_shipEntityId = NotAShip;
 		m_x = x;
 		m_y = y;
@@ -53,7 +53,7 @@ public class PacketPlayerSleepInBerth extends Packet
 		if( world instanceof ShipWorld )
 		{
 			EntityShip ship = ((ShipWorld)world).getShip();
-			m_shipEntityId = ship.entityId;
+			m_shipEntityId = ship.getEntityId();
 		}
 	}
 	

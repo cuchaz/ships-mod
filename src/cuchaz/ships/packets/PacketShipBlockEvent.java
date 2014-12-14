@@ -36,7 +36,7 @@ public class PacketShipBlockEvent extends Packet
 		super( Channel );
 	}
 	
-	public PacketShipBlockEvent( int entityId, int x, int y, int z, int blockId, int eventId, int eventParam )
+	public PacketShipBlockEvent( int entityId, int x, int y, int z, Block block, int eventId, int eventParam )
 	{
 		this();
 		
@@ -44,7 +44,7 @@ public class PacketShipBlockEvent extends Packet
 		m_x = x;
 		m_y = y;
 		m_z = z;
-		m_blockId = blockId;
+		m_blockId = Block.getIdFromBlock( block );
 		m_eventId = eventId;
 		m_eventParam = eventParam;
 	}
@@ -86,9 +86,10 @@ public class PacketShipBlockEvent extends Packet
 		}
 		
 		// deliver the event
-		if( ship.getShipWorld().getBlockId( m_x, m_y, m_z ) == m_blockId )
+		Block block = Block.getBlockById( m_blockId );
+		if( ship.getShipWorld().getBlock( m_x, m_y, m_z ) == block )
 		{
-			Block.blocksList[m_blockId].onBlockEventReceived( ship.getShipWorld(), m_x, m_y, m_z, m_eventId, m_eventParam );
+			block.onBlockEventReceived( ship.getShipWorld(), m_x, m_y, m_z, m_eventId, m_eventParam );
 		}
 	}
 }

@@ -335,7 +335,7 @@ public class ShipCollider
 	
 	public AxisAlignedBB getBlockBoxInBlockSpace( Coords coords )
 	{
-		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+		Block block = m_ship.getShipWorld().getBlock( coords );
 		
 		// if this is an air block, then use another block to get bounds
 		if( block == null )
@@ -356,7 +356,7 @@ public class ShipCollider
 	
 	public void getCollisionBoxesInBlockSpace( List<AxisAlignedBB> out, Coords coords, AxisAlignedBB box )
 	{
-		Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+		Block block = m_ship.getShipWorld().getBlock( coords );
 		block.addCollisionBoxesToList( m_ship.getShipWorld(), coords.x, coords.y, coords.z, box, out, null );
 	}
 	
@@ -573,7 +573,7 @@ public class ShipCollider
 		getEntityBoxInBlockSpace( entityBox, entity );
 		for( Coords coords : shipWorld.getGeometry().rangeQuery( entityBox ) )
 		{
-			Block block = Block.blocksList[shipWorld.getBlockId( coords )];
+			Block block = shipWorld.getBlock( coords );
 			if( block != Blocks.air && block.isLadder( shipWorld, coords.x, coords.y, coords.z, entity ) )
 			{
 				return true;
@@ -618,7 +618,7 @@ public class ShipCollider
 		for( Coords coords : nearbyBlocks )
 		{
 			// get the intersection point with the line segment
-			Block block = Block.blocksList[m_ship.getShipWorld().getBlockId( coords )];
+			Block block = m_ship.getShipWorld().getBlock( coords );
 			MovingObjectPosition intersection = block.collisionRayTrace( m_ship.getShipWorld(), coords.x, coords.y, coords.z, from, to );
 			if( intersection != null )
 			{
@@ -699,7 +699,7 @@ public class ShipCollider
         for( Coords worldCoords : nearbyWorldBlocks )
 		{
         	// get the block collision boxes
-        	Block worldBlock = Block.blocksList[m_ship.worldObj.getBlockId( worldCoords.x, worldCoords.y, worldCoords.z )];
+        	Block worldBlock = m_ship.worldObj.getBlock( worldCoords.x, worldCoords.y, worldCoords.z );
         	worldBlockBoxes.clear();
         	worldBlock.addCollisionBoxesToList(
         		m_ship.worldObj,

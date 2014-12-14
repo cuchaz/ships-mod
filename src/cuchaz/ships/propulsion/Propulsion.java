@@ -169,7 +169,7 @@ public class Propulsion
 		// always return the direction the helm is facing
 		for( Coords coords : blocksStorage.coords() )
 		{
-			if( blocksStorage.getBlock( coords ).id == Ships.m_blockHelm.blockID )
+			if( blocksStorage.getBlock( coords ).block == Ships.m_blockHelm )
 			{
 				return coords;
 			}
