@@ -175,6 +175,7 @@ public class BlockProperties
 		return DefaultBlockProperties.getEntry( block );
 	}
 	
+	@SuppressWarnings( "unchecked" )
 	private static void readEntries( Map<Block,BlockEntry> entries, Reader inRaw )
 	{
 		// build a map of the block names

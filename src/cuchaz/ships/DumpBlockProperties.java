@@ -29,6 +29,7 @@ public class DumpBlockProperties
 		new MinecraftRunner( )
 		{
 			@Override
+			@SuppressWarnings( "unchecked" )
 			public void onRun( )
 			throws Exception
 			{

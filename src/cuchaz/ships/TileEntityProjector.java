@@ -11,9 +11,9 @@
 package cuchaz.ships;
 
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.INetworkManager;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.Packet132TileEntityData;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import cpw.mods.fml.relauncher.Side;
@@ -119,17 +119,17 @@ public class TileEntityProjector extends TileEntity
 	}
 	
 	@Override
-	public Packet getDescriptionPacket( )
+	public Packet getDescriptionPacket()
 	{
 		NBTTagCompound nbt = new NBTTagCompound();
 		writeToNBT( nbt );
-		return new Packet132TileEntityData( xCoord, yCoord, zCoord, 0, nbt );
+		return new S35PacketUpdateTileEntity( xCoord, yCoord, zCoord, 0, nbt );
 	}
 	
 	@Override
-	public void onDataPacket( INetworkManager net, Packet132TileEntityData packet )
+	public void onDataPacket( NetworkManager net, S35PacketUpdateTileEntity packet )
 	{
-		readFromNBT( packet.data );
+		readFromNBT( packet.func_148857_g() );
 		
 		// re-render if we're on the client
 		if( worldObj.isRemote )

@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -36,6 +37,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.Coords;
@@ -279,7 +281,7 @@ public class PlayerRespawner
 		
 		// set sleeping flags
 		EntityPlayerAccessor.setSleeping( player, true );
-		player.sleepTimer = 0; // TODO: need access to this field
+		setPlayerSleepTimer( player, 0 );
 		
 		// stop all motion
 		player.motionX = 0;
@@ -296,7 +298,10 @@ public class PlayerRespawner
 			// tell all interested clients that the player started sleeping
 			EntityPlayerMP playerServer = (EntityPlayerMP)player;
 			PacketPlayerSleepInBerth packet = new PacketPlayerSleepInBerth( player, world, x, y, z );
-            playerServer.getServerForPlayer().getEntityTracker().sendPacketToAllPlayersTrackingEntity( player, packet );
+			for( EntityPlayer trackingPlayer : playerServer.getServerForPlayer().getEntityTracker().getTrackingPlayers( player ) )
+			{
+				Ships.net.getDispatch().sendTo( packet, (EntityPlayerMP)trackingPlayer );
+			}
             playerServer.playerNetServerHandler.setPlayerLocation(
         		player.posX, player.posY, player.posZ,
         		player.rotationYaw, player.rotationPitch
@@ -306,6 +311,34 @@ public class PlayerRespawner
 		
 		return EnumStatus.OK;
     }
+	
+	private static void setPlayerSleepTimer( EntityPlayer player, int val )
+	{
+		// the field is private, so we need to hack
+		String fieldName = Environment.isObfuscated() ? "field_71076_b" : "sleepTimer";
+		try
+		{
+			Field field = player.getClass().getField( fieldName );
+			field.setAccessible( true );
+			field.setInt( player, val );
+		}
+		catch( SecurityException ex )
+		{
+			throw new Error( ex );
+		}
+		catch( NoSuchFieldException ex )
+		{
+			throw new Error( ex );
+		}
+		catch( IllegalArgumentException ex )
+		{
+			throw new Error( ex );
+		}
+		catch( IllegalAccessException ex )
+		{
+			throw new Error( ex );
+		}
+	}
 	
 	public static boolean isPlayerInBerth( EntityPlayer player )
 	{

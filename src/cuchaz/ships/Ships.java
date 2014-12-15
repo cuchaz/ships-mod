@@ -70,7 +70,6 @@ import cuchaz.ships.items.ItemShipEraser;
 import cuchaz.ships.items.ItemShipPlaque;
 import cuchaz.ships.items.ItemSupporterPlaque;
 import cuchaz.ships.items.SupporterPlaqueType;
-import cuchaz.ships.packets.Packet;
 import cuchaz.ships.packets.PacketBlockPropertiesOverrides;
 import cuchaz.ships.packets.PacketRegistry;
 import cuchaz.ships.render.RenderShip;

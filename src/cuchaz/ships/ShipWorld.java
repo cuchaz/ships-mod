@@ -26,7 +26,6 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
@@ -694,10 +693,7 @@ public class ShipWorld extends DetachedWorld
 			m_ship.blocksToShip( v );
 			m_ship.shipToWorld( v );
 			
-			Ships.net.getDispatch().sendToAllAround(
-				new Packet62LevelSound( sound, v.xCoord, v.yCoord, v.zCoord, volume, pitch ),
-				new TargetPoint( m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, volume > 1.0F ? (double)(16.0F * volume) : 16.0D )
-			);
+			m_ship.worldObj.playSoundEffect( v.xCoord, v.yCoord, v.zCoord, sound, volume, pitch );
 		}
 		
 		// on the client, just ignore. Sounds actually get played by the packet handler
@@ -716,16 +712,13 @@ public class ShipWorld extends DetachedWorld
 			m_ship.blocksToShip( v );
 			m_ship.shipToWorld( v );
 			
-			Ships.net.getDispatch().sendToAllAround(
-				new Packet61DoorChange(
-					sfxID,
-					MathHelper.floor_double(v.xCoord),
-					MathHelper.floor_double(v.yCoord),
-					MathHelper.floor_double(v.zCoord),
-					auxData,
-					false
-				),
-				new TargetPoint( m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, 64 )
+			m_ship.worldObj.playAuxSFXAtEntity(
+				player,
+				sfxID,
+				MathHelper.floor_double( v.xCoord ),
+				MathHelper.floor_double( v.yCoord ),
+				MathHelper.floor_double( v.zCoord ),
+				auxData
 			);
 		}
 		

@@ -873,7 +873,7 @@ public class EntityShip extends Entity
 		}
 		else
 		{
-			boolean result = !ForgeEventFactory.onPlayerInteract( player, Action.RIGHT_CLICK_BLOCK, hit.blockX, hit.blockY, hit.blockZ, hit.sideHit ).isCanceled();
+			boolean result = !ForgeEventFactory.onPlayerInteract( player, Action.RIGHT_CLICK_BLOCK, hit.blockX, hit.blockY, hit.blockZ, hit.sideHit, player.worldObj ).isCanceled();
 			if( result && playerController.onPlayerRightClick( player, worldObj, heldItem, hit.blockX, hit.blockY, hit.blockZ, hit.sideHit, hit.hitVec ) )
 			{
 				player.swingItem();
