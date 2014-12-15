@@ -13,6 +13,8 @@ package cuchaz.ships.packets;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.NetHandlerPlayServer;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 
@@ -42,8 +44,21 @@ public class PacketRequestShipBlocks extends Packet<PacketRequestShipBlocks>
 		m_entityId = buf.readInt();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
+	public IMessageHandler<PacketRequestShipBlocks,IMessage> getServerHandler( )
+	{
+		return new IMessageHandler<PacketRequestShipBlocks,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketRequestShipBlocks message, MessageContext ctx )
+			{
+				return message.onReceivedServer( ctx.getServerHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// get the ship
 		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );

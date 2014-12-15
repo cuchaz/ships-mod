@@ -15,6 +15,8 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 
@@ -68,8 +70,21 @@ public class PacketShipBlockEvent extends Packet<PacketShipBlockEvent>
 		m_eventParam = buf.readInt();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	public IMessageHandler<PacketShipBlockEvent,IMessage> getClientHandler( )
+	{
+		return new IMessageHandler<PacketShipBlockEvent,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketShipBlockEvent message, MessageContext ctx )
+			{
+				return message.onReceivedClient( ctx.getClientHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
 		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );

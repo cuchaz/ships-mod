@@ -281,7 +281,7 @@ public class Ships extends DummyModContainer
 	private void loadThings( )
 	{
 		// blocks
-		GameRegistry.registerBlock( m_blockShip, ShipItemBlock.class, "blockShip" );
+		GameRegistry.registerBlock( m_blockShip, "blockShip" );
 		ShipType.registerBlocks();
 		GameRegistry.registerBlock( m_blockAirWall, "blockAirWall" );
 		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );

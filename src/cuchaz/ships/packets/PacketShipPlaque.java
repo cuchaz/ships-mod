@@ -15,6 +15,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.network.NetHandlerPlayServer;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.EntityShipPlaque;
 import cuchaz.ships.items.ItemShipPlaque;
 
@@ -48,8 +50,21 @@ public class PacketShipPlaque extends Packet<PacketShipPlaque>
 		m_name = ByteBufUtils.readUTF8String( buf );
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
+	public IMessageHandler<PacketShipPlaque,IMessage> getServerHandler( )
+	{
+		return new IMessageHandler<PacketShipPlaque,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketShipPlaque message, MessageContext ctx )
+			{
+				return message.onReceivedServer( ctx.getServerHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// can this player use the ship plaque?
 		if( !ItemShipPlaque.canUse( netServer.playerEntity ) )

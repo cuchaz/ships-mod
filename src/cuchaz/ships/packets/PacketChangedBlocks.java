@@ -15,6 +15,8 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
@@ -86,8 +88,21 @@ public class PacketChangedBlocks extends Packet<PacketChangedBlocks>
 		}
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	public IMessageHandler<PacketChangedBlocks,IMessage> getClientHandler( )
+	{
+		return new IMessageHandler<PacketChangedBlocks,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketChangedBlocks message, MessageContext ctx )
+			{
+				return message.onReceivedClient( ctx.getClientHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
 		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );

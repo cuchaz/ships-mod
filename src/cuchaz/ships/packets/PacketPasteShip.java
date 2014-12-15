@@ -14,6 +14,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.NetHandlerPlayServer;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.Ships;
@@ -57,8 +59,21 @@ public class PacketPasteShip extends Packet<PacketPasteShip>
 		m_dz = buf.readInt();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
+	public IMessageHandler<PacketPasteShip,IMessage> getServerHandler( )
+	{
+		return new IMessageHandler<PacketPasteShip,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketPasteShip message, MessageContext ctx )
+			{
+				return message.onReceivedServer( ctx.getServerHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		if( m_encodedBlocks == null )
 		{

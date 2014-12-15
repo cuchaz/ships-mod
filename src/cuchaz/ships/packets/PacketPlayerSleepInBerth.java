@@ -17,6 +17,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.PlayerRespawner;
 import cuchaz.ships.ShipLocator;
@@ -73,8 +75,21 @@ public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 		m_z = buf.readInt();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	public IMessageHandler<PacketPlayerSleepInBerth,IMessage> getClientHandler( )
+	{
+		return new IMessageHandler<PacketPlayerSleepInBerth,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketPlayerSleepInBerth message, MessageContext ctx )
+			{
+				return message.onReceivedClient( ctx.getClientHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// NOTE: the sleeping player isn't necessarily the player that received the packet
 		// but they are in the same world

@@ -16,6 +16,8 @@ import java.util.TreeMap;
 
 import net.minecraft.client.network.NetHandlerPlayClient;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
@@ -74,8 +76,21 @@ public class PacketShipLaunched extends Packet<PacketShipLaunched>
 		m_launchZ = buf.readInt();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	public IMessageHandler<PacketShipLaunched,IMessage> getClientHandler( )
+	{
+		return new IMessageHandler<PacketShipLaunched,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketShipLaunched message, MessageContext ctx )
+			{
+				return message.onReceivedClient( ctx.getClientHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// save the packet for later
 		m_packets.put( m_entityId, this );

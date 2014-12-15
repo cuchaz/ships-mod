@@ -16,6 +16,8 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.NetHandlerPlayServer;
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
@@ -63,8 +65,21 @@ public class PacketPilotShip extends Packet<PacketPilotShip>
 		m_angularThrottle = buf.readByte();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
+	public IMessageHandler<PacketPilotShip,IMessage> getServerHandler( )
+	{
+		return new IMessageHandler<PacketPilotShip,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketPilotShip message, MessageContext ctx )
+			{
+				return message.onReceivedServer( ctx.getServerHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		// get the ship
 		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );
@@ -85,8 +100,21 @@ public class PacketPilotShip extends Packet<PacketPilotShip>
 		return null;
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
+	public IMessageHandler<PacketPilotShip,IMessage> getClientHandler( )
+	{
+		return new IMessageHandler<PacketPilotShip,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketPilotShip message, MessageContext ctx )
+			{
+				return message.onReceivedClient( ctx.getClientHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
 		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );

@@ -55,7 +55,7 @@ public class PacketRegistry
 		}
 		
 		IMessageHandler<T,IMessage> serverHandler = packet.getServerHandler();
-		if( clientHandler != null )
+		if( serverHandler != null )
 		{
 			m_network.registerMessage( serverHandler, c, m_nextId, Side.SERVER );
 		}

@@ -14,6 +14,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.config.BlockProperties;
 
 public class PacketBlockPropertiesOverrides extends Packet<PacketBlockPropertiesOverrides>
@@ -41,8 +43,21 @@ public class PacketBlockPropertiesOverrides extends Packet<PacketBlockProperties
 	{
 		m_overrides = ByteBufUtils.readUTF8String( buf );
 	}
-
+	
+	// boilerplate code is annoying...
 	@Override
+	public IMessageHandler<PacketBlockPropertiesOverrides,IMessage> getClientHandler( )
+	{
+		return new IMessageHandler<PacketBlockPropertiesOverrides,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketBlockPropertiesOverrides message, MessageContext ctx )
+			{
+				return message.onReceivedClient( ctx.getClientHandler() );
+			}
+		};
+	}
+	
 	protected IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// received on the client

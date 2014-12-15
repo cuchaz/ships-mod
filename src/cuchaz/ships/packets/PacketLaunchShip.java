@@ -14,6 +14,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLauncher.LaunchFlag;
@@ -53,8 +55,21 @@ public class PacketLaunchShip extends Packet<PacketLaunchShip>
 		m_z = buf.readInt();
 	}
 	
+	// boilerplate code is annoying...
 	@Override
-	protected IMessage onReceivedServer( NetHandlerPlayServer netServer )
+	public IMessageHandler<PacketLaunchShip,IMessage> getServerHandler( )
+	{
+		return new IMessageHandler<PacketLaunchShip,IMessage>( )
+		{
+			@Override
+			public IMessage onMessage( PacketLaunchShip message, MessageContext ctx )
+			{
+				return message.onReceivedServer( ctx.getServerHandler() );
+			}
+		};
+	}
+	
+	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
 	{
 		World world = netServer.playerEntity.worldObj;
 		
