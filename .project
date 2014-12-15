@@ -14,4 +14,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>forgeBin</name>
+			<type>2</type>
+			<location>/home/jeff/minecraft/forge-v1.7.10.1230/bin</location>
+		</link>
+	</linkedResources>
 </projectDescription>
