@@ -18,23 +18,22 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.Name;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 
 @Name( "cuchaz.ships.core" )
-@MCVersion( "1.6.4" )
+@MCVersion( "1.7.10" )
 @TransformerExclusions( { "cuchaz.ships.asm" } )
 public class CoreModPlugin implements IFMLLoadingPlugin
 {
 	public static Boolean isObfuscatedEnvironment = null;
 	
 	@Override
-	public String[] getLibraryRequestClass( )
-	{
-		// to download libraries if we need them (apache commons?)
-		return null;
-	}
-	
-	@Override
 	public String[] getASMTransformerClass( )
 	{
 		return new String[] { "cuchaz.ships.asm.CoreModTransformer" };
+	}
+	
+	@Override
+	public String getAccessTransformerClass( )
+	{
+		return null;
 	}
 	
 	@Override

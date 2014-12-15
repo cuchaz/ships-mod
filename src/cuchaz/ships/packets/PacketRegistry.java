@@ -25,7 +25,7 @@ public class PacketRegistry
 	{
 		m_nextId = 0;
 		
-		NetworkRegistry.INSTANCE.newSimpleChannel( modId );
+		m_network = NetworkRegistry.INSTANCE.newSimpleChannel( modId );
 		
 		register( new PacketLaunchShip() );
 		register( new PacketShipLaunched() );

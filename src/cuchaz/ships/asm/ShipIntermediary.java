@@ -51,7 +51,7 @@ public class ShipIntermediary
 	
 	public static double getEntityDistanceSq( EntityPlayer player, double tileEntityX, double tileEntityY, double tileEntityZ, TileEntity tileEntity )
 	{
-		return translateDistance( tileEntity.worldObj, player, tileEntityX, tileEntityY, tileEntityZ );
+		return translateDistance( tileEntity.getWorldObj(), player, tileEntityX, tileEntityY, tileEntityZ );
 	}
 	
 	public static double getEntityDistanceSq( EntityPlayer player, double containerX, double containerY, double containerZ, Container container )

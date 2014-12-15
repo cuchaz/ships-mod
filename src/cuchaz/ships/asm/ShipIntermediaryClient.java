@@ -12,8 +12,8 @@ package cuchaz.ships.asm;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.EntityShip;
@@ -41,7 +41,7 @@ public class ShipIntermediaryClient
 		}
 		
 		// did we hit a ship?
-		if( currentHit != null && currentHit.typeOfHit == EnumMovingObjectType.ENTITY && currentHit.entityHit != null && currentHit.entityHit instanceof EntityShip )
+		if( currentHit != null && currentHit.typeOfHit == MovingObjectType.ENTITY && currentHit.entityHit != null && currentHit.entityHit instanceof EntityShip )
 		{
 			EntityShip ship = (EntityShip)currentHit.entityHit;
 			
