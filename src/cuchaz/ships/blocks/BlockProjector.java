@@ -37,7 +37,6 @@ public class BlockProjector extends Block
 		setResistance( 5.0F );
 		setStepSound( soundTypeMetal );
 	    setBlockName( "shipProjector" );
-	    setBlockTextureName( "projector" );
 	}
 	
 	@Override
@@ -74,7 +73,7 @@ public class BlockProjector extends Block
 	@SideOnly( Side.CLIENT )
     public void registerBlockIcons( IIconRegister iconRegister )
     {
-        this.blockIcon = iconRegister.registerIcon( "ships:projector" );
+		// do nothing
     }
 	
 	@Override
