@@ -16,6 +16,6 @@ public class BlockAirRoof extends BlockAirWall
 	public BlockAirRoof( )
 	{
 		// an air block that stops rain
-		setBlockName( "blockAirRoof" );
+		setBlockName( "cuchaz.ships.airRoof" );
 	}
 }

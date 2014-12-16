@@ -38,7 +38,7 @@ public class ItemShipPlaque extends ItemHangingEntity
 		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabDecorations );
-		setUnlocalizedName( "shipPlaque" );
+		setUnlocalizedName( "cuchaz.ships.shipPlaque" );
 	}
 	
 	@Override

@@ -15,7 +15,6 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -26,7 +25,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Tiny Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
@@ -40,7 +38,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Small Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xzx", "zyz", "xzx",
@@ -55,7 +52,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Medium Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
@@ -69,7 +65,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Large Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xzx", "zyz", "xzx",
@@ -84,7 +79,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Huge Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
@@ -98,7 +92,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Gigantic Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xzx", "zyz", "xzx",
@@ -113,7 +106,6 @@ public enum ShipType
 		@Override
 		protected void registerBlock( )
 		{
-			LanguageRegistry.addName( newItemStack(), "Epic Ship" );
 			GameRegistry.addRecipe(
 				newItemStack(),
 				"xxx", "xyx", "xxx",
@@ -174,7 +166,7 @@ public enum ShipType
 		return new ItemStack( Ships.m_blockShip, 1, getMeta() );
 	}
 	
-	public static void registerBlocks( )
+	public static void registerRecipes( )
 	{
 		for( ShipType type : values() )
 		{

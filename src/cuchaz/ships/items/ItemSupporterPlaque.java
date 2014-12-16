@@ -38,7 +38,7 @@ public class ItemSupporterPlaque extends ItemHangingEntity
 		
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabDecorations );
-		setUnlocalizedName( "supporterPlaque" );
+		setUnlocalizedName( "cuchaz.ships.supporterPlaque" );
 		setHasSubtypes( true );
 		setMaxDamage( 0 );
 	}

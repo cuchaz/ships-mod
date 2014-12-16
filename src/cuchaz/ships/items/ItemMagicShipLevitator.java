@@ -26,7 +26,7 @@ public class ItemMagicShipLevitator extends Item
 	{
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
-		setUnlocalizedName( "magicShipLevitator" );
+		setUnlocalizedName( "cuchaz.ships.magicShipLevitator" );
 	}
 	
 	@Override

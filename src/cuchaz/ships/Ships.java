@@ -46,7 +46,6 @@ import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.FMLHacker;
@@ -58,13 +57,13 @@ import cuchaz.ships.blocks.BlockProjector;
 import cuchaz.ships.blocks.BlockShip;
 import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.Gui;
-import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.items.ItemBerth;
 import cuchaz.ships.items.ItemListOfSupporters;
 import cuchaz.ships.items.ItemMagicBucket;
 import cuchaz.ships.items.ItemMagicShipLevitator;
 import cuchaz.ships.items.ItemPaddle;
 import cuchaz.ships.items.ItemProjector;
+import cuchaz.ships.items.ItemShipBlock;
 import cuchaz.ships.items.ItemShipClipboard;
 import cuchaz.ships.items.ItemShipEraser;
 import cuchaz.ships.items.ItemShipPlaque;
@@ -87,6 +86,16 @@ public class Ships extends DummyModContainer
 	// materials
 	public static final Material m_materialAirWall = new MaterialAirWall( MapColor.airColor );
 	
+	// blocks
+	public static final BlockShip m_blockShip = new BlockShip();
+	public static final BlockAirWall m_blockAirWall = new BlockAirWall();
+	public static final BlockHelm m_blockHelm = new BlockHelm();
+	public static final BlockBerth m_blockBerth = new BlockBerth();
+	public static final BlockAirWall m_blockAirRoof = new BlockAirRoof();
+	public static final BlockProjector m_blockProjector = new BlockProjector();
+	
+	// items
+	public static final ItemShipBlock m_itemShipBlock = new ItemShipBlock( m_blockShip );
 	public static final ItemPaddle m_itemPaddle = new ItemPaddle();
 	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket();
 	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator();
@@ -96,17 +105,9 @@ public class Ships extends DummyModContainer
 	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser();
 	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque();
 	public static final ItemBerth m_itemBerth = new ItemBerth();
-	public static final ItemProjector m_itemProjector = new ItemProjector();
+	public static final ItemProjector m_itemProjector = new ItemProjector( m_blockProjector );
 	
-	// block registration
-	public static final BlockShip m_blockShip = new BlockShip();
-	public static final BlockAirWall m_blockAirWall = new BlockAirWall();
-	public static final BlockHelm m_blockHelm = new BlockHelm();
-	public static final BlockBerth m_blockBerth = new BlockBerth();
-	public static final BlockAirWall m_blockAirRoof = new BlockAirRoof();
-	public static final BlockProjector m_blockProjector = new BlockProjector();
-	
-	// entity registration
+	// entities
 	public static final int EntityShipId = 174;
 	public static final int EntitySupporterPlaqueId = 175;
 	public static final int EntityShipPlaqueId = 176;
@@ -204,7 +205,6 @@ public class Ships extends DummyModContainer
 		try
 		{
 			loadThings();
-			loadLanguage();
 			loadRecipes();
 			
 			if( event.getSide().isClient() )
@@ -281,15 +281,15 @@ public class Ships extends DummyModContainer
 	private void loadThings( )
 	{
 		// blocks
-		GameRegistry.registerBlock( m_blockShip, "blockShip" );
-		ShipType.registerBlocks();
+		GameRegistry.registerBlock( m_blockShip, ItemShipBlock.class, "blockShip" );
 		GameRegistry.registerBlock( m_blockAirWall, "blockAirWall" );
 		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );
 		GameRegistry.registerBlock( m_blockBerth, "blockBerth" );
 		GameRegistry.registerBlock( m_blockAirRoof, "blockAirRoof" );
-		GameRegistry.registerBlock( m_blockProjector, "blockProjector" );
+		GameRegistry.registerBlock( m_blockProjector, ItemProjector.class, "blockProjector" );
 		
 		// items
+		//GameRegistry.registerItem( m_itemShipBlock, "shipBlock" );
 		GameRegistry.registerItem( m_itemPaddle, "paddle" );
 		GameRegistry.registerItem( m_itemMagicBucket, "magicBucket" );
 		GameRegistry.registerItem( m_itemMagicShipLevitator, "magicShipLevitator" );
@@ -299,7 +299,7 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemShipEraser, "shipEraser" );
 		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
 		GameRegistry.registerItem( m_itemBerth, "berth" );
-		GameRegistry.registerItem( m_itemProjector, "shipProjector" );
+		//GameRegistry.registerItem( m_itemProjector, "shipProjector" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
@@ -313,39 +313,10 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerTileEntity( TileEntityHelm.class, "helm" );
 		GameRegistry.registerTileEntity( TileEntityProjector.class, "projector" );
 	}
-	
-	private void loadLanguage( )
-	{
-		// TODO: move these to language file
-		// block names
-		LanguageRegistry.addName( m_blockAirWall, "Air Wall" );
-		LanguageRegistry.addName( m_blockHelm, "Helm" );
-		LanguageRegistry.addName( m_blockBerth, "Berth" );
-		LanguageRegistry.addName( m_blockAirRoof, "Air Roof" );
-		LanguageRegistry.addName( m_blockProjector, "Ship Projector" );
-		
-		// item names
-		LanguageRegistry.addName( m_itemPaddle, "Paddle" );
-		LanguageRegistry.addName( m_itemMagicBucket, "Magic Bucket" );
-		LanguageRegistry.addName( m_itemMagicShipLevitator, "Magic Ship Levitator" );
-		LanguageRegistry.addName( m_itemShipClipboard, "Ship Clipboard" );
-		LanguageRegistry.addName( m_itemListOfSupporters, "Cuchaz Interactive List of Supporters" );
-		LanguageRegistry.addName( m_itemShipEraser, "Ship Eraser" );
-		LanguageRegistry.addName( m_itemShipPlaque, "Ship Plaque" );
-		LanguageRegistry.addName( m_itemBerth, "Berth" );
-		LanguageRegistry.addName( m_itemProjector, "Ship Projector" );
-		
-		// gui strings
-		for( GuiString string : GuiString.values() )
-		{
-			LanguageRegistry.instance().addStringLocalization( string.getKey(), string.getUnlocalizedText() );
-		}
-	}
 
 	private void loadRecipes( )
 	{
-		// NOTE: the recipes for ship blocks are in the ShipType enum
-		
+		ShipType.registerRecipes();
 		SupporterPlaqueType.registerRecipes();
 		
 		ItemStack stickStack = new ItemStack( Items.stick );

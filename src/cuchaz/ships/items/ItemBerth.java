@@ -28,7 +28,7 @@ public class ItemBerth extends ItemBed
 	{
 		setMaxStackSize( 1 );
 		setCreativeTab( CreativeTabs.tabDecorations );
-		setUnlocalizedName( "berth" );
+		setUnlocalizedName( "cuchaz.ships.berth" );
 	}
 	
 	@Override

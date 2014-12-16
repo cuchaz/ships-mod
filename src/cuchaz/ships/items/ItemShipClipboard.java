@@ -45,7 +45,7 @@ public class ItemShipClipboard extends Item
 	{
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
-		setUnlocalizedName( "shipClipboard" );
+		setUnlocalizedName( "cuchaz.ships.shipClipboard" );
 	}
 	
 	@Override

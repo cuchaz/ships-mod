@@ -27,7 +27,7 @@ public class ItemListOfSupporters extends Item
 	{
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabMisc );
-		setUnlocalizedName( "listOfSupporters" );
+		setUnlocalizedName( "cuchaz.ships.listOfSupporters" );
 	}
 	
 	@Override

@@ -31,7 +31,7 @@ public class BlockAirWall extends Block
 		// an air block that stops flowing water
 		super( Ships.m_materialAirWall );
 		
-		setBlockName( "blockAirWall" );
+		setBlockName( "cuchaz.ships.airWall" );
 		setBlockBounds( 0, 0, 0, 1, 1, 1 );
 	}
 	

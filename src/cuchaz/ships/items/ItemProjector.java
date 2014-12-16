@@ -1,10 +1,9 @@
 package cuchaz.ships.items;
 
-import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
@@ -12,7 +11,6 @@ import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.ShipWorld;
@@ -22,20 +20,12 @@ import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPlaceProjector;
 import cuchaz.ships.persistence.PersistenceException;
 
-public class ItemProjector extends Item
+public class ItemProjector extends ItemBlock
 {
-	public ItemProjector( )
+	public ItemProjector( Block block )
 	{
+		super( block );
 		setMaxStackSize( 1 );
-		setCreativeTab( CreativeTabs.tabRedstone );
-		setUnlocalizedName( "shipProjector" );
-	}
-	
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void registerIcons( IIconRegister iconRegister )
-	{
-		itemIcon = iconRegister.registerIcon( "ships:projector" );
 	}
 	
 	@Override

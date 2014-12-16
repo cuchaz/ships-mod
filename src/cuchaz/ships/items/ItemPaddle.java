@@ -22,7 +22,7 @@ public class ItemPaddle extends Item
 	{
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
-		setUnlocalizedName( "paddle" );
+		setUnlocalizedName( "cuchaz.ships.paddle" );
 	}
 	
 	@Override

@@ -15,6 +15,7 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -36,7 +37,8 @@ public class BlockProjector extends Block
 		disableStats();
 		setResistance( 5.0F );
 		setStepSound( soundTypeMetal );
-	    setBlockName( "shipProjector" );
+	    setBlockName( "cuchaz.ships.shipProjector" );
+		setCreativeTab( CreativeTabs.tabRedstone );
 	}
 	
 	@Override
@@ -73,7 +75,7 @@ public class BlockProjector extends Block
 	@SideOnly( Side.CLIENT )
     public void registerBlockIcons( IIconRegister iconRegister )
     {
-		// do nothing
+        this.blockIcon = iconRegister.registerIcon( "ships:projector" );
     }
 	
 	@Override

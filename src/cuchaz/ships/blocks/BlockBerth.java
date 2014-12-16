@@ -51,7 +51,7 @@ public class BlockBerth extends BlockBed
 	{
 	    setHardness( 0.2F );
 	    disableStats();
-	    setBlockName( "berth" );
+	    setBlockName( "cuchaz.ships.berth" );
 	    setBlockTextureName( "berth" );
 	}
 	

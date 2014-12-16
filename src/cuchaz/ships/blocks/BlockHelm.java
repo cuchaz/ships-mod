@@ -35,7 +35,7 @@ public class BlockHelm extends Block
 		setHardness( 2.0F );
 		setResistance( 5.0F );
 		setStepSound( soundTypeWood );
-		setBlockName( "helm" );
+		setBlockName( "cuchaz.ships.helm" );
 		setCreativeTab( CreativeTabs.tabTransport );
 	}
 	

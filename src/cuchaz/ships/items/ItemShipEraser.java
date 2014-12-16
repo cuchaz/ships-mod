@@ -39,7 +39,7 @@ public class ItemShipEraser extends Item
 	{
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
-		setUnlocalizedName( "shipEraser" );
+		setUnlocalizedName( "cuchaz.ships.shipEraser" );
 	}
 	
 	@Override

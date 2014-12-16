@@ -29,7 +29,7 @@ public class ItemMagicBucket extends Item
 	{
 		maxStackSize = 1;
 		setCreativeTab( CreativeTabs.tabTools );
-		setUnlocalizedName( "magicBucket" );
+		setUnlocalizedName( "cuchaz.ships.magicBucket" );
 	}
 	
 	@Override
