@@ -289,7 +289,6 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerBlock( m_blockProjector, ItemProjector.class, "blockProjector" );
 		
 		// items
-		//GameRegistry.registerItem( m_itemShipBlock, "shipBlock" );
 		GameRegistry.registerItem( m_itemPaddle, "paddle" );
 		GameRegistry.registerItem( m_itemMagicBucket, "magicBucket" );
 		GameRegistry.registerItem( m_itemMagicShipLevitator, "magicShipLevitator" );
@@ -299,7 +298,6 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemShipEraser, "shipEraser" );
 		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
 		GameRegistry.registerItem( m_itemBerth, "berth" );
-		//GameRegistry.registerItem( m_itemProjector, "shipProjector" );
 		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );

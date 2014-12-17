@@ -10,8 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import cpw.mods.fml.common.registry.LanguageRegistry;
-import cuchaz.ships.Ships;
+import net.minecraft.util.StatCollector;
 
 public enum GuiString
 {
@@ -63,18 +62,10 @@ public enum GuiString
 	
 	public String getLocalizedText( )
 	{
-		try
+		String text = StatCollector.translateToLocal( getKey() );
+		if( text != null && text.length() > 0 )
 		{
-			String text = LanguageRegistry.instance().getStringLocalization( getKey() );
-			if( text != null && text.length() > 0 )
-			{
-				return text;
-			}
-		}
-		catch( Exception ex )
-		{
-			// sometimes, the language registry doesn't work...
-			Ships.logger.error( ex, "Unable to translate string: %s", name() );
+			return text;
 		}
 		
 		// if nothing worked, just return the name
