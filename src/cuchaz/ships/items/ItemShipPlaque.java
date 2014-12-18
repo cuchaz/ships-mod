@@ -19,9 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.EntityShipPlaque;
 import cuchaz.ships.EntitySupporterPlaque;
@@ -54,7 +54,7 @@ public class ItemShipPlaque extends ItemHangingEntity
 		// is the player a supporter?
 		if( !canUse( player ) )
 		{
-			if( FMLLaunchHandler.side() == Side.CLIENT )
+			if( Environment.isClient() )
 			{
 				player.addChatMessage( new ChatComponentTranslation( GuiString.NotASupporter.getLocalizedText() ) );
 			}

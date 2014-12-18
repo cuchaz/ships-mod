@@ -17,9 +17,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
@@ -99,7 +99,7 @@ public class ItemShipEraser extends Item
 			return false;
 		}
 		
-		if( FMLLaunchHandler.side() == Side.CLIENT )
+		if( Environment.isClient() )
 		{
 			Ships.net.getDispatch().sendToServer( new PacketEraseShip( blockX, blockY, blockZ ) );
 		}
@@ -117,7 +117,7 @@ public class ItemShipEraser extends Item
 	
 	private static void message( EntityPlayer player, GuiString text, Object ... args )
 	{
-		if( FMLLaunchHandler.side() == Side.CLIENT )
+		if( Environment.isClient() )
 		{
 			player.addChatMessage( new ChatComponentTranslation( text.getLocalizedText(), args ) );
 		}

@@ -30,10 +30,10 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.EntityUtils;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -172,7 +172,7 @@ public class EntityShip extends Entity
 		Ships.logger.info( "EntityShip %d died!", getEntityId() );
 		
 		// only restore blocks on the server
-		if( FMLLaunchHandler.side() == Side.SERVER )
+		if( Environment.isServer() )
 		{
 			m_waterDisplacer.restore();
 			m_rainDisplacer.restore();
@@ -187,7 +187,7 @@ public class EntityShip extends Entity
 			{
 				// for players, only adjust position on the client
 				boolean isPlayer = rider instanceof EntityPlayer;
-				if( ( isPlayer && FMLLaunchHandler.side() == Side.CLIENT ) || !isPlayer )
+				if( ( isPlayer && Environment.isClient() ) || !isPlayer )
 				{
 					unlauncher.applyUnlaunch( rider );
 				}

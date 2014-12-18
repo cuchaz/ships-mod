@@ -9,8 +9,7 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
-import cpw.mods.fml.relauncher.Side;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.ShipWorld;
@@ -26,13 +25,14 @@ public class ItemProjector extends ItemBlock
 	{
 		super( block );
 		setMaxStackSize( 1 );
+		setUnlocalizedName( "shipProjector" );
 	}
 	
 	@Override
 	public ItemStack onItemRightClick( ItemStack itemStack, World world, EntityPlayer player )
     {
 		// client only
-		if( FMLLaunchHandler.side() == Side.SERVER )
+		if( Environment.isServer() )
 		{
 			return itemStack;
 		}
@@ -103,7 +103,7 @@ public class ItemProjector extends ItemBlock
 	
 	private void clientMessage( EntityPlayer player, GuiString text, Object ... args )
 	{
-		if( FMLLaunchHandler.side() == Side.CLIENT )
+		if( Environment.isClient() )
 		{
 			player.addChatMessage( new ChatComponentTranslation( text.getLocalizedText(), args ) );
 		}

@@ -19,8 +19,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.WorldServer;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
-import cpw.mods.fml.relauncher.Side;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.Util;
 import cuchaz.modsShared.blocks.BlockMap;
 import cuchaz.modsShared.blocks.BlockSet;
@@ -196,7 +195,7 @@ public class ShipUnlauncher
 	public void unlaunch( )
 	{
 		// server only
-		if( FMLLaunchHandler.side() == Side.CLIENT )
+		if( Environment.isClient() )
 		{
 			return;
 		}

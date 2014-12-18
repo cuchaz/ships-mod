@@ -34,7 +34,7 @@ public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 	private int m_y;
 	private int m_z;
 	
-	protected PacketPlayerSleepInBerth( )
+	public PacketPlayerSleepInBerth( )
 	{
 		// for registration
 	}

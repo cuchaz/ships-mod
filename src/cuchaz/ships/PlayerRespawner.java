@@ -318,7 +318,7 @@ public class PlayerRespawner
 		String fieldName = Environment.isObfuscated() ? "field_71076_b" : "sleepTimer";
 		try
 		{
-			Field field = player.getClass().getField( fieldName );
+			Field field = EntityPlayer.class.getDeclaredField( fieldName );
 			field.setAccessible( true );
 			field.setInt( player, val );
 		}

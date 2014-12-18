@@ -25,9 +25,9 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.BlockUtils;
@@ -65,7 +65,7 @@ public class ShipCollider
 	{
 		m_ship = ship;
 		
-		if( FMLLaunchHandler.side() == Side.CLIENT )
+		if( Environment.isClient() )
 		{
 			m_debugRenderInfo = new ShipDebugRenderInfo();
 		}
@@ -150,7 +150,7 @@ public class ShipCollider
 		oldEntityBox.maxY -= dYSize;
 		oldEntityBox.minY -= dYSize;
 		
-		if( FMLLaunchHandler.side() == Side.CLIENT && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
+		if( Environment.isClient() && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
 			m_debugRenderInfo.setQueryBox( entity, oldEntityBox );
 		}
@@ -197,7 +197,7 @@ public class ShipCollider
 		
 		List<PossibleCollision> possibleCollisions = trajectoryQuery( oldEntityBox, newEntityBox );
 		
-		if( FMLLaunchHandler.side() == Side.CLIENT && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
+		if( Environment.isClient() && ShipDebugRenderInfo.isDebugRenderingOn() && entity instanceof EntityLivingBase )
 		{
 			for( PossibleCollision collision : possibleCollisions )
 			{

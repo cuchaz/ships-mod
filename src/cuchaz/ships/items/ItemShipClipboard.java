@@ -21,9 +21,9 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
@@ -59,7 +59,7 @@ public class ItemShipClipboard extends Item
 	public ItemStack onItemRightClick( ItemStack itemStack, World world, EntityPlayer player )
     {
 		// client only
-		if( FMLLaunchHandler.side() == Side.SERVER )
+		if( Environment.isServer() )
 		{
 			return itemStack;
 		}
@@ -92,7 +92,7 @@ public class ItemShipClipboard extends Item
 	public boolean onItemUseFirst( ItemStack itemStack, EntityPlayer player, final World world, int blockX, int blockY, int blockZ, int side, float hitX, float hitY, float hitZ )
     {
 		// only on the client
-		if( FMLLaunchHandler.side() == Side.SERVER )
+		if( Environment.isServer() )
 		{
 			return false;
 		}
@@ -227,7 +227,7 @@ public class ItemShipClipboard extends Item
 	
 	private void message( EntityPlayer player, GuiString text, Object ... args )
 	{
-		if( FMLLaunchHandler.side() == Side.CLIENT )
+		if( Environment.isClient() )
 		{
 			player.addChatMessage( new ChatComponentTranslation( text.getLocalizedText(), args ) );
 		}

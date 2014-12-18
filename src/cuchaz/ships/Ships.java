@@ -23,6 +23,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -95,7 +96,6 @@ public class Ships extends DummyModContainer
 	public static final BlockProjector m_blockProjector = new BlockProjector();
 	
 	// items
-	public static final ItemShipBlock m_itemShipBlock = new ItemShipBlock( m_blockShip );
 	public static final ItemPaddle m_itemPaddle = new ItemPaddle();
 	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket();
 	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator();
@@ -105,7 +105,7 @@ public class Ships extends DummyModContainer
 	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser();
 	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque();
 	public static final ItemBerth m_itemBerth = new ItemBerth();
-	public static final ItemProjector m_itemProjector = new ItemProjector( m_blockProjector );
+	public static ItemProjector m_itemProjector = null;
 	
 	// entities
 	public static final int EntityShipId = 174;
@@ -299,6 +299,9 @@ public class Ships extends DummyModContainer
 		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
 		GameRegistry.registerItem( m_itemBerth, "berth" );
 		
+		// we can't register these items directly, so get them after registration
+		m_itemProjector = (ItemProjector)Item.getItemFromBlock( m_blockProjector );
+		
 		// entities
 		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
 		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, this, 256, 10, true );
@@ -389,7 +392,7 @@ public class Ships extends DummyModContainer
 		
 		// ship projector
 		GameRegistry.addRecipe(
-			new ItemStack( m_itemProjector ),
+			new ItemStack( m_blockProjector ),
 			" x ", "yzy", " w ",
 			'x', glassStack,
 			'y', ironStack,

@@ -17,6 +17,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.Environment;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.ContainerShip;
 import cuchaz.ships.EntityShip;
