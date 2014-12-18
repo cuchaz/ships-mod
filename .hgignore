@@ -5,3 +5,5 @@ syntax: regexp
 ^media$
 syntax: regexp
 ^keys$
+syntax: regexp
+^\.settings$
