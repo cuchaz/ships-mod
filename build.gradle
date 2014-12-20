@@ -27,7 +27,7 @@ sourceSets {
 			srcDir "src"
 		}
 		resources {
-			srcDir "conf"
+			srcDir "assets"
 		}
 	}
 	test {
@@ -39,6 +39,12 @@ sourceSets {
 
 compileJava {
 	source file("../ModsShared/src")
+}
+
+jar {
+	manifest {
+		mainAttributes "FMLCorePlugin": "cuchaz.ships.asm.CoreModPlugin"
+	}
 }
 
 minecraft {
