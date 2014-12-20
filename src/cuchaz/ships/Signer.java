@@ -24,8 +24,8 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Base64OutputStream;
 
 public class Signer
 {
@@ -55,7 +55,7 @@ public class Signer
 			key = pair.getPrivate();
 			
 			// dump the public key
-			System.out.println( new BASE64Encoder().encode( pair.getPublic().getEncoded() ) );
+			System.out.println( Base64.encodeBase64String( pair.getPublic().getEncoded() ) );
 		}
 		else
 		{
@@ -107,7 +107,7 @@ public class Signer
 	{
 		try
 		{
-			return verify( data, signatureData, new BASE64Decoder().decodeBuffer( pub ) );
+			return verify( data, signatureData, Base64.decodeBase64( pub ) );
 		}
 		catch( Exception ex )
 		{

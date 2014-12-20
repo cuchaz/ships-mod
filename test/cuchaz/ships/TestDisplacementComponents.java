@@ -26,7 +26,7 @@ import cuchaz.ships.persistence.BlockStoragePersistence;
 
 public class TestDisplacementComponents
 {
-	@Test
+	//@Test
 	public void shipA( )
 	throws Exception
 	{
@@ -41,7 +41,7 @@ public class TestDisplacementComponents
 		}.run();
 	}
 	
-	@Test
+	//@Test
 	public void shipB( )
 	throws Exception
 	{

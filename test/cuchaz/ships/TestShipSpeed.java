@@ -22,21 +22,21 @@ public class TestShipSpeed
 {
 	// yeah, I know these aren't really unit tests
 	
-	@Test
+	//@Test
 	public void testLongShip5x3Sail( )
 	throws Exception
 	{
 		printSpeeds( "H4sIAAAAAAAAAH3OWw6CQAxA0bYJf8RNyMpYiStWkZcKAjOxhMnkhv5M56QvEakkxPqPe0gL8XB7gD3BGrAXWAvWgfVgA9gI9gb7gH3BJrAZ7Ae2gK25eVr4f/E37r1G32tSS/pTUzA76Q1zL7e95oiyjrP8FoVbFOblpmAG8+IOgx0GO3JTMMttA4jxGjfUAgAA" );
 	}
 	
-	@Test
+	//@Test
 	public void testShortShip5x3Sail( )
 	throws Exception
 	{
 		printSpeeds( "H4sIAAAAAAAAAG2QWwqAMAwE82j/xEvoyTyJJ1dbrNbGWSiUIZOFiMh6tsidXJ7VDzCN7OMquAqugmvgGrgGroPr4Dq4CdwEbgI3g5vBHeZ6pq3d4kn5z/s4M/Qebb6yJdz4ZX3XwBSYwb6j8dhh8u+ITIEZ7KsdDh0u/47IFJhFdgHalVXR1AIAAA==" );
 	}
 	
-	@Test
+	//@Test
 	public void testRaft( )
 	throws Exception
 	{
