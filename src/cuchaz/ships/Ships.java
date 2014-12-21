@@ -120,7 +120,7 @@ public class Ships extends DummyModContainer
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
-		meta.version = "1.1";
+		meta.version = "1.0";
 		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "http://www.cuchazinteractive.com/ships";

@@ -19,6 +19,8 @@ import net.minecraft.world.World;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.PlayerRespawner;
 import cuchaz.ships.ShipLocator;
@@ -89,6 +91,7 @@ public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 		};
 	}
 	
+	@SideOnly( Side.CLIENT )
 	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// NOTE: the sleeping player isn't necessarily the player that received the packet

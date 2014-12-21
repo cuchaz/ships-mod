@@ -16,6 +16,8 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.Ships;
@@ -68,6 +70,7 @@ public class PacketShipBlocks extends Packet<PacketShipBlocks>
 		};
 	}
 	
+	@SideOnly( Side.CLIENT )
 	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
 	{
 		// get the ship
