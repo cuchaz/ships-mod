@@ -11,3 +11,5 @@ syntax: regexp
 ^build$
 syntax: regexp
 ^\.gradle$
+syntax: regexp
+^logs$
