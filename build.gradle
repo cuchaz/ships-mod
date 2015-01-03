@@ -17,7 +17,7 @@ buildscript {
 
 apply plugin: "forge"
 
-version = "v1.7.10-1.0-e1"
+version = "v1.7.10-1.0"
 group = "cuchaz"
 archivesBaseName = "shipsMod"
 
