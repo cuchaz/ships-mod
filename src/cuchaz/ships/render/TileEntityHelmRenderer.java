@@ -47,15 +47,15 @@ public class TileEntityHelmRenderer extends TileEntitySpecialRenderer
 		int rotation = tileEntity.getWorldObj().getBlockMetadata( tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord );
 		float angle = rotation*360.f/4.0f;
 		
+		// set the rotation of the ship wheel
+		m_model.setWheelAngle( 0 );
 		if( tileEntity.getWorldObj() instanceof ShipWorld )
 		{
-			// set the rotation of the ship wheel
 			ShipWorld world = (ShipWorld)tileEntity.getWorldObj();
-			m_model.setWheelAngle( -world.getShip().motionYaw * 20 );
-		}
-		else
-		{
-			m_model.setWheelAngle( 0 );
+			if( world.getShip() != null )
+			{
+				m_model.setWheelAngle( -world.getShip().motionYaw * 20 );
+			}
 		}
 		
 		GL11.glPushMatrix();

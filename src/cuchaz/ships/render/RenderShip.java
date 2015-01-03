@@ -49,14 +49,12 @@ public class RenderShip extends Render
 	private RenderBlocks m_renderBlocks;
 	private Set<Integer> m_blacklistedBlocks;
 	private Map<ShipWorld,Integer> m_displayListIds;
-	private List<TileEntity> m_tileEntitiesToRender;
 	
 	public RenderShip( )
 	{
 		m_renderBlocks = new RenderBlocks();
 		m_blacklistedBlocks = new TreeSet<Integer>();
 		m_displayListIds = new HashMap<ShipWorld,Integer>(); // fine to hash on instance
-		m_tileEntitiesToRender = new ArrayList<TileEntity>();
 	}
 	
 	@Override
@@ -97,17 +95,6 @@ public class RenderShip extends Render
 		RenderManager.instance.renderEngine.bindTexture( TextureMap.locationBlocksTexture );
 		GL11.glCallList( getDisplayList( m_renderBlocks, shipWorld ) );
 		
-		// collect all the tile entities we need to render
-		m_tileEntitiesToRender.clear();
-		for( Coords coords : shipWorld.coords() )
-		{
-			TileEntity tileEntity = shipWorld.getTileEntity( coords );
-			if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
-			{
-				m_tileEntitiesToRender.add( tileEntity );
-			}
-		}
-		
 		// draw all the hanging entities (in a different coord system);
 		GL11.glPushMatrix();
 		GL11.glTranslated( RenderManager.renderPosX, RenderManager.renderPosY, RenderManager.renderPosZ );
@@ -118,15 +105,19 @@ public class RenderShip extends Render
 		GL11.glPopMatrix();
 		
 		// now render all the special tile entities
-		for( TileEntity tileEntity : m_tileEntitiesToRender )
+		for( Coords coords : shipWorld.coords() )
 		{
-			TileEntityRendererDispatcher.instance.renderTileEntityAt(
-				tileEntity,
-				tileEntity.xCoord,
-				tileEntity.yCoord,
-				tileEntity.zCoord,
-				partialTickTime
-			);
+			TileEntity tileEntity = shipWorld.getTileEntity( coords );
+			if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
+			{
+				TileEntityRendererDispatcher.instance.renderTileEntityAt(
+					tileEntity,
+					tileEntity.xCoord,
+					tileEntity.yCoord,
+					tileEntity.zCoord,
+					partialTickTime
+				);
+			}
 		}
 		
 		RenderHelper.enableStandardItemLighting();

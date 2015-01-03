@@ -15,6 +15,7 @@ import java.util.Random;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -102,6 +103,22 @@ public class TileEntityProjectorRenderer extends TileEntitySpecialRenderer
 				// render the display list
 				m_renderBlocks.renderAllFaces = true;
 				GL11.glCallList( m_shipRenderer.getDisplayList( m_renderBlocks, shipWorld ) );
+				
+				// render the tile entities
+				for( Coords coords : shipWorld.coords() )
+				{
+					TileEntity tileEntity = shipWorld.getTileEntity( coords );
+					if( tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer( tileEntity ) )
+					{
+						TileEntityRendererDispatcher.instance.renderTileEntityAt(
+							tileEntity,
+							tileEntity.xCoord,
+							tileEntity.yCoord,
+							tileEntity.zCoord,
+							partialTickTime
+						);
+					}
+				}
 				
 				GL11.glPopMatrix();
 			}
