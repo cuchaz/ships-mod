@@ -108,11 +108,14 @@ public class RenderShip extends Render
 			}
 		}
 		
-		// draw all the hanging entities
+		// draw all the hanging entities (in a different coord system);
+		GL11.glPushMatrix();
+		GL11.glTranslated( RenderManager.renderPosX, RenderManager.renderPosY, RenderManager.renderPosZ );
 		for( EntityHanging hangingEntity : shipWorld.hangingEntities().values() )
 		{
 			RenderManager.instance.renderEntitySimple( hangingEntity, partialTickTime );
 		}
+		GL11.glPopMatrix();
 		
 		// now render all the special tile entities
 		for( TileEntity tileEntity : m_tileEntitiesToRender )
