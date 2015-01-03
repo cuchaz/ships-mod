@@ -68,6 +68,7 @@ public class GuiShipLaunch extends GuiShip
 			20,
 			"<"
 		);
+		m_buttonRotateLeft.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add( m_buttonRotateLeft );
 		m_buttonRotateRight = new GuiButton( 
 			2,
@@ -77,6 +78,7 @@ public class GuiShipLaunch extends GuiShip
 			20,
 			">"
 		);
+		m_buttonRotateRight.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add( m_buttonRotateRight );
 	}
 	
