@@ -78,9 +78,12 @@ public class BlockProperties
 		final double ThinPaneFactor = 0.2;
 		addScaledEntry( Blocks.glass_pane, new BlockEntry( ThinPaneFactor, ThinPaneFactor, true, false, false ) );
 		
+		final double SignFactor = 0.2;
+		addScaledEntry( Blocks.wall_sign, new BlockEntry( SignFactor, SignFactor, false, false, false ) );
+		
 		// special ships mod blocks
 		addEntry( Ships.m_blockAirWall, new BlockEntry( 0, 0, false, true, true ) );
-		// TODO: make the air roof block
+		addEntry( Ships.m_blockAirRoof, new BlockEntry( 0, 0, false, true, false ) );
 	}
 	
 	public static void readConfigFile( )
