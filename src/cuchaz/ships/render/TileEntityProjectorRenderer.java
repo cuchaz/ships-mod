@@ -66,7 +66,7 @@ public class TileEntityProjectorRenderer extends TileEntitySpecialRenderer
 			bindTexture( Texture );
 			GL11.glPushMatrix();
 			GL11.glTranslated( x + 0.5, y + 1.5, z + 0.5 );
-			GL11.glScalef( 1.0f, -1.0f, -1.0f );
+			GL11.glScalef( 1f, -1f, -1f );
 			m_model.render( scaleFactor );
 			GL11.glPopMatrix();
 		}
@@ -111,7 +111,7 @@ public class TileEntityProjectorRenderer extends TileEntitySpecialRenderer
 			GL11.glPushMatrix();
 			GL11.glTranslated( x + 0.5, y + 1.25, z + 0.5 );
 			GL11.glRotatef( (float)Math.toDegrees( Math.atan2( x + 0.5, z + 0.5 ) ), 0, 1, 0 );
-			GL11.glScalef( 1, -1, 1 );
+			GL11.glScalef( -1, -1, 1 );
 			GL11.glColor4f( 1, 1, 1, alpha );
 			GL11.glBlendFunc( GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA );
 			Tessellator tessellator = Tessellator.instance;
