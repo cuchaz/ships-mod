@@ -36,6 +36,13 @@ public class BlockAirWall extends Block
 	}
 	
 	@Override
+	public int getRenderType( )
+	{
+		// no really, don't EVER render this block
+		return -1;
+	}
+	
+	@Override
 	public boolean renderAsNormalBlock( )
 	{
 		return false;
