@@ -1,5 +1,7 @@
 package cuchaz.ships;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -56,8 +58,11 @@ public class DumpBlockProperties
 					}
 				} );
 				
+				// setup out file
+				FileWriter out = new FileWriter( new File( "../cuchazinteractive/config/blockProperties.json" ) );
+				
 				// check the blocks
-				System.out.println( "{" );
+				out.write( "{\n" );
 				for( int i=0; i<keys.size(); i++ )
 				{
 					Block block = blocksToCheck.get( keys.get( i ) );
@@ -96,7 +101,7 @@ public class DumpBlockProperties
 						}
 					}
 					
-					System.out.print( String.format( "\"%s\": [\"%s\", %f, %f, %b, %b, %b]",
+					out.write( String.format( "\"%s\": [\"%s\", %f, %f, %b, %b, %b]",
 						block.getUnlocalizedName(),
 						name,
 						entry.mass,
@@ -108,14 +113,18 @@ public class DumpBlockProperties
 					
 					if( i == blocksToCheck.size() - 1 )
 					{
-						System.out.println();
+						out.write("\n");
 					}
 					else
 					{
-						System.out.println(",");
+						out.write(",\n");
 					}
 				}
-				System.out.println( "}" );
+				out.write( "}\n" );
+				
+				out.close();
+				
+				System.out.println( "Done!" );
 			}
 			
 			private boolean isGoodName( String name, Block block )

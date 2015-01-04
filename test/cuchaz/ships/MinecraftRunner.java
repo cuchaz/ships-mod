@@ -12,13 +12,16 @@ package cuchaz.ships;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.relauncher.FMLRelaunchLog;
+import cpw.mods.fml.relauncher.Side;
 
 public abstract class MinecraftRunner
 {
@@ -31,13 +34,26 @@ public abstract class MinecraftRunner
 			// init the FML loader
 			Loader.injectData( null, null, null, null, Loader.MC_VERSION, null, null, null );
 			
+			// masquerade as the client side
+			Thread.currentThread().setName("client thread");
+			try
+			{
+				Field sideField = FMLRelaunchLog.class.getDeclaredField("side");
+				sideField.setAccessible(true);
+				sideField.set(null, Side.CLIENT);
+			}
+			catch( Exception ex )
+			{
+				ex.printStackTrace( System.err );
+			}
+			
 			// force some Minecraft classes to run their static initializers
-			@SuppressWarnings( "unused" )
-			Object o;
-			o = Blocks.air;
-			o = Items.apple;
+			Block.registerBlocks();
+			Item.registerItems();
 			
 			// init the mod
+			@SuppressWarnings("unused")
+			Object o;
 			o = Ships.instance;
 		}
 	}
@@ -76,6 +92,8 @@ public abstract class MinecraftRunner
 		Method method = classRunnable.getDeclaredMethod( "onRun" );
 		method.setAccessible( true );
 		method.invoke( runnableInstance );
+		
+		cl.close();
 	}
 	
 	public abstract void onRun( ) throws Exception;
