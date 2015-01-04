@@ -42,6 +42,7 @@ public class DefaultBlockProperties
 		m_properties.put( Material.glass, new BlockEntry( 0.6, 1.0, true, false, false ) );
 		m_properties.put( Material.anvil, new BlockEntry( 6.0, 1.0, true, false, false ) );
 	    m_properties.put( Material.ice, new BlockEntry( 0.8, 1.0, true, false, false ) );
+	    m_properties.put( Material.packedIce, new BlockEntry( 0.8, 1.0, true, false, false ) );
 	    m_properties.put( Material.clay, new BlockEntry( 3.0, 1.0, true, false, false ) );
 		
 		// particulates
@@ -63,6 +64,7 @@ public class DefaultBlockProperties
 	    m_properties.put( Material.plants, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.vine, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.cactus, new BlockEntry( 0.5, 1.0, false, false, false ) );
+	    m_properties.put( Material.gourd, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.cake, new BlockEntry( 0.5, 1.0, false, false, false ) );
 	    m_properties.put( Material.dragonEgg, new BlockEntry( 1.2, 1.0, false, false, false ) );
 	    
