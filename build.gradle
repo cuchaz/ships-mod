@@ -48,6 +48,7 @@ jar {
 	manifest {
 		mainAttributes "FMLCorePlugin": "cuchaz.ships.asm.CoreModPlugin"
 	}
+	from "LICENSE.txt"
 }
 
 minecraft {
