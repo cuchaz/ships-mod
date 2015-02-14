@@ -8,25 +8,23 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships.asm;
+package cuchaz.ships.core;
 
 import java.util.Map;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin.MCVersion;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin.Name;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 
-@Name("cuchaz.ships.core")
-@MCVersion("1.7.10")
-@TransformerExclusions({ "cuchaz.ships.asm" })
+@IFMLLoadingPlugin.Name("cuchaz.ships.core")
+@IFMLLoadingPlugin.MCVersion("1.7.10")
+@IFMLLoadingPlugin.TransformerExclusions({ "cuchaz.ships.core" })
+@IFMLLoadingPlugin.SortingIndex(value = 1001)
 public class CoreModPlugin implements IFMLLoadingPlugin {
 	
 	public static Boolean isObfuscatedEnvironment = null;
 	
 	@Override
 	public String[] getASMTransformerClass() {
-		return new String[] { "cuchaz.ships.asm.CoreModTransformer" };
+		return new String[] { "cuchaz.ships.core.CoreModTransformer" };
 	}
 	
 	@Override
@@ -36,7 +34,7 @@ public class CoreModPlugin implements IFMLLoadingPlugin {
 	
 	@Override
 	public String getModContainerClass() {
-		return "cuchaz.ships.Ships";
+		return "cuchaz.ships.core.ShipsCore";
 	}
 	
 	@Override

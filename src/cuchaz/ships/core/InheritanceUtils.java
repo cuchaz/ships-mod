@@ -8,7 +8,7 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships.asm;
+package cuchaz.ships.core;
 
 import org.objectweb.asm.ClassReader;
 

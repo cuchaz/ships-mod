@@ -20,7 +20,7 @@ apply plugin: "forge"
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
 
-version = "v1.7.10-1.0"
+version = "v1.7.10-1.0.1"
 group = "cuchaz"
 archivesBaseName = "shipsMod"
 
@@ -46,13 +46,14 @@ compileJava {
 
 jar {
 	manifest {
-		mainAttributes "FMLCorePlugin": "cuchaz.ships.asm.CoreModPlugin"
+		attributes "FMLCorePlugin": "cuchaz.ships.asm.CoreModPlugin",
+			"FMLCorePluginContainsFMLMod": "true"
 	}
 	from "LICENSE.txt"
 }
 
 minecraft {
-    version = "1.7.10-10.13.2.1230"
+    version = "1.7.10-10.13.2.1291"
     runDir = "eclipse"
 }
 

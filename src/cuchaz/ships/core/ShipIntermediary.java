@@ -8,7 +8,7 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships.asm;
+package cuchaz.ships.core;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -34,7 +34,7 @@ import cuchaz.ships.Ships;
 
 public class ShipIntermediary {
 	
-	public static final String Path = "cuchaz/ships/asm/ShipIntermediary";
+	public static final String Path = "cuchaz/ships/core/ShipIntermediary";
 	
 	public static World translateWorld(World world, InventoryPlayer inventory) {
 		// are we looking at a ship?

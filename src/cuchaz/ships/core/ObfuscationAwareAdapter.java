@@ -8,7 +8,7 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships.asm;
+package cuchaz.ships.core;
 
 import java.lang.reflect.Field;
 import java.util.Map;

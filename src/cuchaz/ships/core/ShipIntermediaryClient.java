@@ -8,7 +8,7 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.ships.asm;
+package cuchaz.ships.core;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,7 +21,7 @@ import cuchaz.ships.HitList;
 
 public class ShipIntermediaryClient {
 	
-	public static final String Path = "cuchaz/ships/asm/ShipIntermediaryClient";
+	public static final String Path = "cuchaz/ships/core/ShipIntermediaryClient";
 	
 	@SideOnly(Side.CLIENT)
 	public static void onFoundHit() {
