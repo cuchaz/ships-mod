@@ -10,15 +10,13 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-public class GuiSettings
-{
+public class GuiSettings {
+	
 	/* A Note about GUIs:
-	 *    Different rendering functions appear to work in different coordinate spaces
-	 *    Full screen coords:
-	 *       buttons, textures
-	 *    Window coords:
-	 *       text
-	 */
+	      Different rendering functions appear to work in different coordinate spaces
+	      Full screen coords: buttons, textures
+	      Window coords: text
+	*/
 	
 	public static final int LeftMargin = 8;
 	public static final int TopMargin = 6;

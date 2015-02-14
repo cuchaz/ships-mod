@@ -10,16 +10,15 @@
  ******************************************************************************/
 package cuchaz.ships.config;
 
-public class BlockEntry
-{
+public class BlockEntry {
+	
 	public double mass;
 	public double displacement;
 	public boolean isWatertight;
 	public boolean isSeparator;
 	public boolean isWater;
 	
-	public BlockEntry( double mass, double displacement, boolean isWatertight, boolean isSeparator, boolean isWater )
-	{
+	public BlockEntry(double mass, double displacement, boolean isWatertight, boolean isSeparator, boolean isWater) {
 		this.mass = mass;
 		this.displacement = displacement;
 		this.isWatertight = isWatertight;

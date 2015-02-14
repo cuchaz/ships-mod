@@ -19,13 +19,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.HitList;
 
-public class ShipIntermediaryClient
-{
+public class ShipIntermediaryClient {
+	
 	public static final String Path = "cuchaz/ships/asm/ShipIntermediaryClient";
 	
-	@SideOnly( Side.CLIENT )
-	public static void onFoundHit( )
-	{
+	@SideOnly(Side.CLIENT)
+	public static void onFoundHit() {
 		// NOTE: this is called at the end of EntityRenderer.getMouseOver()
 		// if the targeted thing is a ship, then run our world block detection logic
 		
@@ -35,25 +34,22 @@ public class ShipIntermediaryClient
 		double reachDist = Minecraft.getMinecraft().playerController != null ? Minecraft.getMinecraft().playerController.getBlockReachDistance() : 0;
 		
 		// if there's no player, something weird is going on. Bail.
-		if( player == null )
-		{
+		if (player == null) {
 			return;
 		}
 		
 		// did we hit a ship?
-		if( currentHit != null && currentHit.typeOfHit == MovingObjectType.ENTITY && currentHit.entityHit != null && currentHit.entityHit instanceof EntityShip )
-		{
+		if (currentHit != null && currentHit.typeOfHit == MovingObjectType.ENTITY && currentHit.entityHit != null && currentHit.entityHit instanceof EntityShip) {
 			EntityShip ship = (EntityShip)currentHit.entityHit;
 			
 			// check for hits again (this time we're aware of ship blocks)
 			HitList hits = new HitList();
-			hits.addHits( ship, player, reachDist );
-			hits.addHits( player.worldObj, player, reachDist );
+			hits.addHits(ship, player, reachDist);
+			hits.addHits(player.worldObj, player, reachDist);
 			HitList.Entry hit = hits.getClosestHit();
 			
 			// did we hit a world block?
-			if( hit != null && hit.type == HitList.Type.World )
-			{
+			if (hit != null && hit.type == HitList.Type.World) {
 				Minecraft.getMinecraft().objectMouseOver = hit.hit;
 			}
 		}

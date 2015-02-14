@@ -21,17 +21,16 @@ import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketLaunchShip;
 import cuchaz.ships.render.RenderShip2D;
 
-public class GuiShipLaunch extends GuiShip
-{
+public class GuiShipLaunch extends GuiShip {
+	
 	private ShipLauncher m_shipLauncher;
 	private GuiButton m_buttonLaunchShip;
 	private BlockSide m_shipSide;
 	private GuiButton m_buttonRotateLeft;
 	private GuiButton m_buttonRotateRight;
 	
-	public GuiShipLaunch( Container container, ShipLauncher shipLauncher )
-	{
-		super( container );
+	public GuiShipLaunch(Container container, ShipLauncher shipLauncher) {
+		super(container);
 		
 		m_shipLauncher = shipLauncher;
 		
@@ -42,134 +41,72 @@ public class GuiShipLaunch extends GuiShip
 	}
 	
 	@Override
-	@SuppressWarnings( "unchecked" )
-	public void initGui( )
-	{
+	@SuppressWarnings("unchecked")
+	public void initGui() {
 		super.initGui();
 		
 		// add the launch button
-		m_buttonLaunchShip = new GuiButton( 
-			0,
-			guiLeft + LeftMargin,
-			guiTop + ySize - TopMargin - 20,
-			80,
-			20,
-			GuiString.ShipLaunch.getLocalizedText()
-		);
+		m_buttonLaunchShip = new GuiButton(0, guiLeft + LeftMargin, guiTop + ySize - TopMargin - 20, 80, 20, GuiString.ShipLaunch.getLocalizedText());
 		m_buttonLaunchShip.enabled = m_shipLauncher.isLaunchable();
-		buttonList.add( m_buttonLaunchShip );
+		buttonList.add(m_buttonLaunchShip);
 		
 		// add the rotate buttons
-		m_buttonRotateLeft = new GuiButton( 
-			1,
-			guiLeft + xSize - LeftMargin - 20 - 20 - 10,
-			guiTop + ySize - TopMargin - 20,
-			20,
-			20,
-			"<"
-		);
+		m_buttonRotateLeft = new GuiButton(1, guiLeft + xSize - LeftMargin - 20 - 20 - 10, guiTop + ySize - TopMargin - 20, 20, 20, "<");
 		m_buttonRotateLeft.enabled = m_shipLauncher.isLaunchable();
-		buttonList.add( m_buttonRotateLeft );
-		m_buttonRotateRight = new GuiButton( 
-			2,
-			guiLeft + xSize - LeftMargin - 20,
-			guiTop + ySize - TopMargin - 20,
-			20,
-			20,
-			">"
-		);
+		buttonList.add(m_buttonRotateLeft);
+		m_buttonRotateRight = new GuiButton(2, guiLeft + xSize - LeftMargin - 20, guiTop + ySize - TopMargin - 20, 20, 20, ">");
 		m_buttonRotateRight.enabled = m_shipLauncher.isLaunchable();
-		buttonList.add( m_buttonRotateRight );
+		buttonList.add(m_buttonRotateRight);
 	}
 	
 	@Override
-	protected void actionPerformed( GuiButton button )
-	{
-		if( button.id == m_buttonLaunchShip.id )
-		{
+	protected void actionPerformed(GuiButton button) {
+		if (button.id == m_buttonLaunchShip.id) {
 			// tell the server to spawn a ship
-			Ships.net.getDispatch().sendToServer( new PacketLaunchShip( m_shipLauncher.getShipBlock() ) );
+			Ships.net.getDispatch().sendToServer(new PacketLaunchShip(m_shipLauncher.getShipBlock()));
 			close();
-		}
-		else if( button.id == m_buttonRotateLeft.id )
-		{
-			m_shipSide = m_shipSide.rotateXZCcw( 1 );
-		}
-		else if( button.id == m_buttonRotateRight.id )
-		{
-			m_shipSide = m_shipSide.rotateXZCw( 1 );
+		} else if (button.id == m_buttonRotateLeft.id) {
+			m_shipSide = m_shipSide.rotateXZCcw(1);
+		} else if (button.id == m_buttonRotateRight.id) {
+			m_shipSide = m_shipSide.rotateXZCw(1);
 		}
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
-	{
-		drawHeaderText( GuiString.ShipConstruction.getLocalizedText(), 0 );
+	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+		drawHeaderText(GuiString.ShipConstruction.getLocalizedText(), 0);
 		
 		String valueText;
 		
 		// right number of blocks
-		if( m_shipLauncher.getLaunchFlag( LaunchFlag.RightNumberOfBlocks ) )
-		{
-			valueText = String.format( "%d / %d",
-				m_shipLauncher.getNumBlocks(),
-				m_shipLauncher.getShipType().getMaxNumBlocks()
-			);
+		if (m_shipLauncher.getLaunchFlag(LaunchFlag.RightNumberOfBlocks)) {
+			valueText = String.format("%d / %d", m_shipLauncher.getNumBlocks(), m_shipLauncher.getShipType().getMaxNumBlocks());
+		} else {
+			valueText = String.format("%d%s / %d", m_shipLauncher.getNumBlocksChecked(), (m_shipLauncher.getNumBlocksChecked() == m_shipLauncher.getNumBlocksToCheck() ? "+" : ""), m_shipLauncher.getShipType().getMaxNumBlocks());
 		}
-		else
-		{
-			valueText = String.format( "%d%s / %d",
-				m_shipLauncher.getNumBlocksChecked(),
-				( m_shipLauncher.getNumBlocksChecked() == m_shipLauncher.getNumBlocksToCheck() ? "+" : "" ),
-				m_shipLauncher.getShipType().getMaxNumBlocks()
-			);
-		}
-		drawYesNoText(
-			GuiString.ShipNumBlocks.getLocalizedText(),
-			valueText,
-			m_shipLauncher.getLaunchFlag( LaunchFlag.RightNumberOfBlocks ),
-			1
-		);
+		drawYesNoText(GuiString.ShipNumBlocks.getLocalizedText(), valueText, m_shipLauncher.getLaunchFlag(LaunchFlag.RightNumberOfBlocks), 1);
 		
 		// draw the launch flags
-		drawYesNoText(
-			GuiString.ShipWillItFloat.getLocalizedText(),
-			m_shipLauncher.getLaunchFlag( LaunchFlag.WillItFloat ),
-			2
-		);
+		drawYesNoText(GuiString.ShipWillItFloat.getLocalizedText(), m_shipLauncher.getLaunchFlag(LaunchFlag.WillItFloat), 2);
 		
 		// show any sink messages if needed
-		if( m_shipLauncher.getSinkWaterHeight() == null )
-		{
+		if (m_shipLauncher.getSinkWaterHeight() == null) {
 			// ship is unsinkable
-			drawText( GuiString.ShipIsUnsinkable.getLocalizedText(), 3 );
-		}
-		else if( m_shipLauncher.getEquilibriumWaterHeight() != null && m_shipLauncher.getSinkWaterHeight() - m_shipLauncher.getEquilibriumWaterHeight() < 0.5 )
-		{
+			drawText(GuiString.ShipIsUnsinkable.getLocalizedText(), 3);
+		} else if (m_shipLauncher.getEquilibriumWaterHeight() != null && m_shipLauncher.getSinkWaterHeight() - m_shipLauncher.getEquilibriumWaterHeight() < 0.5) {
 			// ship floats close to the sink line
-			drawText( GuiString.ShipFloatsCloseToSinkLine.getLocalizedText(), 3, NoColor );
+			drawText(GuiString.ShipFloatsCloseToSinkLine.getLocalizedText(), 3, NoColor);
 		}
 		
 		// draw the ship and show the water height
-		if( m_shipSide != null )
-		{
-			BlockArray envelope = m_shipLauncher.getShipEnvelope( m_shipSide );
+		if (m_shipSide != null) {
+			BlockArray envelope = m_shipLauncher.getShipEnvelope(m_shipSide);
 			int x = LeftMargin;
-			int y = getLineY( 3 );
-			int width = xSize - LeftMargin*2;
+			int y = getLineY(3);
+			int width = xSize - LeftMargin * 2;
 			int height = 96;
-			RenderShip2D.drawWater(
-				envelope,
-				m_shipLauncher.getEquilibriumWaterHeight(),
-				m_shipLauncher.getSinkWaterHeight(),
-				x, y, zLevel, width, height
-			);
-			RenderShip2D.drawShip(
-				envelope,
-				m_shipSide,
-				m_shipLauncher.getShipWorld(),
-				x, y, zLevel, width, height
-			);
+			RenderShip2D.drawWater(envelope, m_shipLauncher.getEquilibriumWaterHeight(), m_shipLauncher.getSinkWaterHeight(), x, y, zLevel, width, height);
+			RenderShip2D.drawShip(envelope, m_shipSide, m_shipLauncher.getShipWorld(), x, y, zLevel, width, height);
 		}
 	}
 }

@@ -10,12 +10,10 @@
  ******************************************************************************/
 package cuchaz.ships.blocks;
 
-
-public class BlockAirRoof extends BlockAirWall
-{
-	public BlockAirRoof( )
-	{
+public class BlockAirRoof extends BlockAirWall {
+	
+	public BlockAirRoof() {
 		// an air block that stops rain
-		setBlockName( "cuchaz.ships.airRoof" );
+		setBlockName("cuchaz.ships.airRoof");
 	}
 }

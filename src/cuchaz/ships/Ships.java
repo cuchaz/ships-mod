@@ -78,14 +78,14 @@ import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 import cuchaz.ships.render.TileEntityProjectorRenderer;
 
-public class Ships extends DummyModContainer
-{
+public class Ships extends DummyModContainer {
+	
 	public static Ships instance = null;
-	public static EnhancedLogger logger = new EnhancedLogger( Logger.getLogger( "cuchaz.ships" ) );
+	public static EnhancedLogger logger = new EnhancedLogger(Logger.getLogger("cuchaz.ships"));
 	public static PacketRegistry net = null;
 	
 	// materials
-	public static final Material m_materialAirWall = new MaterialAirWall( MapColor.airColor );
+	public static final Material m_materialAirWall = new MaterialAirWall(MapColor.airColor);
 	
 	// blocks
 	public static final BlockShip m_blockShip = new BlockShip();
@@ -114,101 +114,84 @@ public class Ships extends DummyModContainer
 	
 	private File m_source;
 	
-	public Ships( )
-	{
-		super( new ModMetadata() );
+	public Ships() {
+		super(new ModMetadata());
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
 		meta.version = "1.7.10-1.0";
-		meta.authorList = Arrays.asList( new String[] { "Cuchaz" } );
+		meta.authorList = Arrays.asList(new String[] { "Cuchaz" });
 		meta.description = "Build sailable ships out of blocks.";
 		meta.url = "http://www.cuchazinteractive.com/ships";
 		meta.credits = "Paddle texture by Snow_Yoshi98";
 		
-		m_source = FMLHacker.getModSource( getClass() );
+		m_source = FMLHacker.getModSource(getClass());
 		
 		// make sure instance semantics are being preserved in core mod land
-		if( instance != null )
-		{
-			throw new Error( "An instance of ships was already active!" );
+		if (instance != null) {
+			throw new Error("An instance of ships was already active!");
 		}
 		instance = this;
 	}
 	
 	@Override
-	public boolean registerBus( EventBus bus, LoadController controller )
-	{
-		bus.register( this );
+	public boolean registerBus(EventBus bus, LoadController controller) {
+		bus.register(this);
 		return true;
 	}
 	
 	@Override
-	public Object getMod( )
-	{
+	public Object getMod() {
 		return this;
 	}
 	
 	@Override
-	public boolean isImmutable( )
-	{
+	public boolean isImmutable() {
 		return false;
 	}
 	
 	@Override
-	public File getSource( )
-	{
+	public File getSource() {
 		return m_source;
 	}
 	
 	@Override
-	public Class<?> getCustomResourcePackClass( )
-	{
-		if( getSource().isDirectory() )
-		{
+	public Class<?> getCustomResourcePackClass() {
+		if (getSource().isDirectory()) {
 			return FMLFolderResourcePack.class;
-		}
-		else
-		{
+		} else {
 			return FMLFileResourcePack.class;
 		}
 	}
 	
 	@Subscribe
-	public void construct( FMLConstructionEvent event )
-	{
+	public void construct(FMLConstructionEvent event) {
 		// the event dispatcher swallows exceptions, so report them here
-		try
-		{
+		try {
 			// this is where the magic happens
-			FMLHacker.unwrapModContainer( this );
+			FMLHacker.unwrapModContainer(this);
 			
 			// add our container to the ASM data table
-			event.getASMHarvestedData().addContainer( this );
-	        
+			event.getASMHarvestedData().addContainer(this);
+			
 			// register for network support
-			net = new PacketRegistry( getModId() );
+			net = new PacketRegistry(getModId());
 			
 			// register for forge events
-			MinecraftForge.EVENT_BUS.register( this );
-		}
-		catch( RuntimeException ex )
-		{
-			Ships.logger.warning( ex, "Unable to construct mod container!" );
+			MinecraftForge.EVENT_BUS.register(this);
+		} catch (RuntimeException ex) {
+			Ships.logger.warning(ex, "Unable to construct mod container!");
 		}
 	}
 	
 	@Subscribe
-	public void load( FMLInitializationEvent event )
-	{
+	public void load(FMLInitializationEvent event) {
 		// the event dispatcher swallows exceptions, so report them here
-		try
-		{
+		try {
 			loadThings();
 			loadRecipes();
 			
-			if( event.getSide().isClient() )
-			{
+			if (event.getSide().isClient()) {
 				// load client things if needed
 				loadClient();
 				
@@ -218,182 +201,176 @@ public class Ships extends DummyModContainer
 			}
 			
 			// GUI hooks
-			NetworkRegistry.INSTANCE.registerGuiHandler( this, new IGuiHandler( )
-			{
+			NetworkRegistry.INSTANCE.registerGuiHandler(this, new IGuiHandler() {
+				
 				@Override
-				public Object getServerGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
-				{
-					return Gui.values()[id].getContainer( player, world, x, y, z );
+				public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+					return Gui.values()[id].getContainer(player, world, x, y, z);
 				}
 				
 				@Override
-				public Object getClientGuiElement( int id, EntityPlayer player, World world, int x, int y, int z )
-				{
-					return Gui.values()[id].getGui( player, world, x, y, z );
+				public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+					return Gui.values()[id].getGui(player, world, x, y, z);
 				}
-			} );
-		}
-		catch( Throwable ex )
-		{
-			Ships.logger.warning( ex, "Exception occurred while loading mod." );
+			});
+		} catch (Throwable ex) {
+			Ships.logger.warning(ex, "Exception occurred while loading mod.");
 		}
 	}
 	
 	@Subscribe
-	public void serverLoad( FMLServerStartingEvent event )
-	{
+	public void serverLoad(FMLServerStartingEvent event) {
 		// register our commands
-		event.registerServerCommand( new CommandShips() );
+		event.registerServerCommand(new CommandShips());
 		
-		try
-		{
+		try {
 			// load the block properties
 			BlockProperties.readConfigFile();
-		}
-		catch( FileNotFoundException ex )
-		{
-			logger.warning( "Unable to read block properties", ex );
+		} catch (FileNotFoundException ex) {
+			logger.warning("Unable to read block properties", ex);
 		}
 	}
 	
-	@SideOnly( Side.CLIENT )
-	private void loadClient( )
-	{
+	@SideOnly(Side.CLIENT)
+	private void loadClient() {
 		// set renderers
 		RenderShip shipRenderer = new RenderShip();
-		RenderingRegistry.registerEntityRenderingHandler( EntityShip.class, shipRenderer );
-		RenderingRegistry.registerEntityRenderingHandler( EntitySupporterPlaque.class, new RenderSupporterPlaque() );
-		RenderingRegistry.registerEntityRenderingHandler( EntityShipPlaque.class, new RenderShipPlaque() );
+		RenderingRegistry.registerEntityRenderingHandler(EntityShip.class, shipRenderer);
+		RenderingRegistry.registerEntityRenderingHandler(EntitySupporterPlaque.class, new RenderSupporterPlaque());
+		RenderingRegistry.registerEntityRenderingHandler(EntityShipPlaque.class, new RenderShipPlaque());
 		
 		// set tile entity renderers
-		registerTileEntityRenderer( TileEntityHelm.class, new TileEntityHelmRenderer() );
-		registerTileEntityRenderer( TileEntityProjector.class, new TileEntityProjectorRenderer( shipRenderer ) );
+		registerTileEntityRenderer(TileEntityHelm.class, new TileEntityHelmRenderer());
+		registerTileEntityRenderer(TileEntityProjector.class, new TileEntityProjectorRenderer(shipRenderer));
 	}
 	
-	@SideOnly( Side.CLIENT )
-	@SuppressWarnings( "unchecked" )
-	private void registerTileEntityRenderer( Class<? extends TileEntity> c, TileEntitySpecialRenderer renderer )
-	{
-		TileEntityRendererDispatcher.instance.mapSpecialRenderers.put( c, renderer );
-		renderer.func_147497_a( TileEntityRendererDispatcher.instance );
+	@SideOnly(Side.CLIENT)
+	@SuppressWarnings("unchecked")
+	private void registerTileEntityRenderer(Class<? extends TileEntity> c, TileEntitySpecialRenderer renderer) {
+		TileEntityRendererDispatcher.instance.mapSpecialRenderers.put(c, renderer);
+		renderer.func_147497_a(TileEntityRendererDispatcher.instance);
 	}
 	
-	private void loadThings( )
-	{
+	private void loadThings() {
 		// blocks
-		GameRegistry.registerBlock( m_blockShip, ItemShipBlock.class, "blockShip" );
-		GameRegistry.registerBlock( m_blockAirWall, "blockAirWall" );
-		GameRegistry.registerBlock( m_blockHelm, "blockHelm" );
-		GameRegistry.registerBlock( m_blockBerth, "blockBerth" );
-		GameRegistry.registerBlock( m_blockAirRoof, "blockAirRoof" );
-		GameRegistry.registerBlock( m_blockProjector, ItemProjector.class, "blockProjector" );
+		GameRegistry.registerBlock(m_blockShip, ItemShipBlock.class, "blockShip");
+		GameRegistry.registerBlock(m_blockAirWall, "blockAirWall");
+		GameRegistry.registerBlock(m_blockHelm, "blockHelm");
+		GameRegistry.registerBlock(m_blockBerth, "blockBerth");
+		GameRegistry.registerBlock(m_blockAirRoof, "blockAirRoof");
+		GameRegistry.registerBlock(m_blockProjector, ItemProjector.class, "blockProjector");
 		
 		// items
-		GameRegistry.registerItem( m_itemPaddle, "paddle" );
-		GameRegistry.registerItem( m_itemMagicBucket, "magicBucket" );
-		GameRegistry.registerItem( m_itemMagicShipLevitator, "magicShipLevitator" );
-		GameRegistry.registerItem( m_itemShipClipboard, "shipClipboard" );
-		GameRegistry.registerItem( m_itemListOfSupporters, "listOfSupporters" );
-		GameRegistry.registerItem( m_itemSupporterPlaque, "supporterPlaque" );
-		GameRegistry.registerItem( m_itemShipEraser, "shipEraser" );
-		GameRegistry.registerItem( m_itemShipPlaque, "shipPlaque" );
-		GameRegistry.registerItem( m_itemBerth, "berth" );
+		GameRegistry.registerItem(m_itemPaddle, "paddle");
+		GameRegistry.registerItem(m_itemMagicBucket, "magicBucket");
+		GameRegistry.registerItem(m_itemMagicShipLevitator, "magicShipLevitator");
+		GameRegistry.registerItem(m_itemShipClipboard, "shipClipboard");
+		GameRegistry.registerItem(m_itemListOfSupporters, "listOfSupporters");
+		GameRegistry.registerItem(m_itemSupporterPlaque, "supporterPlaque");
+		GameRegistry.registerItem(m_itemShipEraser, "shipEraser");
+		GameRegistry.registerItem(m_itemShipPlaque, "shipPlaque");
+		GameRegistry.registerItem(m_itemBerth, "berth");
 		
 		// we can't register these items directly, so get them after registration
-		m_itemProjector = (ItemProjector)Item.getItemFromBlock( m_blockProjector );
+		m_itemProjector = (ItemProjector)Item.getItemFromBlock(m_blockProjector);
 		
 		// entities
-		EntityRegistry.registerGlobalEntityID( EntityShip.class, "Ship", EntityShipId );
-		EntityRegistry.registerModEntity( EntityShip.class, "Ship", EntityShipId, this, 256, 10, true );
-		EntityRegistry.registerGlobalEntityID( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId );
-		EntityRegistry.registerModEntity( EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, false );
-		EntityRegistry.registerGlobalEntityID( EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId );
-		EntityRegistry.registerModEntity( EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId, this, 256, 10, false );
+		EntityRegistry.registerGlobalEntityID(EntityShip.class, "Ship", EntityShipId);
+		EntityRegistry.registerModEntity(EntityShip.class, "Ship", EntityShipId, this, 256, 10, true);
+		EntityRegistry.registerGlobalEntityID(EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId);
+		EntityRegistry.registerModEntity(EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, false);
+		EntityRegistry.registerGlobalEntityID(EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId);
+		EntityRegistry.registerModEntity(EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId, this, 256, 10, false);
 		
 		// tile entities
-		GameRegistry.registerTileEntity( TileEntityHelm.class, "helm" );
-		GameRegistry.registerTileEntity( TileEntityProjector.class, "projector" );
+		GameRegistry.registerTileEntity(TileEntityHelm.class, "helm");
+		GameRegistry.registerTileEntity(TileEntityProjector.class, "projector");
 	}
-
-	private void loadRecipes( )
-	{
+	
+	private void loadRecipes() {
 		ShipType.registerRecipes();
 		SupporterPlaqueType.registerRecipes();
 		
-		ItemStack stickStack = new ItemStack( Items.stick );
-		ItemStack goldStack = new ItemStack( Items.gold_ingot );
-		ItemStack ironStack = new ItemStack( Items.iron_ingot );
-		ItemStack paperStack = new ItemStack( Items.paper );
-		ItemStack glassStack = new ItemStack( Blocks.glass );
-		ItemStack lapisStack = new ItemStack( Items.dye, 1, 4 );
-		ItemStack boatStack = new ItemStack( Items.boat );
+		ItemStack stickStack = new ItemStack(Items.stick);
+		ItemStack goldStack = new ItemStack(Items.gold_ingot);
+		ItemStack ironStack = new ItemStack(Items.iron_ingot);
+		ItemStack paperStack = new ItemStack(Items.paper);
+		ItemStack glassStack = new ItemStack(Blocks.glass);
+		ItemStack lapisStack = new ItemStack(Items.dye, 1, 4);
+		ItemStack boatStack = new ItemStack(Items.boat);
 		
 		// paddle
-		GameRegistry.addRecipe(
-			new ItemStack( m_itemPaddle ),
-			" xx", " xx", "x  ",
+		GameRegistry.addRecipe(new ItemStack(m_itemPaddle), 
+			" xx",
+			" xx",
+			"x  ",
 			'x', stickStack
 		);
 		
 		// magic bucket
-		GameRegistry.addRecipe(
-			new ItemStack( m_itemMagicBucket ),
-			"   ", "x x", " x ",
+		GameRegistry.addRecipe(new ItemStack(m_itemMagicBucket),
+			"   ",
+			"x x",
+			" x ",
 			'x', goldStack
 		);
 		
 		// helm
-		GameRegistry.addRecipe(
-			new ItemStack( m_blockHelm ),
-			" x ", "x x", "yxy",
+		GameRegistry.addRecipe(new ItemStack(m_blockHelm),
+			" x ",
+			"x x",
+			"yxy",
 			'x', stickStack,
 			'y', ironStack
 		);
 		
 		// list of supporters
-		GameRegistry.addRecipe(
-			new ItemStack( m_itemListOfSupporters ),
-			"yyy", "yxy", "yyy",
+		GameRegistry.addRecipe(new ItemStack(m_itemListOfSupporters),
+			"yyy",
+			"yxy",
+			"yyy",
 			'x', ShipType.Tiny.newItemStack(),
 			'y', paperStack
 		);
 		
 		// ship plaque (for all the wood types)
-		for( int i=0; i<4; i++ )
-		{
-			GameRegistry.addRecipe(
-				new ItemStack( m_itemShipPlaque ),
-				"   ", " x ", "yyy",
+		for (int i = 0; i < 4; i++) {
+			GameRegistry.addRecipe(new ItemStack(m_itemShipPlaque),
+				"   ",
+				" x ",
+				"yyy",
 				'x', ironStack,
-				'y', new ItemStack( Blocks.planks, 1, i )
+				'y', new ItemStack(Blocks.planks, 1, i)
 			);
 		}
 		
 		// berth
-		for( int i=0; i<16; i++ )
-		{
-			GameRegistry.addRecipe(
-				new ItemStack( m_itemBerth ),
-				"   ", "xxx", "yzy",
-				'x', new ItemStack( Blocks.wool, 1, i ),
+		for (int i = 0; i < 16; i++) {
+			GameRegistry.addRecipe(new ItemStack(m_itemBerth),
+				"   ",
+				"xxx",
+				"yzy",
+				'x', new ItemStack(Blocks.wool, 1, i),
 				'y', stickStack,
 				'z', goldStack
 			);
 		}
 		
 		// ship clipboard
-		GameRegistry.addRecipe(
-			new ItemStack( m_itemShipClipboard ),
-			"xxx", "xxx", "yzy",
+		GameRegistry.addRecipe(new ItemStack(m_itemShipClipboard),
+			"xxx",
+			"xxx",
+			"yzy",
 			'x', paperStack,
 			'y', stickStack,
 			'z', ShipType.Tiny.newItemStack()
 		);
 		
 		// ship projector
-		GameRegistry.addRecipe(
-			new ItemStack( m_blockProjector ),
-			" x ", "yzy", " w ",
+		GameRegistry.addRecipe(new ItemStack(m_blockProjector),
+			" x ",
+			"yzy",
+			" w ",
 			'x', glassStack,
 			'y', ironStack,
 			'z', lapisStack,
@@ -402,26 +379,22 @@ public class Ships extends DummyModContainer
 	}
 	
 	@SubscribeEvent
-	public void onEntityJoin( EntityJoinWorldEvent event )
-	{
-		if( event.world.isRemote )
-		{
+	public void onEntityJoin(EntityJoinWorldEvent event) {
+		if (event.world.isRemote) {
 			// ignore on client
 			return;
 		}
 		
 		// is this a player?
 		EntityPlayerMP player = null;
-		if( event.entity instanceof EntityPlayerMP )
-		{
+		if (event.entity instanceof EntityPlayerMP) {
 			player = (EntityPlayerMP)event.entity;
 		}
-		if( player == null )
-		{
+		if (player == null) {
 			return;
 		}
 		
 		// send block overrides to the client
-		net.getDispatch().sendTo( new PacketBlockPropertiesOverrides( BlockProperties.getOverrides() ), player );
+		net.getDispatch().sendTo(new PacketBlockPropertiesOverrides(BlockProperties.getOverrides()), player);
 	}
 }

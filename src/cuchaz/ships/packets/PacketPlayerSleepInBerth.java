@@ -26,8 +26,8 @@ import cuchaz.ships.PlayerRespawner;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;
 
-public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
-{
+public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth> {
+	
 	private static final int NotAShip = -1;
 	
 	private int m_playerEntityId;
@@ -36,13 +36,11 @@ public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 	private int m_y;
 	private int m_z;
 	
-	public PacketPlayerSleepInBerth( )
-	{
+	public PacketPlayerSleepInBerth() {
 		// for registration
 	}
 	
-	public PacketPlayerSleepInBerth( EntityPlayer player, World world, int x, int y, int z )
-	{
+	public PacketPlayerSleepInBerth(EntityPlayer player, World world, int x, int y, int z) {
 		m_playerEntityId = player.getEntityId();
 		m_shipEntityId = NotAShip;
 		m_x = x;
@@ -50,26 +48,23 @@ public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 		m_z = z;
 		
 		// is this on a ship?
-		if( world instanceof ShipWorld )
-		{
+		if (world instanceof ShipWorld) {
 			EntityShip ship = ((ShipWorld)world).getShip();
 			m_shipEntityId = ship.getEntityId();
 		}
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		buf.writeInt( m_playerEntityId );
-		buf.writeInt( m_shipEntityId );
-		buf.writeInt( m_x );
-		buf.writeInt( m_y );
-		buf.writeInt( m_z );
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(m_playerEntityId);
+		buf.writeInt(m_shipEntityId);
+		buf.writeInt(m_x);
+		buf.writeInt(m_y);
+		buf.writeInt(m_z);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
+	public void fromBytes(ByteBuf buf) {
 		m_playerEntityId = buf.readInt();
 		m_shipEntityId = buf.readInt();
 		m_x = buf.readInt();
@@ -79,49 +74,41 @@ public class PacketPlayerSleepInBerth extends Packet<PacketPlayerSleepInBerth>
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketPlayerSleepInBerth,IMessage> getClientHandler( )
-	{
-		return new IMessageHandler<PacketPlayerSleepInBerth,IMessage>( )
-		{
+	public IMessageHandler<PacketPlayerSleepInBerth,IMessage> getClientHandler() {
+		return new IMessageHandler<PacketPlayerSleepInBerth,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketPlayerSleepInBerth message, MessageContext ctx )
-			{
-				return message.onReceivedClient( ctx.getClientHandler() );
+			public IMessage onMessage(PacketPlayerSleepInBerth message, MessageContext ctx) {
+				return message.onReceivedClient(ctx.getClientHandler());
 			}
 		};
 	}
 	
-	@SideOnly( Side.CLIENT )
-	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
-	{
+	@SideOnly(Side.CLIENT)
+	private IMessage onReceivedClient(NetHandlerPlayClient netClient) {
 		// NOTE: the sleeping player isn't necessarily the player that received the packet
 		// but they are in the same world
 		World world = Minecraft.getMinecraft().theWorld;
 		
 		// get the sleeping player
-		Entity entity = world.getEntityByID( m_playerEntityId );
-		if( entity == null || !( entity instanceof EntityPlayer ) )
-		{
+		Entity entity = world.getEntityByID(m_playerEntityId);
+		if (entity == null || ! (entity instanceof EntityPlayer)) {
 			return null;
 		}
 		EntityPlayer sleepingPlayer = (EntityPlayer)entity;
 		
-		if( m_shipEntityId == NotAShip )
-		{
+		if (m_shipEntityId == NotAShip) {
 			// sleep in the berth in the world
-			PlayerRespawner.sleepInBerthAt( world, m_x, m_y, m_z, sleepingPlayer );
-		}
-		else
-		{
+			PlayerRespawner.sleepInBerthAt(world, m_x, m_y, m_z, sleepingPlayer);
+		} else {
 			// get the ship
-			EntityShip ship = ShipLocator.getShip( world, m_shipEntityId );
-			if( ship == null )
-			{
+			EntityShip ship = ShipLocator.getShip(world, m_shipEntityId);
+			if (ship == null) {
 				return null;
 			}
 			
 			// sleep in the berth on the ship
-			PlayerRespawner.sleepInBerthAt( ship.getShipWorld(), m_x, m_y, m_z, sleepingPlayer );
+			PlayerRespawner.sleepInBerthAt(ship.getShipWorld(), m_x, m_y, m_z, sleepingPlayer);
 		}
 		
 		return null;

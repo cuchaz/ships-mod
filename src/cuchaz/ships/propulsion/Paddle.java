@@ -12,18 +12,15 @@ package cuchaz.ships.propulsion;
 
 import cuchaz.modsShared.Util;
 
-
-public class Paddle extends PropulsionMethod
-{
-	public Paddle( )
-	{
-		super( "Paddle", "Paddles" );
+public class Paddle extends PropulsionMethod {
+	
+	public Paddle() {
+		super("Paddle", "Paddles");
 	}
 	
 	@Override
-	public double getThrust( double speed )
-	{
+	public double getThrust(double speed) {
 		// the paddle always has constant thrust
-		return Util.perSecond2ToPerTick2( 80 );
+		return Util.perSecond2ToPerTick2(80);
 	}
 }

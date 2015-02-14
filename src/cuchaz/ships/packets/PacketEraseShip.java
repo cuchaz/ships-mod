@@ -17,35 +17,31 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.items.ItemShipEraser;
 
-public class PacketEraseShip extends Packet<PacketEraseShip>
-{
+public class PacketEraseShip extends Packet<PacketEraseShip> {
+	
 	private int m_x;
 	private int m_y;
 	private int m_z;
 	
-	public PacketEraseShip( )
-	{
+	public PacketEraseShip() {
 		// for registration
 	}
 	
-	public PacketEraseShip( int x, int y, int z )
-	{
+	public PacketEraseShip(int x, int y, int z) {
 		m_x = x;
 		m_y = y;
 		m_z = z;
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		buf.writeInt( m_x );
-		buf.writeInt( m_y );
-		buf.writeInt( m_z );
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(m_x);
+		buf.writeInt(m_y);
+		buf.writeInt(m_z);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
+	public void fromBytes(ByteBuf buf) {
 		m_x = buf.readInt();
 		m_y = buf.readInt();
 		m_z = buf.readInt();
@@ -53,21 +49,18 @@ public class PacketEraseShip extends Packet<PacketEraseShip>
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketEraseShip,IMessage> getServerHandler( )
-	{
-		return new IMessageHandler<PacketEraseShip,IMessage>( )
-		{
+	public IMessageHandler<PacketEraseShip,IMessage> getServerHandler() {
+		return new IMessageHandler<PacketEraseShip,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketEraseShip message, MessageContext ctx )
-			{
-				return message.onReceivedServer( ctx.getServerHandler() );
+			public IMessage onMessage(PacketEraseShip message, MessageContext ctx) {
+				return message.onReceivedServer(ctx.getServerHandler());
 			}
 		};
 	}
 	
-	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
-	{
-		ItemShipEraser.eraseShip( netServer.playerEntity.worldObj, netServer.playerEntity, m_x, m_y, m_z );
+	private IMessage onReceivedServer(NetHandlerPlayServer netServer) {
+		ItemShipEraser.eraseShip(netServer.playerEntity.worldObj, netServer.playerEntity, m_x, m_y, m_z);
 		
 		return null;
 	}

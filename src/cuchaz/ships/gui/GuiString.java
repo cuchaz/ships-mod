@@ -12,59 +12,16 @@ package cuchaz.ships.gui;
 
 import net.minecraft.util.StatCollector;
 
-public enum GuiString
-{
-	Yes,
-	No,
-	ShipConstruction,
-	ShipDashboard,
-	ShipNumBlocks,
-	ShipTooLarge,
-	ShipLaunch,
-	ShipUnlaunch,
-	ShipInOrAboveWater,
-	ShipHasAirAbove,
-	ShipFoundWaterHeight,
-	ShipWillItFloat,
-	ShipAlignedToDirection,
-	ShipAwayFromBlocks,
-	ShipPropulsion,
-	NoShipBlock,
-	InvalidShip,
-	ClipboardUsage,
-	NoShipWasFoundHere,
-	CopiedShip,
-	ErrorCheckLogForDetails,
-	NoShipOnClipboard,
-	NoRoomToPasteShip,
-	PastedShip,
-	OnlyCreative,
-	NoPropulsion,
-	FoundPropulsion,
-	ShipUnlaunchOverride,
-	ShipUnlaunchOverrideWarning,
-	ListOfSupporters,
-	NotASupporter,
-	EraserUsage,
-	ShipPlaque,
-	Done,
-	ShipIsUnsinkable,
-	ShipFloatsCloseToSinkLine,
-	Sink,
-	Slept,
-	BerthNotFound,
-	TryOnStillWater;
+public enum GuiString {
+	Yes, No, ShipConstruction, ShipDashboard, ShipNumBlocks, ShipTooLarge, ShipLaunch, ShipUnlaunch, ShipInOrAboveWater, ShipHasAirAbove, ShipFoundWaterHeight, ShipWillItFloat, ShipAlignedToDirection, ShipAwayFromBlocks, ShipPropulsion, NoShipBlock, InvalidShip, ClipboardUsage, NoShipWasFoundHere, CopiedShip, ErrorCheckLogForDetails, NoShipOnClipboard, NoRoomToPasteShip, PastedShip, OnlyCreative, NoPropulsion, FoundPropulsion, ShipUnlaunchOverride, ShipUnlaunchOverrideWarning, ListOfSupporters, NotASupporter, EraserUsage, ShipPlaque, Done, ShipIsUnsinkable, ShipFloatsCloseToSinkLine, Sink, Slept, BerthNotFound, TryOnStillWater;
 	
-	public String getKey( )
-	{
+	public String getKey() {
 		return "cuchaz.ships." + name();
 	}
 	
-	public String getLocalizedText( )
-	{
-		String text = StatCollector.translateToLocal( getKey() );
-		if( text != null && text.length() > 0 )
-		{
+	public String getLocalizedText() {
+		String text = StatCollector.translateToLocal(getKey());
+		if (text != null && text.length() > 0) {
 			return text;
 		}
 		

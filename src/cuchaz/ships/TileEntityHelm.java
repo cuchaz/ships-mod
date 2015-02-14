@@ -12,12 +12,11 @@ package cuchaz.ships;
 
 import net.minecraft.tileentity.TileEntity;
 
-public class TileEntityHelm extends TileEntity
-{
+public class TileEntityHelm extends TileEntity {
+	
 	// not much to do here... move along
 	@Override
-	public boolean canUpdate( )
-	{
+	public boolean canUpdate() {
 		return false;
 	}
 }

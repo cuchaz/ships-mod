@@ -10,17 +10,15 @@
  ******************************************************************************/
 package cuchaz.ships.persistence;
 
-public class PersistenceException extends Exception
-{
+public class PersistenceException extends Exception {
+	
 	private static final long serialVersionUID = -5267418089825144274L;
 	
-	public PersistenceException( String message )
-	{
-		super( message );
+	public PersistenceException(String message) {
+		super(message);
 	}
-
-	public PersistenceException( String message, Exception cause )
-	{
-		super( message, cause );
+	
+	public PersistenceException(String message, Exception cause) {
+		super(message, cause);
 	}
 }

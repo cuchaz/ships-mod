@@ -28,54 +28,46 @@ import cuchaz.ships.EntitySupporterPlaque;
 import cuchaz.ships.Supporters;
 import cuchaz.ships.gui.GuiString;
 
-public class ItemShipPlaque extends ItemHangingEntity
-{
+public class ItemShipPlaque extends ItemHangingEntity {
+	
 	private static final int MinRank = 4;
 	
-	public ItemShipPlaque( )
-	{
-		super( EntitySupporterPlaque.class );
+	public ItemShipPlaque() {
+		super(EntitySupporterPlaque.class);
 		
 		maxStackSize = 1;
-		setCreativeTab( CreativeTabs.tabDecorations );
-		setUnlocalizedName( "cuchaz.ships.shipPlaque" );
+		setCreativeTab(CreativeTabs.tabDecorations);
+		setUnlocalizedName("cuchaz.ships.shipPlaque");
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public void registerIcons( IIconRegister iconRegister )
-	{
-		itemIcon = iconRegister.registerIcon( "ships:shipPlaque" );
+	@SideOnly(Side.CLIENT)
+	public void registerIcons(IIconRegister iconRegister) {
+		itemIcon = iconRegister.registerIcon("ships:shipPlaque");
 	}
 	
 	@Override
-	public boolean onItemUse( ItemStack itemStack, EntityPlayer player, World world, int x, int y, int z, int sideId, float xHit, float yHit, float zHit )
-	{
+	public boolean onItemUse(ItemStack itemStack, EntityPlayer player, World world, int x, int y, int z, int sideId, float xHit, float yHit, float zHit) {
 		// is the player a supporter?
-		if( !canUse( player ) )
-		{
-			if( Environment.isClient() )
-			{
-				player.addChatMessage( new ChatComponentTranslation( GuiString.NotASupporter.getLocalizedText() ) );
+		if (!canUse(player)) {
+			if (Environment.isClient()) {
+				player.addChatMessage(new ChatComponentTranslation(GuiString.NotASupporter.getLocalizedText()));
 			}
 			return false;
 		}
-		int supporterId = Supporters.getId( player.getCommandSenderName() );
+		int supporterId = Supporters.getId(player.getCommandSenderName());
 		
 		// was the plaque placed on the top or bottom of a block?
-		BlockSide side = BlockSide.getById( sideId );
-		if( side == BlockSide.Bottom || side == BlockSide.Top )
-		{
+		BlockSide side = BlockSide.getById(sideId);
+		if (side == BlockSide.Bottom || side == BlockSide.Top) {
 			return false;
 		}
 		
 		// create the entity
-		EntityHanging entity = new EntityShipPlaque( world, supporterId, x, y, z, Direction.facingToDirection[sideId] );
-		if( entity.onValidSurface() )
-		{
-			if( !world.isRemote )
-			{
-				world.spawnEntityInWorld( entity );
+		EntityHanging entity = new EntityShipPlaque(world, supporterId, x, y, z, Direction.facingToDirection[sideId]);
+		if (entity.onValidSurface()) {
+			if (!world.isRemote) {
+				world.spawnEntityInWorld(entity);
 			}
 			
 			// use the item
@@ -86,15 +78,12 @@ public class ItemShipPlaque extends ItemHangingEntity
 		
 		return false;
 	}
-
-	public static boolean canUse( EntityPlayer player )
-	{
-		int supporterId = Supporters.getId( player.getCommandSenderName() );
-		if( supporterId != Supporters.InvalidSupporterId )
-		{
+	
+	public static boolean canUse(EntityPlayer player) {
+		int supporterId = Supporters.getId(player.getCommandSenderName());
+		if (supporterId != Supporters.InvalidSupporterId) {
 			// does the player meet the min rank?
-			if( Supporters.getRank( supporterId ) >= MinRank )
-			{
+			if (Supporters.getRank(supporterId) >= MinRank) {
 				return true;
 			}
 		}

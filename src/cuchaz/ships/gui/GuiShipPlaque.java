@@ -21,85 +21,65 @@ import cuchaz.ships.EntityShipPlaque;
 import cuchaz.ships.Ships;
 import cuchaz.ships.packets.PacketShipPlaque;
 
-public class GuiShipPlaque extends GuiShip
-{
+public class GuiShipPlaque extends GuiShip {
+	
 	private EntityShipPlaque m_shipPlaque;
 	private GuiTextField m_textName;
 	private GuiButton m_buttonDone;
 	
-	public GuiShipPlaque( ContainerShip container, EntityShipPlaque shipPlaque )
-	{
-		super( container );
+	public GuiShipPlaque(ContainerShip container, EntityShipPlaque shipPlaque) {
+		super(container);
 		
 		m_shipPlaque = shipPlaque;
 	}
 	
 	@Override
-	@SuppressWarnings( "unchecked" )
-	public void initGui( )
-	{
+	@SuppressWarnings("unchecked")
+	public void initGui() {
 		super.initGui();
 		
 		// add the text box
-		m_textName = new GuiTextField( this.mc.fontRenderer,
-			LeftMargin,
-			60,
-			120,
-			20
-		);
-		m_textName.setFocused( true );
-		m_textName.setText( m_shipPlaque.getName() );
+		m_textName = new GuiTextField(this.mc.fontRenderer, LeftMargin, 60, 120, 20);
+		m_textName.setFocused(true);
+		m_textName.setText(m_shipPlaque.getName());
 		
 		// add the button
-		m_buttonDone = new GuiButton( 0,
-			guiLeft + LeftMargin,
-			guiTop + ySize - TopMargin - 20,
-			80,
-			20,
-			GuiString.Done.getLocalizedText()
-		);
-		buttonList.add( m_buttonDone );
+		m_buttonDone = new GuiButton(0, guiLeft + LeftMargin, guiTop + ySize - TopMargin - 20, 80, 20, GuiString.Done.getLocalizedText());
+		buttonList.add(m_buttonDone);
 	}
 	
 	@Override
-	protected void actionPerformed( GuiButton button )
-	{
-		if( button.id == m_buttonDone.id )
-		{
+	protected void actionPerformed(GuiButton button) {
+		if (button.id == m_buttonDone.id) {
 			apply();
 		}
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer( int mouseX, int mouseY )
-	{
-		drawHeaderText( GuiString.ShipPlaque.getLocalizedText(), 0 );
+	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+		drawHeaderText(GuiString.ShipPlaque.getLocalizedText(), 0);
 		
 		m_textName.drawTextBox();
 	}
 	
 	@Override
-	protected void keyTyped( char keyChar, int keyCode )
-    {
-		if( keyCode == Keyboard.KEY_RETURN )
-		{
+	protected void keyTyped(char keyChar, int keyCode) {
+		if (keyCode == Keyboard.KEY_RETURN) {
 			apply();
 		}
 		
-		if( m_textName.isFocused() )
-		{
-			m_textName.textboxKeyTyped( keyChar, keyCode );
+		if (m_textName.isFocused()) {
+			m_textName.textboxKeyTyped(keyChar, keyCode);
 		}
-		super.keyTyped( keyChar, keyCode );
-    }
+		super.keyTyped(keyChar, keyCode);
+	}
 	
-	private void apply( )
-	{
+	private void apply() {
 		// save the name
-		m_shipPlaque.setName( m_textName.getText() );
+		m_shipPlaque.setName(m_textName.getText());
 		
 		// update the server too
-		Ships.net.getDispatch().sendToServer( new PacketShipPlaque( m_shipPlaque ) );
+		Ships.net.getDispatch().sendToServer(new PacketShipPlaque(m_shipPlaque));
 		
 		close();
 	}

@@ -24,84 +24,72 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.Ships;
 
-public class BlockAirWall extends Block
-{
-	public BlockAirWall( )
-	{
+public class BlockAirWall extends Block {
+	
+	public BlockAirWall() {
 		// an air block that stops flowing water
-		super( Ships.m_materialAirWall );
+		super(Ships.m_materialAirWall);
 		
-		setBlockName( "cuchaz.ships.airWall" );
-		setBlockBounds( 0, 0, 0, 1, 1, 1 );
+		setBlockName("cuchaz.ships.airWall");
+		setBlockBounds(0, 0, 0, 1, 1, 1);
 	}
 	
 	@Override
-	public int getRenderType( )
-	{
+	public int getRenderType() {
 		// no really, don't EVER render this block
 		return -1;
 	}
 	
 	@Override
-	public boolean renderAsNormalBlock( )
-	{
+	public boolean renderAsNormalBlock() {
 		return false;
 	}
 	
 	@Override
-	public boolean isOpaqueCube( )
-	{
+	public boolean isOpaqueCube() {
 		return false;
 	}
 	
 	@Override
-	public AxisAlignedBB getCollisionBoundingBoxFromPool( World world, int x, int y, int z )
-	{
+	public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
 		return null;
 	}
 	
 	@Override
-	public boolean canCollideCheck( int meta, boolean hitLiquids )
-	{
+	public boolean canCollideCheck(int meta, boolean hitLiquids) {
 		return hitLiquids;
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public boolean shouldSideBeRendered( IBlockAccess world, int x, int y, int z, int side )
-	{
+	@SideOnly(Side.CLIENT)
+	public boolean shouldSideBeRendered(IBlockAccess world, int x, int y, int z, int side) {
 		return false;
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public void registerBlockIcons( IIconRegister iconRegister )
-	{
+	@SideOnly(Side.CLIENT)
+	public void registerBlockIcons(IIconRegister iconRegister) {
 		// do nothing
 	}
 	
 	@Override
-	public int quantityDropped( Random rand )
-	{
+	public int quantityDropped(Random rand) {
 		return 0;
 	}
 	
 	@Override
-	public Item getItemDropped( int meta, Random random, int fortune )
-	{
+	public Item getItemDropped(int meta, Random random, int fortune) {
 		return null;
 	}
 	
 	@Override
-	public boolean canHarvestBlock( EntityPlayer player, int meta )
-	{
+	public boolean canHarvestBlock(EntityPlayer player, int meta) {
 		return false;
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-    public boolean addDestroyEffects( World world, int x, int y, int z, int meta, EffectRenderer effectRenderer )
-	{
+	@SideOnly(Side.CLIENT)
+	public boolean addDestroyEffects(World world, int x, int y, int z, int meta, EffectRenderer effectRenderer) {
 		// don't show block break effects
 		return true;
 	}

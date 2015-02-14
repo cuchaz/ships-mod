@@ -21,20 +21,18 @@ import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.Ships;
 import cuchaz.ships.persistence.PersistenceException;
 
-public class PacketPasteShip extends Packet<PacketPasteShip>
-{
+public class PacketPasteShip extends Packet<PacketPasteShip> {
+	
 	private String m_encodedBlocks;
 	private int m_dx;
 	private int m_dy;
 	private int m_dz;
 	
-	public PacketPasteShip( )
-	{
+	public PacketPasteShip() {
 		// for registation
 	}
 	
-	public PacketPasteShip( String encodedBlocks, int dx, int dy, int dz )
-	{
+	public PacketPasteShip(String encodedBlocks, int dx, int dy, int dz) {
 		m_encodedBlocks = encodedBlocks;
 		m_dx = dx;
 		m_dy = dy;
@@ -42,18 +40,16 @@ public class PacketPasteShip extends Packet<PacketPasteShip>
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		ByteBufUtils.writeUTF8String( buf, m_encodedBlocks );
-		buf.writeInt( m_dx );
-		buf.writeInt( m_dy );
-		buf.writeInt( m_dz );
+	public void toBytes(ByteBuf buf) {
+		ByteBufUtils.writeUTF8String(buf, m_encodedBlocks);
+		buf.writeInt(m_dx);
+		buf.writeInt(m_dy);
+		buf.writeInt(m_dz);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
-		m_encodedBlocks = ByteBufUtils.readUTF8String( buf );
+	public void fromBytes(ByteBuf buf) {
+		m_encodedBlocks = ByteBufUtils.readUTF8String(buf);
 		m_dx = buf.readInt();
 		m_dy = buf.readInt();
 		m_dz = buf.readInt();
@@ -61,37 +57,26 @@ public class PacketPasteShip extends Packet<PacketPasteShip>
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketPasteShip,IMessage> getServerHandler( )
-	{
-		return new IMessageHandler<PacketPasteShip,IMessage>( )
-		{
+	public IMessageHandler<PacketPasteShip,IMessage> getServerHandler() {
+		return new IMessageHandler<PacketPasteShip,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketPasteShip message, MessageContext ctx )
-			{
-				return message.onReceivedServer( ctx.getServerHandler() );
+			public IMessage onMessage(PacketPasteShip message, MessageContext ctx) {
+				return message.onReceivedServer(ctx.getServerHandler());
 			}
 		};
 	}
 	
-	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
-	{
-		if( m_encodedBlocks == null )
-		{
+	private IMessage onReceivedServer(NetHandlerPlayServer netServer) {
+		if (m_encodedBlocks == null) {
 			return null;
 		}
 		
 		// restore the ship blocks on the server
-		try
-		{
-			ShipClipboard.restoreShip(
-				netServer.playerEntity.worldObj,
-				m_encodedBlocks,
-				new Coords( m_dx, m_dy, m_dz )
-			);
-		}
-		catch( PersistenceException ex )
-		{
-			Ships.logger.warning( ex, "Unable to restore ship!" );
+		try {
+			ShipClipboard.restoreShip(netServer.playerEntity.worldObj, m_encodedBlocks, new Coords(m_dx, m_dy, m_dz));
+		} catch (PersistenceException ex) {
+			Ships.logger.warning(ex, "Unable to restore ship!");
 		}
 		
 		return null;

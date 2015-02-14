@@ -20,64 +20,55 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cuchaz.ships.EntityShipPlaque;
 import cuchaz.ships.items.ItemShipPlaque;
 
-public class PacketShipPlaque extends Packet<PacketShipPlaque>
-{
+public class PacketShipPlaque extends Packet<PacketShipPlaque> {
+	
 	private int m_entityId;
 	private String m_name;
 	
-	public PacketShipPlaque( )
-	{
+	public PacketShipPlaque() {
 		// for registration
 	}
 	
-	public PacketShipPlaque( EntityShipPlaque shipPlaque )
-	{
+	public PacketShipPlaque(EntityShipPlaque shipPlaque) {
 		m_entityId = shipPlaque.getEntityId();
 		m_name = shipPlaque.getName();
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		buf.writeInt( m_entityId );
-		ByteBufUtils.writeUTF8String( buf, m_name );
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(m_entityId);
+		ByteBufUtils.writeUTF8String(buf, m_name);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
+	public void fromBytes(ByteBuf buf) {
 		m_entityId = buf.readInt();
-		m_name = ByteBufUtils.readUTF8String( buf );
+		m_name = ByteBufUtils.readUTF8String(buf);
 	}
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketShipPlaque,IMessage> getServerHandler( )
-	{
-		return new IMessageHandler<PacketShipPlaque,IMessage>( )
-		{
+	public IMessageHandler<PacketShipPlaque,IMessage> getServerHandler() {
+		return new IMessageHandler<PacketShipPlaque,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketShipPlaque message, MessageContext ctx )
-			{
-				return message.onReceivedServer( ctx.getServerHandler() );
+			public IMessage onMessage(PacketShipPlaque message, MessageContext ctx) {
+				return message.onReceivedServer(ctx.getServerHandler());
 			}
 		};
 	}
 	
-	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
-	{
+	private IMessage onReceivedServer(NetHandlerPlayServer netServer) {
 		// can this player use the ship plaque?
-		if( !ItemShipPlaque.canUse( netServer.playerEntity ) )
-		{
+		if (!ItemShipPlaque.canUse(netServer.playerEntity)) {
 			return null;
 		}
 		
 		// get the ship plaque
-		Entity entity = netServer.playerEntity.worldObj.getEntityByID( m_entityId );
-		if( entity != null && entity instanceof EntityShipPlaque ) 
-		{
+		Entity entity = netServer.playerEntity.worldObj.getEntityByID(m_entityId);
+		if (entity != null && entity instanceof EntityShipPlaque) {
 			EntityShipPlaque shipPlaque = (EntityShipPlaque)entity;
-			shipPlaque.setName( m_name );
+			shipPlaque.setName(m_name);
 		}
 		
 		return null;

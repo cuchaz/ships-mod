@@ -21,62 +21,52 @@ import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
 
-@SideOnly( Side.CLIENT )
-public class ShipDebugRenderInfo
-{
+@SideOnly(Side.CLIENT)
+public class ShipDebugRenderInfo {
+	
 	private boolean m_isRendered;
 	private BlockSet m_collidedCoords;
 	private Map<Entity,AxisAlignedBB> m_queryBoxes;
 	
-	public ShipDebugRenderInfo( )
-	{
+	public ShipDebugRenderInfo() {
 		m_isRendered = false;
 		m_collidedCoords = new BlockSet();
 		m_queryBoxes = new HashMap<Entity,AxisAlignedBB>();
 	}
 	
-	public static boolean isDebugRenderingOn( )
-	{
+	public static boolean isDebugRenderingOn() {
 		return Minecraft.getMinecraft().gameSettings.showDebugInfo;
 		// here's the flag for the game's built-in debug rendering
 		// RenderManager.field_85095_o;
 	}
 	
-	public BlockSet getCollidedCoords( )
-	{
+	public BlockSet getCollidedCoords() {
 		return m_collidedCoords;
 	}
 	
-	public Iterable<AxisAlignedBB> getQueryBoxes( )
-	{
+	public Iterable<AxisAlignedBB> getQueryBoxes() {
 		return m_queryBoxes.values();
 	}
 	
-	public void setRendered()
-	{
+	public void setRendered() {
 		m_isRendered = true;
 	}
 	
-	public void addCollidedCoord( Coords coords )
-	{
-		if( m_isRendered )
-		{
+	public void addCollidedCoord(Coords coords) {
+		if (m_isRendered) {
 			reset();
 		}
-		m_collidedCoords.add( coords );
+		m_collidedCoords.add(coords);
 	}
 	
-	public void setQueryBox( Entity entity, AxisAlignedBB box )
-	{
-		if( m_isRendered )
-		{
+	public void setQueryBox(Entity entity, AxisAlignedBB box) {
+		if (m_isRendered) {
 			reset();
 		}
-		m_queryBoxes.put( entity, box );
+		m_queryBoxes.put(entity, box);
 	}
 	
-	private void reset( )
-	{
+	private void reset() {
 		m_isRendered = false;
 		m_collidedCoords.clear();
 		m_queryBoxes.clear();

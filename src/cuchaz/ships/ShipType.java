@@ -18,99 +18,98 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public enum ShipType
-{
-	Tiny( 20, true )
-	{
+public enum ShipType {
+	Tiny(20, true) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Items.iron_ingot ),
-				'y', new ItemStack( Items.redstone )
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xxx",
+				"xyx",
+				"xxx",
+				'x', new ItemStack(Items.iron_ingot),
+				'y', new ItemStack(Items.redstone)
 			);
 		}
 	},
-	Small( 200, false )
-	{
+	Small(200, false) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xzx", "zyz", "xzx",
-				'x', new ItemStack( Items.iron_ingot ),
-				'y', new ItemStack( Items.redstone ),
-				'z', new ItemStack( Items.gold_ingot )
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xzx",
+				"zyz",
+				"xzx",
+				'x', new ItemStack(Items.iron_ingot),
+				'y', new ItemStack(Items.redstone),
+				'z', new ItemStack(Items.gold_ingot)
 			);
 		}
 	},
-	Medium( 400, false )
-	{
+	Medium(400, false) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Items.gold_ingot ),
-				'y', new ItemStack( Items.redstone )
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xxx",
+				"xyx",
+				"xxx",
+				'x', new ItemStack(Items.gold_ingot),
+				'y', new ItemStack(Items.redstone)
 			);
 		}
 	},
-	Large( 1000, false )
-	{
+	Large(1000, false) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xzx", "zyz", "xzx",
-				'x', new ItemStack( Items.gold_ingot ),
-				'y', new ItemStack( Items.redstone ),
-				'z', new ItemStack( Items.dye, 1, 4 ) // lapis lazuli
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xzx",
+				"zyz",
+				"xzx",
+				'x', new ItemStack(Items.gold_ingot),
+				'y', new ItemStack(Items.redstone),
+				'z', new ItemStack(Items.dye, 1, 4) // lapis lazuli
 			);
 		}
 	},
-	Huge( 2000, false )
-	{
+	Huge(2000, false) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Items.dye, 1, 4 ), // lapis lazuli
-				'y', new ItemStack( Items.redstone )
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xxx",
+				"xyx",
+				"xxx",
+				'x', new ItemStack(Items.dye, 1, 4), // lapis lazuli
+				'y', new ItemStack(Items.redstone)
 			);
 		}
 	},
-	Gigantic( 4000, false )
-	{
+	Gigantic(4000, false) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xzx", "zyz", "xzx",
-				'x', new ItemStack( Items.dye, 1, 4 ), // lapis lazuli
-				'y', new ItemStack( Items.redstone ),
-				'z', new ItemStack( Items.diamond )
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xzx",
+				"zyz",
+				"xzx",
+				'x', new ItemStack(Items.dye, 1, 4), // lapis lazuli
+				'y', new ItemStack(Items.redstone),
+				'z', new ItemStack(Items.diamond)
 			);
 		}
 	},
-	Epic( 10000, false )
-	{
+	Epic(10000, false) {
+		
 		@Override
-		protected void registerBlock( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"xxx", "xyx", "xxx",
-				'x', new ItemStack( Items.diamond ),
-				'y', new ItemStack( Items.redstone )
+		protected void registerBlock() {
+			GameRegistry.addRecipe(newItemStack(),
+				"xxx",
+				"xyx",
+				"xxx",
+				'x', new ItemStack(Items.diamond),
+				'y', new ItemStack(Items.redstone)
 			);
 		}
 	};
@@ -118,61 +117,50 @@ public enum ShipType
 	private int m_maxNumBlocks;
 	private boolean m_isPaddleable;
 	
-	@SideOnly( Side.CLIENT )
+	@SideOnly(Side.CLIENT)
 	private IIcon m_icon;
 	
-	private ShipType( int maxNumBlocks, boolean isPaddleable )
-	{
+	private ShipType(int maxNumBlocks, boolean isPaddleable) {
 		m_maxNumBlocks = maxNumBlocks;
 		m_isPaddleable = isPaddleable;
 	}
 	
-	public int getMaxNumBlocks( )
-	{
+	public int getMaxNumBlocks() {
 		return m_maxNumBlocks;
 	}
 	
-	public boolean isPaddleable( )
-	{
+	public boolean isPaddleable() {
 		return m_isPaddleable;
 	}
 	
-	@SideOnly( Side.CLIENT )
-	public static void registerIcons( IIconRegister iconRegister )
-	{
-		for( ShipType type : values() )
-		{
-			type.m_icon = iconRegister.registerIcon( "ships:shipSide-" + type.name().toLowerCase() );
+	@SideOnly(Side.CLIENT)
+	public static void registerIcons(IIconRegister iconRegister) {
+		for (ShipType type : values()) {
+			type.m_icon = iconRegister.registerIcon("ships:shipSide-" + type.name().toLowerCase());
 		}
 	}
 	
-	public IIcon getIcon( )
-	{
+	public IIcon getIcon() {
 		return m_icon;
 	}
 	
-	public static ShipType getByMeta( int meta )
-	{
+	public static ShipType getByMeta(int meta) {
 		return values()[meta];
 	}
 	
-	public int getMeta( )
-	{
+	public int getMeta() {
 		return ordinal();
 	}
 	
-	public ItemStack newItemStack( )
-	{
-		return new ItemStack( Ships.m_blockShip, 1, getMeta() );
+	public ItemStack newItemStack() {
+		return new ItemStack(Ships.m_blockShip, 1, getMeta());
 	}
 	
-	public static void registerRecipes( )
-	{
-		for( ShipType type : values() )
-		{
+	public static void registerRecipes() {
+		for (ShipType type : values()) {
 			type.registerBlock();
 		}
 	}
 	
-	protected abstract void registerBlock( );
+	protected abstract void registerBlock();
 }

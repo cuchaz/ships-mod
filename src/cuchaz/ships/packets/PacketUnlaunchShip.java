@@ -19,59 +19,50 @@ import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipUnlauncher;
 
-public class PacketUnlaunchShip extends Packet<PacketUnlaunchShip>
-{
+public class PacketUnlaunchShip extends Packet<PacketUnlaunchShip> {
+	
 	private int m_entityId;
 	
-	public PacketUnlaunchShip( )
-	{
+	public PacketUnlaunchShip() {
 		// for registration
 	}
 	
-	public PacketUnlaunchShip( int entityId )
-	{
+	public PacketUnlaunchShip(int entityId) {
 		m_entityId = entityId;
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		buf.writeInt( m_entityId );
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(m_entityId);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
+	public void fromBytes(ByteBuf buf) {
 		m_entityId = buf.readInt();
 	}
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketUnlaunchShip,IMessage> getServerHandler( )
-	{
-		return new IMessageHandler<PacketUnlaunchShip,IMessage>( )
-		{
+	public IMessageHandler<PacketUnlaunchShip,IMessage> getServerHandler() {
+		return new IMessageHandler<PacketUnlaunchShip,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketUnlaunchShip message, MessageContext ctx )
-			{
-				return message.onReceivedServer( ctx.getServerHandler() );
+			public IMessage onMessage(PacketUnlaunchShip message, MessageContext ctx) {
+				return message.onReceivedServer(ctx.getServerHandler());
 			}
 		};
 	}
 	
-	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
-	{
+	private IMessage onReceivedServer(NetHandlerPlayServer netServer) {
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );
-		if( ship == null )
-		{
+		EntityShip ship = ShipLocator.getShip(netServer.playerEntity.worldObj, m_entityId);
+		if (ship == null) {
 			return null;
 		}
 		
 		// unlaunch the ship
-		ShipUnlauncher unlauncher = new ShipUnlauncher( ship );
-		if( unlauncher.isUnlaunchable( true ) )
-		{
+		ShipUnlauncher unlauncher = new ShipUnlauncher(ship);
+		if (unlauncher.isUnlaunchable(true)) {
 			unlauncher.unlaunch();
 		}
 		

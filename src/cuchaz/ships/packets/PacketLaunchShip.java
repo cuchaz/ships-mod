@@ -21,35 +21,31 @@ import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLauncher.LaunchFlag;
 import cuchaz.ships.Ships;
 
-public class PacketLaunchShip extends Packet<PacketLaunchShip>
-{
+public class PacketLaunchShip extends Packet<PacketLaunchShip> {
+	
 	private int m_x;
 	private int m_y;
 	private int m_z;
 	
-	public PacketLaunchShip( )
-	{
+	public PacketLaunchShip() {
 		// for registration
 	}
 	
-	public PacketLaunchShip( Coords coords )
-	{
+	public PacketLaunchShip(Coords coords) {
 		m_x = coords.x;
 		m_y = coords.y;
 		m_z = coords.z;
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		buf.writeInt( m_x );
-		buf.writeInt( m_y );
-		buf.writeInt( m_z );
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(m_x);
+		buf.writeInt(m_y);
+		buf.writeInt(m_z);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
+	public void fromBytes(ByteBuf buf) {
 		m_x = buf.readInt();
 		m_y = buf.readInt();
 		m_z = buf.readInt();
@@ -57,38 +53,28 @@ public class PacketLaunchShip extends Packet<PacketLaunchShip>
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketLaunchShip,IMessage> getServerHandler( )
-	{
-		return new IMessageHandler<PacketLaunchShip,IMessage>( )
-		{
+	public IMessageHandler<PacketLaunchShip,IMessage> getServerHandler() {
+		return new IMessageHandler<PacketLaunchShip,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketLaunchShip message, MessageContext ctx )
-			{
-				return message.onReceivedServer( ctx.getServerHandler() );
+			public IMessage onMessage(PacketLaunchShip message, MessageContext ctx) {
+				return message.onReceivedServer(ctx.getServerHandler());
 			}
 		};
 	}
 	
-	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
-	{
+	private IMessage onReceivedServer(NetHandlerPlayServer netServer) {
 		World world = netServer.playerEntity.worldObj;
 		
 		// spawn the ship
-		ShipLauncher launcher = new ShipLauncher( world, new Coords( m_x, m_y, m_z ) );
-		if( launcher.isLaunchable() )
-		{
+		ShipLauncher launcher = new ShipLauncher(world, new Coords(m_x, m_y, m_z));
+		if (launcher.isLaunchable()) {
 			launcher.launch();
-		}
-		else
-		{
+		} else {
 			// debug info
-			Ships.logger.warning(
-				"Server can't launch ship at: (%d,%d,%d)",
-				m_x, m_y, m_z
-			);
-			for( LaunchFlag flag : LaunchFlag.values() )
-			{
-				Ships.logger.warning( "\t" + flag.name() + ": " + launcher.getLaunchFlag( flag ) );
+			Ships.logger.warning("Server can't launch ship at: (%d,%d,%d)", m_x, m_y, m_z);
+			for (LaunchFlag flag : LaunchFlag.values()) {
+				Ships.logger.warning("\t" + flag.name() + ": " + launcher.getLaunchFlag(flag));
 			}
 		}
 		

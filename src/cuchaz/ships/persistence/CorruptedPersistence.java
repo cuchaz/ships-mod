@@ -10,12 +10,11 @@
  ******************************************************************************/
 package cuchaz.ships.persistence;
 
-public class CorruptedPersistence extends PersistenceException
-{
+public class CorruptedPersistence extends PersistenceException {
+	
 	private static final long serialVersionUID = 6468194186150584767L;
-
-	public CorruptedPersistence( Exception cause )
-	{
-		super( "Saved ship appears corrupted!", cause );
+	
+	public CorruptedPersistence(Exception cause) {
+		super("Saved ship appears corrupted!", cause);
 	}
 }

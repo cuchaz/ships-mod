@@ -17,35 +17,30 @@ import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.config.BlockProperties;
 
-public class WaterDisplacer extends Displacer
-{
-	public WaterDisplacer( EntityShip ship )
-	{
-		super( ship, Ships.m_blockAirWall );
+public class WaterDisplacer extends Displacer {
+	
+	public WaterDisplacer(EntityShip ship) {
+		super(ship, Ships.m_blockAirWall);
 	}
 	
-	public void update( double waterHeightInBlockSpace )
-	{
+	public void update(double waterHeightInBlockSpace) {
 		// get all the trapped air blocks
-		BlockSet trappedAirBlocks = m_ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace );
-		if( trappedAirBlocks.isEmpty() )
-		{
+		BlockSet trappedAirBlocks = m_ship.getShipWorld().getDisplacement().getTrappedAirFromWaterHeight(waterHeightInBlockSpace);
+		if (trappedAirBlocks.isEmpty()) {
 			// the ship is out of the water or flooded
 			return;
 		}
 		
 		// translate to world blocks
 		m_shouldBeDisplaced.clear();
-		m_ship.getCollider().getIntersectingWorldBlocks( m_shouldBeDisplaced, trappedAirBlocks, 0.01, false );
+		m_ship.getCollider().getIntersectingWorldBlocks(m_shouldBeDisplaced, trappedAirBlocks, 0.01, false);
 		
 		// filter out blocks that aren't water
 		Iterator<Coords> iter = m_shouldBeDisplaced.iterator();
-		while( iter.hasNext() )
-		{
+		while (iter.hasNext()) {
 			Coords coords = iter.next();
-			Block block = m_ship.worldObj.getBlock( coords.x, coords.y, coords.z );
-			if( !BlockProperties.isWater( block ) )
-			{
+			Block block = m_ship.worldObj.getBlock(coords.x, coords.y, coords.z);
+			if (!BlockProperties.isWater(block)) {
 				iter.remove();
 			}
 		}

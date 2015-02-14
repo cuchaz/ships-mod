@@ -29,108 +29,86 @@ import net.minecraft.world.storage.WorldInfo;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class DetachedWorld extends World
-{
-	private static class SaveHandler implements ISaveHandler
-	{
+public class DetachedWorld extends World {
+	
+	private static class SaveHandler implements ISaveHandler {
+		
 		@Override
-		public WorldInfo loadWorldInfo( )
-		{
+		public WorldInfo loadWorldInfo() {
 			return null;
 		}
-
+		
 		@Override
-		public void checkSessionLock( )
-		throws MinecraftException
-		{
+		public void checkSessionLock() throws MinecraftException {
 		}
-
+		
 		@Override
-		public IChunkLoader getChunkLoader( WorldProvider worldprovider )
-		{
+		public IChunkLoader getChunkLoader(WorldProvider worldprovider) {
 			return null;
 		}
-
+		
 		@Override
-		public void saveWorldInfoWithPlayer( WorldInfo worldinfo, NBTTagCompound nbttagcompound )
-		{
+		public void saveWorldInfoWithPlayer(WorldInfo worldinfo, NBTTagCompound nbttagcompound) {
 		}
-
+		
 		@Override
-		public void saveWorldInfo( WorldInfo worldinfo )
-		{
+		public void saveWorldInfo(WorldInfo worldinfo) {
 		}
-
+		
 		@Override
-		public IPlayerFileData getSaveHandler( )
-		{
+		public IPlayerFileData getSaveHandler() {
 			return null;
 		}
-
+		
 		@Override
-		public void flush( )
-		{
+		public void flush() {
 		}
-
+		
 		@Override
-		public File getMapFileFromName( String s )
-		{
+		public File getMapFileFromName(String s) {
 			return null;
 		}
-
+		
 		@Override
-		public String getWorldDirectoryName( )
-		{
+		public String getWorldDirectoryName() {
 			return null;
 		}
-
+		
 		@Override
-		public File getWorldDirectory( )
-		{
+		public File getWorldDirectory() {
 			return null;
 		}
 	}
 	
-	public DetachedWorld( World realWorld, String worldName )
-	{
+	public DetachedWorld(World realWorld, String worldName) {
 		// none of these values have to actually work, but we just need to get past the World constructor
-		super(
-        	new SaveHandler(),
-        	worldName,
-        	new WorldSettings( realWorld.getWorldInfo() ),
-        	realWorld.provider,
-        	new Profiler()
-		);
+		super(new SaveHandler(), worldName, new WorldSettings(realWorld.getWorldInfo()), realWorld.provider, new Profiler());
 		
 		// world constructors try to take over the existing world
 		// so let the real world take back over
-		realWorld.provider.registerWorld( realWorld );
+		realWorld.provider.registerWorld(realWorld);
 		
 		isRemote = realWorld.isRemote;
 	}
 	
 	@Override
-	protected IChunkProvider createChunkProvider( )
-	{
+	protected IChunkProvider createChunkProvider() {
 		return null;
 	}
 	
 	@Override
-	public Entity getEntityByID( int i )
-	{
+	public Entity getEntityByID(int i) {
 		return null;
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int minBlockBrightness )
-	{
+	@SideOnly(Side.CLIENT)
+	public int getLightBrightnessForSkyBlocks(int x, int y, int z, int minBlockBrightness) {
 		return 0;
 	}
 	
 	@Override
-	public float getLightBrightness( int x, int y, int z )
-	{
+	public float getLightBrightness(int x, int y, int z) {
 		// how bright is this block intrinsically? (eg fluids)
 		// returns [0-1] where 1 is the most bright
 		
@@ -139,53 +117,45 @@ public class DetachedWorld extends World
 	}
 	
 	@Override
-	public BiomeGenBase getBiomeGenForCoords( int x, int z )
-	{
+	public BiomeGenBase getBiomeGenForCoords(int x, int z) {
 		// detached worlds don't have biomes
 		return null;
 	}
 	
 	@Override
-	public BiomeGenBase getBiomeGenForCoordsBody( int x, int z )
-	{
+	public BiomeGenBase getBiomeGenForCoordsBody(int x, int z) {
 		// detached worlds don't have biomes
 		return null;
 	}
 	
 	@Override
-	public boolean doChunksNearChunkExist( int blockX, int blockY, int blockZ, int dist )
-	{
+	public boolean doChunksNearChunkExist(int blockX, int blockY, int blockZ, int dist) {
 		return true;
 	}
 	
 	@Override
-	protected boolean chunkExists( int chunkX, int chunkZ )
-	{
+	protected boolean chunkExists(int chunkX, int chunkZ) {
 		return true;
 	}
 	
 	@Override
-	public Chunk getChunkFromChunkCoords( int chunkX, int chunkZ )
-    {
+	public Chunk getChunkFromChunkCoords(int chunkX, int chunkZ) {
 		// detatched worlds don't have chunks
 		return null;
-    }
+	}
 	
 	@Override
-	public String getProviderName( )
-	{
+	public String getProviderName() {
 		return "Detatched world";
 	}
 	
 	@Override
-	public boolean isBlockNormalCubeDefault( int blockX, int blockY, int blockZ, boolean defaultValue )
-	{
+	public boolean isBlockNormalCubeDefault(int blockX, int blockY, int blockZ, boolean defaultValue) {
 		return false;
 	}
-
+	
 	@Override
-	protected int func_152379_p( )
-	{
+	protected int func_152379_p() {
 		// TODO Auto-generated method stub
 		return 0;
 	}

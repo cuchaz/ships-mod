@@ -14,14 +14,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
-public class Collider
-{
-	public static void onEntityMove( Entity entity, double dx, double dy, double dz )
-	{
+public class Collider {
+	
+	public static void onEntityMove(Entity entity, double dx, double dy, double dz) {
 		// no clip? Then it's easy
-		if( entity.noClip )
-		{
-			entity.moveEntity( dx, dy, dz );
+		if (entity.noClip) {
+			entity.moveEntity(dx, dy, dz);
 			return;
 		}
 		
@@ -35,44 +33,34 @@ public class Collider
 		// because edge walk-over prevention doesn't know about ship blocks
 		// it always sees the player as already over the edge, so any movement is prevented
 		boolean isPlayerCrouching = entity.onGround && entity.isSneaking() && entity instanceof EntityPlayer;
-		if( isPlayerCrouching && isEntityOnAnyShip( entity ) )
-		{
+		if (isPlayerCrouching && isEntityOnAnyShip(entity)) {
 			// move the entity against the world without edge walk-over protections
 			entity.onGround = false;
-			entity.moveEntity( dx, dy, dz );
+			entity.moveEntity(dx, dy, dz);
 			entity.onGround = true;
-		}
-		else
-		{
+		} else {
 			// collide with the world normally
-			entity.moveEntity( dx, dy, dz );
+			entity.moveEntity(dx, dy, dz);
 		}
 		
-		for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
-		{
+		for (EntityShip ship : ShipLocator.getFromEntityLocation(entity)) {
 			// collide with the ships
-			ship.getCollider().onNearbyEntityMoved( oldX, oldY, oldZ,oldYSize, entity );
+			ship.getCollider().onNearbyEntityMoved(oldX, oldY, oldZ, oldYSize, entity);
 		}
 	}
 	
-	public static boolean isEntityOnShipLadder( EntityLivingBase entity )
-	{
-		for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
-		{
-			if( ship.getCollider().isEntityOnLadder( entity ) )
-			{
+	public static boolean isEntityOnShipLadder(EntityLivingBase entity) {
+		for (EntityShip ship : ShipLocator.getFromEntityLocation(entity)) {
+			if (ship.getCollider().isEntityOnLadder(entity)) {
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	private static boolean isEntityOnAnyShip( Entity entity )
-	{
-		for( EntityShip ship : ShipLocator.getFromEntityLocation( entity ) )
-		{
-			if( ship.getCollider().isEntityAboard( entity ) )
-			{
+	private static boolean isEntityOnAnyShip(Entity entity) {
+		for (EntityShip ship : ShipLocator.getFromEntityLocation(entity)) {
+			if (ship.getCollider().isEntityAboard(entity)) {
 				return true;
 			}
 		}

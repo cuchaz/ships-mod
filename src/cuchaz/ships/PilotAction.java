@@ -16,140 +16,115 @@ import net.minecraft.client.settings.GameSettings;
 
 import org.lwjgl.input.Keyboard;
 
-public enum PilotAction
-{
-	Forward
-	{
+public enum PilotAction {
+	Forward {
+		
 		@Override
-		public void applyToShip( EntityShip ship )
-		{
+		public void applyToShip(EntityShip ship) {
 			ship.linearThrottle = EntityShip.LinearThrottleMax;
 		}
 		
 		@Override
-		public void resetShip( EntityShip ship )
-		{
+		public void resetShip(EntityShip ship) {
 			ship.linearThrottle = 0;
 		}
 	},
-	Backward
-	{
+	Backward {
+		
 		@Override
-		public void applyToShip( EntityShip ship )
-		{
+		public void applyToShip(EntityShip ship) {
 			ship.linearThrottle = EntityShip.LinearThrottleMin;
 		}
 		
 		@Override
-		public void resetShip( EntityShip ship )
-		{
+		public void resetShip(EntityShip ship) {
 			ship.linearThrottle = 0;
 		}
 	},
-	Left
-	{
+	Left {
+		
 		@Override
-		public void applyToShip( EntityShip ship )
-		{
+		public void applyToShip(EntityShip ship) {
 			ship.angularThrottle = EntityShip.AngularThrottleMax;
 		}
-
+		
 		@Override
-		public void resetShip( EntityShip ship )
-		{
+		public void resetShip(EntityShip ship) {
 			ship.angularThrottle = 0;
 		}
 	},
-	Right
-	{
+	Right {
+		
 		@Override
-		public void applyToShip( EntityShip ship )
-		{
+		public void applyToShip(EntityShip ship) {
 			ship.angularThrottle = EntityShip.AngularThrottleMin;
 		}
 		
 		@Override
-		public void resetShip( EntityShip ship )
-		{
+		public void resetShip(EntityShip ship) {
 			ship.angularThrottle = 0;
 		}
 	},
-	ThrottleUp
-	{
+	ThrottleUp {
+		
 		private boolean m_isForwardAllowed = true;
 		
 		@Override
-		public void applyToShip( EntityShip ship )
-		{
-			if( ship.linearThrottle < 0 )
-			{
+		public void applyToShip(EntityShip ship) {
+			if (ship.linearThrottle < 0) {
 				// add a backstop so we stop at zero throttle
 				m_isForwardAllowed = false;
 			}
 			
-			if( ( ship.linearThrottle < 0 ) || ( ship.linearThrottle == 0 && m_isForwardAllowed ) || ( ship.linearThrottle > 0 ) )
-			{
+			if ( (ship.linearThrottle < 0) || (ship.linearThrottle == 0 && m_isForwardAllowed) || (ship.linearThrottle > 0)) {
 				// increase the throttle, but make sure we stop at zero
-				if( ship.linearThrottle < 0 && ship.linearThrottle > -EntityShip.LinearThrottleStep )
-				{
+				if (ship.linearThrottle < 0 && ship.linearThrottle > -EntityShip.LinearThrottleStep) {
 					ship.linearThrottle = 0;
-				}
-				else
-				{
+				} else {
 					ship.linearThrottle += EntityShip.LinearThrottleStep;
 				}
 			}
 		}
 		
 		@Override
-		public void resetShip( EntityShip ship )
-		{
+		public void resetShip(EntityShip ship) {
 			m_isForwardAllowed = true;
 		}
 	},
-	ThrottleDown
-	{
+	ThrottleDown {
+		
 		private boolean m_isReverseAllowed = true;
 		
 		@Override
-		public void applyToShip( EntityShip ship )
-		{
-			if( ship.linearThrottle > 0 )
-			{
+		public void applyToShip(EntityShip ship) {
+			if (ship.linearThrottle > 0) {
 				// add a backstop so we stop at zero throttle
 				m_isReverseAllowed = false;
 			}
 			
-			if( ( ship.linearThrottle > 0 ) || ( ship.linearThrottle == 0 && m_isReverseAllowed ) || ( ship.linearThrottle < 0 ) )
-			{
+			if ( (ship.linearThrottle > 0) || (ship.linearThrottle == 0 && m_isReverseAllowed) || (ship.linearThrottle < 0)) {
 				// decrease the throttle, but make sure we stop at zero
-				if( ship.linearThrottle > 0 && ship.linearThrottle < EntityShip.LinearThrottleStep )
-				{
+				if (ship.linearThrottle > 0 && ship.linearThrottle < EntityShip.LinearThrottleStep) {
 					ship.linearThrottle = 0;
-				}
-				else
-				{
+				} else {
 					ship.linearThrottle -= EntityShip.LinearThrottleStep;
 				}
 			}
 		}
 		
 		@Override
-		public void resetShip( EntityShip ship )
-		{
+		public void resetShip(EntityShip ship) {
 			m_isReverseAllowed = true;
 		}
 	};
 	
 	private int m_keyCode;
 	
-	private PilotAction( )
-	{
+	private PilotAction() {
 		m_keyCode = -1;
 	}
 	
-	public static void setActionCodes( GameSettings settings )
-	{
+	public static void setActionCodes(GameSettings settings) {
 		Forward.m_keyCode = settings.keyBindForward.getKeyCode();
 		Backward.m_keyCode = settings.keyBindBack.getKeyCode();
 		Left.m_keyCode = settings.keyBindLeft.getKeyCode();
@@ -158,51 +133,40 @@ public enum PilotAction
 		ThrottleDown.m_keyCode = settings.keyBindBack.getKeyCode();
 	}
 	
-	public static int getActiveActions( GameSettings settings, List<PilotAction> allowedActions )
-	{
+	public static int getActiveActions(GameSettings settings, List<PilotAction> allowedActions) {
 		// roll up the actions into a bit vector
 		int actions = 0;
-		for( PilotAction action : allowedActions )
-		{
-			if( Keyboard.isKeyDown( action.m_keyCode ) )
-			{
+		for (PilotAction action : allowedActions) {
+			if (Keyboard.isKeyDown(action.m_keyCode)) {
 				actions |= 1 << action.ordinal();
 			}
 		}
 		return actions;
 	}
 	
-	public static void applyToShip( EntityShip ship, int actions )
-	{
-		for( PilotAction action : values() )
-		{
-			if( action.isActive( actions ) )
-			{
-				action.applyToShip( ship );
+	public static void applyToShip(EntityShip ship, int actions) {
+		for (PilotAction action : values()) {
+			if (action.isActive(actions)) {
+				action.applyToShip(ship);
 			}
 		}
 	}
 	
-	public static void resetShip( EntityShip ship, int actions, int oldActions )
-	{
-		for( PilotAction action : values() )
-		{
-			if( action.isActive( oldActions ) && !action.isActive( actions ) )
-			{
-				action.resetShip( ship );
+	public static void resetShip(EntityShip ship, int actions, int oldActions) {
+		for (PilotAction action : values()) {
+			if (action.isActive(oldActions) && !action.isActive(actions)) {
+				action.resetShip(ship);
 			}
 		}
 	}
 	
-	public boolean isActive( int actions )
-	{
-		return ( ( actions >> ordinal() ) & 0x1 ) == 1;
+	public boolean isActive(int actions) {
+		return ( (actions >> ordinal()) & 0x1) == 1;
 	}
 	
-	protected abstract void applyToShip( EntityShip ship );
+	protected abstract void applyToShip(EntityShip ship);
 	
-	protected void resetShip( EntityShip ship )
-	{
+	protected void resetShip(EntityShip ship) {
 		// do nothing
 	}
 }

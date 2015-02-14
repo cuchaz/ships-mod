@@ -25,21 +25,19 @@ import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.Ships;
 
-public class PacketPilotShip extends Packet<PacketPilotShip>
-{
+public class PacketPilotShip extends Packet<PacketPilotShip> {
+	
 	private int m_entityId;
 	private int m_actions;
 	private BlockSide m_sideShipForward;
 	private int m_linearThrottle;
 	private int m_angularThrottle;
 	
-	public PacketPilotShip( )
-	{
+	public PacketPilotShip() {
 		// for registration
 	}
 	
-	public PacketPilotShip( int entityId, int actions, BlockSide sideFacingPlayer, int linearThrottle, int angularThrottle )
-	{
+	public PacketPilotShip(int entityId, int actions, BlockSide sideFacingPlayer, int linearThrottle, int angularThrottle) {
 		m_entityId = entityId;
 		m_actions = actions;
 		m_sideShipForward = sideFacingPlayer;
@@ -48,18 +46,16 @@ public class PacketPilotShip extends Packet<PacketPilotShip>
 	}
 	
 	@Override
-	public void toBytes( ByteBuf buf )
-	{
-		buf.writeInt( m_entityId );
-		buf.writeInt( m_actions );
-		buf.writeByte( m_sideShipForward.ordinal() );
-		buf.writeByte( m_linearThrottle );
-		buf.writeByte( m_angularThrottle );
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(m_entityId);
+		buf.writeInt(m_actions);
+		buf.writeByte(m_sideShipForward.ordinal());
+		buf.writeByte(m_linearThrottle);
+		buf.writeByte(m_angularThrottle);
 	}
 	
 	@Override
-	public void fromBytes( ByteBuf buf )
-	{
+	public void fromBytes(ByteBuf buf) {
 		m_entityId = buf.readInt();
 		m_actions = buf.readInt();
 		m_sideShipForward = BlockSide.values()[buf.readByte()];
@@ -69,71 +65,58 @@ public class PacketPilotShip extends Packet<PacketPilotShip>
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketPilotShip,IMessage> getServerHandler( )
-	{
-		return new IMessageHandler<PacketPilotShip,IMessage>( )
-		{
+	public IMessageHandler<PacketPilotShip,IMessage> getServerHandler() {
+		return new IMessageHandler<PacketPilotShip,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketPilotShip message, MessageContext ctx )
-			{
-				return message.onReceivedServer( ctx.getServerHandler() );
+			public IMessage onMessage(PacketPilotShip message, MessageContext ctx) {
+				return message.onReceivedServer(ctx.getServerHandler());
 			}
 		};
 	}
 	
-	private IMessage onReceivedServer( NetHandlerPlayServer netServer )
-	{
+	private IMessage onReceivedServer(NetHandlerPlayServer netServer) {
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( netServer.playerEntity.worldObj, m_entityId );
-		if( ship == null )
-		{
+		EntityShip ship = ShipLocator.getShip(netServer.playerEntity.worldObj, m_entityId);
+		if (ship == null) {
 			return null;
 		}
 		
-		applyActions( ship );
+		applyActions(ship);
 		
 		// relay the actions to the clients
-		Ships.net.getDispatch().sendToAllAround( this, new TargetPoint(
-			netServer.playerEntity.worldObj.provider.dimensionId,
-			ship.posX, ship.posY, ship.posZ,
-			100
-		) );
+		Ships.net.getDispatch().sendToAllAround(this, new TargetPoint(netServer.playerEntity.worldObj.provider.dimensionId, ship.posX, ship.posY, ship.posZ, 100));
 		
 		return null;
 	}
 	
 	// boilerplate code is annoying...
 	@Override
-	public IMessageHandler<PacketPilotShip,IMessage> getClientHandler( )
-	{
-		return new IMessageHandler<PacketPilotShip,IMessage>( )
-		{
+	public IMessageHandler<PacketPilotShip,IMessage> getClientHandler() {
+		return new IMessageHandler<PacketPilotShip,IMessage>() {
+			
 			@Override
-			public IMessage onMessage( PacketPilotShip message, MessageContext ctx )
-			{
-				return message.onReceivedClient( ctx.getClientHandler() );
+			public IMessage onMessage(PacketPilotShip message, MessageContext ctx) {
+				return message.onReceivedClient(ctx.getClientHandler());
 			}
 		};
 	}
 	
-	@SideOnly( Side.CLIENT )
-	private IMessage onReceivedClient( NetHandlerPlayClient netClient )
-	{
+	@SideOnly(Side.CLIENT)
+	private IMessage onReceivedClient(NetHandlerPlayClient netClient) {
 		// get the ship
-		EntityShip ship = ShipLocator.getShip( Minecraft.getMinecraft().theWorld, m_entityId );
-		if( ship == null )
-		{
+		EntityShip ship = ShipLocator.getShip(Minecraft.getMinecraft().theWorld, m_entityId);
+		if (ship == null) {
 			return null;
 		}
 		
-		applyActions( ship );
+		applyActions(ship);
 		
 		return null;
 	}
 	
-	private void applyActions( EntityShip ship )
-	{
-		ship.setPilotActions( m_actions, m_sideShipForward, false );
+	private void applyActions(EntityShip ship) {
+		ship.setPilotActions(m_actions, m_sideShipForward, false);
 		ship.linearThrottle = m_linearThrottle;
 		ship.angularThrottle = m_angularThrottle;
 	}

@@ -13,23 +13,20 @@ package cuchaz.ships.propulsion;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PropulsionDiscovererRegistry
-{
+public class PropulsionDiscovererRegistry {
+	
 	private static List<PropulsionDiscoverer> m_discoverers;
 	
-	static
-	{
+	static {
 		m_discoverers = new ArrayList<PropulsionDiscoverer>();
-		addDiscoverer( new SailDiscoverer() );
+		addDiscoverer(new SailDiscoverer());
 	}
 	
-	public static void addDiscoverer( PropulsionDiscoverer discoverer )
-	{
-		m_discoverers.add( discoverer );
+	public static void addDiscoverer(PropulsionDiscoverer discoverer) {
+		m_discoverers.add(discoverer);
 	}
 	
-	public static Iterable<PropulsionDiscoverer> discoverers( )
-	{
+	public static Iterable<PropulsionDiscoverer> discoverers() {
 		return m_discoverers;
 	}
 }

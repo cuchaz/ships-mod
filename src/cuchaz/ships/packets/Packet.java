@@ -13,15 +13,13 @@ package cuchaz.ships.packets;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 
-public abstract class Packet<T extends Packet<T>> implements IMessage
-{
-	public IMessageHandler<T,IMessage> getClientHandler( )
-	{
+public abstract class Packet<T extends Packet<T>> implements IMessage {
+	
+	public IMessageHandler<T,IMessage> getClientHandler() {
 		return null;
 	}
 	
-	public IMessageHandler<T,IMessage> getServerHandler( )
-	{
+	public IMessageHandler<T,IMessage> getServerHandler() {
 		return null;
 	}
 }

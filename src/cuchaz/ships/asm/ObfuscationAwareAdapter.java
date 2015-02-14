@@ -17,98 +17,78 @@ import org.objectweb.asm.ClassVisitor;
 
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 
-public class ObfuscationAwareAdapter extends ClassVisitor
-{
+public class ObfuscationAwareAdapter extends ClassVisitor {
+	
 	private boolean m_isObfuscatedEnvironment;
 	
-	public ObfuscationAwareAdapter( int api, ClassVisitor cv, boolean isObfuscatedEnvironment )
-	{
-		super( api, cv );
+	public ObfuscationAwareAdapter(int api, ClassVisitor cv, boolean isObfuscatedEnvironment) {
+		super(api, cv);
 		
 		m_isObfuscatedEnvironment = isObfuscatedEnvironment;
 	}
 	
-	public ClassVisitor getPreviousClassVisitor( )
-	{
+	public ClassVisitor getPreviousClassVisitor() {
 		return cv;
 	}
-	public void setPreviousClassVisitor( ClassVisitor val )
-	{
+	
+	public void setPreviousClassVisitor(ClassVisitor val) {
 		cv = val;
 	}
 	
-	protected String getRuntimeClassName( String clearClassName )
-	{
-		if( m_isObfuscatedEnvironment )
-		{
-			return getObfuscatedClassName( clearClassName );
-		}
-		else
-		{
+	protected String getRuntimeClassName(String clearClassName) {
+		if (m_isObfuscatedEnvironment) {
+			return getObfuscatedClassName(clearClassName);
+		} else {
 			return clearClassName;
 		}
 	}
 	
-	protected String getRuntimeMethodName( String runtimeClassName, String clearMethodName, String idMethodName )
-	{
-		if( m_isObfuscatedEnvironment )
-		{
-			return methodMapReverseLookup( getMethodMap( runtimeClassName ), idMethodName );
-		}
-		else
-		{
+	protected String getRuntimeMethodName(String runtimeClassName, String clearMethodName, String idMethodName) {
+		if (m_isObfuscatedEnvironment) {
+			return methodMapReverseLookup(getMethodMap(runtimeClassName), idMethodName);
+		} else {
 			return clearMethodName;
 		}
 	}
 	
-	private String getObfuscatedClassName( String clearClassName )
-	{
-		String obfuscatedClassName = FMLDeobfuscatingRemapper.INSTANCE.unmap( clearClassName );
-		if( obfuscatedClassName == null )
-		{
+	private String getObfuscatedClassName(String clearClassName) {
+		String obfuscatedClassName = FMLDeobfuscatingRemapper.INSTANCE.unmap(clearClassName);
+		if (obfuscatedClassName == null) {
 			// assume this class is not obufscated
 			obfuscatedClassName = clearClassName;
 		}
 		return obfuscatedClassName;
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	private Map<String,String> getMethodMap( String obfuscatedClassName )
-	{
+	@SuppressWarnings("unchecked")
+	private Map<String,String> getMethodMap(String obfuscatedClassName) {
 		// sadly, the method maps are private
 		// let's fix that
-		try
-		{
-			Field field = FMLDeobfuscatingRemapper.class.getDeclaredField( "methodNameMaps" );
-			field.setAccessible( true );
+		try {
+			Field field = FMLDeobfuscatingRemapper.class.getDeclaredField("methodNameMaps");
+			field.setAccessible(true);
 			
-			return ((Map<String,Map<String,String>>)field.get( FMLDeobfuscatingRemapper.INSTANCE )).get( obfuscatedClassName );
-		}
-		catch( Exception ex )
-		{
-			throw new Error( "Unable to access FML's deobfuscation mappings!", ex );
+			return ((Map<String,Map<String,String>>)field.get(FMLDeobfuscatingRemapper.INSTANCE)).get(obfuscatedClassName);
+		} catch (Exception ex) {
+			throw new Error("Unable to access FML's deobfuscation mappings!", ex);
 		}
 	}
 	
-	private String methodMapReverseLookup( Map<String,String> methodMap, String idMethodName )
-	{
+	private String methodMapReverseLookup(Map<String,String> methodMap, String idMethodName) {
 		// did we not get a method map? just pass through the method name
-		if( methodMap == null )
-		{
+		if (methodMap == null) {
 			return idMethodName;
 		}
 		
 		// methodNameMaps = Map<obfuscated class name,Map<obfuscated method name + signature,id method name>>
-		for( Map.Entry<String,String> entry : methodMap.entrySet() )
-		{
-			if( entry.getValue().equals( idMethodName ) )
-			{
+		for (Map.Entry<String,String> entry : methodMap.entrySet()) {
+			if (entry.getValue().equals(idMethodName)) {
 				String obfuscatedName = entry.getKey();
 				
 				// chop off the signature
 				// ie, turn "a(III)V" into just "a"
 				
-				return obfuscatedName.substring( 0, obfuscatedName.indexOf( "(" ) );
+				return obfuscatedName.substring(0, obfuscatedName.indexOf("("));
 			}
 		}
 		

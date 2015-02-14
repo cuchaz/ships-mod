@@ -20,97 +20,81 @@ import org.lwjgl.opengl.GL11;
 
 import cuchaz.modsShared.ColorUtils;
 
-public abstract class GuiShip extends GuiCloseable
-{
-	public final int TextColor = ColorUtils.getGrey( 64 );
-	public final int HeaderColor = ColorUtils.getColor( 50, 99, 145 );
-	public final int HeaderBevelColor = ColorUtils.getColor( 213, 223, 239 );
-	public final int YesColor = ColorUtils.getColor( 0, 160, 0 );
-	public final int NoColor = ColorUtils.getColor( 160, 0, 0 );
+public abstract class GuiShip extends GuiCloseable {
 	
-	private static final ResourceLocation BackgroundTexture = new ResourceLocation( "ships", "textures/gui/ship.png" );
+	public final int TextColor = ColorUtils.getGrey(64);
+	public final int HeaderColor = ColorUtils.getColor(50, 99, 145);
+	public final int HeaderBevelColor = ColorUtils.getColor(213, 223, 239);
+	public final int YesColor = ColorUtils.getColor(0, 160, 0);
+	public final int NoColor = ColorUtils.getColor(160, 0, 0);
 	
-	public GuiShip( Container container )
-	{
-		super( container );
+	private static final ResourceLocation BackgroundTexture = new ResourceLocation("ships", "textures/gui/ship.png");
+	
+	public GuiShip(Container container) {
+		super(container);
 		
 		xSize = 176;
 		ySize = 166;
 	}
 	
 	@Override
-	protected void drawGuiContainerBackgroundLayer( float renderPartialTicks, int mouseX, int mouseY )
-	{
-		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		mc.getTextureManager().bindTexture( BackgroundTexture );
-		drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize );
+	protected void drawGuiContainerBackgroundLayer(float renderPartialTicks, int mouseX, int mouseY) {
+		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		mc.getTextureManager().bindTexture(BackgroundTexture);
+		drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 	}
 	
-	protected void drawHeaderText( String text, int lineNum )
-	{
+	protected void drawHeaderText(String text, int lineNum) {
 		int x1 = LeftMargin;
 		int x2 = xSize - LeftMargin;
-		int y1 = getLineY( lineNum );
+		int y1 = getLineY(lineNum);
 		int y2 = y1 + this.mc.fontRenderer.FONT_HEIGHT;
-		drawHorizontalLine( x1 - 1, x2 - 1, y2 - 2, HeaderBevelColor );
-		this.mc.fontRenderer.drawString( text, x1 - 1, y1 - 1, HeaderBevelColor );
-		drawHorizontalLine( x1, x2, y2 - 1, HeaderColor );
-		this.mc.fontRenderer.drawString( text, x1, y1, HeaderColor );
+		drawHorizontalLine(x1 - 1, x2 - 1, y2 - 2, HeaderBevelColor);
+		this.mc.fontRenderer.drawString(text, x1 - 1, y1 - 1, HeaderBevelColor);
+		drawHorizontalLine(x1, x2, y2 - 1, HeaderColor);
+		this.mc.fontRenderer.drawString(text, x1, y1, HeaderColor);
 	}
 	
-	protected void drawText( String text, int lineNum )
-	{
-		drawText( text, lineNum, TextColor );
+	protected void drawText(String text, int lineNum) {
+		drawText(text, lineNum, TextColor);
 	}
 	
-	protected void drawText( String text, int lineNum, int color )
-	{
-		this.mc.fontRenderer.drawString( text, LeftMargin, getLineY( lineNum ), color );
+	protected void drawText(String text, int lineNum, int color) {
+		this.mc.fontRenderer.drawString(text, LeftMargin, getLineY(lineNum), color);
 	}
 	
-	protected void drawWrappedText( String text, int lineNum, int width )
-	{
-		this.mc.fontRenderer.drawSplitString( text, LeftMargin, getLineY( lineNum ), width, TextColor );
+	protected void drawWrappedText(String text, int lineNum, int width) {
+		this.mc.fontRenderer.drawSplitString(text, LeftMargin, getLineY(lineNum), width, TextColor);
 	}
 	
-	protected void drawLabelValueText( String labelText, String valueText, int lineNum )
-	{
+	protected void drawLabelValueText(String labelText, String valueText, int lineNum) {
 		// draw the label
-		this.mc.fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		this.mc.fontRenderer.drawString(labelText + ":", LeftMargin, getLineY(lineNum), TextColor);
 		
 		// draw the value
-		int valueWidth = this.mc.fontRenderer.getStringWidth( valueText );
-		this.mc.fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), TextColor );
+		int valueWidth = this.mc.fontRenderer.getStringWidth(valueText);
+		this.mc.fontRenderer.drawString(valueText, xSize - LeftMargin - valueWidth, getLineY(lineNum), TextColor);
 	}
 	
-	protected String getYesNoText( boolean flag )
-	{
+	protected String getYesNoText(boolean flag) {
 		return flag ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText();
 	}
 	
-	protected void drawYesNoText( String labelText, boolean isYes, int lineNum )
-	{
-		drawYesNoText(
-			labelText,
-			isYes ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText(),
-			isYes,
-			lineNum
-		);
+	protected void drawYesNoText(String labelText, boolean isYes, int lineNum) {
+		drawYesNoText(labelText, isYes ? GuiString.Yes.getLocalizedText() : GuiString.No.getLocalizedText(), isYes, lineNum);
 	}
 	
-	protected void drawYesNoText( String labelText, String valueText, boolean isYes, int lineNum )
-	{
+	protected void drawYesNoText(String labelText, String valueText, boolean isYes, int lineNum) {
 		// draw the label
-		this.mc.fontRenderer.drawString( labelText + ":", LeftMargin, getLineY( lineNum ), TextColor );
+		this.mc.fontRenderer.drawString(labelText + ":", LeftMargin, getLineY(lineNum), TextColor);
 		
 		// draw the value
 		int valueColor = isYes ? YesColor : NoColor;
-		int valueWidth = this.mc.fontRenderer.getStringWidth( valueText );
-		this.mc.fontRenderer.drawString( valueText, xSize - LeftMargin - valueWidth, getLineY( lineNum ), valueColor );
+		int valueWidth = this.mc.fontRenderer.getStringWidth(valueText);
+		this.mc.fontRenderer.drawString(valueText, xSize - LeftMargin - valueWidth, getLineY(lineNum), valueColor);
 	}
 	
-	protected int getLineY( int lineNum )
-	{
-		return TopMargin + ( this.mc.fontRenderer.FONT_HEIGHT + LineSpacing )*lineNum;
+	protected int getLineY(int lineNum) {
+		return TopMargin + (this.mc.fontRenderer.FONT_HEIGHT + LineSpacing) * lineNum;
 	}
 }

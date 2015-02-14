@@ -15,7 +15,7 @@ import java.util.List;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.BlocksStorage;
 
-public interface PropulsionDiscoverer
-{
-	public List<PropulsionMethod> getPropulsionMethods( BlocksStorage blocksStorage, BlockSide frontDirection );
+public interface PropulsionDiscoverer {
+	
+	public List<PropulsionMethod> getPropulsionMethods(BlocksStorage blocksStorage, BlockSide frontDirection);
 }

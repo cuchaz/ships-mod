@@ -21,31 +21,28 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.ships.gui.Gui;
 
-public class ItemListOfSupporters extends Item
-{
-	public ItemListOfSupporters()
-	{
+public class ItemListOfSupporters extends Item {
+	
+	public ItemListOfSupporters() {
 		maxStackSize = 1;
-		setCreativeTab( CreativeTabs.tabMisc );
-		setUnlocalizedName( "cuchaz.ships.listOfSupporters" );
+		setCreativeTab(CreativeTabs.tabMisc);
+		setUnlocalizedName("cuchaz.ships.listOfSupporters");
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public void registerIcons( IIconRegister iconRegister )
-	{
-		itemIcon = iconRegister.registerIcon( "ships:listOfSupporters" );
+	@SideOnly(Side.CLIENT)
+	public void registerIcons(IIconRegister iconRegister) {
+		itemIcon = iconRegister.registerIcon("ships:listOfSupporters");
 	}
 	
 	@Override
-	public ItemStack onItemRightClick( ItemStack itemStack, World world, EntityPlayer player )
-    {
+	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
 		// show the supporters GUI
-		int x = MathHelper.floor_double( player.posX );
-		int y = MathHelper.floor_double( player.posY );
-		int z = MathHelper.floor_double( player.posZ );
-		Gui.ListOfSupporters.open( player, world, x, y, z );
+		int x = MathHelper.floor_double(player.posX);
+		int y = MathHelper.floor_double(player.posY);
+		int z = MathHelper.floor_double(player.posZ);
+		Gui.ListOfSupporters.open(player, world, x, y, z);
 		
 		return itemStack;
-    }
+	}
 }

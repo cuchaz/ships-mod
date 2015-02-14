@@ -21,30 +21,25 @@ import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 
-public class SailDiscoverer implements PropulsionDiscoverer
-{
+public class SailDiscoverer implements PropulsionDiscoverer {
+	
 	@Override
-	public List<PropulsionMethod> getPropulsionMethods( BlocksStorage shipBlocks, BlockSide frontDirection )
-	{
+	public List<PropulsionMethod> getPropulsionMethods(BlocksStorage shipBlocks, BlockSide frontDirection) {
 		// collect all the cloth blocks into connected components
 		BlockSet clothCoords = new BlockSet();
-		for( Coords coords : shipBlocks.coords() )
-		{
-			if( shipBlocks.getBlock( coords ).block == Blocks.wool )
-			{
-				clothCoords.add( coords );
+		for (Coords coords : shipBlocks.coords()) {
+			if (shipBlocks.getBlock(coords).block == Blocks.wool) {
+				clothCoords.add(coords);
 			}
 		}
-		List<BlockSet> clothComponents = BlockUtils.getConnectedComponents( clothCoords, Neighbors.Edges );
+		List<BlockSet> clothComponents = BlockUtils.getConnectedComponents(clothCoords, Neighbors.Edges);
 		
 		// build the sails
 		List<PropulsionMethod> sails = new ArrayList<PropulsionMethod>();
-		for( BlockSet component : clothComponents )
-		{
-			Sail sail = new Sail( shipBlocks, component, frontDirection );
-			if( sail.isValid() )
-			{
-				sails.add( sail );
+		for (BlockSet component : clothComponents) {
+			Sail sail = new Sail(shipBlocks, component, frontDirection);
+			if (sail.isValid()) {
+				sails.add(sail);
 			}
 		}
 		return sails;

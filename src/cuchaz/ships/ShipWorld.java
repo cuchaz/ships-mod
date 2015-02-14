@@ -46,10 +46,10 @@ import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
-public class ShipWorld extends DetachedWorld
-{	
+public class ShipWorld extends DetachedWorld {
+	
 	// NOTE: this member var is essentially cache. It works as long as the client/server are single-threaded
-	private Coords m_lookupCoords = new Coords( 0, 0, 0 );
+	private Coords m_lookupCoords = new Coords(0, 0, 0);
 	
 	private EntityShip m_ship;
 	private BlocksStorage m_storage;
@@ -59,9 +59,8 @@ public class ShipWorld extends DetachedWorld
 	private boolean m_needsRenderUpdate;
 	private int m_biomeId;
 	
-	public ShipWorld( World world )
-	{
-		super( world, "Ship" );
+	public ShipWorld(World world) {
+		super(world, "Ship");
 		
 		// init defaults
 		m_ship = null;
@@ -72,9 +71,8 @@ public class ShipWorld extends DetachedWorld
 		m_biomeId = 0;
 	}
 	
-	public ShipWorld( World world, BlocksStorage storage, BlockMap<TileEntity> tileEntities, BlockMap<EntityHanging> hangingEntities, int biomeId )
-	{
-		this( world );
+	public ShipWorld(World world, BlocksStorage storage, BlockMap<TileEntity> tileEntities, BlockMap<EntityHanging> hangingEntities, int biomeId) {
+		this(world);
 		
 		// save args
 		m_storage = storage;
@@ -83,80 +81,73 @@ public class ShipWorld extends DetachedWorld
 		m_biomeId = biomeId;
 		
 		// init the tile entities in the world
-		for( TileEntity tileEntity : m_tileEntities.values() )
-		{
-			tileEntity.setWorldObj( this );
+		for (TileEntity tileEntity : m_tileEntities.values()) {
+			tileEntity.setWorldObj(this);
 			tileEntity.validate();
 		}
 		
 		// init the hanging entities in the world
-		for( EntityHanging hangingEntity : m_hangingEntities.values() )
-		{
-			hangingEntity.setWorld( this );
+		for (EntityHanging hangingEntity : m_hangingEntities.values()) {
+			hangingEntity.setWorld(this);
 		}
 	}
 	
-	public ShipWorld( World world, Coords originCoords, BlockSet blocks )
-	{
-		this( world );
+	public ShipWorld(World world, Coords originCoords, BlockSet blocks) {
+		this(world);
 		
 		// copy the blocks
-		m_storage.readFromWorld( world, originCoords, blocks );
+		m_storage.readFromWorld(world, originCoords, blocks);
 		
 		// copy the tile entities
-		for( Coords worldCoords : blocks )
-		{
+		for (Coords worldCoords : blocks) {
 			// does this block have a tile entity?
-			TileEntity tileEntity = world.getTileEntity( worldCoords.x, worldCoords.y, worldCoords.z );
-			if( tileEntity == null )
-			{
+			TileEntity tileEntity = world.getTileEntity(worldCoords.x, worldCoords.y, worldCoords.z);
+			if (tileEntity == null) {
 				continue;
 			}
 			
-			Coords relativeCoords = new Coords( worldCoords.x - originCoords.x, worldCoords.y - originCoords.y, worldCoords.z - originCoords.z );
+			Coords relativeCoords = new Coords(
+				worldCoords.x - originCoords.x,
+				worldCoords.y - originCoords.y,
+				worldCoords.z - originCoords.z
+			);
 			
-			try
-			{
+			try {
 				// copy the tile entity
 				NBTTagCompound nbt = new NBTTagCompound();
-				tileEntity.writeToNBT( nbt );
-				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
+				tileEntity.writeToNBT(nbt);
+				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity(nbt);
 				
 				// initialize the tile entity
-				tileEntityCopy.setWorldObj( this );
+				tileEntityCopy.setWorldObj(this);
 				tileEntityCopy.xCoord = relativeCoords.x;
 				tileEntityCopy.yCoord = relativeCoords.y;
 				tileEntityCopy.zCoord = relativeCoords.z;
 				tileEntityCopy.validate();
 				
 				// save it to the ship world
-				m_tileEntities.put( relativeCoords, tileEntityCopy );
-			}
-			catch( Exception ex )
-			{
-				Ships.logger.warning(
-					ex,
-					"Tile entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but tile entity was not moved.",
-					tileEntity.getClass().getName(),
-					worldCoords.x, worldCoords.y, worldCoords.z
-				);
+				m_tileEntities.put(relativeCoords, tileEntityCopy);
+			} catch (Exception ex) {
+				Ships.logger.warning(ex, "Tile entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but tile entity was not moved.", tileEntity.getClass().getName(), worldCoords.x, worldCoords.y, worldCoords.z);
 			}
 		}
 		
 		// copy hanging entities
-		for( Map.Entry<Coords,EntityHanging> entry : getNearbyHangingEntities( world, blocks ).entrySet() )
-		{
+		for (Map.Entry<Coords,EntityHanging> entry : getNearbyHangingEntities(world, blocks).entrySet()) {
 			Coords worldCoords = entry.getKey();
 			EntityHanging hangingEntity = entry.getValue();
 			
-			Coords relativeCoords = new Coords( worldCoords.x - originCoords.x, worldCoords.y - originCoords.y, worldCoords.z - originCoords.z );
+			Coords relativeCoords = new Coords(
+				worldCoords.x - originCoords.x,
+				worldCoords.y - originCoords.y,
+				worldCoords.z - originCoords.z
+			);
 			
-			try
-			{
+			try {
 				// copy the hanging entity
 				NBTTagCompound nbt = new NBTTagCompound();
-				hangingEntity.writeToNBTOptional( nbt );
-				EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, this );
+				hangingEntity.writeToNBTOptional(nbt);
+				EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT(nbt, this);
 				
 				// save it to the ship world
 				hangingEntityCopy.field_146063_b = relativeCoords.x;
@@ -165,96 +156,74 @@ public class ShipWorld extends DetachedWorld
 				hangingEntityCopy.posX -= originCoords.x;
 				hangingEntityCopy.posY -= originCoords.y;
 				hangingEntityCopy.posZ -= originCoords.z;
-				m_hangingEntities.put( relativeCoords, hangingEntityCopy );
+				m_hangingEntities.put(relativeCoords, hangingEntityCopy);
 				
 				// reset the hanging entity's bounding box after the move
-				hangingEntityCopy.setDirection( hangingEntityCopy.hangingDirection );
-			}
-			catch( Exception ex )
-			{
-				Ships.logger.warning(
-					ex,
-					"Hanging entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but hanging entity was not moved.",
-					hangingEntity.getClass().getName(),
-					worldCoords.x, worldCoords.y, worldCoords.z
-				);
+				hangingEntityCopy.setDirection(hangingEntityCopy.hangingDirection);
+			} catch (Exception ex) {
+				Ships.logger.warning(ex, "Hanging entity %s at (%d,%d,%d) didn't like being moved to the ship. The block was moved, the but hanging entity was not moved.", hangingEntity.getClass().getName(), worldCoords.x, worldCoords.y, worldCoords.z);
 			}
 		}
 		
 		// copy the biome
-		m_biomeId = world.getBiomeGenForCoords( originCoords.x, originCoords.z ).biomeID;
+		m_biomeId = world.getBiomeGenForCoords(originCoords.x, originCoords.z).biomeID;
 	}
 	
-	public void restoreToWorld( World world, Map<Coords,Coords> correspondence, int waterHeightInBlockSpace )
-	{
+	public void restoreToWorld(World world, Map<Coords,Coords> correspondence, int waterHeightInBlockSpace) {
 		// restore the blocks
-		m_storage.writeToWorld( world, correspondence );
+		m_storage.writeToWorld(world, correspondence);
 		
 		// bail out the boat if needed (it might have water in the trapped air blocks)
-		for( Coords coordsShip : getDisplacement().getTrappedAirFromWaterHeight( waterHeightInBlockSpace ) )
-		{
-			Coords coordsWorld = correspondence.get( coordsShip );
+		for (Coords coordsShip : getDisplacement().getTrappedAirFromWaterHeight(waterHeightInBlockSpace)) {
+			Coords coordsWorld = correspondence.get(coordsShip);
 			
 			// is this block actually water?
-			Block block = world.getBlock( coordsWorld.x, coordsWorld.y, coordsWorld.z );
-			if( block == Blocks.water || block == Ships.m_blockAirWall )
-			{
-				BlockUtils.removeBlockWithoutNotifyingIt( world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients );
+			Block block = world.getBlock(coordsWorld.x, coordsWorld.y, coordsWorld.z);
+			if (block == Blocks.water || block == Ships.m_blockAirWall) {
+				BlockUtils.removeBlockWithoutNotifyingIt(world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients);
 			}
 		}
 		
 		// restore the tile entities
-		for( Map.Entry<Coords,TileEntity> entry : m_tileEntities.entrySet() )
-		{
+		for (Map.Entry<Coords,TileEntity> entry : m_tileEntities.entrySet()) {
 			Coords coordsShip = entry.getKey();
-			Coords coordsWorld = correspondence.get( coordsShip );
+			Coords coordsWorld = correspondence.get(coordsShip);
 			TileEntity tileEntity = entry.getValue();
 			
-			try
-			{
+			try {
 				NBTTagCompound nbt = new NBTTagCompound();
-				tileEntity.writeToNBT( nbt );
-				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity( nbt );
-				tileEntityCopy.setWorldObj( world );
+				tileEntity.writeToNBT(nbt);
+				TileEntity tileEntityCopy = TileEntity.createAndLoadEntity(nbt);
+				tileEntityCopy.setWorldObj(world);
 				tileEntityCopy.xCoord = coordsWorld.x;
 				tileEntityCopy.yCoord = coordsWorld.y;
 				tileEntityCopy.zCoord = coordsWorld.z;
 				tileEntityCopy.validate();
 				
-				world.setTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z, tileEntityCopy );
-			}
-			catch( Exception ex )
-			{
+				world.setTileEntity(coordsWorld.x, coordsWorld.y, coordsWorld.z, tileEntityCopy);
+			} catch (Exception ex) {
 				// remove the tile entity
-				world.removeTileEntity( coordsWorld.x, coordsWorld.y, coordsWorld.z );
+				world.removeTileEntity(coordsWorld.x, coordsWorld.y, coordsWorld.z);
 				
-				Ships.logger.warning(
-					ex,
-					"Tile entity %s at (%d,%d,%d) didn't like being moved to the world. The tile entity has been removed from its block to prevent further errors.",
-					tileEntity.getClass().getName(),
-					coordsWorld.x, coordsWorld.y, coordsWorld.z
-				);
+				Ships.logger.warning(ex, "Tile entity %s at (%d,%d,%d) didn't like being moved to the world. The tile entity has been removed from its block to prevent further errors.", tileEntity.getClass().getName(), coordsWorld.x, coordsWorld.y, coordsWorld.z);
 			}
 		}
 		
 		// compute the translation from block space to world space
-		Coords translation = correspondence.get( new Coords( 0, 0, 0 ) );
+		Coords translation = correspondence.get(new Coords(0, 0, 0));
 		
 		// restore hanging entities (on the server only)
-		if( !world.isRemote )
-		{
-			for( Map.Entry<Coords,EntityHanging> entry : m_hangingEntities.entrySet() )
-			{
+		if (!world.isRemote) {
+			for (Map.Entry<Coords,EntityHanging> entry : m_hangingEntities.entrySet()) {
 				Coords coordsShip = entry.getKey();
-				Coords coordsWorld = correspondence.get( coordsShip );
+				Coords coordsWorld = correspondence.get(coordsShip);
 				EntityHanging hangingEntity = entry.getValue();
 				
-				try
-				{
+				try {
 					// copy the hanging entity
 					NBTTagCompound nbt = new NBTTagCompound();
-					hangingEntity.writeToNBTOptional( nbt );
-					EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT( nbt, world );
+					hangingEntity.writeToNBTOptional(nbt);
+					EntityHanging hangingEntityCopy = (EntityHanging)EntityList.createEntityFromNBT(nbt, world);
 					
 					// save it to the ship world
 					hangingEntityCopy.field_146063_b = coordsWorld.x;
@@ -265,176 +234,141 @@ public class ShipWorld extends DetachedWorld
 					hangingEntityCopy.posZ += translation.z;
 					
 					// reset the hanging entity's bounding box after the move
-					hangingEntityCopy.setDirection( hangingEntityCopy.hangingDirection );
+					hangingEntityCopy.setDirection(hangingEntityCopy.hangingDirection);
 					
 					// then spawn it
-					world.spawnEntityInWorld( hangingEntityCopy );
-				}
-				catch( Exception ex )
-				{
-					Ships.logger.warning(
-						ex,
-						"Hanging entity %s at (%d,%d,%d) didn't like being moved to the world. The block was moved, the but hanging entity was not moved.",
-						hangingEntity.getClass().getName(),
-						coordsWorld.x, coordsWorld.y, coordsWorld.z
-					);
+					world.spawnEntityInWorld(hangingEntityCopy);
+				} catch (Exception ex) {
+					Ships.logger.warning(ex, "Hanging entity %s at (%d,%d,%d) didn't like being moved to the world. The block was moved, the but hanging entity was not moved.", hangingEntity.getClass().getName(), coordsWorld.x, coordsWorld.y, coordsWorld.z);
 				}
 			}
 		}
 	}
 	
-	public BlockMap<EntityHanging> getNearbyHangingEntities( World world, BlockSet blocks )
-	{
+	public BlockMap<EntityHanging> getNearbyHangingEntities(World world, BlockSet blocks) {
 		// get the bounding box of the blocks
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox( 0, 0, 0, 0, 0, 0 );
-		blocks.getBoundingBox().toAxisAlignedBB( box );
+		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(0, 0, 0, 0, 0, 0);
+		blocks.getBoundingBox().toAxisAlignedBB(box);
 		
 		// collect the hanging entities that are hanging on a block in the block set
 		BlockMap<EntityHanging> out = new BlockMap<EntityHanging>();
-		Coords entityBlock = new Coords( 0, 0, 0 );
-		@SuppressWarnings( "unchecked" )
-		List<EntityHanging> hangingEntities = (List<EntityHanging>)world.getEntitiesWithinAABB( EntityHanging.class, box );
-		for( EntityHanging hangingEntity : hangingEntities )
-		{
+		Coords entityBlock = new Coords(0, 0, 0);
+		@SuppressWarnings("unchecked")
+		List<EntityHanging> hangingEntities = (List<EntityHanging>)world.getEntitiesWithinAABB(EntityHanging.class, box);
+		for (EntityHanging hangingEntity : hangingEntities) {
 			// is this hanging entity actually on a ship block?
-			entityBlock.set( hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d );
-			if( blocks.contains( entityBlock ) )
-			{
-				out.put( new Coords( entityBlock ), hangingEntity );
+			entityBlock.set(hangingEntity.field_146063_b, hangingEntity.field_146064_c, hangingEntity.field_146062_d);
+			if (blocks.contains(entityBlock)) {
+				out.put(new Coords(entityBlock), hangingEntity);
 			}
 		}
 		return out;
 	}
 	
-	public BlocksStorage getBlocksStorage( )
-	{
+	public BlocksStorage getBlocksStorage() {
 		return m_storage;
 	}
 	
-	public EntityShip getShip( )
-	{
+	public EntityShip getShip() {
 		return m_ship;
 	}
 	
-	public void setShip( EntityShip val )
-	{
+	public void setShip(EntityShip val) {
 		m_ship = val;
 	}
 	
-	public ShipType getShipType( )
-	{
-		return ShipType.getByMeta( getBlockMetadata( 0, 0, 0 ) );
+	public ShipType getShipType() {
+		return ShipType.getByMeta(getBlockMetadata(0, 0, 0));
 	}
 	
-	public boolean isValid( )
-	{
+	public boolean isValid() {
 		return m_storage.getNumBlocks() > 0;
 	}
 	
-	public int getNumBlocks( )
-	{
+	public int getNumBlocks() {
 		return m_storage.getNumBlocks();
 	}
 	
-	public Set<Coords> coords( )
-	{
+	public Set<Coords> coords() {
 		return m_storage.coords();
 	}
 	
-	public BlockMap<TileEntity> tileEntities( )
-	{
+	public BlockMap<TileEntity> tileEntities() {
 		return m_tileEntities;
 	}
 	
-	public BlockMap<EntityHanging> hangingEntities( )
-	{
+	public BlockMap<EntityHanging> hangingEntities() {
 		return m_hangingEntities;
 	}
 	
-	public int getBiomeId( )
-	{
+	public int getBiomeId() {
 		return m_biomeId;
 	}
 	
-	public ShipGeometry getGeometry( )
-	{
+	public ShipGeometry getGeometry() {
 		return m_storage.getGeometry();
 	}
 	
-	public ShipDisplacement getDisplacement( )
-	{
+	public ShipDisplacement getDisplacement() {
 		return m_storage.getDisplacement();
 	}
 	
-	public BoundingBoxInt getBoundingBox( )
-	{
+	public BoundingBoxInt getBoundingBox() {
 		return m_storage.getGeometry().getEnvelopes().getBoundingBox();
 	}
 	
-	public BlockStorage getBlockStorage( int x, int y, int z )
-	{
-		m_lookupCoords.set( x, y, z );
-		return getBlockStorage( m_lookupCoords );
+	public BlockStorage getBlockStorage(int x, int y, int z) {
+		m_lookupCoords.set(x, y, z);
+		return getBlockStorage(m_lookupCoords);
 	}
 	
-	public BlockStorage getBlockStorage( Coords coords )
-	{
-		return m_storage.getBlock( coords );
-	}
-	
-	@Override
-	public Block getBlock( int x, int y, int z )
-	{
-		m_lookupCoords.set( x, y, z );
-		return getBlock( m_lookupCoords );
-	}
-	
-	public Block getBlock( Coords coords )
-	{
-		return getBlockStorage( coords ).block;
+	public BlockStorage getBlockStorage(Coords coords) {
+		return m_storage.getBlock(coords);
 	}
 	
 	@Override
-	public boolean blockExists( int x, int y, int z )
-	{
+	public Block getBlock(int x, int y, int z) {
+		m_lookupCoords.set(x, y, z);
+		return getBlock(m_lookupCoords);
+	}
+	
+	public Block getBlock(Coords coords) {
+		return getBlockStorage(coords).block;
+	}
+	
+	@Override
+	public boolean blockExists(int x, int y, int z) {
 		// always return true. a block outside the ship will still exist, even if it's just air
 		return true;
 	}
 	
 	@Override
-	public TileEntity getTileEntity( int x, int y, int z )
-	{
-		m_lookupCoords.set( x, y, z );
-		return getTileEntity( m_lookupCoords );
+	public TileEntity getTileEntity(int x, int y, int z) {
+		m_lookupCoords.set(x, y, z);
+		return getTileEntity(m_lookupCoords);
 	}
 	
-	public TileEntity getTileEntity( Coords coords )
-	{
-		return m_tileEntities.get( coords );
-	}
-	
-	@Override
-	public int getBlockMetadata( int x, int y, int z )
-	{
-		m_lookupCoords.set( x, y, z );
-		return getBlockMetadata( m_lookupCoords );
-	}
-	
-	public int getBlockMetadata( Coords coords )
-	{
-		return getBlockStorage( coords ).meta;
+	public TileEntity getTileEntity(Coords coords) {
+		return m_tileEntities.get(coords);
 	}
 	
 	@Override
-	public boolean setBlock( int x, int y, int z, Block newBlock, int newMeta, int ignored )
-	{
-		if( applyBlockChange( x, y, z, newBlock, newMeta ) )
-		{
+	public int getBlockMetadata(int x, int y, int z) {
+		m_lookupCoords.set(x, y, z);
+		return getBlockMetadata(m_lookupCoords);
+	}
+	
+	public int getBlockMetadata(Coords coords) {
+		return getBlockStorage(coords).meta;
+	}
+	
+	@Override
+	public boolean setBlock(int x, int y, int z, Block newBlock, int newMeta, int ignored) {
+		if (applyBlockChange(x, y, z, newBlock, newMeta)) {
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
-			if( Environment.isServer() )
-			{
-				m_changedBlocks.add( new Coords( x, y, z ) );
+			if (Environment.isServer()) {
+				m_changedBlocks.add(new Coords(x, y, z));
 			}
 			return true;
 		}
@@ -442,64 +376,55 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public void setTileEntity( int x, int y, int z, TileEntity tileEntity )
-	{
+	public void setTileEntity(int x, int y, int z, TileEntity tileEntity) {
 		// do nothing. tile entities are handled differently
 	}
 	
 	@Override
-	public boolean setBlockMetadataWithNotify( int x, int y, int z, int meta, int ignored )
-	{
-		if( applyBlockChange( x, y, z, getBlock( x, y, z ), meta ) )
-		{
+	public boolean setBlockMetadataWithNotify(int x, int y, int z, int meta, int ignored) {
+		if (applyBlockChange(x, y, z, getBlock(x, y, z), meta)) {
 			// on the client do nothing more
 			// on the server, buffer the changes to be broadcast to the client
-			if( Environment.isServer() )
-			{
-				m_changedBlocks.add( new Coords( x, y, z ) );
+			if (Environment.isServer()) {
+				m_changedBlocks.add(new Coords(x, y, z));
 			}
 			return true;
 		}
 		return false;
 	}
 	
-	public boolean needsRenderUpdate( )
-	{
+	public boolean needsRenderUpdate() {
 		boolean val = m_needsRenderUpdate;
 		m_needsRenderUpdate = false;
 		return val;
 	}
 	
-	public boolean applyBlockChange( int x, int y, int z, Block newBlock, int newMeta )
-	{
-		m_lookupCoords.set( x, y, z );
-		return applyBlockChange( m_lookupCoords, newBlock, newMeta );
+	public boolean applyBlockChange(int x, int y, int z, Block newBlock, int newMeta) {
+		m_lookupCoords.set(x, y, z);
+		return applyBlockChange(m_lookupCoords, newBlock, newMeta);
 	}
 	
-	public boolean applyBlockChange( Coords coords, Block newBlock, int newMeta )
-	{
+	public boolean applyBlockChange(Coords coords, Block newBlock, int newMeta) {
 		// lookup the affected block
-		BlockStorage storage = getBlockStorage( coords );
+		BlockStorage storage = getBlockStorage(coords);
 		Block oldBlock = storage.block;
 		
 		// only allow benign changes to blocks
 		boolean isAllowed = false
 			// allow metadata changes
-			|| ( oldBlock == newBlock )
+			|| (oldBlock == newBlock)
 			// allow furnace block changes
-			|| ( oldBlock == Blocks.lit_furnace && newBlock == Blocks.furnace )
-			|| ( oldBlock == Blocks.furnace && newBlock == Blocks.lit_furnace );
+			|| (oldBlock == Blocks.lit_furnace && newBlock == Blocks.furnace)
+			|| (oldBlock == Blocks.furnace && newBlock == Blocks.lit_furnace);
 		
-		if( isAllowed )
-		{
+		if (isAllowed) {
 			// apply the change
 			storage.block = newBlock;
 			storage.meta = newMeta;
 			
 			// notify the tile entity if needed
-			TileEntity tileEntity = getTileEntity( coords );
-			if( tileEntity != null )
-			{
+			TileEntity tileEntity = getTileEntity(coords);
+			if (tileEntity != null) {
 				tileEntity.updateContainingBlockInfo();
 			}
 			
@@ -510,32 +435,27 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	public boolean isSideSolid( int x, int y, int z, ForgeDirection side, boolean defaultValue )
-	{
-		m_lookupCoords.set( x, y, z );
-		Block block = getBlock( m_lookupCoords );
-		if( block == Blocks.air )
-		{
+	public boolean isSideSolid(int x, int y, int z, ForgeDirection side, boolean defaultValue) {
+		m_lookupCoords.set(x, y, z);
+		Block block = getBlock(m_lookupCoords);
+		if (block == Blocks.air) {
 			return defaultValue;
 		}
-		return block.isSideSolid( this, x, y, z, side );
+		return block.isSideSolid(this, x, y, z, side);
 	}
 	
 	@Override
-	public boolean isBlockNormalCubeDefault( int x, int y, int z, boolean defaultValue )
-	{
-		m_lookupCoords.set( x, y, z );
-		Block block = getBlock( m_lookupCoords );
-		if( block == Blocks.air )
-		{
+	public boolean isBlockNormalCubeDefault(int x, int y, int z, boolean defaultValue) {
+		m_lookupCoords.set(x, y, z);
+		Block block = getBlock(m_lookupCoords);
+		if (block == Blocks.air) {
 			return defaultValue;
 		}
-		return block.isNormalCube( this, x, y, z );
+		return block.isNormalCube(this, x, y, z);
 	}
 	
 	@Override
-	public int getLightBrightnessForSkyBlocks( int x, int y, int z, int blockBrightness )
-	{
+	public int getLightBrightnessForSkyBlocks(int x, int y, int z, int blockBrightness) {
 		// keep the ship fully sky-lit by default
 		return 15 << 20 | 0 << 4;
 		
@@ -543,9 +463,8 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	@SuppressWarnings( "rawtypes" )
-	public List selectEntitiesWithinAABB( Class theClass, AxisAlignedBB box, IEntitySelector selector )
-	{
+	@SuppressWarnings("rawtypes")
+	public List selectEntitiesWithinAABB(Class theClass, AxisAlignedBB box, IEntitySelector selector) {
 		// there are no entities in ship world
 		return new ArrayList();
 		
@@ -556,187 +475,151 @@ public class ShipWorld extends DetachedWorld
 	}
 	
 	@Override
-	@SuppressWarnings( "rawtypes" )
-	public List getEntitiesWithinAABBExcludingEntity( Entity entity, AxisAlignedBB box, IEntitySelector selector )
-    {
+	@SuppressWarnings("rawtypes")
+	public List getEntitiesWithinAABBExcludingEntity(Entity entity, AxisAlignedBB box, IEntitySelector selector) {
 		// there are no entities in ship world
 		return new ArrayList();
 	}
 	
 	@Override
-	public void markTileEntityChunkModified( int x, int y, int z, TileEntity tileEntity )
-	{
+	public void markTileEntityChunkModified(int x, int y, int z, TileEntity tileEntity) {
 		// don't need to do anything
 	}
 	
 	@Override
-	public void updateEntities( )
-	{
+	public void updateEntities() {
 		// update the tile entities
 		Iterator<Map.Entry<Coords,TileEntity>> iter = m_tileEntities.entrySet().iterator();
-		while( iter.hasNext() )
-		{
+		while (iter.hasNext()) {
 			Map.Entry<Coords,TileEntity> entry = iter.next();
 			Coords coords = entry.getKey();
 			TileEntity entity = entry.getValue();
 			
-			try
-			{
+			try {
 				entity.updateEntity();
-			}
-			catch( Exception ex )
-			{
+			} catch (Exception ex) {
 				// remove the offending tile entity
 				iter.remove();
 				
-				Ships.logger.warning(
-					ex,
-					"Tile entity %s at (%d,%d,%d) had a problem during an update! The tile entity has been removed from its block to prevent further errors.",
-					entity.getClass().getName(),
-					coords.x, coords.y, coords.z
-				);
+				Ships.logger.warning(ex, "Tile entity %s at (%d,%d,%d) had a problem during an update! The tile entity has been removed from its block to prevent further errors.", entity.getClass().getName(), coords.x, coords.y, coords.z);
 			}
 		}
 		
 		// on the client, do random update ticks
-		if( Environment.isClient() && m_ship != null )
-		{
+		if (Environment.isClient() && m_ship != null) {
 			updateEntitiesClient();
 		}
 		
 		// on the server, push any accumulated changes to the client
-		if( Environment.isServer() && !m_changedBlocks.isEmpty() )
-		{
+		if (Environment.isServer() && !m_changedBlocks.isEmpty()) {
 			pushBlockChangesToClients();
 			m_changedBlocks.clear();
 		}
 	}
 	
-	@SideOnly( Side.CLIENT )
-	private void updateEntitiesClient( )
-	{
+	@SideOnly(Side.CLIENT)
+	private void updateEntitiesClient() {
 		// get the player position on the ship
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-		Vec3 v = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
-		m_ship.worldToShip( v );
-		m_ship.shipToBlocks( v );
-		int playerX = MathHelper.floor_double( v.xCoord );
-		int playerY = MathHelper.floor_double( v.yCoord );
-		int playerZ = MathHelper.floor_double( v.zCoord );
+		Vec3 v = Vec3.createVectorHelper(player.posX, player.posY, player.posZ);
+		m_ship.worldToShip(v);
+		m_ship.shipToBlocks(v);
+		int playerX = MathHelper.floor_double(v.xCoord);
+		int playerY = MathHelper.floor_double(v.yCoord);
+		int playerZ = MathHelper.floor_double(v.zCoord);
 		
 		Random random = new Random();
-		for( int i=0; i<1000; i++ )
-		{
-			int x = playerX + random.nextInt( 16 ) - random.nextInt( 16 );
-			int y = playerY + random.nextInt( 16 ) - random.nextInt( 16 );
-			int z = playerZ + random.nextInt( 16 ) - random.nextInt( 16 );
-			Block block = getBlock( x, y, z );
-			if( block != Blocks.air )
-			{
-				block.randomDisplayTick( this, x, y, z, random );
+		for (int i = 0; i < 1000; i++) {
+			int x = playerX + random.nextInt(16) - random.nextInt(16);
+			int y = playerY + random.nextInt(16) - random.nextInt(16);
+			int z = playerZ + random.nextInt(16) - random.nextInt(16);
+			Block block = getBlock(x, y, z);
+			if (block != Blocks.air) {
+				block.randomDisplayTick(this, x, y, z, random);
 			}
 		}
 	}
-
-	private void pushBlockChangesToClients( )
-	{
-		if( m_ship == null )
-		{
+	
+	private void pushBlockChangesToClients() {
+		if (m_ship == null) {
 			return;
 		}
 		
 		Ships.net.getDispatch().sendToAllAround(
-			new PacketChangedBlocks( m_ship, m_changedBlocks ),
-			new TargetPoint( m_ship.worldObj.provider.dimensionId, m_ship.posX, m_ship.posY, m_ship.posZ, 64 )
+			new PacketChangedBlocks(m_ship, m_changedBlocks),
+			new TargetPoint(m_ship.worldObj.provider.dimensionId, m_ship.posX, m_ship.posY, m_ship.posZ, 64)
 		);
 	}
 	
 	@Override
-	public void addBlockEvent( int x, int y, int z, Block block, int eventId, int eventParam )
-	{
-		if( m_ship == null || block == Blocks.air || getBlock( x, y, z ) != block )
-		{
+	public void addBlockEvent(int x, int y, int z, Block block, int eventId, int eventParam) {
+		if (m_ship == null || block == Blocks.air || getBlock(x, y, z) != block) {
 			return;
 		}
 		
 		// on the client, just deliver to the block
-		boolean eventWasAccepted = block.onBlockEventReceived( this, x, y, z, eventId, eventParam );
+		boolean eventWasAccepted = block.onBlockEventReceived(this, x, y, z, eventId, eventParam);
 		
 		// on the server, also send a packet to the client
-		if( Environment.isServer() && eventWasAccepted )
-		{
+		if (Environment.isServer() && eventWasAccepted) {
 			// get the pos in world space
-			Vec3 v = Vec3.createVectorHelper( x, y, z );
-			m_ship.blocksToShip( v );
-			m_ship.shipToWorld( v );
+			Vec3 v = Vec3.createVectorHelper(x, y, z);
+			m_ship.blocksToShip(v);
+			m_ship.shipToWorld(v);
 			
 			Ships.net.getDispatch().sendToAllAround(
-				new PacketShipBlockEvent( m_ship.getEntityId(), x, y, z, block, eventId, eventParam ),
-				new TargetPoint( m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, 64 )
+				new PacketShipBlockEvent(m_ship.getEntityId(), x, y, z, block, eventId, eventParam),
+				new TargetPoint(m_ship.worldObj.provider.dimensionId, v.xCoord, v.yCoord, v.zCoord, 64)
 			);
 		}
 	}
 	
 	@Override
-	public void playSoundEffect( double x, double y, double z, String sound, float volume, float pitch )
-    {
-		if( sound == null )
-		{
+	public void playSoundEffect(double x, double y, double z, String sound, float volume, float pitch) {
+		if (sound == null) {
 			return;
 		}
 		
 		// on the server, send a packet to the clients
-		if( Environment.isServer() )
-		{
+		if (Environment.isServer()) {
 			// get the pos in world space
-			Vec3 v = Vec3.createVectorHelper( x, y, z );
-			m_ship.blocksToShip( v );
-			m_ship.shipToWorld( v );
+			Vec3 v = Vec3.createVectorHelper(x, y, z);
+			m_ship.blocksToShip(v);
+			m_ship.shipToWorld(v);
 			
-			m_ship.worldObj.playSoundEffect( v.xCoord, v.yCoord, v.zCoord, sound, volume, pitch );
+			m_ship.worldObj.playSoundEffect(v.xCoord, v.yCoord, v.zCoord, sound, volume, pitch);
 		}
 		
 		// on the client, just ignore. Sounds actually get played by the packet handler
-    }
+	}
 	
 	// NOTE: don't have to override playSoundToNearExcept() or playSoundAtEntity(), not called by blocks/tileEntities
 	
 	@Override
-	public void playAuxSFXAtEntity( EntityPlayer player, int sfxID, int x, int y, int z, int auxData )
-	{
+	public void playAuxSFXAtEntity(EntityPlayer player, int sfxID, int x, int y, int z, int auxData) {
 		// on the server, send a packet to the clients
-		if( Environment.isServer() )
-		{
+		if (Environment.isServer()) {
 			// get the pos in world space
-			Vec3 v = Vec3.createVectorHelper( x, y, z );
-			m_ship.blocksToShip( v );
-			m_ship.shipToWorld( v );
+			Vec3 v = Vec3.createVectorHelper(x, y, z);
+			m_ship.blocksToShip(v);
+			m_ship.shipToWorld(v);
 			
-			m_ship.worldObj.playAuxSFXAtEntity(
-				player,
-				sfxID,
-				MathHelper.floor_double( v.xCoord ),
-				MathHelper.floor_double( v.yCoord ),
-				MathHelper.floor_double( v.zCoord ),
-				auxData
-			);
+			m_ship.worldObj.playAuxSFXAtEntity(player, sfxID, MathHelper.floor_double(v.xCoord), MathHelper.floor_double(v.yCoord), MathHelper.floor_double(v.zCoord), auxData);
 		}
 		
 		// on the client, just ignore. Sounds actually get played by the packet handler
 	}
 	
 	@Override
-	public void spawnParticle( String name, double x, double y, double z, double motionX, double motionY, double motionZ )
-	{
-		if( m_ship == null )
-		{
+	public void spawnParticle(String name, double x, double y, double z, double motionX, double motionY, double motionZ) {
+		if (m_ship == null) {
 			return;
 		}
 		
 		// transform the position to world coordinates
-		Vec3 v = Vec3.createVectorHelper( x, y, z );
-		m_ship.blocksToShip( v );
-		m_ship.shipToWorld( v );
+		Vec3 v = Vec3.createVectorHelper(x, y, z);
+		m_ship.blocksToShip(v);
+		m_ship.shipToWorld(v);
 		x = v.xCoord;
 		y = v.yCoord;
 		z = v.zCoord;
@@ -745,26 +628,24 @@ public class ShipWorld extends DetachedWorld
 		v.xCoord = motionX;
 		v.yCoord = motionY;
 		v.zCoord = motionZ;
-		m_ship.shipToWorldDirection( v );
+		m_ship.shipToWorldDirection(v);
 		motionX = v.xCoord;
 		motionY = v.yCoord;
 		motionZ = v.zCoord;
 		
-		m_ship.worldObj.spawnParticle( name, x, y, z, motionX, motionY, motionZ );
+		m_ship.worldObj.spawnParticle(name, x, y, z, motionX, motionY, motionZ);
 	}
 	
 	@Override
-	public boolean spawnEntityInWorld( Entity entity )
-    {
-		if( m_ship == null )
-		{
+	public boolean spawnEntityInWorld(Entity entity) {
+		if (m_ship == null) {
 			return false;
 		}
 		
 		// transform the entity position to world coordinates
-		Vec3 v = Vec3.createVectorHelper( entity.posX, entity.posY, entity.posZ );
-		m_ship.blocksToShip( v );
-		m_ship.shipToWorld( v );
+		Vec3 v = Vec3.createVectorHelper(entity.posX, entity.posY, entity.posZ);
+		m_ship.blocksToShip(v);
+		m_ship.shipToWorld(v);
 		entity.posX = v.xCoord;
 		entity.posY = v.yCoord;
 		entity.posZ = v.zCoord;
@@ -773,19 +654,18 @@ public class ShipWorld extends DetachedWorld
 		v.xCoord = entity.motionX;
 		v.yCoord = entity.motionY;
 		v.zCoord = entity.motionZ;
-		m_ship.shipToWorldDirection( v );
+		m_ship.shipToWorldDirection(v);
 		entity.motionX = v.xCoord;
 		entity.motionY = v.yCoord;
 		entity.motionZ = v.zCoord;
 		
 		// pass off to the outer world
 		entity.worldObj = m_ship.worldObj;
-		return m_ship.worldObj.spawnEntityInWorld( entity );
-    }
+		return m_ship.worldObj.spawnEntityInWorld(entity);
+	}
 	
 	@Override
-	public BiomeGenBase getBiomeGenForCoords( int x, int z )
-	{
-		return BiomeGenBase.getBiome( m_biomeId );
+	public BiomeGenBase getBiomeGenForCoords(int x, int z) {
+		return BiomeGenBase.getBiome(m_biomeId);
 	}
 }

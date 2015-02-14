@@ -20,34 +20,19 @@ import cuchaz.ships.ShipType;
 import cuchaz.ships.Ships;
 import cuchaz.ships.Supporters;
 
-public enum SupporterPlaqueType
-{
-	Small( 16, 2, "Cuchaz Interactive Supporter Plaque" )
-	{
+public enum SupporterPlaqueType {
+	Small(16, 2, "Cuchaz Interactive Supporter Plaque") {
+		
 		@Override
-		public void registerRecipe( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				" y ", " x ", "zzz",
-				'x', ShipType.Tiny.newItemStack(),
-				'y', new ItemStack( Items.iron_ingot ),
-				'z', new ItemStack( Blocks.planks )
-			);
+		public void registerRecipe() {
+			GameRegistry.addRecipe(newItemStack(), " y ", " x ", "zzz", 'x', ShipType.Tiny.newItemStack(), 'y', new ItemStack(Items.iron_ingot), 'z', new ItemStack(Blocks.planks));
 		}
 	},
-	Large( 32, 3, "Cuchaz Interactive Supporter Plaque (Large)" )
-	{
+	Large(32, 3, "Cuchaz Interactive Supporter Plaque (Large)") {
+		
 		@Override
-		public void registerRecipe( )
-		{
-			GameRegistry.addRecipe(
-				newItemStack(),
-				"yyy", "zxz", "zzz",
-				'x', ShipType.Tiny.newItemStack(),
-				'y', new ItemStack( Items.iron_ingot ),
-				'z', new ItemStack( Blocks.planks )
-			);
+		public void registerRecipe() {
+			GameRegistry.addRecipe(newItemStack(), "yyy", "zxz", "zzz", 'x', ShipType.Tiny.newItemStack(), 'y', new ItemStack(Items.iron_ingot), 'z', new ItemStack(Blocks.planks));
 		}
 	};
 	
@@ -56,66 +41,53 @@ public enum SupporterPlaqueType
 	private String m_itemName;
 	private ResourceLocation m_texture;
 	
-	private SupporterPlaqueType( int size, int minRank, String itemName )
-	{
+	private SupporterPlaqueType(int size, int minRank, String itemName) {
 		m_size = size;
 		m_minRank = minRank;
 		m_itemName = itemName;
-		m_texture = new ResourceLocation( "ships", String.format( "textures/blocks/supporterPlaque-%s.png", name().toLowerCase() ) );
+		m_texture = new ResourceLocation("ships", String.format("textures/blocks/supporterPlaque-%s.png", name().toLowerCase()));
 	}
 	
-	public int getSize( )
-	{
+	public int getSize() {
 		return m_size;
 	}
 	
-	public int getMinRank( )
-	{
+	public int getMinRank() {
 		return m_minRank;
 	}
 	
-	public String getItemName( )
-	{
+	public String getItemName() {
 		return m_itemName;
 	}
 	
-	public ResourceLocation getTexture( )
-	{
+	public ResourceLocation getTexture() {
 		return m_texture;
 	}
 	
-	public int getMeta( )
-	{
+	public int getMeta() {
 		return ordinal();
 	}
 	
-	public static SupporterPlaqueType getByMeta( int meta )
-	{
+	public static SupporterPlaqueType getByMeta(int meta) {
 		return values()[meta];
 	}
 	
-	public ItemStack newItemStack( )
-	{
-		return new ItemStack( Ships.m_itemSupporterPlaque, 1, getMeta() );
+	public ItemStack newItemStack() {
+		return new ItemStack(Ships.m_itemSupporterPlaque, 1, getMeta());
 	}
 	
-	public static void registerRecipes( )
-	{
-		for( SupporterPlaqueType type : values() )
-		{
+	public static void registerRecipes() {
+		for (SupporterPlaqueType type : values()) {
 			type.registerRecipe();
 		}
 	}
 	
-	public boolean canUse( EntityPlayer player )
-	{
+	public boolean canUse(EntityPlayer player) {
 		// is this player a supporter?
-		int supporterId = Supporters.getId( player.getCommandSenderName() );
-		if( supporterId != Supporters.InvalidSupporterId )
-		{
+		int supporterId = Supporters.getId(player.getCommandSenderName());
+		if (supporterId != Supporters.InvalidSupporterId) {
 			// does the player meet the min rank?
-			if( Supporters.getRank( supporterId ) >= m_minRank )
-			{
+			if (Supporters.getRank(supporterId) >= m_minRank) {
 				return true;
 			}
 		}
@@ -123,5 +95,5 @@ public enum SupporterPlaqueType
 		return false;
 	}
 	
-	public abstract void registerRecipe( );
+	public abstract void registerRecipe();
 }

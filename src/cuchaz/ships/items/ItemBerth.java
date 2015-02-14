@@ -22,65 +22,53 @@ import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.Ships;
 
-public class ItemBerth extends ItemBed
-{
-	public ItemBerth( )
-	{
-		setMaxStackSize( 1 );
-		setCreativeTab( CreativeTabs.tabDecorations );
-		setUnlocalizedName( "cuchaz.ships.berth" );
+public class ItemBerth extends ItemBed {
+	
+	public ItemBerth() {
+		setMaxStackSize(1);
+		setCreativeTab(CreativeTabs.tabDecorations);
+		setUnlocalizedName("cuchaz.ships.berth");
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public void registerIcons( IIconRegister iconRegister )
-	{
-		itemIcon = iconRegister.registerIcon( "ships:berth" );
+	@SideOnly(Side.CLIENT)
+	public void registerIcons(IIconRegister iconRegister) {
+		itemIcon = iconRegister.registerIcon("ships:berth");
 	}
 	
 	@Override
-	public boolean onItemUse( ItemStack itemStack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ )
-	{
+	public boolean onItemUse(ItemStack itemStack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
 		// ignore on clients
-		if( world.isRemote )
-		{
+		if (world.isRemote) {
 			return true;
 		}
 		
 		// ignore unless placed on top of a block
-		if( side != BlockSide.Top.getId() )
-		{
+		if (side != BlockSide.Top.getId()) {
 			return false;
 		}
 		
 		// decide where to place the two berth blocks
-		BlockSide placementSide = BlockSide.getByYaw( player.rotationYaw ).getOppositeSide();
+		BlockSide placementSide = BlockSide.getByYaw(player.rotationYaw).getOppositeSide();
 		int meta = placementSide.getXZOffset();
 		int dx = BlockBed.field_149981_a[meta][0]; // footBlockToHeadBlockMap
 		int dz = BlockBed.field_149981_a[meta][1];
 		
-		if( isValidForBerthBlock( world, x, y + 1, z, player, side, itemStack )
-			&& isValidForBerthBlock( world, x + dx, y + 1, z + dz, player, side, itemStack ) )
-		{
+		if (isValidForBerthBlock(world, x, y + 1, z, player, side, itemStack) && isValidForBerthBlock(world, x + dx, y + 1, z + dz, player, side, itemStack)) {
 			// set the two berth blocks
-			world.setBlock( x, y + 1, z, Ships.m_blockBerth, meta, 3 );
-			world.setBlock( x + dx, y + 1, z + dz, Ships.m_blockBerth, meta + 8, 3 );
+			world.setBlock(x, y + 1, z, Ships.m_blockBerth, meta, 3);
+			world.setBlock(x + dx, y + 1, z + dz, Ships.m_blockBerth, meta + 8, 3);
 			
 			// use the item
 			itemStack.stackSize--;
 			
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 	
-	private boolean isValidForBerthBlock( World world, int x, int y, int z, EntityPlayer player, int side, ItemStack itemStack )
-	{
-		return player.canPlayerEdit( x, y, z, side, itemStack )
-			&& world.isAirBlock( x, y, z )
-			&& World.doesBlockHaveSolidTopSurface( world, x, y - 1, z );
+	private boolean isValidForBerthBlock(World world, int x, int y, int z, EntityPlayer player, int side, ItemStack itemStack) {
+		return player.canPlayerEdit(x, y, z, side, itemStack) && world.isAirBlock(x, y, z) && World.doesBlockHaveSolidTopSurface(world, x, y - 1, z);
 	}
 }

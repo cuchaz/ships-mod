@@ -16,19 +16,17 @@ import net.minecraft.item.Item;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ItemPaddle extends Item
-{
-	public ItemPaddle( )
-	{
+public class ItemPaddle extends Item {
+	
+	public ItemPaddle() {
 		maxStackSize = 1;
-		setCreativeTab( CreativeTabs.tabTools );
-		setUnlocalizedName( "cuchaz.ships.paddle" );
+		setCreativeTab(CreativeTabs.tabTools);
+		setUnlocalizedName("cuchaz.ships.paddle");
 	}
 	
 	@Override
-	@SideOnly( Side.CLIENT )
-	public void registerIcons( IIconRegister iconRegister )
-	{
-		itemIcon = iconRegister.registerIcon( "ships:paddle" );
+	@SideOnly(Side.CLIENT)
+	public void registerIcons(IIconRegister iconRegister) {
+		itemIcon = iconRegister.registerIcon("ships:paddle");
 	}
 }

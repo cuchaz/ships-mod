@@ -17,51 +17,41 @@ import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.blocks.Coords;
 import cuchaz.ships.BlocksStorage;
 
-public class Sail extends PropulsionMethod
-{
-	public static final double ThrustPerForwardBlock = Util.perSecond2ToPerTick2( 8 ); // N
-	public static final double ThrustPerSideBlock = Util.perSecond2ToPerTick2( 2 ); // N
+public class Sail extends PropulsionMethod {
+	
+	public static final double ThrustPerForwardBlock = Util.perSecond2ToPerTick2(8); // N
+	public static final double ThrustPerSideBlock = Util.perSecond2ToPerTick2(2); // N
 	
 	private int m_numForwardBlocks;
 	private int m_numSideBlocks;
 	
-	protected Sail( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection )
-	{
-		super( "Sail", "Sails", sailBlocks );
+	protected Sail(BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide frontDirection) {
+		super("Sail", "Sails", sailBlocks);
 		
-		m_numForwardBlocks = getNumExposedBlocks( shipBlocks, sailBlocks, frontDirection );
-		m_numSideBlocks = getNumExposedBlocks( shipBlocks, sailBlocks, frontDirection.rotateXZCw( 1 ) );
+		m_numForwardBlocks = getNumExposedBlocks(shipBlocks, sailBlocks, frontDirection);
+		m_numSideBlocks = getNumExposedBlocks(shipBlocks, sailBlocks, frontDirection.rotateXZCw(1));
 	}
 	
 	@Override
-	public double getThrust( double speed )
-	{
+	public double getThrust(double speed) {
 		// sail thrust depends on ship speed
 		// sails have full strength when the ship isn't moving
 		// when the ship reaches the wind speed, the sails don't add anymore thrust
 		// although, wind speed is implicit here...
-		return ( ThrustPerForwardBlock*m_numForwardBlocks + ThrustPerSideBlock*m_numSideBlocks )/( speed + 1 );
+		return (ThrustPerForwardBlock * m_numForwardBlocks + ThrustPerSideBlock * m_numSideBlocks) / (speed + 1);
 	}
 	
-	public boolean isValid( )
-	{
+	public boolean isValid() {
 		// sails are always valid
 		return true;
 	}
 	
-	private int getNumExposedBlocks( BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide checkDirection )
-	{
+	private int getNumExposedBlocks(BlocksStorage shipBlocks, BlockSet sailBlocks, BlockSide checkDirection) {
 		int numExposedBlocks = 0;
 		Coords checkCoords = new Coords();
-		for( Coords coords : sailBlocks )
-		{
-			checkCoords.set(
-				coords.x + checkDirection.getDx(),
-				coords.y + checkDirection.getDy(),
-				coords.z + checkDirection.getDz()
-			);
-			if( shipBlocks.getBlock( checkCoords ).block == Blocks.air )
-			{
+		for (Coords coords : sailBlocks) {
+			checkCoords.set(coords.x + checkDirection.getDx(), coords.y + checkDirection.getDy(), coords.z + checkDirection.getDz());
+			if (shipBlocks.getBlock(checkCoords).block == Blocks.air) {
 				numExposedBlocks++;
 			}
 		}
