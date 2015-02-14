@@ -108,14 +108,16 @@ public class Ships extends DummyModContainer {
 	public static ItemProjector m_itemProjector = null;
 	
 	// entities
-	public static final int EntityShipId = 174;
-	public static final int EntitySupporterPlaqueId = 175;
-	public static final int EntityShipPlaqueId = 176;
+	public static final int EntityShipId = 0;
+	public static final int EntitySupporterPlaqueId = 1;
+	public static final int EntityShipPlaqueId = 2;
 	
 	private File m_source;
 	
 	public Ships() {
+		
 		super(new ModMetadata());
+		
 		ModMetadata meta = getMetadata();
 		meta.modId = "cuchaz.ships";
 		meta.name = "Ships Mod";
@@ -220,6 +222,7 @@ public class Ships extends DummyModContainer {
 	
 	@Subscribe
 	public void serverLoad(FMLServerStartingEvent event) {
+		
 		// register our commands
 		event.registerServerCommand(new CommandShips());
 		
@@ -233,6 +236,7 @@ public class Ships extends DummyModContainer {
 	
 	@SideOnly(Side.CLIENT)
 	private void loadClient() {
+		
 		// set renderers
 		RenderShip shipRenderer = new RenderShip();
 		RenderingRegistry.registerEntityRenderingHandler(EntityShip.class, shipRenderer);
@@ -252,6 +256,7 @@ public class Ships extends DummyModContainer {
 	}
 	
 	private void loadThings() {
+		
 		// blocks
 		GameRegistry.registerBlock(m_blockShip, ItemShipBlock.class, "blockShip");
 		GameRegistry.registerBlock(m_blockAirWall, "blockAirWall");
@@ -275,11 +280,8 @@ public class Ships extends DummyModContainer {
 		m_itemProjector = (ItemProjector)Item.getItemFromBlock(m_blockProjector);
 		
 		// entities
-		EntityRegistry.registerGlobalEntityID(EntityShip.class, "Ship", EntityShipId);
 		EntityRegistry.registerModEntity(EntityShip.class, "Ship", EntityShipId, this, 256, 10, true);
-		EntityRegistry.registerGlobalEntityID(EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId);
 		EntityRegistry.registerModEntity(EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, false);
-		EntityRegistry.registerGlobalEntityID(EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId);
 		EntityRegistry.registerModEntity(EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId, this, 256, 10, false);
 		
 		// tile entities
