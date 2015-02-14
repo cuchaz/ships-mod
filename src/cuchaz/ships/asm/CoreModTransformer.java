@@ -28,7 +28,11 @@ public class CoreModTransformer implements IClassTransformer {
 	public byte[] transform(String name, String transformedName, byte[] classData) {
 		
 		if (classData == null) {
-			throw new Error("Transformer received no class data for " + name + ":" + transformedName + "! This class probably doesn't exist on the server!");
+			// if class data is null, ignore it
+			// if the classloader crashes and burns, it's not our fault
+			// if you're investigating a burning classloader and you see this function in the stack trace,
+			// Ships Mod is not causing the problem! =P
+			return null;
 		}
 		
 		try {
