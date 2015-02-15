@@ -78,8 +78,8 @@ import cuchaz.ships.render.TileEntityProjectorRenderer;
 @Mod(
 	modid = Ships.Id,
 	name = "Ships Mod",
-	version = "1.7.10-1.0.1",
-	dependencies = "required-after:Forge@[10.13.2.1291,);required-after:cuchaz.ships.core", // ;required-after:cuchaz.cuchazinteractive
+	version = Ships.Version,
+	dependencies = "required-after:Forge@[10.13.2.1291,);required-after:cuchaz.ships.core;required-after:cuchaz.cuchazinteractive",
 	acceptedMinecraftVersions = "[1.7.10,)"
 )
 public class Ships {

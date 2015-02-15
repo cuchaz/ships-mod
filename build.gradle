@@ -42,6 +42,8 @@ sourceSets {
 
 compileJava {
 	source file("../ModsShared/src")
+	source file("../Cuchazinteractive Mod/src")
+	source file("../Cuchazinteractive Mod/assets")
 }
 
 jar {

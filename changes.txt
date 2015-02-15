@@ -1,4 +1,14 @@
 
-v1.0 change log
+v1.0,1 change log
 
-Update to Minecraft 1.7.10
+Update to Forge v1291
+Added new ship block textures by useless_one!
+Ship block properties are much more user friendly now
+ * Server log shows if properties are loaded, and how many
+ * added server command to list overridden block properties
+ * added server command to query properties for specific blocks
+Fixed a bug with ship collision that was causing massive lag in mid-to-far lands
+Restructured GUIs to stop acting like inventory GUIs
+ * This keeps inventory related overlays from covering the GUIs
+Restructured core mod to be more friendly to non-standard Minecraft environments/launchers
+Switched to dynamically managed entity IDs to improve inter-mod compatibility
