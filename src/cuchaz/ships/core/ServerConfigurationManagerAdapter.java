@@ -28,9 +28,9 @@ public class ServerConfigurationManagerAdapter extends ObfuscationAwareAdapter {
 		m_className = null;
 		
 		// cache the runtime class names
-		ServerConfigurationManagerClassName = getRuntimeClassName("net/minecraft/server/management/ServerConfigurationManager");
-		EntityPlayerMPClassName = getRuntimeClassName("net/minecraft/entity/player/EntityPlayerMP");
-		ChunkProviderServerClassName = getRuntimeClassName("net/minecraft/world/gen/ChunkProviderServer");
+		ServerConfigurationManagerClassName = "net/minecraft/server/management/ServerConfigurationManager";
+		EntityPlayerMPClassName = "net/minecraft/entity/player/EntityPlayerMP";
+		ChunkProviderServerClassName = "net/minecraft/world/gen/ChunkProviderServer";
 	}
 	
 	@Override

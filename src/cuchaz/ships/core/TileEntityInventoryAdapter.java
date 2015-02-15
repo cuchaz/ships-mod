@@ -23,17 +23,16 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter {
 	private final String WorldClassName;
 	
 	private String m_name;
-	private String m_superName;
 	
 	public TileEntityInventoryAdapter(int api, ClassVisitor cv, boolean isObfuscatedEnvironment) {
 		super(api, cv, isObfuscatedEnvironment);
 		
 		// cache the runtime class names
-		TileEntityClassName = getRuntimeClassName("net/minecraft/tileentity/TileEntity");
-		ContainerClassName = getRuntimeClassName("net/minecraft/inventory/Container");
-		PlayerClassName = getRuntimeClassName("net/minecraft/entity/player/EntityPlayer");
-		InventoryPlayerClassName = getRuntimeClassName("net/minecraft/entity/player/InventoryPlayer");
-		WorldClassName = getRuntimeClassName("net/minecraft/world/World");
+		TileEntityClassName = "net/minecraft/tileentity/TileEntity";
+		ContainerClassName = "net/minecraft/inventory/Container";
+		PlayerClassName = "net/minecraft/entity/player/EntityPlayer";
+		InventoryPlayerClassName = "net/minecraft/entity/player/InventoryPlayer";
+		WorldClassName = "net/minecraft/world/World";
 	}
 	
 	@Override
@@ -42,7 +41,6 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter {
 		
 		// save the class details for later visit methods
 		m_name = name;
-		m_superName = superName;
 	}
 	
 	@Override
@@ -50,9 +48,12 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter {
 		// should we transform this method?
 		// for performance, check method names first, class inheritance second, and finally interfaces third
 		// NOTE: for TileEntityEnderChest (and only on the server), it's func_70365_a instead of func_70300_a for some reason...
-		final boolean isTileEntityInventoryIsUseableByPlayer = (methodName.equals(getRuntimeMethodName(m_name, "isUseableByPlayer", "func_70300_a")) || methodName.equals(getRuntimeMethodName(m_name, "isUseableByPlayer", "func_70365_a"))) && extendsClass(TileEntityClassName);
-		final boolean isContainerCanInteractWith = methodName.equals(getRuntimeMethodName(m_name, "canInteractWith", "func_75145_c")) && extendsClass(ContainerClassName);
-		if ( (isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith) && methodDesc.equals(String.format("(L%s;)Z", PlayerClassName))) {
+		final boolean isTileEntityInventoryIsUseableByPlayer =
+			(methodName.equals(getRuntimeMethodName(m_name, "isUseableByPlayer", "func_70300_a"))
+			|| methodName.equals(getRuntimeMethodName(m_name, "isUseableByPlayer", "func_70365_a")));
+		final boolean isContainerCanInteractWith =
+			methodName.equals(getRuntimeMethodName(m_name, "canInteractWith", "func_75145_c"));
+		if ((isTileEntityInventoryIsUseableByPlayer || isContainerCanInteractWith) && methodDesc.equals(String.format("(L%s;)Z", PlayerClassName))) {
 			return new MethodVisitor(api, cv.visitMethod(access, methodName, methodDesc, signature, exceptions)) {
 				
 				@Override
@@ -84,7 +85,7 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter {
 					}
 				}
 			};
-		} else if (methodName.equals("<init>") && methodDesc.startsWith(String.format("(L%s;L%s;III", InventoryPlayerClassName, WorldClassName)) && extendsClass(ContainerClassName)) {
+		} else if (methodName.equals("<init>") && methodDesc.startsWith(String.format("(L%s;L%s;III", InventoryPlayerClassName, WorldClassName))) {
 			return new MethodVisitor(api, cv.visitMethod(access, methodName, methodDesc, signature, exceptions)) {
 				
 				@Override
@@ -109,9 +110,5 @@ public class TileEntityInventoryAdapter extends ObfuscationAwareAdapter {
 		} else {
 			return super.visitMethod(access, methodName, methodDesc, signature, exceptions);
 		}
-	}
-	
-	private boolean extendsClass(String targetClassName) {
-		return InheritanceUtils.extendsClass(m_superName, targetClassName);
 	}
 }

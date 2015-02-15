@@ -27,7 +27,7 @@ public class EntityPlayerAdapter extends ObfuscationAwareAdapter {
 		m_className = null;
 		
 		// cache the runtime class names
-		EntityPlayerClassName = getRuntimeClassName("net/minecraft/entity/player/EntityPlayer");
+		EntityPlayerClassName = "net/minecraft/entity/player/EntityPlayer";
 	}
 	
 	@Override

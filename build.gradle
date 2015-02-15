@@ -43,15 +43,15 @@ sourceSets {
 compileJava {
 	source file("../ModsShared/src")
 	source file("../Cuchazinteractive Mod/src")
-	source file("../Cuchazinteractive Mod/assets")
 }
 
 jar {
 	manifest {
-		attributes "FMLCorePlugin": "cuchaz.ships.asm.CoreModPlugin",
+		attributes "FMLCorePlugin": "cuchaz.ships.core.CoreModPlugin",
 			"FMLCorePluginContainsFMLMod": "true"
 	}
 	from "LICENSE.txt"
+	from file("../Cuchazinteractive Mod/assets")
 }
 
 minecraft {

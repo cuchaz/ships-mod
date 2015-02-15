@@ -24,7 +24,7 @@ public class EntityRendererAdapter extends ObfuscationAwareAdapter {
 		super(api, cv, isObfuscatedEnvironment);
 		
 		// cache the runtime class names
-		EntityRendererClassName = getRuntimeClassName("net/minecraft/client/renderer/EntityRenderer");
+		EntityRendererClassName = "net/minecraft/client/renderer/EntityRenderer";
 	}
 	
 	@Override

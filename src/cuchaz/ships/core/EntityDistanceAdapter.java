@@ -27,7 +27,7 @@ public class EntityDistanceAdapter extends ObfuscationAwareAdapter {
 		m_className = null;
 		
 		// cache the runtime class names
-		EntityClassName = getRuntimeClassName("net/minecraft/entity/Entity");
+		EntityClassName = "net/minecraft/entity/Entity";
 	}
 	
 	@Override

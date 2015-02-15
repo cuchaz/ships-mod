@@ -31,10 +31,10 @@ public class WorldAdapter extends ObfuscationAwareAdapter {
 		m_className = null;
 		
 		// cache the runtime class names
-		WorldClassName = getRuntimeClassName("net/minecraft/world/World");
-		EntityClassName = getRuntimeClassName("net/minecraft/entity/Entity");
-		AxisAlignedBBClassName = getRuntimeClassName("net/minecraft/util/AxisAlignedBB");
-		IEntitySelectorClassName = getRuntimeClassName("net/minecraft/command/IEntitySelector");
+		WorldClassName = "net/minecraft/world/World";
+		EntityClassName = "net/minecraft/entity/Entity";
+		AxisAlignedBBClassName = "net/minecraft/util/AxisAlignedBB";
+		IEntitySelectorClassName = "net/minecraft/command/IEntitySelector";
 	}
 	
 	@Override

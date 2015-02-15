@@ -35,29 +35,12 @@ public class ObfuscationAwareAdapter extends ClassVisitor {
 		cv = val;
 	}
 	
-	protected String getRuntimeClassName(String clearClassName) {
-		if (m_isObfuscatedEnvironment) {
-			return getObfuscatedClassName(clearClassName);
-		} else {
-			return clearClassName;
-		}
-	}
-	
 	protected String getRuntimeMethodName(String runtimeClassName, String clearMethodName, String idMethodName) {
 		if (m_isObfuscatedEnvironment) {
 			return methodMapReverseLookup(getMethodMap(runtimeClassName), idMethodName);
 		} else {
 			return clearMethodName;
 		}
-	}
-	
-	private String getObfuscatedClassName(String clearClassName) {
-		String obfuscatedClassName = FMLDeobfuscatingRemapper.INSTANCE.unmap(clearClassName);
-		if (obfuscatedClassName == null) {
-			// assume this class is not obufscated
-			obfuscatedClassName = clearClassName;
-		}
-		return obfuscatedClassName;
 	}
 	
 	@SuppressWarnings("unchecked")

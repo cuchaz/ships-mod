@@ -27,7 +27,7 @@ public class EntityLadderAdapter extends ObfuscationAwareAdapter {
 		m_className = null;
 		
 		// cache the runtime class names
-		EntityLivingBaseClassName = getRuntimeClassName("net/minecraft/entity/EntityLivingBase");
+		EntityLivingBaseClassName = "net/minecraft/entity/EntityLivingBase";
 	}
 	
 	@Override

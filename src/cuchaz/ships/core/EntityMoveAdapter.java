@@ -26,7 +26,7 @@ public class EntityMoveAdapter extends ObfuscationAwareAdapter {
 		m_className = null;
 		
 		// cache the runtime class names
-		EntityClassName = getRuntimeClassName("net/minecraft/entity/Entity");
+		EntityClassName = "net/minecraft/entity/Entity";
 	}
 	
 	@Override
@@ -43,7 +43,8 @@ public class EntityMoveAdapter extends ObfuscationAwareAdapter {
 			@Override
 			public void visitMethodInsn(int opcode, String calledOwner, String calledName, String calledDesc) {
 				// should we transform this method call?
-				if (opcode == Opcodes.INVOKEVIRTUAL && calledDesc.equals("(DDD)V") && calledName.equals(getRuntimeMethodName(m_className, "moveEntity", "func_70091_d")) && InheritanceUtils.extendsClass(calledOwner, EntityClassName)) {
+				if (opcode == Opcodes.INVOKEVIRTUAL && calledDesc.equals("(DDD)V")
+						&& calledName.equals(getRuntimeMethodName(m_className, "moveEntity", "func_70091_d"))) {
 					mv.visitMethodInsn(Opcodes.INVOKESTATIC, ShipIntermediary.Path, "onEntityMove", String.format("(L%s;DDD)V", EntityClassName));
 				} else {
 					super.visitMethodInsn(opcode, calledOwner, calledName, calledDesc);
