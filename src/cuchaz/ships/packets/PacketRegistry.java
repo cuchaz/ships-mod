@@ -36,7 +36,6 @@ public class PacketRegistry {
 		register(new PacketChangedBlocks());
 		register(new PacketPasteShip());
 		register(new PacketEraseShip());
-		register(new PacketShipPlaque());
 		register(new PacketPlayerSleepInBerth());
 		register(new PacketBlockPropertiesOverrides());
 		register(new PacketPlaceProjector());

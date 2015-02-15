@@ -53,7 +53,6 @@ import cuchaz.ships.blocks.BlockShip;
 import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.Gui;
 import cuchaz.ships.items.ItemBerth;
-import cuchaz.ships.items.ItemListOfSupporters;
 import cuchaz.ships.items.ItemMagicBucket;
 import cuchaz.ships.items.ItemMagicShipLevitator;
 import cuchaz.ships.items.ItemPaddle;
@@ -61,14 +60,9 @@ import cuchaz.ships.items.ItemProjector;
 import cuchaz.ships.items.ItemShipBlock;
 import cuchaz.ships.items.ItemShipClipboard;
 import cuchaz.ships.items.ItemShipEraser;
-import cuchaz.ships.items.ItemShipPlaque;
-import cuchaz.ships.items.ItemSupporterPlaque;
-import cuchaz.ships.items.SupporterPlaqueType;
 import cuchaz.ships.packets.PacketBlockPropertiesOverrides;
 import cuchaz.ships.packets.PacketRegistry;
 import cuchaz.ships.render.RenderShip;
-import cuchaz.ships.render.RenderShipPlaque;
-import cuchaz.ships.render.RenderSupporterPlaque;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 import cuchaz.ships.render.TileEntityProjectorRenderer;
 
@@ -76,7 +70,7 @@ import cuchaz.ships.render.TileEntityProjectorRenderer;
 	modid = Ships.Id,
 	name = "Ships Mod",
 	version = "1.7.10-1.0.1",
-	dependencies = "required-after:Forge@[10.13.2.1291,);required-after:cuchaz.ships.core",
+	dependencies = "required-after:Forge@[10.13.2.1291,);required-after:cuchaz.ships.core", // ;required-after:cuchaz.cuchazinteractive
 	acceptedMinecraftVersions = "[1.7.10,)"
 )
 public class Ships {
@@ -84,7 +78,7 @@ public class Ships {
 	public static final String Id = "cuchaz.ships";
 	public static final String Version = "1.7.10-1.0.1";
 	
-	@Mod.Instance("cuchaz.ships")
+	@Mod.Instance(Id)
 	public static Ships instance = null;
 	
 	public static EnhancedLogger logger = new EnhancedLogger(Logger.getLogger(Id));
@@ -106,17 +100,12 @@ public class Ships {
 	public static final ItemMagicBucket m_itemMagicBucket = new ItemMagicBucket();
 	public static final ItemMagicShipLevitator m_itemMagicShipLevitator = new ItemMagicShipLevitator();
 	public static final ItemShipClipboard m_itemShipClipboard = new ItemShipClipboard();
-	public static final ItemListOfSupporters m_itemListOfSupporters = new ItemListOfSupporters();
-	public static final ItemSupporterPlaque m_itemSupporterPlaque = new ItemSupporterPlaque();
 	public static final ItemShipEraser m_itemShipEraser = new ItemShipEraser();
-	public static final ItemShipPlaque m_itemShipPlaque = new ItemShipPlaque();
 	public static final ItemBerth m_itemBerth = new ItemBerth();
 	public static ItemProjector m_itemProjector = null;
 	
 	// entities
 	public static final int EntityShipId = 0;
-	public static final int EntitySupporterPlaqueId = 1;
-	public static final int EntityShipPlaqueId = 2;
 	
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -191,8 +180,6 @@ public class Ships {
 		// set renderers
 		RenderShip shipRenderer = new RenderShip();
 		RenderingRegistry.registerEntityRenderingHandler(EntityShip.class, shipRenderer);
-		RenderingRegistry.registerEntityRenderingHandler(EntitySupporterPlaque.class, new RenderSupporterPlaque());
-		RenderingRegistry.registerEntityRenderingHandler(EntityShipPlaque.class, new RenderShipPlaque());
 		
 		// set tile entity renderers
 		registerTileEntityRenderer(TileEntityHelm.class, new TileEntityHelmRenderer());
@@ -221,10 +208,7 @@ public class Ships {
 		GameRegistry.registerItem(m_itemMagicBucket, "magicBucket");
 		GameRegistry.registerItem(m_itemMagicShipLevitator, "magicShipLevitator");
 		GameRegistry.registerItem(m_itemShipClipboard, "shipClipboard");
-		GameRegistry.registerItem(m_itemListOfSupporters, "listOfSupporters");
-		GameRegistry.registerItem(m_itemSupporterPlaque, "supporterPlaque");
 		GameRegistry.registerItem(m_itemShipEraser, "shipEraser");
-		GameRegistry.registerItem(m_itemShipPlaque, "shipPlaque");
 		GameRegistry.registerItem(m_itemBerth, "berth");
 		
 		// we can't register these items directly, so get them after registration
@@ -232,8 +216,6 @@ public class Ships {
 		
 		// entities
 		EntityRegistry.registerModEntity(EntityShip.class, "Ship", EntityShipId, this, 256, 10, true);
-		EntityRegistry.registerModEntity(EntitySupporterPlaque.class, "Supporter Plaque", EntitySupporterPlaqueId, this, 256, 10, false);
-		EntityRegistry.registerModEntity(EntityShipPlaque.class, "Ship Plaque", EntityShipPlaqueId, this, 256, 10, false);
 		
 		// tile entities
 		GameRegistry.registerTileEntity(TileEntityHelm.class, "helm");
@@ -242,7 +224,6 @@ public class Ships {
 	
 	private void loadRecipes() {
 		ShipType.registerRecipes();
-		SupporterPlaqueType.registerRecipes();
 		
 		ItemStack stickStack = new ItemStack(Items.stick);
 		ItemStack goldStack = new ItemStack(Items.gold_ingot);
@@ -276,26 +257,6 @@ public class Ships {
 			'x', stickStack,
 			'y', ironStack
 		);
-		
-		// list of supporters
-		GameRegistry.addRecipe(new ItemStack(m_itemListOfSupporters),
-			"yyy",
-			"yxy",
-			"yyy",
-			'x', ShipType.Tiny.newItemStack(),
-			'y', paperStack
-		);
-		
-		// ship plaque (for all the wood types)
-		for (int i = 0; i < 4; i++) {
-			GameRegistry.addRecipe(new ItemStack(m_itemShipPlaque),
-				"   ",
-				" x ",
-				"yyy",
-				'x', ironStack,
-				'y', new ItemStack(Blocks.planks, 1, i)
-			);
-		}
 		
 		// berth
 		for (int i = 0; i < 16; i++) {
