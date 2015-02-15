@@ -379,6 +379,7 @@ public class ShipCollider {
 	}
 	
 	public void moveShip(double dx, double dy, double dz, float dYaw) {
+		
 		// compute the scaling of the delta (between 0 and 1) that avoids collisions
 		double scaling = 1.0;
 		int numCollidingBoxes = 0;
@@ -393,7 +394,7 @@ public class ShipCollider {
 		
 		// look for collisions with other ships
 		AxisAlignedBB nextShipBox = AxisAlignedBB.getBoundingBox(0, 0, 0, 0, 0, 0);
-		computeShipBoundingBox(nextShipBox, dx, dy, dz, dYaw);
+		computeShipBoundingBox(nextShipBox, m_ship.posX + dx, m_ship.posY + dy, m_ship.posZ + dz, m_ship.rotationYaw + dYaw);
 		AxisAlignedBB queryBox = m_ship.boundingBox.func_111270_a(nextShipBox);
 		@SuppressWarnings("unchecked")
 		List<EntityShip> ships = (List<EntityShip>)m_ship.worldObj.getEntitiesWithinAABB(EntityShip.class, queryBox);
@@ -412,7 +413,7 @@ public class ShipCollider {
 				}
 			}
 		}
-		
+
 		// avoid the collision
 		dx *= scaling;
 		dy *= scaling;

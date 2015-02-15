@@ -27,6 +27,6 @@ public class ItemShipBlock extends ItemBlock {
 	}
 	
 	public String getUnlocalizedName(ItemStack itemStack) {
-		return super.getUnlocalizedName() + "." + ShipType.getByMeta(itemStack.getItemDamage()).name();
+		return super.getUnlocalizedName() + "." + ShipType.getByMeta(itemStack.getItemDamage()).name().toLowerCase();
 	}
 }
