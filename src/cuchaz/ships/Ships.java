@@ -18,14 +18,12 @@ import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
@@ -38,7 +36,6 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -143,18 +140,8 @@ public class Ships {
 			}
 			
 			// GUI hooks
-			NetworkRegistry.INSTANCE.registerGuiHandler(this, new IGuiHandler() {
-				
-				@Override
-				public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
-					return Gui.values()[id].getContainer(player, world, x, y, z);
-				}
-				
-				@Override
-				public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
-					return Gui.values()[id].getGui(player, world, x, y, z);
-				}
-			});
+			NetworkRegistry.INSTANCE.registerGuiHandler(this, Gui.Handler);
+			
 		} catch (Throwable ex) {
 			Ships.logger.warning(ex, "Exception occurred while loading mod.");
 		}

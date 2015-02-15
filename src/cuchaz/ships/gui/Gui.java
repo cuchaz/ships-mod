@@ -10,10 +10,12 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
+import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.Coords;
@@ -88,4 +90,17 @@ public enum Gui {
 	public GuiContainer getGuiOnShip(EntityPlayer player, EntityShip ship) {
 		return null;
 	}
+	
+	public static final IGuiHandler Handler = new IGuiHandler() {
+
+		@Override
+		public Container getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+			return values()[id].getContainer(player, world, x, y, z);
+		}
+		
+		@Override
+		public GuiScreen getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+			return values()[id].getGui(player, world, x, y, z);
+		}
+	};
 }
