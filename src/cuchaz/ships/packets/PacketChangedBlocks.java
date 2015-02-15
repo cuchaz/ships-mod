@@ -21,6 +21,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.BlockSet;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.modsShared.net.Packet;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLocator;
 import cuchaz.ships.ShipWorld;

@@ -15,6 +15,7 @@ import net.minecraft.network.NetHandlerPlayServer;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import cuchaz.modsShared.net.Packet;
 import cuchaz.ships.items.ItemShipEraser;
 
 public class PacketEraseShip extends Packet<PacketEraseShip> {

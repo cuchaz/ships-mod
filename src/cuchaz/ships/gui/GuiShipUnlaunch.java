@@ -10,9 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import static cuchaz.ships.gui.GuiSettings.*;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.inventory.Container;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipUnlauncher;
 import cuchaz.ships.ShipUnlauncher.UnlaunchFlag;
@@ -26,9 +24,7 @@ public class GuiShipUnlaunch extends GuiShip {
 	private GuiButton m_buttonUnlaunchShip;
 	private GuiButton m_buttonOverride;
 	
-	public GuiShipUnlaunch(Container container, EntityShip ship) {
-		super(container);
-		
+	public GuiShipUnlaunch(EntityShip ship) {
 		m_ship = ship;
 		m_unlauncher = new ShipUnlauncher(ship);
 		
@@ -41,10 +37,20 @@ public class GuiShipUnlaunch extends GuiShip {
 		super.initGui();
 		
 		// add the buttons
-		m_buttonUnlaunchShip = new GuiButton(0, guiLeft + LeftMargin, guiTop + ySize - TopMargin - 20, 80, 20, GuiString.ShipUnlaunch.getLocalizedText());
+		m_buttonUnlaunchShip = newGuiButton(0,
+			LeftMargin,
+			m_height - TopMargin - 20,
+			80, 20,
+			GuiString.ShipUnlaunch.getLocalizedText()
+		);
 		m_buttonUnlaunchShip.enabled = false;
 		
-		m_buttonOverride = new GuiButton(1, guiLeft + LeftMargin, guiTop + ySize - TopMargin - 20, 120, 20, GuiString.ShipUnlaunchOverride.getLocalizedText());
+		m_buttonOverride = newGuiButton(1,
+			LeftMargin,
+			m_height - TopMargin - 20,
+			120, 20,
+			GuiString.ShipUnlaunchOverride.getLocalizedText()
+		);
 		m_buttonOverride.enabled = false;
 		
 		if (m_unlauncher.isUnlaunchable()) {
@@ -75,7 +81,7 @@ public class GuiShipUnlaunch extends GuiShip {
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+	protected void drawForeground(int mouseX, int mouseY, float partialTickTime) {
 		drawHeaderText(GuiString.ShipDashboard.getLocalizedText(), 0);
 		
 		// draw the unlaunch flags

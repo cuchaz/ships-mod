@@ -18,6 +18,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.net.Packet;
 import cuchaz.ships.config.BlockProperties;
 
 public class PacketBlockPropertiesOverrides extends Packet<PacketBlockPropertiesOverrides> {

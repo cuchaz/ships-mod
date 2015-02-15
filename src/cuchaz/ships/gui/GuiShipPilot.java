@@ -12,21 +12,15 @@ package cuchaz.ships.gui;
 
 import java.util.List;
 
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
-
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
-
-import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.blocks.BlockSide;
+import cuchaz.modsShared.gui.GuiBase;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.PilotAction;
 
-public abstract class GuiShipPilot extends GuiCloseable {
+public abstract class GuiShipPilot extends GuiBase {
 	
 	protected static enum ForwardSideMethod {
 		ByPlayerLook {
@@ -67,17 +61,13 @@ public abstract class GuiShipPilot extends GuiCloseable {
 		public abstract BlockSide compute(EntityShip ship, EntityPlayer player);
 	}
 	
-	private static final ResourceLocation BackgroundTexture = new ResourceLocation("ships", "textures/gui/shipPaddle.png");
-	private static final int TextureWidth = 128;
-	private static final int TextureHeight = 32;
-	
 	private EntityShip m_ship;
 	private List<PilotAction> m_allowedActions;
 	private int m_lastActions;
 	private BlockSide m_forwardSide;
 	
-	public GuiShipPilot(Container container, EntityShip ship, EntityPlayer player, List<PilotAction> allowedActions, ForwardSideMethod forwardSideMethod) {
-		super(container);
+	protected GuiShipPilot(int width, int height, ResourceLocation background, EntityShip ship, EntityPlayer player, List<PilotAction> allowedActions, ForwardSideMethod forwardSideMethod) {
+		super(width, height, background, false);
 		
 		m_ship = ship;
 		m_allowedActions = allowedActions;
@@ -95,9 +85,13 @@ public abstract class GuiShipPilot extends GuiCloseable {
 	
 	@Override
 	public void initGui() {
+		super.initGui();
+		
 		// show this GUI near the bottom so it doesn't block much of the screen
-		guiLeft = (width - xSize) / 2;
-		guiTop = height - ySize - 48;
+		setPos(
+			(width - m_width)/2,
+			height - m_height - 48
+		);
 		
 		// try to let the player look around while in this gui
 		allowUserInput = true;
@@ -108,44 +102,8 @@ public abstract class GuiShipPilot extends GuiCloseable {
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-		int keyForward = mc.gameSettings.keyBindForward.getKeyCode();
-		int keyBack = mc.gameSettings.keyBindBack.getKeyCode();
-		int keyLeft = mc.gameSettings.keyBindLeft.getKeyCode();
-		int keyRight = mc.gameSettings.keyBindRight.getKeyCode();
-		
-		// draw the key binds
-		int textColor = ColorUtils.getGrey(64);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyForward), 11, 8, textColor);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyBack), 46, 8, textColor);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyLeft), 61, 8, textColor);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyRight), 95, 8, textColor);
-	}
-	
-	@Override
-	protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		mc.getTextureManager().bindTexture(BackgroundTexture);
-		
-		double umax = (double)xSize / TextureWidth;
-		double vmax = (double)ySize / TextureHeight;
-		
-		Tessellator tessellator = Tessellator.instance;
-		tessellator.startDrawingQuads();
-		tessellator.addVertexWithUV((double) (guiLeft), (double) (guiTop + ySize), (double)zLevel, 0, vmax);
-		tessellator.addVertexWithUV((double) (guiLeft + xSize), (double) (guiTop + ySize), (double)zLevel, umax, vmax);
-		tessellator.addVertexWithUV((double) (guiLeft + xSize), (double) (guiTop), (double)zLevel, umax, 0);
-		tessellator.addVertexWithUV((double) (guiLeft), (double) (guiTop), (double)zLevel, 0, 0);
-		tessellator.draw();
-	}
-	
-	@Override
-	public void drawDefaultBackground() {
-		// do nothing, so we don't draw the dark filter over the world
-	}
-	
-	@Override
 	public void updateScreen() {
+		
 		// get the actions, if any
 		int actions = PilotAction.getActiveActions(mc.gameSettings, m_allowedActions);
 		

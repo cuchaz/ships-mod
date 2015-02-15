@@ -10,11 +10,8 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import static cuchaz.ships.gui.GuiSettings.LeftMargin;
-
 import java.io.IOException;
 
-import net.minecraft.inventory.Container;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -50,8 +47,7 @@ public class GuiShipPropulsion extends GuiShip {
 	private double m_topAngularSpeed;
 	private String m_propulsionMethodsDescription;
 	
-	public GuiShipPropulsion(Container container, final World world, int helmX, int helmY, int helmZ) {
-		super(container);
+	public GuiShipPropulsion(final World world, int helmX, int helmY, int helmZ) {
 		
 		// defaults
 		m_shipLauncher = null;
@@ -137,7 +133,7 @@ public class GuiShipPropulsion extends GuiShip {
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+	protected void drawForeground(int mouseX, int mouseY, float partialTickTime) {
 		drawHeaderText(GuiString.ShipPropulsion.getLocalizedText(), 0);
 		
 		if (m_shipLauncher == null) {
@@ -161,7 +157,7 @@ public class GuiShipPropulsion extends GuiShip {
 	private void drawPropulsion() {
 		int x = LeftMargin;
 		int y = getLineY(6);
-		int width = xSize - LeftMargin * 2;
+		int width = m_width - LeftMargin * 2;
 		int height = 64;
 		
 		RenderShip2D.drawWater(x, y, zLevel, width, height);

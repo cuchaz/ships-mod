@@ -161,7 +161,7 @@ public enum PilotAction {
 	}
 	
 	public boolean isActive(int actions) {
-		return ( (actions >> ordinal()) & 0x1) == 1;
+		return ((actions >> ordinal()) & 0x1) == 1;
 	}
 	
 	protected abstract void applyToShip(EntityShip ship);

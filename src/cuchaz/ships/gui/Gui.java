@@ -11,7 +11,6 @@
 package cuchaz.ships.gui;
 
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
@@ -19,7 +18,6 @@ import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cuchaz.modsShared.blocks.Coords;
-import cuchaz.ships.ContainerShip;
 import cuchaz.ships.EntityShip;
 import cuchaz.ships.ShipLauncher;
 import cuchaz.ships.ShipLocator;
@@ -30,40 +28,40 @@ public enum Gui {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public GuiContainer getGui(EntityPlayer player, World world, int x, int y, int z) {
-			return new GuiShipLaunch(new ContainerShip(), new ShipLauncher(world, new Coords(x, y, z)));
+		public GuiScreen getGui(EntityPlayer player, World world, int x, int y, int z) {
+			return new GuiShipLaunch(new ShipLauncher(world, new Coords(x, y, z)));
 		}
 	},
 	UnbuildShip {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public GuiContainer getGuiOnShip(EntityPlayer player, EntityShip ship) {
-			return new GuiShipUnlaunch(new ContainerShip(), ship);
+		public GuiScreen getGuiOnShip(EntityPlayer player, EntityShip ship) {
+			return new GuiShipUnlaunch(ship);
 		}
 	},
 	PaddleShip {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public GuiContainer getGuiOnShip(EntityPlayer player, EntityShip ship) {
-			return new GuiShipPilotPaddle(new ContainerShip(), ship, player);
+		public GuiScreen getGuiOnShip(EntityPlayer player, EntityShip ship) {
+			return new GuiShipPilotPaddle(ship, player);
 		}
 	},
 	PilotSurfaceShip {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public GuiContainer getGuiOnShip(EntityPlayer player, EntityShip ship) {
-			return new GuiShipPilotSurface(new ContainerShip(), ship, player);
+		public GuiScreen getGuiOnShip(EntityPlayer player, EntityShip ship) {
+			return new GuiShipPilotSurface(ship, player);
 		}
 	},
 	ShipPropulsion {
 		
 		@Override
 		@SideOnly(Side.CLIENT)
-		public GuiContainer getGui(EntityPlayer player, World world, int x, int y, int z) {
-			return new GuiShipPropulsion(new ContainerShip(), world, x, y, z);
+		public GuiScreen getGui(EntityPlayer player, World world, int x, int y, int z) {
+			return new GuiShipPropulsion(world, x, y, z);
 		}
 	};
 	
@@ -71,12 +69,8 @@ public enum Gui {
 		player.openGui(Ships.instance, ordinal(), world, x, y, z);
 	}
 	
-	public Container getContainer(EntityPlayer player, World world, int x, int y, int z) {
-		return new ContainerShip();
-	}
-	
 	@SideOnly(Side.CLIENT)
-	public GuiContainer getGui(EntityPlayer player, World world, int x, int y, int z) {
+	public GuiScreen getGui(EntityPlayer player, World world, int x, int y, int z) {
 		// NOTE: world is always the real world, never the ship world
 		EntityShip ship = ShipLocator.getFromPlayerLook(player);
 		if (ship == null) {
@@ -87,7 +81,7 @@ public enum Gui {
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public GuiContainer getGuiOnShip(EntityPlayer player, EntityShip ship) {
+	public GuiScreen getGuiOnShip(EntityPlayer player, EntityShip ship) {
 		return null;
 	}
 	
@@ -95,7 +89,7 @@ public enum Gui {
 
 		@Override
 		public Container getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
-			return values()[id].getContainer(player, world, x, y, z);
+			return null;
 		}
 		
 		@Override

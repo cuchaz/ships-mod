@@ -607,6 +607,7 @@ public class EntityShip extends Entity {
 	}
 	
 	private void adjustMotionDueToThrustAndDrag(double waterHeightInBlockSpace) {
+		
 		// process pilot actions
 		PilotAction.resetShip(this, m_pilotActions, m_oldPilotActions);
 		PilotAction.applyToShip(this, m_pilotActions);

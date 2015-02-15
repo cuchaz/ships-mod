@@ -14,11 +14,9 @@ import java.util.Arrays;
 
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.blocks.BlockSide;
@@ -28,9 +26,8 @@ import cuchaz.ships.PilotAction;
 
 public class GuiShipPilotSurface extends GuiShipPilot {
 	
-	private static final ResourceLocation BackgroundTexture = new ResourceLocation("ships", "textures/gui/shipPilotSurface.png");
 	private static final int TextureWidth = 256;
-	private static final int TextureHeight = 64;
+	private static final int TextureHeight = 256;
 	private static final int CompassHeight = 12;
 	private static final int CompassY = 52;
 	private static final int CompassFrameX = 156;
@@ -52,15 +49,18 @@ public class GuiShipPilotSurface extends GuiShipPilot {
 	private static final int ThrottleFrameX = 8;
 	private static final int ThrottleFrameY = 6;
 	
-	public GuiShipPilotSurface(Container container, EntityShip ship, EntityPlayer player) {
-		super(container, ship, player, Arrays.asList(PilotAction.ThrottleUp, PilotAction.ThrottleDown, PilotAction.Left, PilotAction.Right), ForwardSideMethod.ByHelm);
-		
-		xSize = 256;
-		ySize = 25;
+	public GuiShipPilotSurface(EntityShip ship, EntityPlayer player) {
+		super(
+			256, 25, new ResourceLocation("ships", "textures/gui/shipPilotSurface.png"),
+			ship, player,
+			Arrays.asList(PilotAction.ThrottleUp, PilotAction.ThrottleDown, PilotAction.Left, PilotAction.Right),
+			ForwardSideMethod.ByHelm
+		);
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+	protected void drawForeground(int mouseX, int mouseY, float partialTickTime) {
+		
 		// do we have a valid ship to pilot?
 		// issue 78 says sometimes we don't. Can't reproduce. Better to handle it just in case though
 		BlockSide forwardSide = getForwardSide();
@@ -82,7 +82,7 @@ public class GuiShipPilotSurface extends GuiShipPilot {
 		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyLeft), TextOffset + 61, 8, textColor);
 		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyRight), TextOffset + 95, 8, textColor);
 		
-		loadTexture();
+		bindBackgroundTexture();
 		
 		// determine the compass offsets
 		double shipDirectionOffset = (double)forwardSide.getXZOffset() / 4;
@@ -97,7 +97,7 @@ public class GuiShipPilotSurface extends GuiShipPilot {
 		double umin = (double)CompassNorthOffset / TextureWidth + shipDirectionOffset - shipYawOffset - compassFrameOffset;
 		double umax = umin + (double)CompassFrameWidth / TextureWidth;
 		double vmin = (double)CompassY / TextureHeight;
-		double vmax = 1;
+		double vmax = (double)(CompassY + CompassHeight) / TextureHeight;
 		double x = CompassFrameX;
 		double y = CompassFrameY;
 		tessellator.addVertexWithUV(x, y + CompassHeight, z, umin, vmax);
@@ -159,26 +159,5 @@ public class GuiShipPilotSurface extends GuiShipPilot {
 		}
 		
 		tessellator.draw();
-	}
-	
-	@Override
-	protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
-		loadTexture();
-		
-		double umax = (double)xSize / TextureWidth;
-		double vmax = (double)ySize / TextureHeight;
-		
-		Tessellator tessellator = Tessellator.instance;
-		tessellator.startDrawingQuads();
-		tessellator.addVertexWithUV((double) (guiLeft), (double) (guiTop + ySize), (double)zLevel, 0, vmax);
-		tessellator.addVertexWithUV((double) (guiLeft + xSize), (double) (guiTop + ySize), (double)zLevel, umax, vmax);
-		tessellator.addVertexWithUV((double) (guiLeft + xSize), (double) (guiTop), (double)zLevel, umax, 0);
-		tessellator.addVertexWithUV((double) (guiLeft), (double) (guiTop), (double)zLevel, 0, 0);
-		tessellator.draw();
-	}
-	
-	private void loadTexture() {
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		mc.getTextureManager().bindTexture(BackgroundTexture);
 	}
 }

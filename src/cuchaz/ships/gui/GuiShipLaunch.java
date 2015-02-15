@@ -10,9 +10,7 @@
  ******************************************************************************/
 package cuchaz.ships.gui;
 
-import static cuchaz.ships.gui.GuiSettings.*;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.inventory.Container;
 import cuchaz.modsShared.blocks.BlockArray;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.ships.ShipLauncher;
@@ -29,9 +27,7 @@ public class GuiShipLaunch extends GuiShip {
 	private GuiButton m_buttonRotateLeft;
 	private GuiButton m_buttonRotateRight;
 	
-	public GuiShipLaunch(Container container, ShipLauncher shipLauncher) {
-		super(container);
-		
+	public GuiShipLaunch(ShipLauncher shipLauncher) {
 		m_shipLauncher = shipLauncher;
 		
 		m_buttonLaunchShip = null;
@@ -46,15 +42,30 @@ public class GuiShipLaunch extends GuiShip {
 		super.initGui();
 		
 		// add the launch button
-		m_buttonLaunchShip = new GuiButton(0, guiLeft + LeftMargin, guiTop + ySize - TopMargin - 20, 80, 20, GuiString.ShipLaunch.getLocalizedText());
+		m_buttonLaunchShip = newGuiButton(0,
+			LeftMargin,
+			m_height - TopMargin - 20,
+			80, 20,
+			GuiString.ShipLaunch.getLocalizedText()
+		);
 		m_buttonLaunchShip.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add(m_buttonLaunchShip);
 		
 		// add the rotate buttons
-		m_buttonRotateLeft = new GuiButton(1, guiLeft + xSize - LeftMargin - 20 - 20 - 10, guiTop + ySize - TopMargin - 20, 20, 20, "<");
+		m_buttonRotateLeft = newGuiButton(1,
+			m_width - LeftMargin - 20 - 20 - 10,
+			m_height - TopMargin - 20,
+			20, 20,
+			"<"
+		);
 		m_buttonRotateLeft.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add(m_buttonRotateLeft);
-		m_buttonRotateRight = new GuiButton(2, guiLeft + xSize - LeftMargin - 20, guiTop + ySize - TopMargin - 20, 20, 20, ">");
+		m_buttonRotateRight = newGuiButton(2,
+			m_width - LeftMargin - 20,
+			m_height - TopMargin - 20,
+			20, 20,
+			">"
+		);
 		m_buttonRotateRight.enabled = m_shipLauncher.isLaunchable();
 		buttonList.add(m_buttonRotateRight);
 	}
@@ -73,16 +84,23 @@ public class GuiShipLaunch extends GuiShip {
 	}
 	
 	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+	protected void drawForeground(int mouseX, int mouseY, float partialTickTime) {
 		drawHeaderText(GuiString.ShipConstruction.getLocalizedText(), 0);
 		
 		String valueText;
 		
 		// right number of blocks
 		if (m_shipLauncher.getLaunchFlag(LaunchFlag.RightNumberOfBlocks)) {
-			valueText = String.format("%d / %d", m_shipLauncher.getNumBlocks(), m_shipLauncher.getShipType().getMaxNumBlocks());
+			valueText = String.format("%d / %d",
+				m_shipLauncher.getNumBlocks(),
+				m_shipLauncher.getShipType().getMaxNumBlocks()
+			);
 		} else {
-			valueText = String.format("%d%s / %d", m_shipLauncher.getNumBlocksChecked(), (m_shipLauncher.getNumBlocksChecked() == m_shipLauncher.getNumBlocksToCheck() ? "+" : ""), m_shipLauncher.getShipType().getMaxNumBlocks());
+			valueText = String.format("%d%s / %d",
+				m_shipLauncher.getNumBlocksChecked(),
+				(m_shipLauncher.getNumBlocksChecked() == m_shipLauncher.getNumBlocksToCheck() ? "+" : ""),
+				m_shipLauncher.getShipType().getMaxNumBlocks()
+			);
 		}
 		drawYesNoText(GuiString.ShipNumBlocks.getLocalizedText(), valueText, m_shipLauncher.getLaunchFlag(LaunchFlag.RightNumberOfBlocks), 1);
 		
@@ -103,10 +121,20 @@ public class GuiShipLaunch extends GuiShip {
 			BlockArray envelope = m_shipLauncher.getShipEnvelope(m_shipSide);
 			int x = LeftMargin;
 			int y = getLineY(3);
-			int width = xSize - LeftMargin * 2;
+			int width = m_width - LeftMargin * 2;
 			int height = 96;
-			RenderShip2D.drawWater(envelope, m_shipLauncher.getEquilibriumWaterHeight(), m_shipLauncher.getSinkWaterHeight(), x, y, zLevel, width, height);
-			RenderShip2D.drawShip(envelope, m_shipSide, m_shipLauncher.getShipWorld(), x, y, zLevel, width, height);
+			RenderShip2D.drawWater(
+				envelope,
+				m_shipLauncher.getEquilibriumWaterHeight(),
+				m_shipLauncher.getSinkWaterHeight(),
+				x, y, zLevel, width, height
+			);
+			RenderShip2D.drawShip(
+				envelope,
+				m_shipSide,
+				m_shipLauncher.getShipWorld(),
+				x, y, zLevel, width, height
+			);
 		}
 	}
 }

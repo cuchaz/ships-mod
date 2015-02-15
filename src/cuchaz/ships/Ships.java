@@ -41,6 +41,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cuchaz.modsShared.net.PacketRegistry;
 import cuchaz.ships.blocks.BlockAirRoof;
 import cuchaz.ships.blocks.BlockAirWall;
 import cuchaz.ships.blocks.BlockBerth;
@@ -58,7 +59,18 @@ import cuchaz.ships.items.ItemShipBlock;
 import cuchaz.ships.items.ItemShipClipboard;
 import cuchaz.ships.items.ItemShipEraser;
 import cuchaz.ships.packets.PacketBlockPropertiesOverrides;
-import cuchaz.ships.packets.PacketRegistry;
+import cuchaz.ships.packets.PacketChangedBlocks;
+import cuchaz.ships.packets.PacketEraseShip;
+import cuchaz.ships.packets.PacketLaunchShip;
+import cuchaz.ships.packets.PacketPasteShip;
+import cuchaz.ships.packets.PacketPilotShip;
+import cuchaz.ships.packets.PacketPlaceProjector;
+import cuchaz.ships.packets.PacketPlayerSleepInBerth;
+import cuchaz.ships.packets.PacketRequestShipBlocks;
+import cuchaz.ships.packets.PacketShipBlockEvent;
+import cuchaz.ships.packets.PacketShipBlocks;
+import cuchaz.ships.packets.PacketShipLaunched;
+import cuchaz.ships.packets.PacketUnlaunchShip;
 import cuchaz.ships.render.RenderShip;
 import cuchaz.ships.render.TileEntityHelmRenderer;
 import cuchaz.ships.render.TileEntityProjectorRenderer;
@@ -123,6 +135,19 @@ public class Ships {
 		try {
 			// register for network support
 			net = new PacketRegistry(Id);
+			net.register(new PacketLaunchShip());
+			net.register(new PacketShipLaunched());
+			net.register(new PacketUnlaunchShip());
+			net.register(new PacketRequestShipBlocks());
+			net.register(new PacketShipBlocks());
+			net.register(new PacketPilotShip());
+			net.register(new PacketShipBlockEvent());
+			net.register(new PacketChangedBlocks());
+			net.register(new PacketPasteShip());
+			net.register(new PacketEraseShip());
+			net.register(new PacketPlayerSleepInBerth());
+			net.register(new PacketBlockPropertiesOverrides());
+			net.register(new PacketPlaceProjector());
 			
 			// register for forge events
 			MinecraftForge.EVENT_BUS.register(this);

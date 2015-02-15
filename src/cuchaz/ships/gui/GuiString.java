@@ -13,7 +13,42 @@ package cuchaz.ships.gui;
 import net.minecraft.util.StatCollector;
 
 public enum GuiString {
-	Yes, No, ShipConstruction, ShipDashboard, ShipNumBlocks, ShipTooLarge, ShipLaunch, ShipUnlaunch, ShipInOrAboveWater, ShipHasAirAbove, ShipFoundWaterHeight, ShipWillItFloat, ShipAlignedToDirection, ShipAwayFromBlocks, ShipPropulsion, NoShipBlock, InvalidShip, ClipboardUsage, NoShipWasFoundHere, CopiedShip, ErrorCheckLogForDetails, NoShipOnClipboard, NoRoomToPasteShip, PastedShip, OnlyCreative, NoPropulsion, FoundPropulsion, ShipUnlaunchOverride, ShipUnlaunchOverrideWarning, ListOfSupporters, NotASupporter, EraserUsage, ShipPlaque, Done, ShipIsUnsinkable, ShipFloatsCloseToSinkLine, Sink, Slept, BerthNotFound, TryOnStillWater;
+	Yes,
+	No,
+	ShipConstruction,
+	ShipDashboard,
+	ShipNumBlocks,
+	ShipTooLarge,
+	ShipLaunch,
+	ShipUnlaunch,
+	ShipInOrAboveWater,
+	ShipHasAirAbove,
+	ShipFoundWaterHeight,
+	ShipWillItFloat,
+	ShipAlignedToDirection,
+	ShipAwayFromBlocks,
+	ShipPropulsion,
+	NoShipBlock,
+	InvalidShip,
+	ClipboardUsage,
+	NoShipWasFoundHere,
+	CopiedShip,
+	ErrorCheckLogForDetails,
+	NoShipOnClipboard,
+	NoRoomToPasteShip,
+	PastedShip,
+	OnlyCreative,
+	NoPropulsion,
+	FoundPropulsion,
+	ShipUnlaunchOverride,
+	ShipUnlaunchOverrideWarning,
+	EraserUsage,
+	ShipIsUnsinkable,
+	ShipFloatsCloseToSinkLine,
+	Sink,
+	Slept,
+	BerthNotFound,
+	TryOnStillWater;
 	
 	public String getKey() {
 		return "cuchaz.ships." + name();
