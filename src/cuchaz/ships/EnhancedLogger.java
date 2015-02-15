@@ -10,8 +10,8 @@
  ******************************************************************************/
 package cuchaz.ships;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 import cuchaz.modsShared.Environment;
 
@@ -36,15 +36,15 @@ public class EnhancedLogger {
 	// convenience formatter methods
 	
 	public void error(Throwable t, String message, Object... args) {
-		log(Level.SEVERE, String.format(message, args), t);
+		log(Level.ERROR, String.format(message, args), t);
 	}
 	
 	public void warning(String message, Object... args) {
-		log(Level.WARNING, String.format(message, args));
+		log(Level.WARN, String.format(message, args));
 	}
 	
 	public void warning(Throwable t, String message, Object... args) {
-		log(Level.WARNING, String.format(message, args), t);
+		log(Level.WARN, String.format(message, args), t);
 	}
 	
 	public void info(String message, Object... args) {
@@ -53,9 +53,5 @@ public class EnhancedLogger {
 	
 	public void info(Throwable t, String message, Object... args) {
 		log(Level.INFO, String.format(message, args), t);
-	}
-	
-	public void fine(String message, Object... args) {
-		log(Level.FINE, String.format(message, args));
 	}
 }

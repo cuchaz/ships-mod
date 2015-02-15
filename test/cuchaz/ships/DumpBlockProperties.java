@@ -8,35 +8,43 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import cpw.mods.fml.common.registry.LanguageRegistry;
 import cuchaz.ships.config.BlockEntry;
 import cuchaz.ships.config.BlockProperties;
 
 public class DumpBlockProperties {
 	
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)
+	throws Exception {
 		new DumpBlockProperties().go();
 	}
 	
-	public void go() throws Exception {
+	public void go()
+	throws Exception {
 		new MinecraftRunner() {
 			
 			@Override
 			@SuppressWarnings("unchecked")
-			public void onRun() throws Exception {
+			public void onRun()
+			throws Exception {
+				
 				// gather all the blocks we care about
 				final Map<String,Block> blocksToCheck = Maps.newLinkedHashMap();
 				for (String blockId : (Iterable<String>)Block.blockRegistry.getKeys()) {
 					Block block = (Block)Block.blockRegistry.getObject(blockId);
 					if (block != null) {
-						blocksToCheck.put(block.getUnlocalizedName(), block);
+						blocksToCheck.put(blockId, block);
 					}
 				}
+				
+				// add ships blocks
+				blocksToCheck.put("cuchaz.ships:blockShip", Ships.m_blockShip);
+				blocksToCheck.put("cuchaz.ships:blockHelm", Ships.m_blockHelm);
+				blocksToCheck.put("cuchaz.ships:blockBerth", Ships.m_blockBerth);
+				blocksToCheck.put("cuchaz.ships:blockProjector", Ships.m_blockProjector);
 				
 				// sort the blocks in number order
 				List<String> keys = Lists.newArrayList(blocksToCheck.keySet());
@@ -56,39 +64,13 @@ public class DumpBlockProperties {
 				// check the blocks
 				out.write("{\n");
 				for (int i = 0; i < keys.size(); i++) {
-					Block block = blocksToCheck.get(keys.get(i));
+					String blockId = keys.get(i);
+					Block block = blocksToCheck.get(blockId);
 					BlockEntry entry = BlockProperties.getEntry(block);
 					
-					// try to get the display name for the block
-					String name = block.getLocalizedName();
-					if (!isGoodName(name, block)) {
-						// try to get the name from an item
-						ItemStack stack = new ItemStack(block);
-						if (stack.getItem() != null) {
-							name = stack.getDisplayName();
-						}
-					}
-					
-					if (!isGoodName(name, block)) {
-						// check the Forge language registry
-						name = LanguageRegistry.instance().getStringLocalization(block.getUnlocalizedName(), "en_US");
-					}
-					
-					if (!isGoodName(name, block)) {
-						// as a last ditch effort, try to parse the class name
-						String[] nameParts = block.getClass().getSimpleName().split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
-						name = "";
-						for (int j = 1; j < nameParts.length; j++) {
-							if (name.length() > 0) {
-								name += " ";
-							}
-							name += nameParts[j];
-						}
-					}
-					
-					out.write(String.format("\"%s\": [\"%s\", %f, %f, %b, %b, %b]",
-						block.getUnlocalizedName(),
-						name, entry.mass, entry.displacement,
+					out.write(String.format("\"%s\": [%f, %f, %b, %b, %b]",
+						blockId,
+						entry.mass, entry.displacement,
 						entry.isWatertight, entry.isSeparator, entry.isWater
 					));
 					
@@ -103,10 +85,6 @@ public class DumpBlockProperties {
 				out.close();
 				
 				System.out.println("Done!");
-			}
-			
-			private boolean isGoodName(String name, Block block) {
-				return name != null && name.length() > 0 && !name.equals(block.getUnlocalizedName() + ".name");
 			}
 		}.run();
 	}

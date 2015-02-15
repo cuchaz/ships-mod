@@ -12,7 +12,6 @@ package cuchaz.ships;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -27,10 +26,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
-import com.google.common.eventbus.Subscribe;
+import org.apache.logging.log4j.LogManager;
 
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -90,7 +90,7 @@ public class Ships {
 	@Mod.Instance(Id)
 	public static Ships instance = null;
 	
-	public static EnhancedLogger logger = new EnhancedLogger(Logger.getLogger(Id));
+	public static EnhancedLogger logger = new EnhancedLogger(LogManager.getLogger(Id));
 	public static PacketRegistry net = null;
 	
 	// materials
@@ -172,7 +172,7 @@ public class Ships {
 		}
 	}
 	
-	@Subscribe
+	@EventHandler
 	public void serverLoad(FMLServerStartingEvent event) {
 		
 		// register our commands
@@ -208,6 +208,9 @@ public class Ships {
 	private void loadThings() {
 		
 		// blocks
+		// sadly, these names look stupid in their id-name format:
+		// cuchaz.ships:blockShip
+		// but it's too late to change them now. =P
 		GameRegistry.registerBlock(m_blockShip, ItemShipBlock.class, "blockShip");
 		GameRegistry.registerBlock(m_blockAirWall, "blockAirWall");
 		GameRegistry.registerBlock(m_blockHelm, "blockHelm");

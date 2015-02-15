@@ -13,6 +13,7 @@ package cuchaz.ships;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
@@ -28,6 +29,8 @@ import cuchaz.modsShared.blocks.BlockUtils.BlockExplorer;
 import cuchaz.modsShared.blocks.BlockUtils.Neighbors;
 import cuchaz.modsShared.blocks.BlockUtils.SearchAction;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.config.BlockEntry;
+import cuchaz.ships.config.BlockProperties;
 
 public class CommandShips extends CommandBase {
 	
@@ -60,7 +63,7 @@ public class CommandShips extends CommandBase {
 					buf.append(SubCommand.values()[i].name().toLowerCase());
 				}
 				buf.append("\n");
-				buf.append("To learn more about a command, type: " + getUsage());
+				buf.append("To learn more about a command: " + getUsage());
 				reply(sender, buf.toString());
 			}
 		},
@@ -186,6 +189,39 @@ public class CommandShips extends CommandBase {
 				}
 				replyAllAdmins(sender, String.format("Removed %d air wall blocks.", airWallBlocks.size()));
 			}
+		},
+		BlockProps("List physical block properties", "<block id name or empty to list overridden blocks>") {
+			
+			@Override
+			public void process(ICommandSender sender, String[] args) {
+				StringBuilder buf = new StringBuilder();
+				if (args.length <= 0) {
+					for (Map.Entry<Block,BlockEntry> mapEntry : BlockProperties.overrides()) {
+						if (buf.length() > 0) {
+							buf.append(", ");
+						}
+						buf.append(Block.blockRegistry.getNameForObject(mapEntry.getKey()));
+					}
+				} else {
+					String blockId = args[0];
+					Block block = (Block)Block.blockRegistry.getObject(blockId);
+					if (block == Blocks.air && !blockId.equals(Block.blockRegistry.getNameForObject(Blocks.air))) {
+						buf.append("Unrecognized block: " + blockId);
+					} else {
+						BlockEntry entry = BlockProperties.getEntry(block);
+						buf.append(String.format("%-20s Ovr:%s Mass:%.1f Vol:%.1f WT:%s Ignrd:%s Water:%s",
+							Block.blockRegistry.getNameForObject(block),
+							BlockProperties.isOverridden(block) ? "Y" : "N",
+							entry.mass,
+							entry.displacement,
+							entry.isWatertight ? "Y" : "N",
+							entry.isSeparator ? "Y" : "N",
+							entry.isWater ? "Y" : "N"
+						));
+					}
+				}
+				reply(sender, buf.toString());
+			}
 		};
 		
 		private String m_description;
@@ -262,7 +298,9 @@ public class CommandShips extends CommandBase {
 	}
 	
 	private static void reply(ICommandSender sender, String msg) {
-		sender.addChatMessage(new ChatComponentTranslation(msg));
+		for (String line : msg.split("\\n")) {
+			sender.addChatMessage(new ChatComponentTranslation(line));
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

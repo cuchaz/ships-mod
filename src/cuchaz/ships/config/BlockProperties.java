@@ -84,15 +84,17 @@ public class BlockProperties {
 		addEntry(Ships.m_blockAirRoof, new BlockEntry(0, 0, false, true, false));
 	}
 	
-	public static void readConfigFile() throws FileNotFoundException {
+	public static void readConfigFile()
+	throws FileNotFoundException {
 		File inFile = new File("config/shipBlockProperties.cfg");
 		if (!inFile.exists()) {
+			Ships.logger.info("Skipping ships block config. No config file found at: " + inFile.getAbsolutePath());
 			return;
 		}
 		
 		m_overriddenEntries.clear();
 		readEntries(m_overriddenEntries, new FileReader(inFile));
-		Ships.logger.info("Read %d block entries from: %s", m_overriddenEntries.size(), inFile.getAbsolutePath());
+		Ships.logger.info("Read %d block properties from: %s", m_overriddenEntries.size(), inFile.getAbsolutePath());
 	}
 	
 	public static void setOverrides(String in) {
@@ -106,6 +108,14 @@ public class BlockProperties {
 	
 	public static boolean hasOverrides() {
 		return !m_overriddenEntries.isEmpty();
+	}
+	
+	public static boolean isOverridden(Block block) {
+		return m_overriddenEntries.containsKey(block);
+	}
+	
+	public static Iterable<Map.Entry<Block,BlockEntry>> overrides() {
+		return m_overriddenEntries.entrySet();
 	}
 	
 	public static void addScaledEntry(Block block, BlockEntry entry) {
@@ -162,11 +172,12 @@ public class BlockProperties {
 	
 	@SuppressWarnings("unchecked")
 	private static void readEntries(Map<Block,BlockEntry> entries, Reader inRaw) {
+		
 		// build a map of the block names
 		Map<String,Block> blocks = new HashMap<String,Block>();
 		for (Block block : (Iterable<Block>)Block.blockRegistry) {
 			if (block != null) {
-				blocks.put(block.getUnlocalizedName(), block);
+				blocks.put(Block.blockRegistry.getNameForObject(block), block);
 			}
 		}
 		
@@ -175,6 +186,7 @@ public class BlockProperties {
 			BufferedReader in = new BufferedReader(inRaw);
 			String line = null;
 			while ( (line = in.readLine()) != null) {
+				
 				// skip blank or empty lines
 				line = line.trim();
 				if (line.length() <= 0) {
@@ -190,7 +202,7 @@ public class BlockProperties {
 					}
 					block = blocks.get(parts[0]);
 					if (block == null) {
-						throw new IllegalArgumentException("Unknown block name: " + parts[0]);
+						throw new IllegalArgumentException("Unknown block id name: " + parts[0]);
 					}
 					BlockEntry entry = readEntry(parts[1]);
 					
@@ -209,7 +221,7 @@ public class BlockProperties {
 	}
 	
 	private static BlockEntry readEntry(String entryString) {
-		String[] parts = entryString.split(",");
+		String[] parts = entryString.split(";");
 		if (parts.length != 5) {
 			throw new IllegalArgumentException();
 		}
@@ -220,16 +232,16 @@ public class BlockProperties {
 	private static String writeEntries(Map<Block,BlockEntry> entries) {
 		StringBuilder buf = new StringBuilder();
 		for (Map.Entry<Block,BlockEntry> entry : entries.entrySet()) {
-			buf.append(entry.getKey().getUnlocalizedName());
+			buf.append(Block.blockRegistry.getNameForObject(entry.getKey()));
 			buf.append("=");
 			buf.append(entry.getValue().mass);
-			buf.append(",");
+			buf.append(";");
 			buf.append(entry.getValue().displacement);
-			buf.append(",");
+			buf.append(";");
 			buf.append(entry.getValue().isWatertight);
-			buf.append(",");
+			buf.append(";");
 			buf.append(entry.getValue().isSeparator);
-			buf.append(",");
+			buf.append(";");
 			buf.append(entry.getValue().isWater);
 		}
 		return buf.toString();
