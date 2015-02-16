@@ -2,11 +2,13 @@
 v1.0,1 change log
 
 Update to Forge v1291
+ * Don't worry, it'll still work with v1230
 Added new ship block textures by useless_one!
 Ship block properties are much more user friendly now
  * Server log shows if properties are loaded, and how many
  * added server command to list overridden block properties
  * added server command to query properties for specific blocks
+ * see the new command with /ships help blockprops
  * entries now look like: minecraft:planks=1;1;true;true;false
 Fixed a bug with ship collision that was causing massive lag in mid-to-far lands
 Restructured GUIs to stop acting like inventory GUIs
