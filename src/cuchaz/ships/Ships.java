@@ -33,6 +33,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -86,6 +87,7 @@ public class Ships {
 	
 	public static final String Id = "cuchaz.ships";
 	public static final String Version = "1.7.10-1.0.1-e1";
+	public static final String VersionUrl = "http://www.cuchazinteractive.com/ships/versions.json";
 	
 	@Mod.Instance(Id)
 	public static Ships instance = null;
@@ -133,6 +135,9 @@ public class Ships {
 		
 		// the event dispatcher swallows exceptions, so report them here
 		try {
+			// check version
+			FMLInterModComms.sendRuntimeMessage(Id, "VersionChecker", "addVersionCheck", VersionUrl);
+			
 			// register for network support
 			net = new PacketRegistry(Id);
 			net.register(new PacketLaunchShip());
