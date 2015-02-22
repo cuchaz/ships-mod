@@ -20,7 +20,7 @@ apply plugin: "forge"
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
 
-version = "v1.7.10-1.0.1-e1"
+version = "v1.7.10-1.0.1"
 group = "cuchaz"
 archivesBaseName = "shipsMod"
 
