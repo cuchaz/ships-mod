@@ -185,7 +185,10 @@ public class BlockProperties {
 			// open the file for reading line-by-line
 			BufferedReader in = new BufferedReader(inRaw);
 			String line = null;
-			while ( (line = in.readLine()) != null) {
+			while ((line = in.readLine()) != null) {
+				
+				// TEMP
+				System.out.println("LINE: " + line);
 				
 				// skip blank or empty lines
 				line = line.trim();
@@ -243,6 +246,7 @@ public class BlockProperties {
 			buf.append(entry.getValue().isSeparator);
 			buf.append(";");
 			buf.append(entry.getValue().isWater);
+			buf.append("\n");
 		}
 		return buf.toString();
 	}
