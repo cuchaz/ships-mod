@@ -51,6 +51,7 @@ jar {
 			"FMLCorePluginContainsFMLMod": "true"
 	}
 	from "LICENSE.txt"
+	from "README.txt"
 	from file("../Cuchazinteractive Mod/assets")
 }
 
