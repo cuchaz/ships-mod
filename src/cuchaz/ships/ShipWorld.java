@@ -43,6 +43,7 @@ import cuchaz.modsShared.blocks.BlockUtils;
 import cuchaz.modsShared.blocks.BlockUtils.UpdateRules;
 import cuchaz.modsShared.blocks.BoundingBoxInt;
 import cuchaz.modsShared.blocks.Coords;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.packets.PacketChangedBlocks;
 import cuchaz.ships.packets.PacketShipBlockEvent;
 
@@ -179,7 +180,7 @@ public class ShipWorld extends DetachedWorld {
 			
 			// is this block actually water?
 			Block block = world.getBlock(coordsWorld.x, coordsWorld.y, coordsWorld.z);
-			if (block == Blocks.water || block == Ships.m_blockAirWall) {
+			if (BlockProperties.isWater(block) || block == Ships.m_blockAirWall) {
 				BlockUtils.removeBlockWithoutNotifyingIt(world, coordsWorld.x, coordsWorld.y, coordsWorld.z, UpdateRules.UpdateClients);
 			}
 		}

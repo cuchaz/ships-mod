@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityHanging;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -260,12 +260,16 @@ public class ShipLauncher {
 		}
 		
 		// compute the water height
-		int waterHeight = computeWaterHeight(world, shipWorld, shipBlock);
+		Coords waterBlockPos = computeWaterBlock(world, shipWorld, shipBlock);
+		Block waterBlock = world.getBlock(waterBlockPos.x, waterBlockPos.y, waterBlockPos.z);
+		
+		// add 1 to get the top of the water block
+		int waterHeight = waterBlockPos.y + 1;
 		
 		// remove the world blocks, but don't tell the clients. They'll do it later when the ship blocks are sent over
 		for (Coords cords : worldBlocks) {
 			if (cords.y < waterHeight) {
-				BlockUtils.changeBlockWithoutNotifyingIt(world, cords.x, cords.y, cords.z, Blocks.water, 0, updateRules);
+				BlockUtils.changeBlockWithoutNotifyingIt(world, cords.x, cords.y, cords.z, waterBlock, 0, updateRules);
 			} else {
 				BlockUtils.removeBlockWithoutNotifyingIt(world, cords.x, cords.y, cords.z, updateRules);
 			}
@@ -277,7 +281,7 @@ public class ShipLauncher {
 			worldCoords.x = blockCoords.x + shipBlock.x;
 			worldCoords.y = blockCoords.y + shipBlock.y;
 			worldCoords.z = blockCoords.z + shipBlock.z;
-			BlockUtils.changeBlockWithoutNotifyingIt(world, worldCoords.x, worldCoords.y, worldCoords.z, Blocks.water, 0, updateRules);
+			BlockUtils.changeBlockWithoutNotifyingIt(world, worldCoords.x, worldCoords.y, worldCoords.z, waterBlock, 0, updateRules);
 		}
 		
 		// remove any hanging entities
@@ -289,24 +293,30 @@ public class ShipLauncher {
 		}
 	}
 	
-	private static int computeWaterHeight(World world, ShipWorld shipWorld, Coords shipBlock) {
-		int maxWaterHeight = 0;
+	private static Coords computeWaterBlock(World world, ShipWorld shipWorld, Coords shipBlock) {
+		
+		Coords highestWaterPos = new Coords();
 		
 		// for each column in the ship or outside it
 		Envelopes envelopes = shipWorld.getGeometry().getEnvelopes();
 		for (int x = envelopes.getBoundingBox().minX - 1; x <= envelopes.getBoundingBox().maxX + 1; x++) {
 			for (int z = envelopes.getBoundingBox().minZ - 1; z <= envelopes.getBoundingBox().maxZ + 1; z++) {
 				int waterHeight = computeWaterHeight(world, shipWorld, shipBlock, x, z);
-				if (waterHeight > maxWaterHeight) {
-					maxWaterHeight = waterHeight;
+				if (waterHeight > highestWaterPos.y) {
+					highestWaterPos.set(
+						shipBlock.x + x,
+						waterHeight,
+						shipBlock.z + z
+					);
 				}
-				
 			}
 		}
-		return maxWaterHeight;
+		
+		return highestWaterPos;
 	}
 	
 	private static int computeWaterHeight(World world, ShipWorld shipWorld, Coords shipBlock, int blockX, int blockZ) {
+		
 		// start at the top of the box
 		Envelopes envelopes = shipWorld.getGeometry().getEnvelopes();
 		int x = blockX + shipBlock.x;
@@ -329,8 +339,7 @@ public class ShipLauncher {
 		// keep dropping until we hit water
 		for (; y >= 0; y--) {
 			if (world.getBlock(x, y, z).getMaterial().isLiquid()) {
-				// add 1 to return the entityY sense instead of the blockY sense
-				return y + 1;
+				return y;
 			}
 		}
 		

@@ -182,6 +182,7 @@ public class CommandShips extends CommandBase {
 				for (Coords coords : airWallBlocks) {
 					Block block = sender.getEntityWorld().getBlock(coords.x, coords.y, coords.z);
 					if (block == Ships.m_blockAirWall) {
+						// TODO: find out what kind of water to use from nearby blocks?
 						sender.getEntityWorld().setBlock(coords.x, coords.y, coords.z, Blocks.water);
 					} else if (block == Ships.m_blockAirRoof) {
 						sender.getEntityWorld().setBlock(coords.x, coords.y, coords.z, Blocks.air);

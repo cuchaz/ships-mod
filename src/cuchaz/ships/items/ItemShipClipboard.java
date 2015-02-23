@@ -70,8 +70,8 @@ public class ItemShipClipboard extends Item {
 		int y = movingobjectposition.blockY;
 		int z = movingobjectposition.blockZ;
 		
-		// did we use the item on a ship block?
-		if (world.getBlock(x, y, z) == Blocks.water) {
+		// did we use the item on a water block?
+		if (BlockProperties.isWater(world.getBlock(x, y, z))) {
 			pasteShip(world, player, x, y, z);
 		} else {
 			message(player, GuiString.ClipboardUsage);
@@ -183,7 +183,7 @@ public class ItemShipClipboard extends Item {
 			for (int y = box.minY - 1; y <= box.maxY + 1; y++) {
 				for (int z = box.minZ - 1; z <= box.maxZ + 1; z++) {
 					Block block = world.getBlock(x, y, z);
-					if (block != Blocks.air && block != Blocks.water) {
+					if (block != Blocks.air && !BlockProperties.isWater(block)) {
 						return false;
 					}
 				}

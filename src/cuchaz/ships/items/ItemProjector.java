@@ -2,7 +2,6 @@ package cuchaz.ships.items;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
@@ -15,6 +14,7 @@ import cuchaz.ships.ShipClipboard;
 import cuchaz.ships.ShipWorld;
 import cuchaz.ships.Ships;
 import cuchaz.ships.TileEntityProjector;
+import cuchaz.ships.config.BlockProperties;
 import cuchaz.ships.gui.GuiString;
 import cuchaz.ships.packets.PacketPlaceProjector;
 import cuchaz.ships.persistence.PersistenceException;
@@ -47,7 +47,7 @@ public class ItemProjector extends ItemBlock {
 			
 			// only place on top of water
 			BlockSide side = BlockSide.getById(movingobjectposition.sideHit);
-			if (world.getBlock(x, y, z) != Blocks.water || side != BlockSide.Top) {
+			if (!BlockProperties.isWater(world.getBlock(x, y, z)) || side != BlockSide.Top) {
 				clientMessage(player, GuiString.TryOnStillWater);
 				return itemStack;
 			}
