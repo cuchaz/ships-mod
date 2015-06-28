@@ -15,6 +15,7 @@ import java.util.List;
 import net.minecraft.client.settings.GameSettings;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 public enum PilotAction {
 	Forward {
@@ -137,13 +138,35 @@ public enum PilotAction {
 		// roll up the actions into a bit vector
 		int actions = 0;
 		for (PilotAction action : allowedActions) {
-			if (Keyboard.isKeyDown(action.m_keyCode)) {
+			if (isKeyDown(action.m_keyCode)) {
 				actions |= 1 << action.ordinal();
 			}
 		}
 		return actions;
 	}
 	
+	private static boolean isKeyDown(int code) {
+		// NOTE: the KeyBinding classes are worthless when the GUI is active
+		// so we need to query lwjgl directly
+		if (isKey(code)) {
+			return Keyboard.isKeyDown(code);
+		} else if (isButton(code)) {
+			return Mouse.isButtonDown(code + 100);
+		}
+		
+		// no idea what this key is...
+		return false;
+	}
+
+	private static boolean isKey(int code) {
+		return code >= 0 && code < Keyboard.KEYBOARD_SIZE;
+	}
+	
+	private static boolean isButton(int code) {
+		int button = code + 100;
+		return button >= 0 && button < Mouse.getButtonCount();
+	}
+
 	public static void applyToShip(EntityShip ship, int actions) {
 		for (PilotAction action : values()) {
 			if (action.isActive(actions)) {

@@ -13,11 +13,10 @@ package cuchaz.ships.gui;
 import java.util.Arrays;
 
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.input.Keyboard;
-
 import cuchaz.modsShared.ColorUtils;
 import cuchaz.modsShared.blocks.BlockSide;
 import cuchaz.modsShared.math.CircleRange;
@@ -69,18 +68,18 @@ public class GuiShipPilotSurface extends GuiShipPilot {
 			return;
 		}
 		
-		int keyForward = mc.gameSettings.keyBindForward.getKeyCode();
-		int keyBack = mc.gameSettings.keyBindBack.getKeyCode();
-		int keyLeft = mc.gameSettings.keyBindLeft.getKeyCode();
-		int keyRight = mc.gameSettings.keyBindRight.getKeyCode();
+		KeyBinding keyForward = mc.gameSettings.keyBindForward;
+		KeyBinding keyBack = mc.gameSettings.keyBindBack;
+		KeyBinding keyLeft = mc.gameSettings.keyBindLeft;
+		KeyBinding keyRight = mc.gameSettings.keyBindRight;
 		
 		// draw the key binds
 		int textColor = ColorUtils.getGrey(64);
 		final int TextOffset = 44;
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyForward), TextOffset + 11, 8, textColor);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyBack), TextOffset + 46, 8, textColor);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyLeft), TextOffset + 61, 8, textColor);
-		this.mc.fontRenderer.drawString(Keyboard.getKeyName(keyRight), TextOffset + 95, 8, textColor);
+		this.mc.fontRenderer.drawString(getKeyName(keyForward), TextOffset + 11, 8, textColor);
+		this.mc.fontRenderer.drawString(getKeyName(keyBack), TextOffset + 46, 8, textColor);
+		this.mc.fontRenderer.drawString(getKeyName(keyLeft), TextOffset + 61, 8, textColor);
+		this.mc.fontRenderer.drawString(getKeyName(keyRight), TextOffset + 95, 8, textColor);
 		
 		bindBackgroundTexture();
 		
@@ -159,5 +158,9 @@ public class GuiShipPilotSurface extends GuiShipPilot {
 		}
 		
 		tessellator.draw();
+	}
+
+	private String getKeyName(KeyBinding key) {
+		return GameSettings.getKeyDisplayString(key.getKeyCode());
 	}
 }
