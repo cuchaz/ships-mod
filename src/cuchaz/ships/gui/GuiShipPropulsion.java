@@ -142,8 +142,8 @@ public class GuiShipPropulsion extends GuiShip {
 			drawText(GuiString.InvalidShip.getLocalizedText(), 1);
 		} else {
 			// list the specs
-			drawLabelValueText("Ship Mass", String.format("%.1f Kg", m_shipLauncher.getShipPhysics().getMass()), 1);
-			drawLabelValueText("Thrust", String.format("%.1f N", Util.perTick2ToPerSecond2(m_propulsion.getTotalThrust(0))), 2);
+			drawLabelValueText("Ship Mass", String.format("%.1f tonnes", m_shipLauncher.getShipPhysics().getMass()), 1);
+			drawLabelValueText("Thrust", String.format("%.1f KN", Util.perTick2ToPerSecond2(m_propulsion.getTotalThrust(0))), 2);
 			drawLabelValueText("Top Speed", String.format("%.1f m/s", Util.perTickToPerSecond(m_topLinearSpeed)), 3);
 			drawLabelValueText("Turning Speed", String.format("%.1f deg/s", Util.perTickToPerSecond(m_topAngularSpeed)), 4);
 			

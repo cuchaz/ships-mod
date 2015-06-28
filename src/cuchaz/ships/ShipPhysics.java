@@ -130,7 +130,8 @@ public class ShipPhysics {
 	}
 	
 	public double getLinearAccelerationDueToThrust(Propulsion propulsion, double speed) {
-		// thrust is in N (which is Kg*m/s/s) and mass is in Kg
+		// thrust: f = ma, so a = f/m
+		// returns: meters/tick/tick
 		return propulsion.getTotalThrust(speed) / m_shipMass;
 	}
 	
