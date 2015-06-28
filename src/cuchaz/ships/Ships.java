@@ -86,7 +86,7 @@ import cuchaz.ships.render.TileEntityProjectorRenderer;
 public class Ships {
 	
 	public static final String Id = "cuchaz.ships";
-	public static final String Version = "1.7.10-1.0.2";
+	public static final String Version = "1.7.10-1.0.3";
 	public static final String VersionUrl = "http://www.cuchazinteractive.com/ships/versions.json";
 	
 	@Mod.Instance(Id)

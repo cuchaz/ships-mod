@@ -1,5 +1,7 @@
 
-v1.0.2 change log
+v1.0.3 change log
 
-Fix bug with multi-line config file
-Fix bug with water replacement for mod water blocks
+fix physical units in propulsion gui and website
+fix item dupe bug
+fix items (and other entities?) falling through launched ships
+ship controls can now be bound to mouse buttons
