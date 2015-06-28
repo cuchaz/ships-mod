@@ -107,7 +107,8 @@ public class ShipCollider {
 	}
 	
 	public void onNearbyEntityMoved(double oldX, double oldY, double oldZ, double oldYSize, Entity entity) {
-		if (!entity.canBeCollidedWith()) {
+		
+		if (entity.noClip) {
 			// skip entities that don't collide
 			return;
 		}
