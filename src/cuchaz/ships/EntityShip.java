@@ -181,6 +181,23 @@ public class EntityShip extends Entity {
 				}
 			}
 		}
+		
+		// if anyone is interacting with something on the ship, make them stop
+		if (!this.worldObj.isRemote) {
+			AxisAlignedBB queryBox = boundingBox.copy();
+			final float dist = 5; // must be at least the reach distance
+			queryBox.expand(dist, dist, dist);
+			@SuppressWarnings("unchecked")
+			List<EntityPlayer> players = (List<EntityPlayer>)this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, queryBox);
+			for (EntityPlayer player : players) {
+				if (player.openContainer != null) {
+					// this player is near a ship and has an open container
+					// force the player to close the container to prevent duplication issues
+					// TODO: check to see if the container is actually on the ship, this is definitely too general
+					player.closeScreen();
+				}
+			}
+		}
 	}
 	
 	@Override
