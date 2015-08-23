@@ -424,8 +424,14 @@ public class EntityShip extends Entity {
 		}
 		
 		// activate the block
+		// NOTE: blocks can do all kinds of crazy things, be defensive here
 		Block block = m_shipWorld.getBlock(hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ);
-		return block.onBlockActivated(m_shipWorld, hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ, player, hit.hit.sideHit, (float)hit.hit.hitVec.xCoord, (float)hit.hit.hitVec.yCoord, (float)hit.hit.hitVec.zCoord);
+		try {
+			return block.onBlockActivated(m_shipWorld, hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ, player, hit.hit.sideHit, (float)hit.hit.hitVec.xCoord, (float)hit.hit.hitVec.yCoord, (float)hit.hit.hitVec.zCoord);
+		} catch (Throwable t) {
+			Ships.logger.warning("Error activating block {}", Block.blockRegistry.getNameForObject(block), t);
+			return false;
+		}
 	}
 	
 	@Override
