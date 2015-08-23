@@ -1,7 +1,6 @@
 
-v1.0.3 change log
+v1.0.4 change log
 
-fix physical units in propulsion gui and website
-fix item dupe bug
-fix items (and other entities?) falling through launched ships
-ship controls can now be bound to mouse buttons
+Fix crash when ship leaves the y=[0,256] range
+Gracefully handle crashes thrown by activating blocks on launched ships
+Update to Forge current recommended version 1448
