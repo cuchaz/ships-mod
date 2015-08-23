@@ -102,7 +102,13 @@ public class RenderShip extends Render {
 		for (Coords coords : shipWorld.coords()) {
 			TileEntity tileEntity = shipWorld.getTileEntity(coords);
 			if (tileEntity != null && TileEntityRendererDispatcher.instance.hasSpecialRenderer(tileEntity)) {
-				TileEntityRendererDispatcher.instance.renderTileEntityAt(tileEntity, tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord, partialTickTime);
+				
+				// blocks can do any crazy thing, be defensive
+				try {
+					TileEntityRendererDispatcher.instance.renderTileEntityAt(tileEntity, tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord, partialTickTime);
+				} catch (Throwable t) {
+					Ships.logger.error(t, "Tile entity threw up while rendering: %s", Block.blockRegistry.getNameForObject(tileEntity.getBlockType()));
+				}
 			}
 		}
 		

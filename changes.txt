@@ -3,4 +3,5 @@ v1.0.4 change log
 
 Fix crash when ship leaves the y=[0,256] range
 Gracefully handle crashes thrown by activating blocks on launched ships
+Gracefully handle crashes thrown by tile entities during ship rendering
 Update to Forge current recommended version 1448
