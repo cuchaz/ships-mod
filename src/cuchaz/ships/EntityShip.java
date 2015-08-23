@@ -429,7 +429,7 @@ public class EntityShip extends Entity {
 		try {
 			return block.onBlockActivated(m_shipWorld, hit.hit.blockX, hit.hit.blockY, hit.hit.blockZ, player, hit.hit.sideHit, (float)hit.hit.hitVec.xCoord, (float)hit.hit.hitVec.yCoord, (float)hit.hit.hitVec.zCoord);
 		} catch (Throwable t) {
-			Ships.logger.warning("Error activating block {}", Block.blockRegistry.getNameForObject(block), t);
+			Ships.logger.error(t, "Error activating block %s", Block.blockRegistry.getNameForObject(block));
 			return false;
 		}
 	}
