@@ -536,7 +536,13 @@ public class ShipWorld extends DetachedWorld {
 			int z = playerZ + random.nextInt(16) - random.nextInt(16);
 			Block block = getBlock(x, y, z);
 			if (block != Blocks.air) {
-				block.randomDisplayTick(this, x, y, z, random);
+				
+				// blocks can do all kinds of crazy things, be defensive
+				try {
+					block.randomDisplayTick(this, x, y, z, random);
+				} catch (Throwable t) {
+					Ships.logger.error(t, "Block threw up during random tick: %s", Block.blockRegistry.getNameForObject(block));
+				}
 			}
 		}
 	}
