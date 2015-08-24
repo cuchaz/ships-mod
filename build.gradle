@@ -20,7 +20,7 @@ apply plugin: "forge"
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
 
-version = "v1.7.10-1.0.3"
+version = "v1.7.10-1.0.4"
 group = "cuchaz"
 archivesBaseName = "shipsMod"
 
@@ -56,7 +56,7 @@ jar {
 }
 
 minecraft {
-    version = "1.7.10-10.13.2.1291"
+    version = "1.7.10-10.13.4.1448-1.7.10"
     runDir = "eclipse"
 }
 
