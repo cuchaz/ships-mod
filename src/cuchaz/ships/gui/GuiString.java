@@ -43,7 +43,8 @@ public enum GuiString {
 	Sink,
 	Slept,
 	BerthNotFound,
-	TryOnStillWater;
+	TryOnStillWater,
+	ShipDataCorrupted;
 	
 	public String getKey() {
 		return "cuchaz.ships." + name();

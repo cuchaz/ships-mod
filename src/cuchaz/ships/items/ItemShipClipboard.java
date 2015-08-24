@@ -172,7 +172,8 @@ public class ItemShipClipboard extends Item {
 			message(player, GuiString.NoRoomToPasteShip, dx, dy, dz);
 			return false;
 		} catch (PersistenceException ex) {
-			message(player, GuiString.NoShipOnClipboard);
+			Ships.logger.error(ex, "Could not reconstruct ship from data");
+			message(player, GuiString.ShipDataCorrupted);
 			return false;
 		}
 	}

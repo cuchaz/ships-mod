@@ -10,12 +10,13 @@
  ******************************************************************************/
 package cuchaz.ships.packets;
 
+import org.apache.commons.codec.binary.Base64;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
-import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
@@ -28,7 +29,7 @@ import cuchaz.ships.persistence.PersistenceException;
 
 public class PacketPlaceProjector extends Packet<PacketPlaceProjector> {
 	
-	private String m_encodedBlocks;
+	private byte[] m_encodedBlocks;
 	private int m_x;
 	private int m_y;
 	private int m_z;
@@ -38,7 +39,11 @@ public class PacketPlaceProjector extends Packet<PacketPlaceProjector> {
 	}
 	
 	public PacketPlaceProjector(String encodedBlocks, int x, int y, int z) {
-		m_encodedBlocks = encodedBlocks;
+		m_encodedBlocks = Base64.decodeBase64(encodedBlocks);
+		if (m_encodedBlocks.length > PacketPasteShip.MaxSize) {
+			// this probably won't ever happen... right?
+			throw new IllegalArgumentException("Ship description size exceeds " + PacketPasteShip.MaxSize + " bytes. If this is a legitimate use, we need a bigger size");
+		}
 		m_x = x;
 		m_y = y;
 		m_z = z;
@@ -46,7 +51,8 @@ public class PacketPlaceProjector extends Packet<PacketPlaceProjector> {
 	
 	@Override
 	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeUTF8String(buf, m_encodedBlocks);
+		buf.writeInt(m_encodedBlocks.length);
+		buf.writeBytes(m_encodedBlocks);
 		buf.writeInt(m_x);
 		buf.writeInt(m_y);
 		buf.writeInt(m_z);
@@ -54,7 +60,11 @@ public class PacketPlaceProjector extends Packet<PacketPlaceProjector> {
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		m_encodedBlocks = ByteBufUtils.readUTF8String(buf);
+		int dataSize = buf.readInt();
+		if (dataSize <= PacketPasteShip.MaxSize) {
+			m_encodedBlocks = new byte[dataSize];
+			buf.readBytes(m_encodedBlocks);
+		}
 		m_x = buf.readInt();
 		m_y = buf.readInt();
 		m_z = buf.readInt();
@@ -79,7 +89,7 @@ public class PacketPlaceProjector extends Packet<PacketPlaceProjector> {
 		
 		// place the projector
 		try {
-			ShipWorld shipWorld = ShipClipboard.createShipWorld(netServer.playerEntity.worldObj, m_encodedBlocks);
+			ShipWorld shipWorld = ShipClipboard.createShipWorld(netServer.playerEntity.worldObj, Base64.encodeBase64String(m_encodedBlocks));
 			ItemProjector.placeProjector(netServer.playerEntity.worldObj, m_x, m_y, m_z, shipWorld);
 			
 			// if the player is holding a projector and we're not in creative mode, use it
