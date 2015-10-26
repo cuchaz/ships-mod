@@ -301,7 +301,9 @@ public class EntityShip extends Entity {
 			return;
 		}
 		
+		// do propulsion things
 		double waterHeightInBlockSpace = shipToBlocksY(worldToShipY(getWaterHeight()));
+		m_propulsion.update(waterHeightInBlockSpace);
 		adjustMotionDueToGravityAndBuoyancy(waterHeightInBlockSpace);
 		adjustMotionDueToThrustAndDrag(waterHeightInBlockSpace);
 		

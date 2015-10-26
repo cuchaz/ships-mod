@@ -41,4 +41,8 @@ public abstract class PropulsionMethod {
 	}
 	
 	public abstract double getThrust(double speed);
+	
+	public void update(double waterHeightInBlockSpace) {
+		// do nothing by default
+	}
 }

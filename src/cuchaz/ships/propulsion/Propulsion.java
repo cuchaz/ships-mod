@@ -125,6 +125,12 @@ public class Propulsion {
 		return totalThrust;
 	}
 	
+	public void update(double waterHeightInBlockSpace) {
+		for (PropulsionMethod method : m_methods) {
+			method.update(waterHeightInBlockSpace);
+		}
+	}
+	
 	public String dumpMethods() {
 		StringBuilder buf = new StringBuilder();
 		String delimiter = "";
